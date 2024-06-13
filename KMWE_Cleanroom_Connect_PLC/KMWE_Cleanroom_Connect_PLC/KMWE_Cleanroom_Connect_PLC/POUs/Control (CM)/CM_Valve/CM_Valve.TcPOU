@@ -1,0 +1,459 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="CM_Valve" Id="{4f71df3e-1fa0-4b1d-8b52-9d243bcf380c}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK CM_Valve EXTENDS CM_Base IMPLEMENTS I_Valve
+
+VAR_INPUT
+	// Configuration
+	i_arr_stFeedbackValve : ARRAY[0..nMAX_NOF_VALVE_FEEDBACK] OF ST_ValveFeedback;
+END_VAR
+
+VAR
+//----------------------Outputs---------------------------//
+//--	s_DOValve : FB_DigOutput;
+//------------------------------------------------------//
+
+	// Inputs
+	I_bStaValveIsOn AT %I* : BOOL; //Valve is on (on = positive logic of fuction)
+	I_bStaValveIsOff AT %I* : BOOL; //Valve is off
+	
+	// Outputs
+	Q_bCmdOn AT %Q* : BOOL; //Commnad to set valve on
+	Q_bCmdOff AT %Q* : BOOL; //Command to set valve off
+
+	// Request
+	s_bReqOff : BOOL;
+	s_bReqOn : BOOL;
+	
+	// Status
+	s_bStaValveIsOff : BOOL;
+	s_bStaValveIsOn : BOOL; 
+	
+	{attribute: 'Hide'}
+	s_bStaValve : BOOL;
+	
+	{attribute: 'Hide'}
+	s_bCfgReverseValve : BOOL; // FALSE = NORMAL, TRUE = INVERTED
+	s_bCfgBiStableValve : BOOL; // FALSE = MONO, TRUE = BI
+	
+	s_bCfgNofFeedbackPairs : SINT;
+	
+	s_arr_stFeedbackValve : ARRAY[0..nMAX_NOF_VALVE_FEEDBACK] OF ST_ValveFeedback;
+	
+	// Alarms
+	s_arr_errFeedbackOnTimeout : ARRAY[0..nMAX_NOF_VALVE_FEEDBACK] OF FB_AlarmHandler;
+	s_arr_errFeedbackOffTimeout : ARRAY[0..nMAX_NOF_VALVE_FEEDBACK] OF FB_AlarmHandler;
+	
+	// Timers
+	s_tofValveControlPulse : TOF;
+	s_bTempBool : BOOL;
+END_VAR
+
+VAR CONSTANT
+	nMAX_NOF_VALVE_FEEDBACK : USINT := 4;	
+
+	bNORMAL : BOOL := FALSE;
+	bINVERTED : BOOL := TRUE;
+	
+	nNORMAL : SINT := 1;
+	nINVERTED : SINT := -1;
+	
+END_VAR
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+SUPER^();
+]]></ST>
+    </Implementation>
+    <Folder Name="Methods" Id="{ea8d9bb4-734d-4580-8584-865c23a88e42}" />
+    <Folder Name="Properties" Id="{2ec02995-39e7-4e65-96bd-a76cfe9eceab}" />
+    <Method Name="_m_Alarms" Id="{d4d0fc1f-8b79-4ff9-9928-983db865f771}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD Protected _m_Alarms : BOOL
+VAR
+	nCounter : UDINT;
+	s_bStaFeedbackError : BOOL;
+	i : USINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Alarms() THEN
+	RETURN;
+END_IF
+
+//Feedback errors (depanding on amount of feedbacks)
+
+s_bStaError := FALSE;
+
+FOR i := 0 TO (s_bCfgNofFeedbackPairs - 1) DO
+	
+	s_arr_errFeedbackOffTimeout[i](
+		i_bStaActive := i_bReqEnable AND s_arr_stFeedbackValve[i].bErrFeedbackOff, 
+		i_eAlarmLevel := E_AlarmLevel.Alarm,
+		i_sAlarmText := CONCAT(i_sCmName , CONCAT(s_arr_stFeedbackValve[i].sFeedbackOffName, ': Feedback timeout.'))
+	);
+	
+	s_arr_errFeedbackOnTimeout[i](
+		i_bStaActive := i_bReqEnable AND s_arr_stFeedbackValve[i].bErrFeedbackOn, 
+		i_eAlarmLevel := E_AlarmLevel.Alarm,
+		i_sAlarmText := CONCAT(i_sCmName , CONCAT(s_arr_stFeedbackValve[i].sFeedbackOnName, ': Feedback timeout.'))
+	);
+
+	IF s_arr_errFeedbackOnTimeout[i].q_bStaActive OR s_arr_errFeedbackOnTimeout[i].q_bStaActive THEN
+		s_bStaError := TRUE;
+	END_IF
+	
+END_FOR
+
+_m_Alarms := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Hmi" Id="{b7e70baf-c92f-407b-8956-5b27f6504914}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Hmi : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Hmi() THEN
+	RETURN;
+END_IF
+
+_m_Hmi := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Init" Id="{aff12dd2-27f0-4c74-8ad8-a313b8d8526f}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Init : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Init() THEN
+	RETURN;
+END_IF
+
+{warning '#TODO: Not sure if this control module needs initialzation'}
+//--s_DOValve.i_stSettings.bCfgDelay 		:= FALSE;
+//--s_DOValve.i_stSettings.tmOutputDelay 	:= T#0S;
+
+_m_Init := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Inputs" Id="{6569b657-be7e-423b-b5ee-7fd46f745288}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Inputs : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Inputs() THEN
+	RETURN;
+END_IF
+
+s_bStaValveIsOff := I_bStaValveIsOff;
+s_bStaValveIsOn := I_bStaValveIsOn;
+
+_m_Inputs := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Outputs" Id="{96cb9638-dd25-4e5f-a9d1-28835e3be357}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Outputs : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Outputs() THEN
+	RETURN;
+END_IF
+
+IF s_bCfgBiStableValve THEN
+	// BI-STABLE
+	Q_bCmdOff := i_bReqEnable AND s_bReqOff AND NOT s_bStaValveIsOff;
+	Q_bCmdOn := i_bReqEnable AND s_bReqOn AND NOT s_bStaValveIsOn;
+		
+ELSE// MONO-STABLE
+	IF i_bReqEnable AND s_bReqOff THEN
+		Q_bCmdOff := TRUE;
+		Q_bCmdOn := FALSE;
+	ELSIF i_bReqEnable AND s_bReqOn THEN
+		Q_bCmdOff := FALSE;
+		Q_bCmdOn := TRUE;
+	ELSE
+		Q_bCmdOff := FALSE;
+		Q_bCmdOn := FALSE;	
+	END_IF
+	
+END_IF
+	
+_m_Outputs := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_Off" Id="{dfb0e5fc-71ae-4e37-85af-425dff907aa0}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PUBLIC m_Off : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+s_bReqOff := TRUE XOR s_bCfgReverseValve;
+s_bReqOn := FALSE XOR s_bCfgReverseValve;
+
+m_Off := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_On" Id="{7e58f661-0318-4088-96a6-cd17436d0ec9}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PUBLIC m_On : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+s_bReqOff := FALSE XOR s_bCfgReverseValve;
+s_bReqOn := TRUE XOR s_bCfgReverseValve;
+
+m_On := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_Stop" Id="{c46b72d5-aa2c-476b-88da-c2a403ab692d}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PUBLIC m_Stop : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+s_bReqOff := FALSE;
+s_bReqOn := FALSE;
+
+m_Stop := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="p_bCfgFeedbackNames" Id="{0e9f09c5-3661-486b-8bba-ab15a972d455}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bCfgFeedbackNames : ARRAY[0..3] OF ST_ValveFeedback_1]]></Declaration>
+      <Get Name="Get" Id="{1c9f8289-7b12-42b7-b9a9-bfe57979d365}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bCfgReverseValve := s_bCfgReverseValve;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{92f3d0cc-b268-415b-b110-b59393295929}">
+        <Declaration><![CDATA[VAR
+	i := SINT;
+END_VAR]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+s_bCfgReverseValve := p_bCfgReverseValve;
+
+s_arr_stFeedbackValve[i].bErrFeedbackOff := p_bCfgFeedbackNames[].sFeedbackOffName]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="p_bCfgReverseValve" Id="{897776c2-ad42-4b65-8d5a-3890c3b6823f}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bCfgReverseValve : BOOL]]></Declaration>
+      <Get Name="Get" Id="{f3fbf4f8-972c-4b1e-966e-d9f0ca7c9f1a}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bCfgReverseValve := s_bCfgReverseValve;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{31b880a5-5c9d-496f-928b-7e6eceda5cde}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+s_bCfgReverseValve := p_bCfgReverseValve;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="p_bStaHasError" Id="{5ce72930-d468-459e-8e18-994bf4cedb95}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bStaHasError : BOOL]]></Declaration>
+      <Get Name="Get" Id="{68bc73bd-22d3-4506-9dd3-f4c135dc4519}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaHasError := s_bStaError;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaIsOff" Id="{790ca530-7388-4b0e-a36a-513598afadeb}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bStaIsOff : BOOL]]></Declaration>
+      <Get Name="Get" Id="{654072ea-3499-4781-8634-a719128bbe7a}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaIsOff := s_bStaValveIsOff;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaIsOn" Id="{f34c7028-14ac-4e6b-8acb-f585d15ae5f6}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bStaIsOn : BOOL]]></Declaration>
+      <Get Name="Get" Id="{1738e38a-8430-47df-b4f9-50a6dbed040c}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaIsOn := s_bStaValveIsOn;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <LineIds Name="CM_Valve">
+      <LineId Id="124" Count="0" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_Valve._m_Alarms">
+      <LineId Id="28" Count="0" />
+      <LineId Id="19" Count="2" />
+      <LineId Id="34" Count="1" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="45" Count="3" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="56" Count="3" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="50" Count="1" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="29" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_Valve._m_Hmi">
+      <LineId Id="17" Count="3" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="87" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_Valve._m_Init">
+      <LineId Id="21" Count="0" />
+      <LineId Id="15" Count="2" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="23" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_Valve._m_Inputs">
+      <LineId Id="13" Count="0" />
+      <LineId Id="5" Count="2" />
+      <LineId Id="10" Count="1" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="17" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_Valve._m_Outputs">
+      <LineId Id="31" Count="0" />
+      <LineId Id="7" Count="2" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="64" Count="0" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="65" Count="1" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="52" Count="1" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="70" Count="1" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="32" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_Valve.m_Off">
+      <LineId Id="25" Count="0" />
+      <LineId Id="14" Count="2" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="23" Count="1" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="26" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_Valve.m_On">
+      <LineId Id="22" Count="0" />
+      <LineId Id="12" Count="3" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="23" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_Valve.m_Stop">
+      <LineId Id="22" Count="0" />
+      <LineId Id="12" Count="3" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="23" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_Valve.p_bCfgFeedbackNames.Get">
+      <LineId Id="3" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="4" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_Valve.p_bCfgFeedbackNames.Set">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_Valve.p_bCfgReverseValve.Get">
+      <LineId Id="3" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="4" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_Valve.p_bCfgReverseValve.Set">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_Valve.p_bStaHasError.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_Valve.p_bStaIsOff.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_Valve.p_bStaIsOn.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

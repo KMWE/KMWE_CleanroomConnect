@@ -3,7 +3,23 @@
   <POU Name="MAIN" Id="{c137dca6-2078-4081-8260-8d6099001278}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM MAIN
 VAR
+
+	// Control Module SIM/TEST
+	cmSpeedDoorOuter : CM_SpeedDoor;
+	arr_bTestBoolSpeeddoor : ARRAY[0..15] OF BOOL;
+	arr_bTestCmdSpeeddoor : ARRAY[0..15] OF BOOL;
 	
+	CmDoorLockCleanroomDoor : CM_DoorLock;
+	arr_bTestBoolCleanroomDoor : ARRAY[0..15] OF BOOL;
+	arr_bTestCmdCleanroomDoor : ARRAY[0..15] OF BOOL;
+	
+	cmValveDoorUnlockingPinUpper : CM_Valve;
+	cmValveDoorUnlockingPinLower : CM_Valve;
+	
+	cmValveDockingClampsUpper : CM_Valve;
+	cmValveDockingClampsLower : CM_Valve;
+	arr_bTestBoolValve : ARRAY[0..15] OF BOOL;
+	arr_bTestCmdValve : ARRAY[0..15] OF BOOL;
 
 	// PLC --> SAFETY IO
 	Q_bErrorAcknowledgement AT %Q* : BOOL;
@@ -12,10 +28,62 @@ VAR
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[]]></ST>
+      <ST><![CDATA[// Speed Door simulation/test
+cmSpeedDoorOuter(
+	i_bReqEnable := arr_bTestCmdSpeeddoor[10],
+	i_eCtrlMode := E_CtrlMode.AUTOMATIC,
+	i_bCmdReset := arr_bTestCmdSpeeddoor[11],
+	i_sCmName := 'Speeddoor Outer');
+
+IF arr_bTestCmdSpeeddoor[0] THEN cmSpeedDoorOuter.m_Open(); arr_bTestCmdSpeeddoor[0] := FALSE; END_IF;
+IF arr_bTestCmdSpeeddoor[1] THEN cmSpeedDoorOuter.m_Close(); arr_bTestCmdSpeeddoor[1] := FALSE; END_IF;
+IF arr_bTestCmdSpeeddoor[2] THEN cmSpeedDoorOuter.m_Reset(); arr_bTestCmdSpeeddoor[2] := FALSE; END_IF;
+IF arr_bTestCmdSpeeddoor[3] THEN cmSpeedDoorOuter.m_Stop(); arr_bTestCmdSpeeddoor[3] := FALSE; END_IF;
+
+arr_bTestBoolSpeeddoor[0] := cmSpeedDoorOuter.p_bStaEnabled;
+arr_bTestBoolSpeeddoor[1] := cmSpeedDoorOuter.p_bStaError;
+arr_bTestBoolSpeeddoor[2] := cmSpeedDoorOuter.p_bStaIsOpening;
+arr_bTestBoolSpeeddoor[3] := cmSpeedDoorOuter.p_bStaIsOpened;
+arr_bTestBoolSpeeddoor[4] := cmSpeedDoorOuter.p_bStaIsClosing;
+arr_bTestBoolSpeeddoor[5] := cmSpeedDoorOuter.p_bStaIsClosed;
+
+// Cleanroom Door simulation/test
+CmDoorLockCleanroomDoor(
+	i_bReqEnable := arr_bTestCmdCleanroomDoor[10],
+	i_eCtrlMode := E_CtrlMode.AUTOMATIC,
+	i_bCmdReset := arr_bTestCmdCleanroomDoor[11],
+	i_sCmName := 'Speeddoor Outer');
+
+IF arr_bTestCmdCleanroomDoor[0] THEN cmDoorLockCleanroomDoor.m_Release(); arr_bTestCmdCleanroomDoor[0] := FALSE; END_IF;
+IF arr_bTestCmdCleanroomDoor[1] THEN cmDoorlockCleanroomDoor.m_Apply(); arr_bTestCmdCleanroomDoor[1] := FALSE; END_IF;
+
+arr_bTestBoolCleanroomDoor[0] := cmDoorLockCleanroomDoor.p_bStaEnabled;
+arr_bTestBoolCleanroomDoor[1] := cmDoorLockCleanroomDoor.p_bStaError;
+arr_bTestBoolCleanroomDoor[2] := cmDoorLockCleanroomDoor.p_bReqReleaseLock;
+arr_bTestBoolCleanroomDoor[3] := cmDoorLockCleanroomDoor.p_bStaDoorIsClosed;
+arr_bTestBoolCleanroomDoor[4] := cmDoorLockCleanroomDoor.p_bStaLockIsApplied;
+arr_bTestBoolCleanroomDoor[5] := cmDoorLockCleanroomDoor.p_bStaLockIsReleased;
+
+// Valves simulation/test
+cmValveDockingClampsUpper(
+	i_bReqEnable := arr_bTestCmdValve[10],
+	i_eCtrlMode := E_CtrlMode.AUTOMATIC,
+	i_bCmdReset := arr_bTestCmdValve[11],
+	i_sCmName := 'Docking Clamp Upper');
+	
+cmValveDockingClampsLower(
+	i_bReqEnable := arr_bTestCmdValve[12],
+	i_eCtrlMode := E_CtrlMode.AUTOMATIC,
+	i_bCmdReset := arr_bTestCmdValve[13],
+	i_sCmName := 'Docking Clamp Lower');
+	]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
-      <LineId Id="2" Count="0" />
+      <LineId Id="189" Count="17" />
+      <LineId Id="243" Count="9" />
+      <LineId Id="255" Count="5" />
+      <LineId Id="242" Count="0" />
+      <LineId Id="207" Count="13" />
     </LineIds>
   </POU>
 </TcPlcObject>

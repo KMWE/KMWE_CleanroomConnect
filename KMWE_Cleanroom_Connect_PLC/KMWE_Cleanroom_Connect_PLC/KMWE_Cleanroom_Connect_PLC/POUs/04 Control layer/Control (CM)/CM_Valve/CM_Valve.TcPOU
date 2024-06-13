@@ -44,6 +44,7 @@ VAR
 	s_arr_errFeedbackOnTimeout : ARRAY[0..nMAX_NOF_VALVE_FEEDBACK] OF FB_AlarmHandler;
 	s_arr_errFeedbackOffTimeout : ARRAY[0..nMAX_NOF_VALVE_FEEDBACK] OF FB_AlarmHandler;
 	
+	
 	// Timers
 	s_tofValveControlPulse : TOF;
 	s_bTempBool : BOOL;
@@ -236,29 +237,6 @@ m_Stop := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Property Name="p_bCfgFeedbackNames" Id="{0e9f09c5-3661-486b-8bba-ab15a972d455}" FolderPath="Properties\">
-      <Declaration><![CDATA[{attribute 'monitoring':='call'}
-PROPERTY PUBLIC p_bCfgFeedbackNames : ARRAY[0..3] OF ST_ValveFeedback_1]]></Declaration>
-      <Get Name="Get" Id="{1c9f8289-7b12-42b7-b9a9-bfe57979d365}">
-        <Declaration><![CDATA[]]></Declaration>
-        <Implementation>
-          <ST><![CDATA[
-p_bCfgReverseValve := s_bCfgReverseValve;
-]]></ST>
-        </Implementation>
-      </Get>
-      <Set Name="Set" Id="{92f3d0cc-b268-415b-b110-b59393295929}">
-        <Declaration><![CDATA[VAR
-	i := SINT;
-END_VAR]]></Declaration>
-        <Implementation>
-          <ST><![CDATA[
-s_bCfgReverseValve := p_bCfgReverseValve;
-
-s_arr_stFeedbackValve[i].bErrFeedbackOff := p_bCfgFeedbackNames[].sFeedbackOffName]]></ST>
-        </Implementation>
-      </Set>
-    </Property>
     <Property Name="p_bCfgReverseValve" Id="{897776c2-ad42-4b65-8d5a-3890c3b6823f}" FolderPath="Properties\">
       <Declaration><![CDATA[{attribute 'monitoring':='call'}
 PROPERTY PUBLIC p_bCfgReverseValve : BOOL]]></Declaration>
@@ -418,17 +396,6 @@ p_bStaIsOn := s_bStaValveIsOn;
       <LineId Id="11" Count="0" />
       <LineId Id="10" Count="0" />
       <LineId Id="23" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_Valve.p_bCfgFeedbackNames.Get">
-      <LineId Id="3" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="4" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_Valve.p_bCfgFeedbackNames.Set">
-      <LineId Id="5" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="7" Count="0" />
-      <LineId Id="6" Count="0" />
     </LineIds>
     <LineIds Name="CM_Valve.p_bCfgReverseValve.Get">
       <LineId Id="3" Count="0" />

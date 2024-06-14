@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="CM_ValveWithDoubleFB" Id="{fa1c28a2-56d2-405b-8a48-8aed0a8180fb}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK CM_ValveWithDoubleFB EXTENDS CM_ValveWithFB
+VAR_INPUT
+	I_bStaValveIsOn2 AT %I* : BOOL; //Valve is on (on = positive logic of fuction)
+	I_bStaValveIsOff2 AT %I* : BOOL; //Valve is off
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+SUPER^();
+]]></ST>
+    </Implementation>
+    <Method Name="_m_Inputs" Id="{575f2f03-5155-4a44-a733-1df6472e24f5}">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Inputs : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Inputs() THEN
+	RETURN;
+END_IF
+
+s_bStaValveIsOff := I_bStaValveIsOff AND I_bStaValveIsOff2;
+s_bStaValveIsOn := I_bStaValveIsOn AND I_bStaValveIsOn2;
+
+_m_Inputs := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="CM_ValveWithDoubleFB">
+      <LineId Id="13" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="14" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_ValveWithDoubleFB._m_Inputs">
+      <LineId Id="13" Count="0" />
+      <LineId Id="5" Count="2" />
+      <LineId Id="10" Count="1" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="17" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

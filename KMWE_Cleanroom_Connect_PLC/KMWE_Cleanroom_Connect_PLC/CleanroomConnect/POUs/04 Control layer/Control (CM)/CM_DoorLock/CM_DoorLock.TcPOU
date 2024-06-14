@@ -2,39 +2,43 @@
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
   <POU Name="CM_DoorLock" Id="{ea68c333-cb10-44e9-998f-ee97a6acb23c}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK CM_DoorLock EXTENDS CM_Base //--IMPLEMENTS I_Door
+VAR_INPUT
+	i_stSettings : ST_SettingsDoorLock;
+END_VAR
 VAR
 	// Inputs
 	I_bStaDoorIsClosed AT %I* : BOOL; // Door is closed
-	I_bStaDoorIsReleased AT %I* : BOOL; // Door is released
-	I_bPbUnlockDoor AT %I* : BOOL; // Request to unlock door
+	I_bStaLockIsReleased AT %I* : BOOL; // Lock is released
 	
 	// Outputs
-	Q_bCmdRelease AT %Q* : BOOL; // FALSE = Apply, TRUE = Release
-	Q_bStaLamp AT %Q* : BOOL; //Status: OFF = Applied (Locked), ON = Released, FLASHING = Request pending
+	Q_bCmdReleaseLock AT %Q* : BOOL; // FALSE = Apply, TRUE = Release
 			
 	// Requests
 	s_bReqReleaseLock : BOOL;
 	s_bReqApplyLock : BOOL;
 	
+	//----------------------Properties---------------------------//
 	// States
-	s_bStaReqReleaseLock : BOOL;
 	s_bStaDoorIsClosed : BOOL;
+	s_bStaDoorIsOpened : BOOL;
 	s_bStaLockIsApplied : BOOL;
 	s_bStaLockIsReleased : BOOL;
+	s_bCfgAutoLockAtClosing : BOOL;
 	
 	// Timers
-	fbFlash : FB_Flash;
+	s_tonReleasingLockTimeout : TON;
+	s_tonApplyingLockTimeout : TON;
 	
 	// Alarms
-	s_fbAlarmHandlerDoorNotClosed : FB_AlarmHandler;
-	s_fbAlarmHandlerRequestPending : FB_AlarmHandler;
+	s_fbAlarmHandlerReleasingLockTimeout : FB_AlarmHandler;
+	s_fbAlarmHandlerApplyingLockTimeout : FB_AlarmHandler;
+	s_fbAlarmHandlerDoorIsNotClosed : FB_AlarmHandler;
 	
-	s_wrnDoorNotClosed : BOOL;
-	s_infRequestPending : BOOL;
-	
-	// Toggele request to release door lock
-	fbToggleReleaseRequest : FB_Toggle;
-	
+	s_errLockReleasingTimeout : BOOL;
+	s_errLockApplyingTimeout : BOOL;
+	s_wrnDoorIsNotClosed : BOOL;
+		
+	s_bStaDoorIsClosedOsr : R_TRIG; 
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -53,22 +57,39 @@ IF NOT SUPER^._m_Alarms() THEN
 	RETURN;
 END_IF
 
+// Timeout (timers)
+s_tonReleasingLockTimeout(
+	IN := i_bReqEnable AND s_bReqReleaseLock AND NOT(s_bStaLockIsReleased),
+	PT := i_stSettings.tReleasingLockTimeout);
+	
+s_tonApplyingLockTimeout(
+	IN := i_bReqEnable AND s_bReqApplyLock AND NOT(s_bStaLockIsApplied),
+	PT := i_stSettings.tApplyingLockTimeout);
+
 // Set error bits
-//..
+s_errLockReleasingTimeout := (s_tonReleasingLockTimeout.Q OR s_errLockReleasingTimeout) AND NOT(i_bCmdReset);
+s_errLockApplyingTimeout := (s_tonApplyingLockTimeout.Q OR s_errLockApplyingTimeout) AND NOT(i_bCmdReset);
 
 // Alarm Handlers
-s_fbAlarmHandlerDoorNotClosed(
-	i_bStaActive := s_wrnDoorNotClosed, 
-	i_eAlarmLevel := E_AlarmLevel.Warning,
-	i_sAlarmText := CONCAT(i_sCmName , CONCAT(': Door - ', 'Apply lock not allowed (close door first).')) );
+s_fbAlarmHandlerReleasingLockTimeout(
+	i_bStaActive := s_errLockReleasingTimeout,
+	i_eAlarmLevel := E_AlarmLevel.Alarm,
+	i_sAlarmText := CONCAT(i_sCmName , ': Lock - releasing timeout.') );
 	
-s_fbAlarmHandlerRequestPending(
-	i_bStaActive := s_infRequestPending, 
-	i_eAlarmLevel := E_AlarmLevel.Info,
-	i_sAlarmText := CONCAT(i_sCmName , CONCAT(': Door - ', 'Request to unlock door pending (please wait...).')) );
+s_fbAlarmHandlerApplyingLockTimeout(
+	i_bStaActive := s_errLockApplyingTimeout,
+	i_eAlarmLevel := E_AlarmLevel.Alarm,
+	i_sAlarmText := CONCAT(i_sCmName , ': Lock - applying timeout.') );
+	
+s_fbAlarmHandlerDoorIsNotClosed(
+	i_bStaActive := s_wrnDoorIsNotClosed,
+	i_eAlarmLevel := E_AlarmLevel.Warning,
+	i_sAlarmText := CONCAT(i_sCmName , ': Door - not closed (close door before lock can be applied).') );	
 	
 // Alarm collector	
-s_bStaError := FALSE;
+s_bStaError := 
+	s_fbAlarmHandlerReleasingLockTimeout.q_bStaActive
+	OR s_fbAlarmHandlerApplyingLockTimeout.q_bStaActive;
 
 _m_Alarms := TRUE;
 ]]></ST>
@@ -83,23 +104,19 @@ IF NOT SUPER^._m_Devices() THEN
 	RETURN;
 END_IF
 
+IF s_bStaError THEN
+	s_bReqReleaseLock := FALSE;
+	s_bReqApplyLock := FALSE;
+END_IF
+	
+IF s_bCfgAutoLockAtClosing AND s_bStaDoorIsClosedOsr.Q THEN
+	s_bReqReleaseLock := FALSE;
+	s_bReqApplyLock := TRUE;
+END_IF
+
 IF s_bStaDoorIsClosed THEN
-	s_wrnDoorNotClosed := FALSE;
+	s_wrnDoorIsNotClosed := FALSE;	
 END_IF
-
-IF s_bStaLockIsReleased THEN
-	s_infRequestPending := FALSE;
-END_IF
-
-//--// Reset request
-//--IF s_bStaLockIsReleased THEN
-//--	s_bReqReleaseLock := FALSE;
-//--ELSIF s_bStaLockIsApplied THEN
-//--	s_bReqApplyLock := FALSE;	
-//--ELSIF s_bStaError THEN
-//--	s_bReqReleaseLock := FALSE;
-//--	s_bReqApplyLock := FALSE;
-//--END_IF
 
 _m_Devices := TRUE;
 ]]></ST>
@@ -127,10 +144,6 @@ IF NOT SUPER^._m_Init() THEN
 	RETURN;
 END_IF
 
-{warning '#TODO: Not sure if this control module needs initialzation'}
-//--s_DOValve.i_stSettings.bCfgDelay 		:= FALSE;
-//--s_DOValve.i_stSettings.tmOutputDelay 	:= T#0S;
-
 _m_Init := TRUE;
 ]]></ST>
       </Implementation>
@@ -144,12 +157,12 @@ IF NOT SUPER^._m_Inputs() THEN
 	RETURN;
 END_IF
 
-fbToggleReleaseRequest(CLK := I_bPbUnlockDoor);
-s_bStaReqReleaseLock := fbToggleReleaseRequest.Q;
-
-s_bStaLockIsReleased := I_bStaDoorIsReleased;
-s_bStaLockIsApplied := NOT(I_bStaDoorIsReleased);
+s_bStaLockIsReleased := I_bStaLockIsReleased;
+s_bStaLockIsApplied := NOT(I_bStaLockIsReleased);
 s_bStaDoorIsClosed := I_bStaDoorIsClosed;
+s_bStaDoorIsOpened := NOT(I_bStaDoorIsClosed);
+
+s_bStaDoorIsClosedOsr(CLK := s_bStaDoorIsClosed);
 
 _m_Inputs := TRUE;
 ]]></ST>
@@ -164,15 +177,8 @@ IF NOT SUPER^._m_Outputs() THEN
 	RETURN;
 END_IF
 
-// Generate flashing pulse for blinking request pending lamp
-fbFlash(
-	i_bExcecute := s_bStaReqReleaseLock,
-	t_tOnTime := T#500MS,
-	t_tOffTime := T#1000MS);
+Q_bCmdReleaseLock := s_bReqReleaseLock;
 
-Q_bCmdRelease := s_bReqReleaseLock;
-Q_bStaLamp := fbFlash.o_bQ; 
-	
 _m_Outputs := TRUE;
 ]]></ST>
       </Implementation>
@@ -191,7 +197,7 @@ IF s_bStaDoorIsClosed THEN
 	s_bReqReleaseLock := FALSE;
 	s_bReqApplyLock := TRUE;
 ELSE
-	s_wrnDoorNotClosed := TRUE;
+	s_wrnDoorIsNotClosed := TRUE;	
 END_IF
 	
 m_Apply := TRUE;
@@ -210,24 +216,29 @@ END_IF
 
 s_bReqReleaseLock := TRUE;
 s_bReqApplyLock := FALSE;
-
-s_infRequestPending := TRUE;
+s_wrnDoorIsNotClosed := FALSE;
 
 m_Release := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Property Name="p_bReqReleaseLock" Id="{085fa38b-af4e-4f0c-a85b-311bf38ba91d}" FolderPath="Properties\">
+    <Property Name="p_bCfgAutoLockAtClosing" Id="{b297b3cd-a9e7-439b-828a-9dc922b1cecc}" FolderPath="Properties\">
       <Declaration><![CDATA[{attribute 'monitoring':='call'}
-PROPERTY PUBLIC p_bReqReleaseLock : BOOL]]></Declaration>
-      <Get Name="Get" Id="{c892ec1b-d93f-48c3-bfe3-815a2bf64387}">
+PROPERTY PUBLIC p_bCfgAutoLockAtClosing : BOOL]]></Declaration>
+      <Get Name="Get" Id="{ebf2f841-0df8-4aa1-82c1-f182980d7fd3}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bReqReleaseLock := s_bStaReqReleaseLock;
-]]></ST>
+p_bCfgAutoLockAtClosing := s_bCfgAutoLockAtClosing;]]></ST>
         </Implementation>
       </Get>
+      <Set Name="Set" Id="{d4466a48-d57f-43a1-b43f-4fc5b971cc4a}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+s_bCfgAutoLockAtClosing := p_bCfgAutoLockAtClosing;]]></ST>
+        </Implementation>
+      </Set>
     </Property>
     <Property Name="p_bStaDoorIsClosed" Id="{6fc03739-dce9-4ee2-80bf-9e9172243c54}" FolderPath="Properties\">
       <Declaration><![CDATA[{attribute 'monitoring':='call'}
@@ -273,31 +284,34 @@ p_bStaLockIsReleased := s_bStaLockIsReleased;
     <LineIds Name="CM_DoorLock._m_Alarms">
       <LineId Id="28" Count="0" />
       <LineId Id="19" Count="2" />
-      <LineId Id="85" Count="0" />
-      <LineId Id="79" Count="0" />
-      <LineId Id="89" Count="1" />
-      <LineId Id="45" Count="0" />
-      <LineId Id="33" Count="0" />
-      <LineId Id="37" Count="0" />
-      <LineId Id="34" Count="1" />
-      <LineId Id="94" Count="0" />
-      <LineId Id="96" Count="2" />
-      <LineId Id="95" Count="0" />
-      <LineId Id="93" Count="0" />
-      <LineId Id="60" Count="0" />
-      <LineId Id="32" Count="0" />
+      <LineId Id="100" Count="0" />
+      <LineId Id="104" Count="9" />
+      <LineId Id="115" Count="3" />
+      <LineId Id="124" Count="8" />
+      <LineId Id="145" Count="0" />
+      <LineId Id="147" Count="2" />
+      <LineId Id="146" Count="0" />
+      <LineId Id="144" Count="0" />
+      <LineId Id="134" Count="1" />
+      <LineId Id="137" Count="0" />
+      <LineId Id="101" Count="0" />
       <LineId Id="5" Count="0" />
       <LineId Id="10" Count="0" />
       <LineId Id="29" Count="0" />
     </LineIds>
     <LineIds Name="CM_DoorLock._m_Devices">
       <LineId Id="6" Count="3" />
-      <LineId Id="65" Count="3" />
-      <LineId Id="70" Count="2" />
-      <LineId Id="69" Count="0" />
-      <LineId Id="14" Count="1" />
-      <LineId Id="73" Count="6" />
-      <LineId Id="20" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="94" Count="0" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="98" Count="0" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="86" Count="2" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="92" Count="1" />
       <LineId Id="53" Count="0" />
       <LineId Id="5" Count="0" />
       <LineId Id="13" Count="0" />
@@ -312,22 +326,17 @@ p_bStaLockIsReleased := s_bStaLockIsReleased;
       <LineId Id="21" Count="0" />
       <LineId Id="15" Count="2" />
       <LineId Id="24" Count="0" />
-      <LineId Id="22" Count="0" />
-      <LineId Id="10" Count="0" />
-      <LineId Id="19" Count="0" />
-      <LineId Id="11" Count="0" />
       <LineId Id="5" Count="0" />
       <LineId Id="23" Count="0" />
     </LineIds>
     <LineIds Name="CM_DoorLock._m_Inputs">
       <LineId Id="13" Count="0" />
       <LineId Id="5" Count="2" />
-      <LineId Id="24" Count="1" />
-      <LineId Id="22" Count="0" />
-      <LineId Id="10" Count="0" />
+      <LineId Id="24" Count="0" />
       <LineId Id="20" Count="0" />
       <LineId Id="23" Count="0" />
       <LineId Id="14" Count="0" />
+      <LineId Id="74" Count="2" />
       <LineId Id="9" Count="0" />
       <LineId Id="8" Count="0" />
       <LineId Id="17" Count="0" />
@@ -335,11 +344,9 @@ p_bStaLockIsReleased := s_bStaLockIsReleased;
     <LineIds Name="CM_DoorLock._m_Outputs">
       <LineId Id="29" Count="0" />
       <LineId Id="7" Count="2" />
-      <LineId Id="64" Count="5" />
-      <LineId Id="57" Count="0" />
+      <LineId Id="64" Count="0" />
       <LineId Id="61" Count="0" />
-      <LineId Id="63" Count="0" />
-      <LineId Id="54" Count="0" />
+      <LineId Id="72" Count="0" />
       <LineId Id="10" Count="0" />
       <LineId Id="39" Count="0" />
     </LineIds>
@@ -348,8 +355,7 @@ p_bStaLockIsReleased := s_bStaLockIsReleased;
       <LineId Id="23" Count="2" />
       <LineId Id="32" Count="0" />
       <LineId Id="26" Count="2" />
-      <LineId Id="33" Count="0" />
-      <LineId Id="35" Count="0" />
+      <LineId Id="38" Count="1" />
       <LineId Id="34" Count="0" />
       <LineId Id="29" Count="1" />
       <LineId Id="3" Count="0" />
@@ -359,12 +365,14 @@ p_bStaLockIsReleased := s_bStaLockIsReleased;
       <LineId Id="32" Count="3" />
       <LineId Id="42" Count="0" />
       <LineId Id="37" Count="0" />
-      <LineId Id="43" Count="1" />
+      <LineId Id="47" Count="0" />
       <LineId Id="38" Count="1" />
       <LineId Id="29" Count="0" />
     </LineIds>
-    <LineIds Name="CM_DoorLock.p_bReqReleaseLock.Get">
-      <LineId Id="4" Count="0" />
+    <LineIds Name="CM_DoorLock.p_bCfgAutoLockAtClosing.Get">
+      <LineId Id="5" Count="1" />
+    </LineIds>
+    <LineIds Name="CM_DoorLock.p_bCfgAutoLockAtClosing.Set">
       <LineId Id="6" Count="0" />
       <LineId Id="2" Count="0" />
     </LineIds>

@@ -1,0 +1,2302 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="EM_Doors" Id="{0ea26ddd-052a-4260-bfaf-0daade60103a}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK EM_Doors EXTENDS EM_Base
+VAR CONSTANT 
+	c_nResultDataSize : UINT := 20;
+END_VAR
+VAR
+//------------------------------------------//
+//Control Modules (Devices)
+	s_cmSpeedDoorOuter : CM_SpeedDoor;
+	s_cmDoorLockCleanroom : CM_DoorLock;
+//------------------------------------------//
+
+//------------------------------------------//
+//Inputs
+	s_diTableDownSensor	: FB_DigInput;
+	s_diBtnTableDown	: FB_DigInput;
+	s_diBtnStop			: FB_DigInput;
+	
+//------------------------------------------//
+	s_doRelayTableDown : FB_DigOutput;
+//------------------------------------------//
+//Outputs
+
+//------------------------------------------//
+
+//------------------------------------------//
+//Params
+	//Tool settings
+	s_fbParamToolHardwareNr				: FB_HmiParamHandler;
+    s_fbParamToolSoftwareVersion		: FB_HmiParamHandler;
+
+	s_fbParamName						: FB_HmiParamHandler;
+	s_fbParamNumber						: FB_HmiParamHandler;
+	s_fbParamRevision                   : FB_HmiParamHandler;
+	
+	s_fbParamTeslaMeterIp				: FB_HmiParamHandler;
+	s_fbParamTeslaMeterPort				: FB_HmiParamHandler;
+	
+	//Product settings (Maybe)
+	s_fbParamTotalStroke				: FB_HmiParamHandler;
+	s_fbParamStepStroke					: FB_HmiParamHandler;
+	s_fbParamAveragingNumberTest		: FB_HmiParamHandler;
+	
+	s_fbParamaMaxMagnitudeCriteria		: FB_HmiParamHandler;
+	
+	s_fbParamRefIduBottom				: FB_HmiParamHandler;
+	s_fbParamRefItm                     : FB_HmiParamHandler;
+	s_fbParamRefCenterTpmPipe           : FB_HmiParamHandler;
+	s_fbParamRefCpValve					: FB_HmiParamHandler;
+//------------------------------------------//
+
+//------------------------------------------//
+//Variables
+	s_sTestResult 						: STRING;
+	
+	s_eCurrentTest						: E_TestMode;
+	s_stCommandsTesla					: ST_SCPI_TeslaCommands;
+//------------------------------------------//
+
+//------------------------------------------//
+//Sensor data	
+	s_aMagneticX						: ARRAY[0..c_nResultDataSize] OF LREAL;
+	s_aMagneticY						: ARRAY[0..c_nResultDataSize] OF LREAL;
+	s_aMagneticZ						: ARRAY[0..c_nResultDataSize] OF LREAL;
+	s_aMagneticMagnitude				: ARRAY[0..c_nResultDataSize] OF LREAL;
+	s_aProbePositionZ					: ARRAY[0..c_nResultDataSize] OF LREAL;
+	
+	s_sXMLData							: STRING(Param_Project.n_MaxLenghtXmlDbRow*Param_Project.n_NumberofRowsXmlDb);
+	
+	s_aHmi_MagneticTest					: ARRAY[1..3,0..c_nResultDataSize] OF ST_POINT;
+	
+//	s_aHmi_ProbePositionZ				: ARRAY[1..1,1..GVL_Datalogging.c_nHmiLogSize] OF ST_POINT;
+//------------------------------------------//
+
+//------------------------------------------//
+//Alarms
+
+//------------------------------------------//
+
+//------------------------------------------//
+//Hmi
+	s_nToHmiStepNr						: INT;
+	s_nToHmiMaxStepNr					: INT;
+	s_sToHmiInstructionText				: T_MAXSTRING;
+	s_sToHmiProcedure					: T_MAXSTRING;
+	
+	s_fbHmiBtnStart						: FB_HmiBtn;
+	s_fbHmiBtnStop						: FB_HmiBtn;	
+	s_fbHmiBtnDiagnosticsLogging		: FB_HmiBtn;
+	
+	s_fbHmiProbeMotor 					: Hmi_Motor_Base;
+	
+	s_fbHmiBtnEnableMotor				: FB_HmiBtn;
+	s_fbHmiBtnHomeMotor					: FB_HmiBtn;
+	s_fbHmiBtnGetField					: FB_HmiBtn;
+	
+	s_fbHmiLedHomedMotor				: FB_HmiLed;
+	s_fbHmiTableDownPressed				: FB_HmiLed;
+	s_fbHmiStopPressed					: FB_HmiLed;
+	s_fbHmiTableDownSensor				: FB_HmiLed;
+//------------------------------------------//
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+SUPER^();
+]]></ST>
+    </Implementation>
+    <Folder Name="Administrative" Id="{a0739789-5416-422a-bb91-d278e4d6c0c6}" />
+    <Folder Name="General" Id="{abe66412-5cb4-4e94-938b-00932105d43b}" />
+    <Folder Name="Procedures" Id="{4fbebc8d-2e5e-4843-ba3a-d70401e17a8b}" />
+    <Folder Name="Sensors" Id="{b84b418c-1139-4453-87ba-182257d5dca9}" />
+    <Method Name="_m_Alarms" Id="{34703853-800b-4320-8e6c-49abce8785b7}" FolderPath="General\">
+      <Declaration><![CDATA[METHOD Protected _m_Alarms : BOOL]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT SUPER^._m_Alarms() THEN
+	RETURN;
+END_IF
+
+_m_Alarms := TRUE;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_DatabaseMagnetic" Id="{bb78cd83-18a1-4e68-a34c-6c165cb86cbd}" FolderPath="Administrative\">
+      <Declaration><![CDATA[METHOD PRIVATE _m_DatabaseMagnetic : BOOL
+VAR_INPUT
+	i_bCmdReset						: BOOL;
+	i_sPassFail						: STRING;
+END_VAR
+VAR_INST
+	s_aDbColumns				: ARRAY[1..GVL_DataLogging.c_nDbColumnMagnetic] OF STRING;
+	s_aDbColumnValues			: ARRAY[1..GVL_DataLogging.c_nDbColumnMagnetic] OF STRING;
+	
+	s_nCounterDbLogging				: UINT := 1;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF i_bCmdReset THEN
+	s_nCounterDbLogging 	:= 1;
+	
+	MEMSET(ADR(s_aDbColumns), 0 , SIZEOF(s_aDbColumns));
+	MEMSET(ADR(s_aDbColumnValues), 0 , SIZEOF(s_aDbColumnValues));	
+
+	s_aDbColumns[1] 		:= 'TestTool Hardware Nr';
+	s_aDbColumns[2] 		:= 'TestTool Software Version';
+	s_aDbColumns[3] 		:= 'User';
+	s_aDbColumns[4] 		:= 'Serial number';
+	s_aDbColumns[5] 		:= '12NC';
+	s_aDbColumns[6] 		:= 'Notes';
+	s_aDbColumns[7] 		:= 'PassFail';
+	s_aDbColumns[8] 		:= 'Message';
+	s_aDbColumns[9] 		:= 'Measurement';
+	
+	s_aDbColumnValues[1] 	:= GVL_DataLogging.g_stReportData.CabinetSerialNumber;
+	s_aDbColumnValues[2] 	:= GVL_DataLogging.g_stReportData.TesterSoftwareVersion;
+	s_aDbColumnValues[3] 	:= GVL.g_sUser;
+	s_aDbColumnValues[4] 	:= GVL_DataLogging.g_stReportData.SerialNumber;;
+	s_aDbColumnValues[5] 	:= CONCAT(s_fbParamNumber.p_sValue, CONCAT('^' ,TO_STRING(TO_INT(s_fbParamRevision.p_fValue))));
+	s_aDbColumnValues[6] 	:= GVL.g_sNotesEntry;
+	s_aDbColumnValues[7]  	:= i_sPassFail;
+		
+	IF GVL_KMWEGenericLib.g_fbAlarmManager.p_bAlarmActive THEN
+		s_aDbColumnValues[8] 	:= 'Stopped due to Alarm';
+	ELSE
+		s_aDbColumnValues[8] 	:= '';
+	END_IF
+	
+END_IF
+
+IF s_nCounterDbLogging < GVL_DataLogging.c_nDbColumnMagnetic THEN
+	IF GVL_Datalogging.g_fbSqlDatabase.m_UpdateTableValue(i_sTableName					:= GVL_DataLogging.c_sTableNameMagnetic,
+															i_sIdentificationColumnName := GVL_DataLogging.c_sIdentificationColumnDataTime,
+															i_sIdentificationValue		:= GVL_KMWEGenericLib.g_fbCurrentTime.p_sCurrentDateTime_DB, 
+															i_sColumnName				:= s_aDbColumns[s_nCounterDbLogging], 
+															i_sColumnValue				:= s_aDbColumnValues[s_nCounterDbLogging])
+	THEN
+		IF s_nCounterDbLogging <=  GVL_DataLogging.c_nDbColumnMagnetic THEN
+			s_nCounterDbLogging := s_nCounterDbLogging + 1;
+		END_IF
+	END_IF
+ELSIF s_nCounterDbLogging = GVL_DataLogging.c_nDbColumnMagnetic THEN
+	IF GVL_Datalogging.g_fbSqlDatabase.m_UpdateTableXml(i_sTableName					:= GVL_DataLogging.c_sTableNameMagnetic,
+															i_sIdentificationColumnName := GVL_DataLogging.c_sIdentificationColumnDataTime,
+															i_sIdentificationValue		:= GVL_KMWEGenericLib.g_fbCurrentTime.p_sCurrentDateTime_DB, 
+															i_sColumnName				:= s_aDbColumns[s_nCounterDbLogging], 
+															i_addrColumnValue			:= ADR(s_sXMLData))
+	THEN
+		IF s_nCounterDbLogging <=  GVL_DataLogging.c_nDbColumnMagnetic THEN
+			s_nCounterDbLogging := s_nCounterDbLogging + 1;
+		END_IF
+	END_IF
+END_IF
+
+_m_DatabaseMagnetic := s_nCounterDbLogging > GVL_DataLogging.c_nDbColumnMagnetic;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Devices" Id="{c18c3403-a619-4da8-8c16-d38b3f2bd5db}" FolderPath="General\">
+      <Declaration><![CDATA[METHOD Protected _m_Devices : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT SUPER^._m_Devices() THEN
+	RETURN;
+END_IF
+
+s_CmProbeMotor(
+	i_bReqEnable					:= , //written in test procedure or manual 
+	i_eCtrlMode						:= i_eCtrlMode, 
+	i_bCmdReset						:= i_bCmdReset, 
+	i_sCmName						:= 'Probe motor');	
+	
+s_CmTeslaMeter(
+	i_bReqEnable					:= , //written in test procedure or manual  
+	i_eCtrlMode						:= i_eCtrlMode, 
+	i_bCmdReset						:= i_bCmdReset, 
+	i_sCmName						:= 'Tesla meter');
+	
+_m_Devices := TRUE;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_GetMagneticField" Id="{d945ccf2-8199-4155-868a-7f8c730d83f6}" FolderPath="Sensors\">
+      <Declaration><![CDATA[METHOD PRIVATE _m_GetMagneticField : E_STATE
+VAR_INPUT
+	i_bCmdReset			: BOOL;
+END_VAR
+VAR_OUTPUT
+	q_fMagneticX		: LREAL;
+	q_fMagneticY		: LREAL;
+	q_fMagneticZ		: LREAL;
+END_VAR
+VAR_INST
+	//Sequence control
+	s_eSequence				: E_ModuleSeqBase;
+	s_fbSeqControl			: FB_SeqControl;
+	
+	s_nInternalStep			: UINT := 0;
+	
+	//Communication
+	s_aReplyBuffer			: ARRAY[1..100] OF T_MAXSTRING; //Tesla
+	s_aResults				: ARRAY[1..10 ] OF T_MAXSTRING;	//Tesla
+	s_sReply				: T_MAXSTRING;
+	s_nIndexReply 			: UDINT := 1;
+	s_nIndexResults			: UDINT := 1;
+	
+	t_nMeasurementsReceived		: UDINT := 1;
+
+	//Measurements
+	s_aMagneticXAve			: ARRAY[1..100] OF LREAL;
+	s_aMagneticYAve			: ARRAY[1..100] OF LREAL;
+	s_aMagneticZAve			: ARRAY[1..100] OF LREAL;
+END_VAR
+VAR
+	t_nCyclceReplies			: UDINT := 1;
+	
+	t_fAveragingX				: LREAL;
+	t_fAveragingY				: LREAL;
+	t_fAveragingZ				: LREAL;
+
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[s_fbSeqControl(
+	i_nSeqStep:= s_eSequence, 
+	i_sStepName:= TO_STRING(s_eSequence), 
+	i_bCmdReset:= i_bCmdReset, 
+	i_bStaError:= FALSE,  
+	q_eActState=> _m_GetMagneticField);
+	
+CASE s_eSequence OF
+	E_ModuleSeqBase.Idle:
+		;
+		
+	E_ModuleSeqBase.Start:
+		IF s_fbSeqControl.q_bStaEntry THEN
+			s_nInternalStep := s_nInternalStep + 1;
+		END_IF
+		
+		IF s_fbSeqControl.q_tmStepTime > T#2S OR s_nInternalStep > 1 THEN
+			IF s_CmTeslaMeter.m_SendCommand(i_sCommand := s_stCommandsTesla.sGetMeasurents , i_bAddCRChar := TRUE) THEN
+				s_eSequence 	:= E_ModuleSeqBase.Busy;
+			END_IF
+		END_IF
+
+	E_ModuleSeqBase.Busy:
+		IF s_fbSeqControl.q_bStaEntry THEN
+			t_nMeasurementsReceived := 1;
+		END_IF
+		
+		s_CmTeslaMeter.m_ReadReplyBuffer(q_sReply => s_sReply);
+			
+		IF s_sReply <> 'No reply' THEN
+			IF t_nMeasurementsReceived = 1 THEN
+				s_aReplyBuffer[t_nCyclceReplies] := '';
+				t_nMeasurementsReceived := 2;
+			ELSIF t_nMeasurementsReceived = 2 THEN
+				s_aMagneticXAve[s_nInternalStep] := TO_LREAL(s_aReplyBuffer[t_nCyclceReplies]);
+				s_aMagneticXAve[s_nInternalStep] := TO_LREAL(s_sReply);
+				s_aReplyBuffer[t_nCyclceReplies] := '';
+				t_nMeasurementsReceived := 3;
+			ELSIF t_nMeasurementsReceived = 3 THEN
+				s_aMagneticYAve[s_nInternalStep] := TO_LREAL(s_aReplyBuffer[t_nCyclceReplies]);
+				s_aMagneticYAve[s_nInternalStep] := TO_LREAL(s_sReply);
+				s_aReplyBuffer[t_nCyclceReplies] := '';
+				t_nMeasurementsReceived := 4;
+			ELSIF t_nMeasurementsReceived = 4 THEN
+				s_aMagneticZAve[s_nInternalStep] := TO_LREAL(s_aReplyBuffer[t_nCyclceReplies]);
+				s_aMagneticZAve[s_nInternalStep] := TO_LREAL(s_sReply);
+				s_aReplyBuffer[t_nCyclceReplies] := '';
+
+				IF s_nInternalStep = TO_UINT(s_fbParamAveragingNumberTest.p_fValue) THEN
+					s_eSequence := E_ModuleSeqBase.Ready;
+				ELSE
+					s_eSequence := E_ModuleSeqBase.Start;
+				END_IF 
+			END_IF
+		END_IF
+
+	E_ModuleSeqBase.Ready:
+		IF s_fbSeqControl.q_bStaEntry THEN
+			s_nInternalStep := 0;
+			
+			t_fAveragingX	:= 0;
+			t_fAveragingY	:= 0;
+			t_fAveragingZ	:= 0;
+ 
+			MEMSET(ADR(s_aReplyBuffer)			, 0, SIZEOF(s_aReplyBuffer));
+			MEMSET(ADR(s_aResults)				, 0, SIZEOF(s_aResults));
+		END_IF
+		
+		FOR t_nCyclceReplies := 1 TO 100 DO
+			t_fAveragingX := t_fAveragingX + s_aMagneticXAve[t_nCyclceReplies];
+			t_fAveragingY := t_fAveragingY + s_aMagneticYAve[t_nCyclceReplies];
+			t_fAveragingZ := t_fAveragingZ + s_aMagneticZAve[t_nCyclceReplies];
+
+			IF t_nCyclceReplies = 100 THEN
+			MEMSET(ADR(s_aMagneticXAve)			, 0, SIZEOF(s_aMagneticXAve));
+			MEMSET(ADR(s_aMagneticYAve)			, 0, SIZEOF(s_aMagneticYAve));
+			MEMSET(ADR(s_aMagneticZAve)			, 0, SIZEOF(s_aMagneticZAve));				
+			END_IF
+		END_FOR
+			
+			q_fMagneticX	:= t_fAveragingX/s_fbParamAveragingNumberTest.p_fValue;
+			q_fMagneticY	:= t_fAveragingY/s_fbParamAveragingNumberTest.p_fValue;
+			q_fMagneticZ	:= t_fAveragingZ/s_fbParamAveragingNumberTest.p_fValue;
+				
+	E_ModuleSeqBase.Error:
+		;
+END_CASE]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Hmi" Id="{06e9697b-07d7-4e29-8455-791381b5d99d}" FolderPath="General\">
+      <Declaration><![CDATA[METHOD Protected _m_Hmi : BOOL
+VAR_INPUT
+END_VAR
+VAR_INST
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT SUPER^._m_Hmi() THEN
+	RETURN;
+END_IF
+
+s_fbHmiBtnDiagnosticsLogging();
+s_fbHmiBtnStart();
+s_fbHmiBtnStop();
+
+s_fbHmiBtnEnableMotor();
+s_fbHmiBtnHomeMotor();
+s_fbHmiBtnGetField();
+
+s_fbHmiProbeMotor(i_IMotor := s_CmProbeMotor);
+
+s_fbHmiLedHomedMotor(i_bStaLed := s_CmProbeMotor.p_bStaMotorHomed);
+s_fbHmiTableDownPressed(i_bStaLed := s_diBtnTableDown.p_bStaInput);
+s_fbHmiTableDownSensor(i_bStaLed := s_diTableDownSensor.p_bStaInput);
+s_fbHmiStopPressed(i_bStaLed := s_diBtnStop.p_bStaInput);
+
+_m_Hmi := TRUE;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_HmiPlots" Id="{cbe7055f-d035-4d00-9575-2b87f9463135}" FolderPath="Administrative\">
+      <Declaration><![CDATA[METHOD PRIVATE _m_HmiPlots
+VAR CONSTANT 
+
+END_VAR
+VAR_INPUT
+	i_bStaHmiLogging : BOOL;
+END_VAR
+VAR_INST
+	s_tonDiagnosticsHmi 	: TON;	
+
+	s_osrDiagnositcsHmi		: R_TRIG;
+	s_osfDiagnositcsHmi		: F_TRIG;
+	
+	s_nInternalTestTime		: LREAL;
+	
+	s_nCounterDiagRawArray	: UDINT;
+	
+	s_nCounterPolish		: UDINT;
+	
+	s_fStartVolumePumped 	: LREAL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[s_tonDiagnosticsHmi(IN := NOT s_tonDiagnosticsHmi.Q, PT := TO_TIME(1000/c_tmHmiLogFreq));
+
+s_osrDiagnositcsHmi(CLK := i_bStaHmiLogging);
+s_osfDiagnositcsHmi(CLK := i_bStaHmiLogging);
+
+IF s_osrDiagnositcsHmi.Q THEN
+	s_nCounterDiagRawArray 	:= 1;
+	
+	s_fStartVolumePumped	:= s_fPumpedVolume;
+	
+	MEMSET(ADR(s_aHmiMovingAve_WaterPresure), 0, SIZEOF(s_aHmiMovingAve_WaterPresure));
+	MEMSET(ADR(s_aHmiMovingAve_R14Pressure), 0, SIZEOF(s_aHmiMovingAve_R14Pressure));
+	MEMSET(ADR(s_aHmiMovingAve_WaterTemperature), 0, SIZEOF(s_aHmiMovingAve_WaterTemperature));
+	MEMSET(ADR(s_aHmiMovingAve_R14Temperature), 0, SIZEOF(s_aHmiMovingAve_R14Temperature));
+	MEMSET(ADR(s_aHmi_PumpedWaterVolume), 0, SIZEOF(s_aHmi_PumpedWaterVolume));
+	MEMSET(ADR(s_aHmi_VoltageMeasurement), 0, SIZEOF(s_aHmi_VoltageMeasurement));
+	MEMSET(ADR(s_aHmi_MovingAve_TemperatureCombined), 0, SIZEOF(s_aHmi_MovingAve_TemperatureCombined));
+	MEMSET(ADR(s_aHmi_MovingAve_PressureCombined), 0, SIZEOF(s_aHmi_MovingAve_PressureCombined));
+	
+END_IF
+
+IF i_bStaHmiLogging AND s_tonDiagnosticsHmi.Q THEN
+	
+		FOR s_nCounterPolish := s_nCounterDiagRawArray TO c_nHmiLogSize DO
+			IF s_nCounterDiagRawArray > 1 THEN
+				s_aHmiMovingAve_WaterPresure[1,s_nCounterPolish].x 		:= s_aHmiMovingAve_WaterPresure[1,s_nCounterDiagRawArray-1].x;
+				s_aHmiMovingAve_R14Pressure[1,s_nCounterPolish].x 		:= s_aHmiMovingAve_R14Pressure[1,s_nCounterDiagRawArray-1].x;
+				s_aHmiMovingAve_WaterTemperature[1,s_nCounterPolish].x 	:= s_aHmiMovingAve_WaterTemperature[1,s_nCounterDiagRawArray-1].x;
+				s_aHmiMovingAve_R14Temperature[1,s_nCounterPolish].x 	:= s_aHmiMovingAve_R14Temperature[1,s_nCounterDiagRawArray-1].x;
+				s_aHmi_PumpedWaterVolume[1,s_nCounterPolish].x			:= s_aHmi_PumpedWaterVolume[1,s_nCounterDiagRawArray-1].x;
+				s_aHmi_VoltageMeasurement[1,s_nCounterPolish].x			:= s_aHmi_VoltageMeasurement[1,s_nCounterDiagRawArray-1].x;
+				
+				s_aHmi_MovingAve_TemperatureCombined[1,s_nCounterPolish].x 	:= s_aHmi_MovingAve_TemperatureCombined[1,s_nCounterDiagRawArray-1].x;		
+				s_aHmi_MovingAve_TemperatureCombined[2,s_nCounterPolish].x 	:= s_aHmi_MovingAve_TemperatureCombined[2,s_nCounterDiagRawArray-1].x;
+				s_aHmi_MovingAve_PressureCombined[1,s_nCounterPolish].x 	:= s_aHmi_MovingAve_PressureCombined[1,s_nCounterDiagRawArray-1].x;		
+				s_aHmi_MovingAve_PressureCombined[2,s_nCounterPolish].x 	:= s_aHmi_MovingAve_PressureCombined[2,s_nCounterDiagRawArray-1].x;
+		
+				s_aHmiMovingAve_WaterPresure[1,s_nCounterPolish].y 		:= s_aHmiMovingAve_WaterPresure[1,s_nCounterDiagRawArray-1].y;
+				s_aHmiMovingAve_R14Pressure[1,s_nCounterPolish].y		:= s_aHmiMovingAve_R14Pressure[1,s_nCounterDiagRawArray-1].y;
+				s_aHmiMovingAve_WaterTemperature[1,s_nCounterPolish].y 	:= s_aHmiMovingAve_WaterTemperature[1,s_nCounterDiagRawArray-1].y;
+				s_aHmiMovingAve_R14Temperature[1,s_nCounterPolish].y 	:= s_aHmiMovingAve_R14Temperature[1,s_nCounterDiagRawArray-1].y;
+				s_aHmi_PumpedWaterVolume[1,s_nCounterPolish].y 			:= s_aHmi_PumpedWaterVolume[1,s_nCounterDiagRawArray-1].y;
+				s_aHmi_VoltageMeasurement[1,s_nCounterPolish].y 		:= s_aHmi_VoltageMeasurement[1,s_nCounterDiagRawArray-1].y;
+				
+				s_aHmi_MovingAve_TemperatureCombined[1,s_nCounterPolish].y 	:= s_aHmi_MovingAve_TemperatureCombined[1,s_nCounterDiagRawArray-1].y;		
+				s_aHmi_MovingAve_TemperatureCombined[2,s_nCounterPolish].y 	:= s_aHmi_MovingAve_TemperatureCombined[2,s_nCounterDiagRawArray-1].y;
+				s_aHmi_MovingAve_PressureCombined[1,s_nCounterPolish].y 	:= s_aHmi_MovingAve_PressureCombined[1,s_nCounterDiagRawArray-1].y;		
+				s_aHmi_MovingAve_PressureCombined[2,s_nCounterPolish].y 	:= s_aHmi_MovingAve_PressureCombined[2,s_nCounterDiagRawArray-1].y;
+			END_IF
+		END_FOR
+		
+	//Raw data logging of sensor (Discuss with marco if this can be raw or needs to be the low pass filter data)
+	IF s_nCounterDiagRawArray <= c_nHmiLogSize THEN
+		s_aHmiMovingAve_WaterPresure[1,s_nCounterDiagRawArray].x 		   	:= (TO_LREAL(s_nCounterDiagRawArray)*(1/TO_LREAL(c_tmHmiLogFreq)));
+		s_aHmiMovingAve_R14Pressure[1,s_nCounterDiagRawArray].x 		    := (TO_LREAL(s_nCounterDiagRawArray)*(1/TO_LREAL(c_tmHmiLogFreq)));
+		s_aHmiMovingAve_WaterTemperature[1,s_nCounterDiagRawArray].x 		:= (TO_LREAL(s_nCounterDiagRawArray)*(1/TO_LREAL(c_tmHmiLogFreq)));
+		s_aHmiMovingAve_R14Temperature[1,s_nCounterDiagRawArray].x 	  		:= (TO_LREAL(s_nCounterDiagRawArray)*(1/TO_LREAL(c_tmHmiLogFreq)));
+		s_aHmi_PumpedWaterVolume[1,s_nCounterDiagRawArray].x			    := (TO_LREAL(s_nCounterDiagRawArray)*(1/TO_LREAL(c_tmHmiLogFreq)));
+		s_aHmi_VoltageMeasurement[1,s_nCounterDiagRawArray].x			    := (TO_LREAL(s_nCounterDiagRawArray)*(1/TO_LREAL(c_tmHmiLogFreq)));
+		s_aHmi_MovingAve_TemperatureCombined[1,s_nCounterDiagRawArray].x 	:= (TO_LREAL(s_nCounterDiagRawArray)*(1/TO_LREAL(c_tmHmiLogFreq)));
+		s_aHmi_MovingAve_TemperatureCombined[2,s_nCounterDiagRawArray].x 	:=(TO_LREAL(s_nCounterDiagRawArray)*(1/TO_LREAL(c_tmHmiLogFreq)));
+		s_aHmi_MovingAve_PressureCombined[1,s_nCounterDiagRawArray].x 		:= (TO_LREAL(s_nCounterDiagRawArray)*(1/TO_LREAL(c_tmHmiLogFreq)));
+		s_aHmi_MovingAve_PressureCombined[2,s_nCounterDiagRawArray].x 		:=(TO_LREAL(s_nCounterDiagRawArray)*(1/TO_LREAL(c_tmHmiLogFreq)));
+
+		s_aHmiMovingAve_WaterPresure[1,s_nCounterDiagRawArray].y			:= s_fbMvAveWaterPressure.p_fMovingAverage;       
+		s_aHmiMovingAve_R14Pressure[1,s_nCounterDiagRawArray].y				:= s_fbMvAveR14Pressure.p_fMovingAverage;  
+		s_aHmiMovingAve_WaterTemperature[1,s_nCounterDiagRawArray].y		:= s_fbMvAveWaterTemperature.p_fMovingAverage;      
+		s_aHmiMovingAve_R14Temperature[1,s_nCounterDiagRawArray].y			:= s_fbMvAveR14Temperature.p_fMovingAverage;
+		s_aHmi_PumpedWaterVolume[1,s_nCounterDiagRawArray].y				:= s_fPumpedVolume - s_fStartVolumePumped;
+		s_aHmi_VoltageMeasurement[1,s_nCounterDiagRawArray].y				:=  s_CmVoltageMeasurement.p_fMeasurement;
+	
+		s_aHmi_MovingAve_TemperatureCombined[1,s_nCounterDiagRawArray].y 	:= s_fbMvAveWaterTemperature.p_fMovingAverage;  
+		s_aHmi_MovingAve_TemperatureCombined[2,s_nCounterDiagRawArray].y 	:= s_fbMvAveR14Temperature.p_fMovingAverage;
+		s_aHmi_MovingAve_PressureCombined[1,s_nCounterDiagRawArray].y 		:= s_fbMvAveWaterPressure.p_fMovingAverage;     
+		s_aHmi_MovingAve_PressureCombined[2,s_nCounterDiagRawArray].y 		:= s_fbMvAveR14Pressure.p_fMovingAverage;  
+
+	END_IF
+	
+	s_nCounterDiagRawArray := s_nCounterDiagRawArray + 1;
+
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_HmiPlots_Test" Id="{ac4d79a0-338a-4f01-97b6-48154040c275}" FolderPath="Administrative\">
+      <Declaration><![CDATA[METHOD PRIVATE _m_HmiPlots_Test
+VAR_INPUT
+	i_bStaHmiLogging 	: BOOL;
+	i_bNewMeasurement	: BOOL;
+END_VAR
+VAR_INST
+	s_tonDiagnosticsHmi 	: TON;	
+
+	s_osrDiagnositcsHmi		: R_TRIG;
+	s_osfDiagnositcsHmi		: F_TRIG;
+	
+	s_osrDiagnositcsHmi		: R_TRIG;
+	s_osfDiagnositcsHmi		: F_TRIG;
+	
+	s_nCounterMeasurements	: UDINT;
+	
+	s_nCounterPolish		: UDINT;
+	
+	s_fStartVolumePumped 	: LREAL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[s_osrDiagnositcsHmi(CLK := i_bStaHmiLogging);
+s_osfDiagnositcsHmi(CLK := i_bStaHmiLogging);
+
+IF s_osrDiagnositcsHmi.Q THEN
+	s_nCounterMeasurements 	:= 1;
+		
+	MEMSET(ADR(s_aHmi_MagneticTest), 0, SIZEOF(s_aHmi_MagneticTest));
+END_IF
+
+IF i_bStaHmiLogging AND i_bNewMeasurement THEN
+	FOR s_nCounterPolish := s_nCounterMeasurements TO c_nResultDataSize DO
+		IF s_nCounterMeasurements > 1 THEN
+			s_aHmi_MagneticTest[1,s_nCounterPolish].x 			:= s_aHmi_MagneticTest[1,s_nCounterMeasurements-1].x;
+			s_aHmi_MagneticTest[2,s_nCounterPolish].x 			:= s_aHmi_MagneticTest[2,s_nCounterMeasurements-1].x;
+			s_aHmi_MagneticTest[3,s_nCounterPolish].x 			:= s_aHmi_MagneticTest[3,s_nCounterMeasurements-1].x;
+			s_aHmi_MagneticTest[4,s_nCounterPolish].x 			:= s_aHmi_MagneticTest[4,s_nCounterMeasurements-1].x;
+
+			s_aHmi_MagneticTest[1,s_nCounterPolish].y			:= s_aHmi_MagneticTest[1,s_nCounterMeasurements-1].y;
+			s_aHmi_MagneticTest[2,s_nCounterPolish].y			:= s_aHmi_MagneticTest[2,s_nCounterMeasurements-1].y;
+			s_aHmi_MagneticTest[3,s_nCounterPolish].y			:= s_aHmi_MagneticTest[3,s_nCounterMeasurements-1].y;
+			s_aHmi_MagneticTest[4,s_nCounterPolish].y 			:= s_aHmi_MagneticTest[4,s_nCounterMeasurements-1].y;
+		END_IF
+	END_FOR
+	
+	s_nCounterMeasurements := s_nCounterMeasurements + 
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Init" Id="{f5588ebd-495a-4c31-a7f5-23415377d40e}" FolderPath="General\">
+      <Declaration><![CDATA[METHOD Protected _m_Init : BOOL
+VAR_INPUT
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT SUPER^._m_Init() THEN
+	RETURN;
+END_IF
+
+//----------------------------------//
+//CM
+	s_CmProbeMotor.i_bReqEnable						:= FALSE;
+	s_CmProbeMotor.i_sCmName 						:= 'Probe motor';
+	s_CmProbeMotor.i_eBtnCtrlType					:= E_HmiButtonType.PUSHBUTTON;
+	s_CmProbeMotor.i_bCfgReverseDirection			:= FALSE;
+	s_CmProbeMotor.p_bCfgMovingForward				:= TRUE;
+	s_CmProbeMotor.p_bCfgMovingReverse				:= TRUE;
+	s_CmProbeMotor.p_fSetMotorVelo					:= 10;
+	
+	s_CmProbeMotor.i_stSettings.i_fAccelaration 	:= 1000;
+	s_CmProbeMotor.i_stSettings.i_fDecelaration		:= 1000;
+	s_CmProbeMotor.i_stSettings.i_fJerk				:= 10000;
+	
+	s_CmTeslaMeter.i_bReqEnable						:= FALSE;
+	s_CmTeslaMeter.i_stSettings.tConnectionTimeOut	:= T#5S;
+
+	
+//---------------------------------//	
+	
+//----------------------------------//	
+//Hmi 
+	s_fbHmiBtnDiagnosticsLogging.p_eButtontype 			:= E_HmiButtonType.TOGGLEBUTTON;
+	s_fbHmiBtnDiagnosticsLogging.p_bStaVisible 			:= TRUE;
+	s_fbHmiBtnDiagnosticsLogging.p_bStaEnabled 			:= TRUE;
+	s_fbHmiBtnDiagnosticsLogging.p_sBtnText				:= 'Diagnostics Logging';
+	
+	s_fbHmiBtnStart.p_eButtontype 						:= E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnStart.p_bStaVisible 						:= FALSE;
+	s_fbHmiBtnStart.p_bStaEnabled 						:= FALSE;		
+	s_fbHmiBtnStart.p_sBtnText							:= 'Start';
+
+	s_fbHmiBtnStop.p_eButtontype 						:= E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnStop.p_bStaVisible 						:= FALSE;
+	s_fbHmiBtnStop.p_bStaEnabled 						:= FALSE;		
+	s_fbHmiBtnStop.p_sBtnText							:= 'Stop';
+	
+	s_fbHmiBtnEnableMotor.p_eButtontype 				:= E_HmiButtonType.TOGGLEBUTTON;
+	s_fbHmiBtnEnableMotor.p_bStaVisible 				:= TRUE;
+	s_fbHmiBtnEnableMotor.p_bStaEnabled 				:= FALSE;		
+	s_fbHmiBtnEnableMotor.p_sBtnText					:= 'Enable motor';
+	
+	s_fbHmiBtnGetField.p_eButtontype 					:= E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnGetField.p_bStaVisible 					:= TRUE;
+	s_fbHmiBtnGetField.p_bStaEnabled 					:= FALSE;		
+	s_fbHmiBtnGetField.p_sBtnText						:= 'Get magnetic field';
+	
+	s_fbHmiBtnHomeMotor.p_eButtontype 					:= E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnHomeMotor.p_bStaVisible 					:= TRUE;
+	s_fbHmiBtnHomeMotor.p_bStaEnabled 					:= FALSE;		
+	s_fbHmiBtnHomeMotor.p_sBtnText						:= 'Home motor';
+//----------------------------------//	
+
+
+//----------------------------------//	
+//Initialize all moving averages
+
+//----------------------------------//	
+
+//----------------------------------//	
+//Inputs
+s_diTableDownSensor.i_stSettings.tmInputDelay	:= T#0S;	
+s_diBtnTableDown.i_stSettings.tmInputDelay		:= T#0S;
+s_diBtnStop.i_stSettings.tmInputDelay			:= T#0S;
+//----------------------------------//	
+
+//----------------------------------//	
+//Inputs
+s_doRelayTableDown.i_stSettings.bCfgDelay		:= FALSE;	
+s_doRelayTableDown.i_stSettings.tmOutputDelay	:= T#0S;	
+//----------------------------------//	
+
+_m_Init := TRUE;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Inputs" Id="{08e3676c-19d2-4657-8762-4d7303d85c82}" FolderPath="General\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Inputs : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT SUPER^._m_Inputs() THEN
+	RETURN;
+END_IF
+
+s_diTableDownSensor();
+s_diBtnTableDown();	
+s_diBtnStop();			
+
+_m_Inputs := TRUE;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Manual" Id="{b1ba78d1-de13-4a0c-aa03-999980f6a4be}" FolderPath="Procedures\">
+      <Declaration><![CDATA[METHOD PRIVATE _m_Manual : E_STATE
+VAR_INPUT
+	i_bCmdReset			: BOOL;
+	i_bStaError			: BOOL;
+END_VAR
+VAR_INST
+	//Sequence control
+	s_eSequence				: E_ManualMode_Steps;
+	s_fbSeqControl			: FB_SeqControl;
+	
+	s_nInternalStep			: UINT := 0;
+	
+	//Communication
+	s_aReplyBuffer			: ARRAY[1..100] OF T_MAXSTRING; //Tesla
+	s_aResults				: ARRAY[1..10 ] OF T_MAXSTRING;	//Tesla
+	s_sReply				: T_MAXSTRING;
+	s_nIndexReply 			: UDINT := 1;
+	s_nIndexResults			: UDINT := 1;
+	
+	//Measurements
+	s_fMagneticX			: LREAL;
+	s_fMagneticY			: LREAL;
+	s_fMagneticZ			: LREAL;
+	s_fMagneticMagnitude 	: LREAL;
+END_VAR
+VAR
+	t_nCyclceReplies			: UDINT := 1;
+	t_nMeasurementsReceived		: UDINT := 1;
+	
+	t_fAveragingX				: LREAL;
+	t_fAveragingY				: LREAL;
+	t_fAveragingZ				: LREAL;
+
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[s_fbSeqControl(
+	i_nSeqStep:= s_eSequence, 
+	i_sStepName:= TO_STRING(s_eSequence), 
+	i_bCmdReset:= i_bCmdReset, 
+	i_bStaError:= i_bStaError,  
+	q_eActState=> _m_Manual);
+	
+IF GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_osrBtnPress AND s_eSequence <> E_ManualMode_Steps.Error AND s_eSequence <> E_ManualMode_Steps.Start THEN
+	s_eSequence := E_ManualMode_Steps.Error;
+END_IF
+
+IF GVL.g_sToHmiMiddleContent = GVL.g_stHmiMiddle.AlarmManager THEN
+	GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_sBtnText	 	:= 'Return';
+END_IF
+
+CASE s_eSequence OF
+	E_ManualMode_Steps.Idle:
+		;
+		
+	E_ManualMode_Steps.Start:
+		IF s_fbSeqControl.q_bStaEntry THEN
+			GVL.g_eStaLedColor := E_KmweLedColors.Green;
+			
+			s_fbHmiBtnEnableMotor.p_bStaEnabled 						:= TRUE;
+			s_fbHmiBtnGetField.p_bStaEnabled 							:= TRUE;
+			GVL_KMWEGenericLib.g_fbHmiBtnReturnToStart.p_bStaEnabled 	:= TRUE;
+		END_IF
+	
+		IF GVL.g_sToHmiMiddleContent <> GVL.g_stHmiMiddle.AlarmManager THEN
+			GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled 	:= FALSE;
+			GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible 	:= FALSE;
+			GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_sBtnText	 	:= 'Return';
+		END_IF
+		
+		IF s_fbHmiBtnEnableMotor.p_osrBtnPress OR s_fbHmiBtnEnableMotor.p_osfBtnPress THEN
+			GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled 	:= TRUE;
+			GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible 	:= TRUE;
+			GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_sBtnText	 	:= 'Stop action';		
+		
+			s_fbHmiBtnEnableMotor.p_bStaEnabled 						:= FALSE;
+			s_fbHmiBtnHomeMotor.p_bStaEnabled							:= FALSE;
+			s_fbHmiBtnGetField.p_bStaEnabled 							:= FALSE;
+			
+			GVL_KMWEGenericLib.g_fbHmiBtnReturnToStart.p_bStaEnabled 	:= FALSE;
+			s_eSequence 												:= E_ManualMode_Steps.EnableDisableMotor;
+		END_IF
+		
+		IF s_fbHmiBtnGetField.p_osrBtnPress THEN
+			GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled 			:= TRUE;
+			GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible 			:= TRUE;
+			GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_sBtnText	 			:= 'Stop action';	
+		                                                                
+			GVL_KMWEGenericLib.g_fbHmiBtnReturnToStart.p_bStaEnabled 	:= FALSE;
+			s_fbHmiBtnGetField.p_bStaEnabled 							:= FALSE;
+			s_fbHmiBtnEnableMotor.p_bStaEnabled 						:= FALSE;
+			
+			s_fMagneticMagnitude										:= 0;
+			                                                            
+			s_eSequence													:= E_ManualMode_Steps.ConnectTesla;
+		END_IF
+		
+		IF s_CmProbeMotor.p_bStaEnabled THEN
+			IF s_fbHmiBtnHomeMotor.p_osrBtnPress THEN
+				GVL_KMWEGenericLib.g_fbHmiBtnReturnToStart.p_bStaEnabled 	:= FALSE;
+				s_eSequence 												:= E_ManualMode_Steps.HomeMotor;
+			END_IF
+		END_IF
+		
+		s_doRelayTableDown.i_bStaOutput	:= NOT s_diTableDownSensor.p_bStaInput 
+											AND s_diBtnTableDown.p_bStaInput 
+											AND NOT s_diBtnStop.p_bStaInput;
+		
+	E_ManualMode_Steps.EnableDisableMotor:
+		IF s_fbHmiBtnEnableMotor.p_bStaBtn THEN
+			s_CmProbeMotor.i_bReqEnable 			:= TRUE;
+			s_CmProbeMotor.p_fSetMotorVelo			:= 100;
+			
+			IF s_CmProbeMotor.m_EnableAxis() THEN
+				s_fbHmiBtnHomeMotor.p_bStaEnabled 	:= TRUE;
+				s_eSequence 						:= E_ManualMode_Steps.Start;	
+			END_IF
+		END_IF
+		
+		IF NOT s_fbHmiBtnEnableMotor.p_bStaBtn THEN
+			IF s_CmProbeMotor.m_DisableAxis() THEN
+				s_fbHmiBtnHomeMotor.p_bStaEnabled 	:= FALSE;
+				s_CmProbeMotor.i_bReqEnable 		:= FALSE;
+				s_eSequence 						:= E_ManualMode_Steps.Start;	
+			END_IF
+		END_IF
+		
+	E_ManualMode_Steps.HomeMotor:
+		IF s_fbSeqControl.q_bStaEntry THEN
+			s_sToHmiInstructionText := 'Motor homing';	
+		END_IF
+		
+		IF NOT GVL.g_fbHmiBtnSimulation.p_bStaBtn THEN
+			IF s_CmProbeMotor.m_HomeMotor() OR (NOT s_CmProbeMotor.p_bStaHoming AND NOT s_fbSeqControl.q_bStaEntry) THEN
+				s_eSequence := E_ManualMode_Steps.Start;
+			END_IF
+		ELSE
+			IF s_CmProbeMotor.m_SetPosition(i_fPosition := 0) THEN
+				s_eSequence := E_ManualMode_Steps.Start;
+			END_IF
+		END_IF
+
+	E_ManualMode_Steps.ConnectTesla:
+		IF s_fbSeqcontrol.q_bStaEntry THEN
+			s_CmTeslaMeter.i_bReqEnable					:= TRUE;
+			s_CmTeslaMeter.i_stSettings.sMetrelIpAdress := s_fbParamTeslaMeterIp.p_sValue;
+			s_CmTeslaMeter.i_stSettings.sMetrelPort 	:= TO_UDINT(s_fbParamTeslaMeterPort.p_fValue);
+		END_IF
+		
+		IF  s_CmTeslaMeter.m_Connect() THEN
+			s_eSequence 	:= E_ManualMode_Steps.ConfigureTesla;
+		END_IF
+		
+	E_ManualMode_Steps.ConfigureTesla:
+		IF s_CmTeslaMeter.m_SendCommand(i_sCommand := s_stCommandsTesla.sSetModeDC , i_bAddCRChar := TRUE) THEN
+			s_eSequence 	:= E_ManualMode_Steps.MeasureMagneticField;
+		END_IF
+
+	E_ManualMode_Steps.MeasureMagneticField:
+		IF _m_GetMagneticField(i_bCmdReset 		:= s_fbSeqControl.q_bStaEntry,
+								q_fMagneticX 	=> s_fMagneticX,
+								q_fMagneticY 	=> s_fMagneticY,
+								q_fMagneticZ 	=> s_fMagneticZ) = E_STATE.Ready 
+		THEN
+			s_fMagneticMagnitude := SQRT((s_fMagneticX*s_fMagneticX) + ((s_fMagneticY*s_fMagneticY)));
+
+			s_eSequence := 	E_ManualMode_Steps.DisconnectTesla;
+		END_IF
+		
+	E_ManualMode_Steps.DisconnectTesla:
+		IF s_CmTeslaMeter.m_Disconnect() THEN
+			s_CmTeslaMeter.i_bReqEnable					:= FALSE;
+			s_eSequence 								:= E_ManualMode_Steps.Start;
+		END_IF
+	
+	E_ManualMode_Steps.Error:
+		IF s_fbSeqControl.q_bStaEntry THEN
+			s_fbHmiBtnEnableMotor.m_Off();
+			s_fbHmiBtnEnableMotor.p_bStaEnabled 	:= FALSE;
+			s_fbHmiBtnHomeMotor.p_bStaEnabled	 	:= FALSE;
+			
+			GVL_KMWEGenericLib.g_fbHmiBtnReturnToStart.p_bStaVisible 	:= TRUE;
+			GVL_KMWEGenericLib.g_fbHmiBtnReturnToStart.p_bStaEnabled 	:= TRUE;
+		END_IF
+		
+		IF GVL.g_sToHmiMiddleContent <> GVL.g_stHmiMiddle.AlarmManager THEN
+			GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled 	:= FALSE;
+			GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible 	:= FALSE;	
+			GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_sBtnText	 	:= 'Return';
+		END_IF
+	
+		IF s_CmTeslaMeter.p_bConnected THEN
+			IF s_CmTeslaMeter.m_Disconnect() THEN 
+				s_CmTeslaMeter.i_bReqEnable := FALSE;
+			END_IF
+		ELSE
+			s_CmTeslaMeter.i_bReqEnable := FALSE;
+		END_IF
+	
+		IF s_CmProbeMotor.p_bStaMoving THEN
+			s_CmProbeMotor.m_StopMoving();
+		ELSIF s_CmProbeMotor.p_bStaEnabled THEN
+			s_CmProbeMotor.m_DisableAxis();
+		END_IF
+		
+		IF NOT GVL_KMWEGenericLib.g_fbAlarmManager.p_bAlarmActive AND NOT s_CmProbeMotor.p_bStaEnabled AND NOT s_CmTeslaMeter.p_bConnected THEN
+			s_eSequence := E_ManualMode_Steps.Start;
+		END_IF
+END_CASE]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Outputs" Id="{f763b42e-2a14-49e4-aeec-3b4dc606af2b}" FolderPath="General\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Outputs : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT SUPER^._m_Outputs() THEN
+	RETURN;
+END_IF
+
+s_doRelayTableDown(); //i_bStaOutput written in procedure or manual mode
+
+_m_Outputs := TRUE;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Params" Id="{02936153-be53-403e-812d-8d9a77c13756}" FolderPath="General\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Params : BOOL
+VAR_INST
+	s_fToHmiXAxisMin	: LREAL;
+	s_fToHmiXAxisMax	: LREAL;
+	s_fToHmiYAxisMin	: LREAL;
+	s_fToHmiYAxisMax	: LREAL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT SUPER^._m_Params() THEN
+	RETURN;
+END_IF
+
+s_fbParamToolHardwareNr(i_fDefaultValue				:= 0,
+						i_nArrayFolderIndex			:= 1,
+						i_sName						:= 'Harware ID',
+						i_bIsNumber					:= FALSE);
+
+s_fbParamToolSoftwareVersion(i_fDefaultValue		:= 0,
+							i_nArrayFolderIndex		:= 1,
+							i_sName					:= 'Software Version',
+							i_bIsNumber				:= FALSE);
+
+s_fbParamName(i_fDefaultValue						:= 0,
+				i_nArrayFolderIndex					:= 1,
+				i_sName								:= 'Description',
+				i_bIsNumber							:= FALSE);
+							
+s_fbParamTeslaMeterIp(i_fDefaultValue			:= 0,
+						i_nArrayFolderIndex		:= 1,
+						i_sName					:= 'Tesla meter ip adress',
+						i_bIsNumber				:= FALSE);
+						
+s_fbParamTeslaMeterPort(i_fDefaultValue			:= 0,
+						i_nArrayFolderIndex		:= 1,
+						i_sName					:= 'Tesla meter port number',
+						i_bIsNumber				:= TRUE);
+
+//---------
+
+						
+s_fbParamTotalStroke(i_fDefaultValue			:= 100,
+						i_nArrayFolderIndex		:= 2,
+						i_sName					:= 'Total measurement stroke',
+						i_bIsNumber				:= TRUE);
+						
+s_fbParamStepStroke(i_fDefaultValue				:= 10,
+						i_nArrayFolderIndex		:= 2,
+						i_sName					:= 'Step distance per measurement',
+						i_bIsNumber				:= TRUE);
+
+s_fbParamAveragingNumberTest(i_fDefaultValue		:= 10,
+							i_nArrayFolderIndex		:= 2,
+							i_sName					:= 'Number of measurements per step for averaging the magnetic field',
+							i_bIsNumber				:= TRUE);
+							
+s_fbParamaMaxMagnitudeCriteria(i_fDefaultValue		:= 100,
+							i_nArrayFolderIndex		:= 2,
+							i_sName					:= 'Maximum allowed magnitude magnetic field (Test)',
+							i_bIsNumber				:= TRUE);
+
+s_fbParamRefIduBottom(i_fDefaultValue				:= 0,
+							i_nArrayFolderIndex		:= 2,
+							i_sName					:= 'Distance from home position to lower IDU Bottom',
+							i_bIsNumber				:= TRUE);
+							
+s_fbParamRefItm(i_fDefaultValue						:= 0,
+							i_nArrayFolderIndex		:= 2,
+							i_sName					:= 'Distance from home position Itm lower IDU / upper IDU',
+							i_bIsNumber				:= TRUE);
+							
+s_fbParamRefCenterTpmPipe(i_fDefaultValue			:= 0,
+							i_nArrayFolderIndex		:= 2,
+							i_sName					:= 'Distance from home position to centre TPM pipe',
+							i_bIsNumber				:= TRUE);
+							
+s_fbParamRefCpValve(i_fDefaultValue		:= 0,
+							i_nArrayFolderIndex		:= 2,
+							i_sName					:= 'Distance from home position to bottom C/P valve',
+							i_bIsNumber				:= TRUE);				
+
+GVL_DataLogging.g_stReportData.CabinetSerialNumber      := s_fbParamToolHardwareNr.p_sValue;
+GVL_DataLogging.g_stReportData.TesterSoftwareVersion    := s_fbParamToolSoftwareVersion.p_sValue;
+GVL_DataLogging.g_stReportData.Operator                 := GVL.g_sUser;
+GVL_DataLogging.g_stReportData.Note						:= GVL.g_sNotesEntry;
+//GVL_DataLogging.g_stReportData.Message can be filled in test procedure with for example the error if test is stopped
+GVL_DataLogging.g_stReportData.SerialNumber             := GVL.g_sSerialNumber;
+
+s_fToHmiXAxisMin	:= -2*s_fbParamaMaxMagnitudeCriteria.p_fValue;
+s_fToHmiXAxisMax	:= 2*s_fbParamaMaxMagnitudeCriteria.p_fValue;
+s_fToHmiYAxisMin	:= s_CmProbeMotor.p_fHomePosition;
+s_fToHmiYAxisMax	:= s_fbParamRefCpValve.p_fValue*1.2;
+
+_m_Params := TRUE;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_PrepareDataFile" Id="{fb1741c7-802f-41e2-a9c9-3469959c243c}" FolderPath="Administrative\">
+      <Declaration><![CDATA[METHOD PRIVATE _m_PrepareDataFile : BOOL
+VAR CONSTANT
+	c_nStartRow : UINT := 10;
+END_VAR
+VAR_INPUT
+	i_nTotalMeasurementSteps : UINT;
+END_VAR
+VAR
+	t_nCounter : UINT;
+END_VAR	
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//Tester data
+GVL_DataLogging.g_aLoggingDataMagnetic[1,2] := GVL_DataLogging.g_stReportData.CabinetSerialNumber;
+GVL_DataLogging.g_aLoggingDataMagnetic[2,2] := GVL_DataLogging.g_stReportData.TesterSoftwareVersion;
+GVL_DataLogging.g_aLoggingDataMagnetic[3,2] := GVL_DataLogging.g_stReportData.Operator;
+GVL_DataLogging.g_aLoggingDataMagnetic[4,2] := GVL_DataLogging.g_stReportData.Message;
+GVL_DataLogging.g_aLoggingDataMagnetic[5,2] := GVL_DataLogging.g_stReportData.Note;
+GVL_DataLogging.g_aLoggingDataMagnetic[6,2] := GVL_KMWEGenericLib.g_fbCurrentTime.p_sCurrentDateTime_File;
+GVL_DataLogging.g_aLoggingDataMagnetic[7,2] := GVL_DataLogging.g_stReportData.SerialNumber;	
+GVL_DataLogging.g_aLoggingDataMagnetic[8,2] := s_sTestResult;	
+
+//Product and test data
+FOR t_nCounter := 0 TO i_nTotalMeasurementSteps DO
+	GVL_DataLogging.g_aLoggingDataMagnetic[c_nStartRow+t_nCounter,1] :=	TO_STRING(s_aProbePositionZ[t_nCounter]);	
+	GVL_DataLogging.g_aLoggingDataMagnetic[c_nStartRow+t_nCounter,2] := TO_STRING(s_aMagneticX[t_nCounter]);
+	GVL_DataLogging.g_aLoggingDataMagnetic[c_nStartRow+t_nCounter,3] :=	TO_STRING(s_aMagneticY[t_nCounter]);
+	GVL_DataLogging.g_aLoggingDataMagnetic[c_nStartRow+t_nCounter,4] :=	TO_STRING(s_aMagneticZ[t_nCounter]);
+	GVL_DataLogging.g_aLoggingDataMagnetic[c_nStartRow+t_nCounter,5] :=	TO_STRING(s_aMagneticMagnitude[t_nCounter]);
+END_FOR
+
+_m_PrepareDataFile := TRUE;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Procedure_Test" Id="{20c92f11-c293-4bd9-8121-fced590a54bd}" FolderPath="Procedures\">
+      <Declaration><![CDATA[METHOD PRIVATE _m_Procedure_Test : E_STATE
+VAR_INPUT
+	i_bCmdReset			: BOOL;
+	i_bStaError			: BOOL;
+END_VAR
+VAR_INST
+	//Sequence control
+	s_eSequence				: E_TestProcedure_Steps;
+	s_fbSeqControl			: FB_SeqControl;
+		
+	//Error handling
+	s_bErrorDBSaveDone			: BOOL;
+	s_bErrorHandlingDone		: BOOL;
+	
+	//Measurements
+	s_nTotalMeasurementSteps 	: UINT;
+	s_nMeasurementStep		 	: UINT; 	
+
+	s_fSimulationNumber			: LREAL;
+	
+	s_sXMLDataRow				: T_MAXSTRING;
+	
+END_VAR
+
+VAR
+	t_nCounterPolish			: UINT;
+	t_nCyclceReplies			: UDINT := 1;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[s_fbSeqControl(
+	i_nSeqStep:= s_eSequence, 
+	i_sStepName:= TO_STRING(s_eSequence), 
+	i_bCmdReset:= i_bCmdReset, 
+	i_bStaError:= i_bStaError,  
+	q_eActState=> _m_Procedure_Test);
+	
+IF _m_Procedure_Test = E_State.Busy THEN
+	s_nToHmiStepNr := s_eSequence; 	
+	
+	s_fbHmiBtnStop.p_bStaEnabled := TRUE;
+	s_fbHmiBtnStop.p_bStaVisible := TRUE;		
+END_IF									
+			
+CASE s_eSequence OF
+	E_TestProcedure_Steps.Idle:
+		;
+	
+	E_TestProcedure_Steps.Start:
+		IF s_fbSeqControl.q_bStaEntry THEN
+			MEMSET(ADR(GVL_DataLogging.g_aLoggingDataMagnetic), 0, SIZEOF(GVL_DataLogging.g_aLoggingDataMagnetic));	
+
+			MEMSET(ADR(s_aHmi_MagneticTest)		, 0, SIZEOF(s_aHmi_MagneticTest));
+			
+			MEMSET(ADR(s_aMagneticX)			, 0, SIZEOF(s_aMagneticX));
+			MEMSET(ADR(s_aMagneticY)			, 0, SIZEOF(s_aMagneticY));
+			MEMSET(ADR(s_aMagneticZ)			, 0, SIZEOF(s_aMagneticZ));
+			MEMSET(ADR(s_aMagneticMagnitude)	, 0, SIZEOF(s_aMagneticMagnitude));
+			MEMSET(ADR(s_aProbePositionZ) 		, 0, SIZEOF(s_aProbePositionZ));
+		
+			MEMSET(ADR(s_sXMLData)				, 0, SIZEOF(s_sXMLData)); 
+			
+			GVL.g_sToHmiMiddleContent := GVL.g_stHmiMiddle.OperatorPrepareTester;	
+			
+			s_fbHmiBtnStart.p_bStaEnabled 						:= FALSE;
+			s_fbHmiBtnStart.p_bStaVisible 						:= FALSE;
+			
+			GVL.g_eStaLedColor									:= E_KmweLedColors.Green;
+			GVL.g_bLedFlashFast									:= FALSE;
+			GVL.g_bLedFlashSlow									:= FALSE;
+			
+			GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled	:= FALSE;
+			GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible	:= FALSE;
+
+			s_sTestResult				:= 'Busy';
+			s_sToHmiProcedure 			:= 'Magnetic field test';
+			s_nToHmiMaxStepNr 			:= TO_INT(E_TestProcedure_Steps.OperatorDisconnect);
+
+			s_nTotalMeasurementSteps 	:= TO_UINT(s_fbParamTotalStroke.p_fValue/s_fbParamStepStroke.p_fValue);
+			s_nMeasurementStep			:= 0;
+			
+			s_fSimulationNumber			:= 2;
+		END_IF
+		
+		s_eSequence := E_TestProcedure_Steps.ConnectDb;
+		
+	E_TestProcedure_Steps.ConnectDb:
+		IF s_fbSeqControl.q_bStaEntry THEN
+			s_sToHmiInstructionText := 'Connecting to the DB';
+		END_IF
+			
+		IF GVL_Datalogging.g_fbSqlDatabase.m_Connect() 
+			AND GVL_KMWEGenericLib.g_fbCurrentTime.m_GetTime() 
+		THEN
+			s_eSequence := E_TestProcedure_Steps.InitializeDB;
+		END_IF
+
+	E_TestProcedure_Steps.InitializeDB:
+			IF s_fbSeqcontrol.q_bStaEntry THEN	
+				s_sToHmiInstructionText := 'Initialize a new DB entry';
+			END_IF
+			
+			IF GVL_Datalogging.g_fbSqlDatabase.m_NewTableRow(i_sTableName 	:= GVL_Datalogging.c_sTableNameMagnetic,
+												i_sIdentificationColumnName := GVL_Datalogging.c_sIdentificationColumnDataTime,
+												i_sIdentificationValue		:=	GVL_KMWEGenericLib.g_fbCurrentTime.p_sCurrentDateTime_DB)
+			THEN
+				s_eSequence := E_TestProcedure_Steps.InitializeDataLogging;
+			END_IF
+	
+	E_TestProcedure_Steps.InitializeDataLogging:
+		IF s_fbSeqcontrol.q_bStaEntry THEN	
+			s_sToHmiInstructionText := 'Initialize a new result file';
+			
+			GVL_DataLogging.g_eDataAction		:= E_DataReadWriteActions.MagneticProcedure;
+			GVL_DataLogging.g_sFilenameFast		:= 'Data\InitialTest';	
+		END_IF
+		
+		GVL_DataLogging.g_bCmdResetReadFast 		:= s_fbSeqControl.q_bStaEntry;
+
+		IF GVL_DataLogging.g_fbDataLogger.q_eStaReadFast = E_State.Ready 
+			AND NOT s_fbSeqControl.q_bStaEntry THEN
+			s_eSequence := E_TestProcedure_Steps.OperatorMounting;
+		END_IF
+				
+	E_TestProcedure_Steps.OperatorMounting:
+		IF s_fbSeqControl.q_bStaEntry THEN
+			s_sToHmiInstructionText 								:= 'Placement of test product';
+			
+			GVL.g_bLedFlashSlow										:= TRUE;
+			GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaVisible	:= TRUE;
+		END_IF
+		
+		GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaEnabled		:= GVL.g_UnRMMT.s_diEmergencyBtn.p_bStaInput OR GVL.g_fbHmiBtnSimulation.p_bStaBtn;
+											
+		IF GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_osrBtnPress THEN
+ 			GVL.g_bLedFlashSlow										:= FALSE;
+			GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaEnabled	:= FALSE;
+			GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaVisible	:= FALSE;
+			
+			s_CmProbeMotor.i_bReqEnable								:= TRUE;
+			s_CmTeslaMeter.i_bReqEnable								:= TRUE;
+
+			GVL.g_sToHmiMiddleContent 								:= GVL.g_stHmiMiddle.OperatorMoveDown;	
+			s_eSequence 											:= E_TestProcedure_Steps.OperatorMoveTable;
+		END_IF
+		
+	E_TestProcedure_Steps.OperatorMoveTable:	
+		IF s_fbSeqControl.q_bStaEntry THEN
+			s_sToHmiInstructionText 								:= 'Placement of test product';
+			GVL.g_bConnectTestEquipment								:= TRUE;
+			GVL.g_bLedFlashSlow										:= TRUE;
+			
+			GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaVisible	:= TRUE;
+		END_IF
+	
+		s_doRelayTableDown.i_bStaOutput	:= NOT s_diTableDownSensor.p_bStaInput 
+											AND s_diBtnTableDown.p_bStaInput 
+											AND NOT s_diBtnStop.p_bStaInput;
+	
+		GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaEnabled	:= s_diBtnTableDown.p_bStaInput OR GVL.g_fbHmiBtnSimulation.p_bStaBtn;
+											
+		IF GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_osrBtnPress THEN
+			GVL.g_bLedFlashSlow										:= FALSE;
+			GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaEnabled	:= FALSE;
+			GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaVisible	:= FALSE;
+			
+			s_CmProbeMotor.i_bReqEnable								:= TRUE;
+			s_CmTeslaMeter.i_bReqEnable								:= TRUE;
+
+			GVL.g_sToHmiMiddleContent 	:= GVL.g_stHmiMiddle.ProcedureTesting;	
+			s_eSequence 				:= E_TestProcedure_Steps.EnableMotor;
+		END_IF	
+			
+	E_TestProcedure_Steps.EnableMotor:
+		IF s_fbSeqcontrol.q_bStaEntry THEN
+			s_sToHmiInstructionText := 'Enabling probe motor';	
+		END_IF
+		
+		IF s_CmProbeMotor.m_EnableAxis() THEN
+			s_eSequence 	:= E_TestProcedure_Steps.HomeMotor;
+		END_IF
+		
+	E_TestProcedure_Steps.HomeMotor:
+		IF s_fbSeqControl.q_bStaEntry THEN
+			s_sToHmiInstructionText := 'Motor homing';	
+		END_IF
+		
+		IF NOT GVL.g_fbHmiBtnSimulation.p_bStaBtn THEN
+			IF s_CmProbeMotor.m_HomeMotor() THEN
+				s_eSequence := E_TestProcedure_Steps.MoveToStart;
+			END_IF
+		ELSE
+			IF s_CmProbeMotor.m_SetPosition(i_fPosition := 0) THEN
+				s_eSequence := E_TestProcedure_Steps.MoveToStart;
+			END_IF
+		END_IF
+		
+	E_TestProcedure_Steps.MoveToStart:
+		IF s_fbSeqControl.q_bStaEntry THEN
+			s_sToHmiInstructionText := 'Moving to start position';	
+		END_IF	
+		
+		IF s_CmProbeMotor.m_MoveAbsolute(i_fSetPosition := 0) THEN
+			s_eSequence := E_TestProcedure_Steps.DisableMotor;
+		END_IF
+
+		
+	E_TestProcedure_Steps.DisableMotor:
+		IF s_fbSeqcontrol.q_bStaEntry THEN
+			s_sToHmiInstructionText := 'Disable probe motor before measurement';	
+		END_IF
+	
+		IF s_CmProbeMotor.m_DisableAxis() THEN
+			IF NOT GVL.g_fbHmiBtnSimulation.p_bStaBtn THEN
+				s_eSequence 	:= E_TestProcedure_Steps.ConnectTesla;
+			ELSE
+				s_eSequence 	:= E_TestProcedure_Steps.CalculateData;
+			END_IF
+		END_IF
+
+	E_TestProcedure_Steps.ConnectTesla:
+		IF s_fbSeqcontrol.q_bStaEntry THEN
+			s_sToHmiInstructionText := 'Connecting to probe';	
+			
+			s_CmTeslaMeter.i_stSettings.sMetrelIpAdress := s_fbParamTeslaMeterIp.p_sValue;
+			s_CmTeslaMeter.i_stSettings.sMetrelPort 	:= TO_UDINT(s_fbParamTeslaMeterPort.p_fValue);
+
+		END_IF
+		
+		IF GVL.g_fbHmiBtnSimulation.p_bStaBtn THEN
+			s_eSequence 	:= E_TestProcedure_Steps.CalculateData;
+		ELSIF  s_CmTeslaMeter.m_Connect() THEN
+			s_eSequence 	:= E_TestProcedure_Steps.ConfigureTesla;
+		END_IF
+		
+	E_TestProcedure_Steps.ConfigureTesla:
+		IF s_fbSeqcontrol.q_bStaEntry THEN
+			s_sToHmiInstructionText := 'Configuring to probe';	
+		END_IF
+		
+		IF s_CmTeslaMeter.m_SendCommand(i_sCommand := s_stCommandsTesla.sSetModeDC , i_bAddCRChar := FALSE) THEN
+			s_eSequence 	:= E_TestProcedure_Steps.MeasureMagneticField;
+		END_IF
+
+	E_TestProcedure_Steps.MeasureMagneticField:
+		IF s_fbSeqcontrol.q_bStaEntry THEN
+			s_sToHmiInstructionText := CONCAT('Measure magnetic field, ',
+										 	CONCAT('Measurement: ', 
+											CONCAT(TO_STRING(s_nMeasurementStep),
+											CONCAT('/',TO_STRING(s_nTotalMeasurementSteps)))));
+		
+		END_IF
+		
+		IF _m_GetMagneticField(i_bCmdReset 		:= s_fbSeqControl.q_bStaEntry,
+								q_fMagneticX 	=> s_aMagneticX[s_nMeasurementStep],
+								q_fMagneticY 	=> s_aMagneticY[s_nMeasurementStep],
+								q_fMagneticZ 	=> s_aMagneticZ[s_nMeasurementStep]) = E_STATE.Ready 
+		THEN
+			s_eSequence := 	E_TestProcedure_Steps.CalculateData;
+		END_IF
+		
+	E_TestProcedure_Steps.CalculateData:
+		IF s_fbSeqControl.q_bStaEntry THEN
+			s_sToHmiInstructionText := CONCAT('Calculate magnetic field, ',
+										 	CONCAT('Measurement: ', 
+											CONCAT(TO_STRING(s_nMeasurementStep),
+											CONCAT('/',TO_STRING(s_nTotalMeasurementSteps)))));	
+		
+			s_aProbePositionZ[s_nMeasurementStep] 		:= s_CmProbeMotor.p_fActualPos;
+			
+			IF GVL.g_fbHmiBtnSimulation.p_bStaBtn THEN		
+				s_aMagneticX[s_nMeasurementStep] 			:= 10*s_fSimulationNumber+ s_fSimulationNumber;
+				s_aMagneticY[s_nMeasurementStep] 			:= -5*s_fSimulationNumber - 3*s_fSimulationNumber/222;
+				s_aMagneticZ[s_nMeasurementStep] 			:= -12.0*s_fSimulationNumber + 0.3*s_fSimulationNumber*s_fSimulationNumber;
+				s_aMagneticMagnitude[s_nMeasurementStep]	:= SQRT((s_aMagneticX[s_nMeasurementStep]*s_aMagneticX[s_nMeasurementStep]) + (s_aMagneticY[s_nMeasurementStep] * s_aMagneticY[s_nMeasurementStep]));
+				s_fSimulationNumber 						:= s_fSimulationNumber + 1;
+			ELSE  
+				s_aMagneticMagnitude[s_nMeasurementStep]	:= SQRT((s_aMagneticX[s_nMeasurementStep]*s_aMagneticX[s_nMeasurementStep]) + (s_aMagneticY[s_nMeasurementStep] * s_aMagneticY[s_nMeasurementStep]));
+			END_IF
+						
+			//HMI plotting
+			s_aHmi_MagneticTest[1,s_nMeasurementStep].x	:= s_aMagneticX[s_nMeasurementStep];
+			s_aHmi_MagneticTest[2,s_nMeasurementStep].x := s_aMagneticY[s_nMeasurementStep];
+			s_aHmi_MagneticTest[3,s_nMeasurementStep].x := s_aMagneticMagnitude[s_nMeasurementStep];
+ 
+			
+			s_aHmi_MagneticTest[1,s_nMeasurementStep].y := s_aProbePositionZ[s_nMeasurementStep];
+			s_aHmi_MagneticTest[2,s_nMeasurementStep].y := s_aProbePositionZ[s_nMeasurementStep];
+			s_aHmi_MagneticTest[3,s_nMeasurementStep].y := s_aProbePositionZ[s_nMeasurementStep];
+
+			
+			FOR t_nCounterPolish := s_nMeasurementStep+1 TO c_nResultDataSize DO
+				IF s_nMeasurementStep > 0 THEN
+					s_aHmi_MagneticTest[1,t_nCounterPolish].x 			:= s_aHmi_MagneticTest[1,s_nMeasurementStep-1].x;
+					s_aHmi_MagneticTest[2,t_nCounterPolish].x 			:= s_aHmi_MagneticTest[2,s_nMeasurementStep-1].x;
+					s_aHmi_MagneticTest[3,t_nCounterPolish].x 			:= s_aHmi_MagneticTest[3,s_nMeasurementStep-1].x;
+
+					s_aHmi_MagneticTest[1,t_nCounterPolish].y			:= s_aHmi_MagneticTest[1,s_nMeasurementStep-1].y;
+					s_aHmi_MagneticTest[2,t_nCounterPolish].y			:= s_aHmi_MagneticTest[2,s_nMeasurementStep-1].y;
+					s_aHmi_MagneticTest[3,t_nCounterPolish].y			:= s_aHmi_MagneticTest[3,s_nMeasurementStep-1].y;
+				END_IF
+			END_FOR
+		END_IF
+		
+		//Data handling DB
+		s_sXMLDataRow := '' ;
+		
+		s_sXMLDataRow := CONCAT(s_sXMLDataRow, '<row>');
+		s_sXMLDataRow := CONCAT(s_sXMLDataRow, 
+								CONCAT('<Height>', 
+								CONCAT(LREAL_TO_FMTSTR(s_aProbePositionZ[s_nMeasurementStep], 2, TRUE ), '</Height>')));  // Assuming Height is in column 1
+		s_sXMLDataRow := CONCAT(s_sXMLDataRow, 
+							CONCAT('<Bx>', 
+							CONCAT(LREAL_TO_FMTSTR(s_aMagneticX[s_nMeasurementStep], 2, TRUE ), '</Bx>')));  // Assuming Bx is in column 2
+		s_sXMLDataRow := CONCAT(s_sXMLDataRow, 
+							CONCAT('<By>', 
+							CONCAT(LREAL_TO_FMTSTR(s_aMagneticY[s_nMeasurementStep], 2, TRUE ), '</By>')));  // Assuming By is in column 3
+		s_sXMLDataRow := CONCAT(s_sXMLDataRow, 
+							CONCAT('<Bz>', 
+							CONCAT(LREAL_TO_FMTSTR(s_aMagneticZ[s_nMeasurementStep], 2, TRUE ), '</Bz>')));  // Assuming Bz is in column 4
+		s_sXMLDataRow := CONCAT(s_sXMLDataRow, 
+							CONCAT('<BxyTotal>', 
+							CONCAT(LREAL_TO_FMTSTR(s_aMagneticMagnitude[s_nMeasurementStep], 2, TRUE ), '</BxyTotal>')));  // Assuming BxyTotal is in column 5
+		s_sXMLDataRow := CONCAT(s_sXMLDataRow, '</row>');
+	
+		CONCAT2(ADR(s_sXMLData), ADR(s_sXMLDataRow), ADR(s_sXMLData), SIZEOF(s_sXMLData));
+		
+		//Check if test is finished
+		IF s_nMeasurementStep = s_nTotalMeasurementSteps THEN
+			s_eSequence := E_TestProcedure_Steps.PassFail;
+		ELSE
+			s_eSequence := E_TestProcedure_Steps.EnableMotorMeasuring;
+		END_IF	
+			
+	E_TestProcedure_Steps.EnableMotorMeasuring:
+		IF s_fbSeqcontrol.q_bStaEntry THEN
+			s_sToHmiInstructionText := CONCAT('Enabling probe motor',
+										 	CONCAT('Measurement: ', 
+											CONCAT(TO_STRING(s_nMeasurementStep),
+											CONCAT('/',TO_STRING(s_nTotalMeasurementSteps)))));	
+		END_IF
+		
+		IF s_CmProbeMotor.m_EnableAxis() THEN
+			s_eSequence 	:= E_TestProcedure_Steps.MoveMotorToNextPos;
+		END_IF	
+		
+	E_TestProcedure_Steps.MoveMotorToNextPos:
+		IF s_fbSeqcontrol.q_bStaEntry THEN
+			s_nMeasurementStep		:= s_nMeasurementStep + 1;
+			s_sToHmiInstructionText := CONCAT('Moving to next position, ',
+										 	CONCAT('Measurement: ', 
+											CONCAT(TO_STRING(s_nMeasurementStep),
+											CONCAT('/',TO_STRING(s_nTotalMeasurementSteps)))));	
+		END_IF
+		
+		IF s_CmProbeMotor.m_MoveAbsolute(i_fSetPosition := s_fbParamStepStroke.p_fValue * s_nMeasurementStep) THEN
+			s_eSequence := E_TestProcedure_Steps.DisableMotorMeasuring;
+		END_IF	
+		
+	E_TestProcedure_Steps.DisableMotorMeasuring:
+		IF s_fbSeqcontrol.q_bStaEntry THEN	
+			s_sToHmiInstructionText := CONCAT('Disabling probe motor, ',
+										 	CONCAT('Measurement: ', 
+											CONCAT(TO_STRING(s_nMeasurementStep),
+											CONCAT('/',TO_STRING(s_nTotalMeasurementSteps)))));		
+		END_IF
+		
+		IF s_CmProbeMotor.m_DisableAxis() THEN
+			IF NOT GVL.g_fbHmiBtnSimulation.p_bStaBtn THEN
+				s_eSequence 	:= E_TestProcedure_Steps.MeasureMagneticField;
+			ELSE
+				s_eSequence 	:= E_TestProcedure_Steps.CalculateData;
+			END_IF
+		END_IF	
+		
+	E_TestProcedure_Steps.PassFail:
+		s_sToHmiInstructionText := 'Pass fail';
+
+		FOR t_nCounterPolish := 0 TO c_nResultDataSize DO
+			IF s_aMagneticMagnitude[t_nCounterPolish] > s_fbParamaMaxMagnitudeCriteria.p_fValue  
+			THEN
+				s_sTestResult 		:= 'Fail';
+				GVL.g_eStaLedColor 	:= E_KmweLedColors.Red;
+				EXIT;
+			ELSIF t_nCounterPolish = c_nResultDataSize THEN
+				s_sTestResult 		:= 'Pass';
+				GVL.g_eStaLedColor 	:= E_KmweLedColors.Green;
+			END_IF
+		END_FOR
+	
+		s_eSequence := E_TestProcedure_Steps.DisconnectTesla;
+		
+	E_TestProcedure_Steps.DisconnectTesla:
+		IF s_fbSeqcontrol.q_bStaEntry THEN
+			s_sToHmiInstructionText := 'Disconnect to probe';	
+		END_IF
+		
+		IF s_CmTeslaMeter.m_Disconnect() THEN
+			s_eSequence 	:= E_TestProcedure_Steps.EnableMotorEnd;
+		END_IF
+			
+	E_TestProcedure_Steps.EnableMotorEnd:
+		IF s_fbSeqcontrol.q_bStaEntry THEN
+			s_sToHmiInstructionText := 'Enabling probe motor';	
+		END_IF
+		
+		IF s_CmProbeMotor.m_EnableAxis() THEN
+			s_eSequence 	:= E_TestProcedure_Steps.MoveMotorEnd;
+		END_IF	
+		
+	E_TestProcedure_Steps.MoveMotorEnd:
+		IF s_fbSeqcontrol.q_bStaEntry THEN
+			s_sToHmiInstructionText := 'Moving end position';
+		END_IF
+		
+		IF s_CmProbeMotor.m_MoveAbsolute(i_fSetPosition := s_CmProbeMotor.p_fHomePosition) THEN
+			s_eSequence := E_TestProcedure_Steps.DisableMotorEnd;
+		END_IF	
+		
+	E_TestProcedure_Steps.DisableMotorEnd:
+		IF s_fbSeqcontrol.q_bStaEntry THEN
+			s_sToHmiInstructionText := 'Disabling probe motor end';	
+		END_IF
+		
+		IF s_CmProbeMotor.m_DisableAxis() THEN
+			s_eSequence 	:= E_TestProcedure_Steps.WriteDataDb;
+		END_IF
+
+	E_TestProcedure_Steps.WriteDataDb:
+		IF s_fbSeqControl.q_bStaEntry THEN	
+			s_sToHmiInstructionText 	:= 'Logging data to DB';	
+		END_IF
+
+		IF  _m_DatabaseMagnetic(i_bCmdReset				:= s_fbSeqControl.q_bStaEntry,
+									i_sPassFail				:= s_sTestResult) 
+		THEN
+			s_eSequence := E_TestProcedure_Steps.DisconnectDb;
+		END_IF	
+		
+	E_TestProcedure_Steps.DisconnectDb:
+		s_sToHmiInstructionText := 'Disconnect DB';
+		
+		IF GVL_Datalogging.g_fbSqlDatabase.m_Disconnect() THEN
+			s_eSequence := E_TestProcedure_Steps.WriteDataLogging;
+		END_IF
+					
+	E_TestProcedure_Steps.WriteDataLogging:
+		IF s_fbSeqControl.q_bStaEntry THEN	
+			s_sToHmiInstructionText 			:= 'Logging data';	
+			GVL_Datalogging.g_bStartDataLogger  := TRUE;
+			GVL_KMWEGenericLib.g_fbCurrentTime.m_GetTime();
+
+			_m_PrepareDataFile(i_nTotalMeasurementSteps := s_nTotalMeasurementSteps);
+			
+			GVL_DataLogging.g_sFilenameFast := CONCAT('Data\T_', 
+												CONCAT(GVL_DataLogging.g_stReportData.SerialNumber, 
+												CONCAT('_', 
+												CONCAT(GVL_DataLogging.g_stReportData.Operator, 
+												CONCAT('_', GVL_KMWEGenericLib.g_fbCurrentTime.p_sCurrentDateTime_File)))));
+
+			GVL_DataLogging.g_eDataAction	:= E_DataReadWriteActions.MagneticProcedure;
+		ELSE
+			GVL_DataLogging.g_bCmdResetWriteFast 	:= GVL_DATALOGGING.g_bStartDataLogger;
+	
+			IF GVL_DataLogging.g_fbDataLogger.q_eStaWriteFast = E_State.Ready 
+				AND NOT GVL_Datalogging.g_bStartDataLogger
+			THEN
+				GVL.g_bLedFlashSlow										:= TRUE;
+				GVL.g_osrNotify.CLK										:= TRUE;	
+				GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaEnabled	:= TRUE;
+				GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaVisible	:= TRUE;
+				
+				IF GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_osrBtnPress THEN
+					s_eSequence := E_TestProcedure_Steps.OperatorDisconnect;
+				END_IF
+			END_IF
+			
+			GVL_Datalogging.g_bStartDataLogger  := FALSE;
+		END_IF
+		
+	E_TestProcedure_Steps.OperatorDisconnect:
+		IF s_fbSeqControl.q_bStaEntry THEN	
+			s_sToHmiInstructionText 		:= 'Removal of test product';	
+			
+			s_CmProbeMotor.i_bReqEnable		:= FALSE;
+			s_CmTeslaMeter.i_bReqEnable		:= FALSE;
+			GVL.g_bConnectTestEquipment		:= FALSE;
+			GVL.g_sToHmiMiddleContent		:= GVL.g_stHmiMiddle.OperatorDisconnect;
+			
+			GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaVisible 	:= TRUE;
+		END_IF
+		
+		GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaEnabled		:= NOT GVL.g_UnRMMT.s_diEmergencyBtn.p_bStaInput OR GVL.g_fbHmiBtnSimulation.p_bStaBtn;
+											
+		IF GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_osrBtnPress THEN
+ 			GVL.g_bLedFlashSlow										:= FALSE;
+			GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaEnabled	:= FALSE;
+			GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaVisible	:= FALSE;
+			
+			s_eSequence 											:= E_TestProcedure_Steps.Ready;
+		END_IF
+
+	E_TestProcedure_Steps.Ready:
+		IF s_fbSeqControl.q_bStaEntry THEN	
+			s_sToHmiInstructionText 	:= 'Done';	
+			
+			s_CmProbeMotor.i_bReqEnable								:= FALSE;
+			s_CmTeslaMeter.i_bReqEnable								:= FALSE;
+		
+			GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible 		:= FALSE;
+			GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled 		:= FALSE;
+			
+			GVL.g_UnRMMT.p_eCtrlMode := E_CtrlMode.IDLE;
+			
+			GVL_KMWEGenericLib.g_fbParamManager.p_bShowHmiParam := FALSE;
+
+			GVL.g_sToHmiMiddleContent 	:= GVL.g_stHmiMiddle.Start;
+			GVL.g_sToHmiBottomContent	:= GVL.g_stHmiBottomBar.Start;
+		END_IF
+		
+	E_TestProcedure_Steps.Error:
+		IF s_fbSeqControl.q_bStaEntry THEN
+			s_sToHmiInstructionText :=  'ERROR: Process interupted';
+			
+			GVL.g_bLedFlashSlow		:= FALSE;
+			GVL.g_bLedFlashFast		:= TRUE;
+			
+			s_bErrorDBSaveDone			:= FALSE;
+			s_bErrorHandlingDone		:= FALSE;
+				
+			GVL.g_sToHmiBottomContent 	:= GVL.g_stHmiBottomBar.General_ReturnToStart;
+			
+			GVL_KMWEGenericLib.g_fbHmiBtnReturnToStart.p_bStaVisible 		:= FALSE;
+			GVL_KMWEGenericLib.g_fbHmiBtnReturnToStart.p_bStaEnabled 		:= FALSE;
+			
+			GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible 				:= FALSE;
+			GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled 				:= FALSE;	
+			
+			GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaVisible			:= FALSE;
+			GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaEnabled			:= FALSE;
+		END_IF
+	
+		IF s_CmTeslaMeter.p_bConnected THEN
+			s_CmTeslaMeter.m_Disconnect();
+		END_IF
+		
+		IF s_CmProbeMotor.p_bStaMoving THEN
+			s_CmProbeMotor.m_StopMoving();
+		END_IF
+		
+		IF NOT s_CmProbeMotor.p_bStaMoving 
+			AND s_CmProbeMotor.p_bStaEnabled
+		THEN
+			s_CmProbeMotor.m_DisableAxis();
+		END_IF
+		
+		IF NOT GVL_Datalogging.g_fbSqlDatabase.p_bStaError 
+			AND GVL_Datalogging.g_fbSqlDatabase.p_bStaConnected  
+			AND NOT s_bErrorDBSaveDone
+		THEN
+			IF _m_DatabaseMagnetic(i_bCmdReset				:= s_fbSeqControl.q_bStaEntry,
+									i_sPassFail				:= s_sTestResult) 
+			THEN
+				s_bErrorDbSaveDone := TRUE;
+			END_IF
+		END_IF
+		
+		IF s_bErrorDbSaveDone AND NOT s_bErrorHandlingDone THEN
+			IF GVL_Datalogging.g_fbSqlDatabase.m_Disconnect() THEN
+				s_bErrorHandlingDone := TRUE;
+			END_IF
+		END_IF
+		
+		IF NOT s_CmProbeMotor.p_bStaEnabled AND NOT s_CmTeslaMeter.p_bConnected THEN
+			IF s_bErrorHandlingDone THEN
+				s_sToHmiInstructionText :=  'ERROR: start test again';
+			ELSE
+				s_sToHmiInstructionText :=  'ERROR: start test again (Db error so no data saved)';
+			END_IF
+			
+			s_CmProbeMotor.i_bReqEnable									:= FALSE;
+			s_CmTeslaMeter.i_bReqEnable									:= FALSE;
+	
+			GVL_KMWEGenericLib.g_fbHmiBtnReturnToStart.p_bStaVisible 	:= TRUE;
+			GVL_KMWEGenericLib.g_fbHmiBtnReturnToStart.p_bStaEnabled 	:= TRUE;
+
+			IF (GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_osrBtnPress AND GVL.g_sToHmiMiddleContent <> GVL.g_stHmiMiddle.AlarmManager)
+			 OR GVL_KMWEGenericLib.g_fbHmiBtnReturnToStart.p_osrBtnPress  THEN
+				s_eCurrentTest 											:= E_TestMode.IDLE;
+				
+				GVL_KMWEGenericLib.g_fbHmiBtnReturnToStart.p_bStaVisible 	:= FALSE;
+				GVL_KMWEGenericLib.g_fbHmiBtnReturnToStart.p_bStaEnabled 	:= FALSE;
+	
+				GVL.g_sToHmiMiddleContent 	:= GVL.g_stHmiMiddle.Start;
+			END_IF
+		END_IF		
+END_CASE
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_Main" Id="{c1559ad6-cc3e-4059-9eff-299ddfbeac7b}" FolderPath="General\">
+      <Declaration><![CDATA[METHOD PUBLIC m_Main : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT SUPER^.m_Main() THEN
+	RETURN;
+END_IF
+
+CASE i_eCtrlMode OF
+	E_CtrlMode.IDLE:
+		IF s_CmProbeMotor.p_bStaEnabled THEN
+			s_CmProbeMotor.m_DisableAxis();
+			s_fbHmiBtnEnableMotor.m_Off();
+			s_fbHmiBtnHomeMotor.p_bStaEnabled := FALSE;
+		END_IF
+		
+		s_eCurrentTest	:= 	E_TestMode.IDLE;
+	
+		s_fbHmiBtnStop.p_bStaVisible := FALSE;
+		s_fbHmiBtnStop.p_bStaEnabled := FALSE;		
+		
+	E_CtrlMode.AUTOMATIC:
+		
+		CASE s_eCurrentTest OF
+			E_TestMode.IDLE:
+				GVL.g_bLedFlashSlow			:= FALSE;
+				
+				s_CmProbeMotor.i_bReqEnable	:= FALSE;
+			
+				GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled 	:= TRUE;
+				GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible 	:= TRUE;
+				
+				IF GVL.g_sToHmiMiddleContent = GVL.g_stHmiMiddle.OperatorInputData THEN
+					IF NOT GVL_KMWEGenericLib.g_fbAlarmManager.p_bAlarmActive THEN
+						s_fbHmiBtnStart.p_bStaVisible	:= TRUE;
+						s_fbHmiBtnStart.p_bStaEnabled	:= TRUE;
+					ELSE
+						s_fbHmiBtnStart.p_bStaVisible	:= FALSE;
+						s_fbHmiBtnStart.p_bStaEnabled	:= FALSE;
+					END_IF
+				END_IF
+				
+				IF s_fbHmiBtnStart.p_osrBtnPress THEN
+					s_eCurrentTest := E_TestMode.Magnetic; 
+				END_IF 
+				
+			E_TestMode.Magnetic:	
+				_m_Procedure_Test(i_bCmdReset			:= s_fbHmiBtnStart.p_osfBtnPress, 
+									i_bStaError			:= GVL_KMWEGenericLib.g_fbAlarmManager.p_bAlarmActive OR s_fbHmiBtnStop.p_osrBtnPress OR s_diBtnStop.p_osrOn);
+		END_CASE
+		
+	E_CtrlMode.MANUAL:
+		_m_Manual(i_bCmdReset			:= GVL.g_UnRMMT.s_fbHmiBtnManual.p_osfBtnPress OR GVL_KMWEGenericLib.g_fbAlarmManager.p_osrReset, 
+					i_bStaError			:= GVL_KMWEGenericLib.g_fbAlarmManager.p_bAlarmActive OR s_fbHmiBtnStop.p_osrBtnPress OR s_diBtnStop.p_osrOn);	
+END_CASE]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="EM_Doors">
+      <LineId Id="221" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="222" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors._m_Alarms">
+      <LineId Id="8" Count="1" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="10" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors._m_DatabaseMagnetic">
+      <LineId Id="216" Count="14" />
+      <LineId Id="267" Count="0" />
+      <LineId Id="231" Count="12" />
+      <LineId Id="269" Count="0" />
+      <LineId Id="244" Count="0" />
+      <LineId Id="270" Count="0" />
+      <LineId Id="245" Count="9" />
+      <LineId Id="271" Count="1" />
+      <LineId Id="274" Count="8" />
+      <LineId Id="273" Count="0" />
+      <LineId Id="255" Count="1" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors._m_Devices">
+      <LineId Id="6" Count="2" />
+      <LineId Id="11" Count="4" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="21" Count="3" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors._m_GetMagneticField">
+      <LineId Id="14" Count="4" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="19" Count="2" />
+      <LineId Id="23" Count="2" />
+      <LineId Id="134" Count="0" />
+      <LineId Id="136" Count="1" />
+      <LineId Id="135" Count="0" />
+      <LineId Id="209" Count="0" />
+      <LineId Id="212" Count="0" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="332" Count="0" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="213" Count="0" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="116" Count="0" />
+      <LineId Id="115" Count="0" />
+      <LineId Id="283" Count="0" />
+      <LineId Id="285" Count="1" />
+      <LineId Id="336" Count="0" />
+      <LineId Id="250" Count="1" />
+      <LineId Id="253" Count="0" />
+      <LineId Id="252" Count="0" />
+      <LineId Id="172" Count="0" />
+      <LineId Id="333" Count="0" />
+      <LineId Id="256" Count="0" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="257" Count="0" />
+      <LineId Id="334" Count="0" />
+      <LineId Id="109" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="94" Count="0" />
+      <LineId Id="258" Count="0" />
+      <LineId Id="335" Count="0" />
+      <LineId Id="98" Count="0" />
+      <LineId Id="118" Count="3" />
+      <LineId Id="117" Count="0" />
+      <LineId Id="100" Count="0" />
+      <LineId Id="123" Count="0" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="147" Count="1" />
+      <LineId Id="150" Count="3" />
+      <LineId Id="162" Count="1" />
+      <LineId Id="160" Count="0" />
+      <LineId Id="149" Count="0" />
+      <LineId Id="138" Count="0" />
+      <LineId Id="132" Count="1" />
+      <LineId Id="140" Count="0" />
+      <LineId Id="157" Count="0" />
+      <LineId Id="262" Count="0" />
+      <LineId Id="165" Count="0" />
+      <LineId Id="168" Count="2" />
+      <LineId Id="167" Count="0" />
+      <LineId Id="154" Count="0" />
+      <LineId Id="264" Count="0" />
+      <LineId Id="267" Count="1" />
+      <LineId Id="265" Count="0" />
+      <LineId Id="141" Count="0" />
+      <LineId Id="90" Count="1" />
+      <LineId Id="270" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors._m_Hmi">
+      <LineId Id="7" Count="2" />
+      <LineId Id="199" Count="0" />
+      <LineId Id="197" Count="1" />
+      <LineId Id="191" Count="0" />
+      <LineId Id="206" Count="0" />
+      <LineId Id="205" Count="0" />
+      <LineId Id="208" Count="0" />
+      <LineId Id="207" Count="0" />
+      <LineId Id="200" Count="0" />
+      <LineId Id="192" Count="0" />
+      <LineId Id="210" Count="0" />
+      <LineId Id="209" Count="0" />
+      <LineId Id="190" Count="0" />
+      <LineId Id="217" Count="0" />
+      <LineId Id="215" Count="1" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors._m_HmiPlots">
+      <LineId Id="652" Count="6" />
+      <LineId Id="660" Count="8" />
+      <LineId Id="708" Count="0" />
+      <LineId Id="746" Count="0" />
+      <LineId Id="707" Count="0" />
+      <LineId Id="669" Count="2" />
+      <LineId Id="722" Count="0" />
+      <LineId Id="672" Count="0" />
+      <LineId Id="757" Count="0" />
+      <LineId Id="673" Count="6" />
+      <LineId Id="709" Count="1" />
+      <LineId Id="747" Count="1" />
+      <LineId Id="711" Count="0" />
+      <LineId Id="680" Count="5" />
+      <LineId Id="712" Count="0" />
+      <LineId Id="714" Count="1" />
+      <LineId Id="750" Count="1" />
+      <LineId Id="749" Count="0" />
+      <LineId Id="687" Count="0" />
+      <LineId Id="724" Count="0" />
+      <LineId Id="688" Count="7" />
+      <LineId Id="716" Count="1" />
+      <LineId Id="754" Count="1" />
+      <LineId Id="696" Count="7" />
+      <LineId Id="720" Count="1" />
+      <LineId Id="752" Count="1" />
+      <LineId Id="719" Count="0" />
+      <LineId Id="718" Count="0" />
+      <LineId Id="704" Count="2" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors._m_HmiPlots_Test">
+      <LineId Id="780" Count="1" />
+      <LineId Id="656" Count="2" />
+      <LineId Id="660" Count="0" />
+      <LineId Id="663" Count="0" />
+      <LineId Id="669" Count="3" />
+      <LineId Id="757" Count="0" />
+      <LineId Id="673" Count="3" />
+      <LineId Id="678" Count="0" />
+      <LineId Id="787" Count="2" />
+      <LineId Id="711" Count="0" />
+      <LineId Id="749" Count="0" />
+      <LineId Id="687" Count="0" />
+      <LineId Id="809" Count="1" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors._m_Init">
+      <LineId Id="5" Count="5" />
+      <LineId Id="175" Count="0" />
+      <LineId Id="121" Count="0" />
+      <LineId Id="126" Count="1" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="132" Count="0" />
+      <LineId Id="135" Count="0" />
+      <LineId Id="162" Count="0" />
+      <LineId Id="136" Count="2" />
+      <LineId Id="141" Count="0" />
+      <LineId Id="176" Count="0" />
+      <LineId Id="198" Count="1" />
+      <LineId Id="146" Count="0" />
+      <LineId Id="35" Count="3" />
+      <LineId Id="147" Count="12" />
+      <LineId Id="88" Count="0" />
+      <LineId Id="181" Count="0" />
+      <LineId Id="189" Count="0" />
+      <LineId Id="182" Count="3" />
+      <LineId Id="190" Count="0" />
+      <LineId Id="186" Count="2" />
+      <LineId Id="191" Count="0" />
+      <LineId Id="193" Count="2" />
+      <LineId Id="192" Count="0" />
+      <LineId Id="89" Count="4" />
+      <LineId Id="97" Count="4" />
+      <LineId Id="166" Count="1" />
+      <LineId Id="118" Count="1" />
+      <LineId Id="168" Count="0" />
+      <LineId Id="170" Count="2" />
+      <LineId Id="174" Count="0" />
+      <LineId Id="169" Count="0" />
+      <LineId Id="120" Count="0" />
+      <LineId Id="4" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors._m_Inputs">
+      <LineId Id="6" Count="2" />
+      <LineId Id="40" Count="2" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors._m_Manual">
+      <LineId Id="6" Count="6" />
+      <LineId Id="331" Count="2" />
+      <LineId Id="353" Count="0" />
+      <LineId Id="352" Count="0" />
+      <LineId Id="330" Count="0" />
+      <LineId Id="354" Count="1" />
+      <LineId Id="13" Count="5" />
+      <LineId Id="433" Count="1" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="317" Count="0" />
+      <LineId Id="20" Count="1" />
+      <LineId Id="346" Count="0" />
+      <LineId Id="350" Count="1" />
+      <LineId Id="348" Count="1" />
+      <LineId Id="347" Count="0" />
+      <LineId Id="139" Count="0" />
+      <LineId Id="344" Count="1" />
+      <LineId Id="342" Count="1" />
+      <LineId Id="150" Count="0" />
+      <LineId Id="454" Count="0" />
+      <LineId Id="311" Count="0" />
+      <LineId Id="357" Count="0" />
+      <LineId Id="312" Count="0" />
+      <LineId Id="141" Count="1" />
+      <LineId Id="169" Count="1" />
+      <LineId Id="336" Count="1" />
+      <LineId Id="334" Count="1" />
+      <LineId Id="314" Count="0" />
+      <LineId Id="171" Count="0" />
+      <LineId Id="315" Count="0" />
+      <LineId Id="531" Count="1" />
+      <LineId Id="356" Count="0" />
+      <LineId Id="316" Count="0" />
+      <LineId Id="172" Count="0" />
+      <LineId Id="216" Count="1" />
+      <LineId Id="221" Count="0" />
+      <LineId Id="318" Count="0" />
+      <LineId Id="222" Count="1" />
+      <LineId Id="219" Count="0" />
+      <LineId Id="391" Count="0" />
+      <LineId Id="393" Count="1" />
+      <LineId Id="392" Count="0" />
+      <LineId Id="144" Count="1" />
+      <LineId Id="152" Count="0" />
+      <LineId Id="154" Count="0" />
+      <LineId Id="455" Count="1" />
+      <LineId Id="158" Count="0" />
+      <LineId Id="319" Count="0" />
+      <LineId Id="159" Count="1" />
+      <LineId Id="155" Count="0" />
+      <LineId Id="161" Count="0" />
+      <LineId Id="163" Count="0" />
+      <LineId Id="165" Count="0" />
+      <LineId Id="320" Count="0" />
+      <LineId Id="168" Count="0" />
+      <LineId Id="166" Count="1" />
+      <LineId Id="162" Count="0" />
+      <LineId Id="224" Count="0" />
+      <LineId Id="226" Count="12" />
+      <LineId Id="225" Count="0" />
+      <LineId Id="174" Count="0" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="183" Count="0" />
+      <LineId Id="490" Count="0" />
+      <LineId Id="186" Count="1" />
+      <LineId Id="189" Count="1" />
+      <LineId Id="193" Count="1" />
+      <LineId Id="176" Count="0" />
+      <LineId Id="195" Count="0" />
+      <LineId Id="197" Count="0" />
+      <LineId Id="202" Count="2" />
+      <LineId Id="196" Count="0" />
+      <LineId Id="175" Count="0" />
+      <LineId Id="207" Count="4" />
+      <LineId Id="213" Count="1" />
+      <LineId Id="212" Count="0" />
+      <LineId Id="206" Count="0" />
+      <LineId Id="303" Count="0" />
+      <LineId Id="296" Count="0" />
+      <LineId Id="301" Count="0" />
+      <LineId Id="491" Count="0" />
+      <LineId Id="302" Count="0" />
+      <LineId Id="239" Count="0" />
+      <LineId Id="287" Count="0" />
+      <LineId Id="304" Count="0" />
+      <LineId Id="439" Count="1" />
+      <LineId Id="435" Count="1" />
+      <LineId Id="441" Count="0" />
+      <LineId Id="310" Count="0" />
+      <LineId Id="307" Count="1" />
+      <LineId Id="442" Count="0" />
+      <LineId Id="444" Count="3" />
+      <LineId Id="443" Count="0" />
+      <LineId Id="306" Count="0" />
+      <LineId Id="289" Count="0" />
+      <LineId Id="494" Count="0" />
+      <LineId Id="496" Count="1" />
+      <LineId Id="495" Count="0" />
+      <LineId Id="493" Count="0" />
+      <LineId Id="291" Count="0" />
+      <LineId Id="260" Count="2" />
+      <LineId Id="265" Count="0" />
+      <LineId Id="452" Count="0" />
+      <LineId Id="448" Count="1" />
+      <LineId Id="286" Count="0" />
+      <LineId Id="396" Count="1" />
+      <LineId Id="215" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors._m_Outputs">
+      <LineId Id="6" Count="2" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors._m_Params">
+      <LineId Id="164" Count="0" />
+      <LineId Id="166" Count="1" />
+      <LineId Id="165" Count="0" />
+      <LineId Id="6" Count="8" />
+      <LineId Id="159" Count="3" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="163" Count="0" />
+      <LineId Id="235" Count="7" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="199" Count="0" />
+      <LineId Id="180" Count="0" />
+      <LineId Id="185" Count="0" />
+      <LineId Id="189" Count="0" />
+      <LineId Id="191" Count="2" />
+      <LineId Id="190" Count="0" />
+      <LineId Id="194" Count="0" />
+      <LineId Id="196" Count="2" />
+      <LineId Id="195" Count="0" />
+      <LineId Id="203" Count="0" />
+      <LineId Id="222" Count="2" />
+      <LineId Id="207" Count="0" />
+      <LineId Id="250" Count="0" />
+      <LineId Id="234" Count="0" />
+      <LineId Id="232" Count="1" />
+      <LineId Id="230" Count="0" />
+      <LineId Id="251" Count="0" />
+      <LineId Id="256" Count="2" />
+      <LineId Id="253" Count="0" />
+      <LineId Id="259" Count="0" />
+      <LineId Id="261" Count="2" />
+      <LineId Id="260" Count="0" />
+      <LineId Id="264" Count="0" />
+      <LineId Id="266" Count="2" />
+      <LineId Id="265" Count="0" />
+      <LineId Id="269" Count="0" />
+      <LineId Id="271" Count="2" />
+      <LineId Id="270" Count="0" />
+      <LineId Id="220" Count="0" />
+      <LineId Id="210" Count="1" />
+      <LineId Id="174" Count="0" />
+      <LineId Id="214" Count="0" />
+      <LineId Id="213" Count="0" />
+      <LineId Id="158" Count="0" />
+      <LineId Id="274" Count="1" />
+      <LineId Id="246" Count="0" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="281" Count="0" />
+      <LineId Id="283" Count="0" />
+      <LineId Id="282" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors._m_PrepareDataFile">
+      <LineId Id="115" Count="0" />
+      <LineId Id="83" Count="2" />
+      <LineId Id="87" Count="2" />
+      <LineId Id="136" Count="1" />
+      <LineId Id="114" Count="0" />
+      <LineId Id="120" Count="0" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="126" Count="0" />
+      <LineId Id="116" Count="0" />
+      <LineId Id="113" Count="0" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="127" Count="0" />
+      <LineId Id="135" Count="0" />
+      <LineId Id="134" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors._m_Procedure_Test">
+      <LineId Id="1911" Count="19" />
+      <LineId Id="2332" Count="1" />
+      <LineId Id="1936" Count="7" />
+      <LineId Id="2687" Count="1" />
+      <LineId Id="1944" Count="0" />
+      <LineId Id="2453" Count="0" />
+      <LineId Id="1945" Count="0" />
+      <LineId Id="2342" Count="0" />
+      <LineId Id="2547" Count="0" />
+      <LineId Id="2637" Count="0" />
+      <LineId Id="2548" Count="1" />
+      <LineId Id="2454" Count="0" />
+      <LineId Id="1946" Count="1" />
+      <LineId Id="2456" Count="0" />
+      <LineId Id="2334" Count="0" />
+      <LineId Id="1949" Count="4" />
+      <LineId Id="2407" Count="1" />
+      <LineId Id="1954" Count="12" />
+      <LineId Id="1969" Count="9" />
+      <LineId Id="1980" Count="19" />
+      <LineId Id="2348" Count="0" />
+      <LineId Id="2357" Count="0" />
+      <LineId Id="2552" Count="1" />
+      <LineId Id="2353" Count="0" />
+      <LineId Id="2351" Count="0" />
+      <LineId Id="2728" Count="0" />
+      <LineId Id="2730" Count="2" />
+      <LineId Id="2734" Count="7" />
+      <LineId Id="2733" Count="0" />
+      <LineId Id="2743" Count="1" />
+      <LineId Id="2700" Count="0" />
+      <LineId Id="2718" Count="5" />
+      <LineId Id="2716" Count="1" />
+      <LineId Id="2702" Count="3" />
+      <LineId Id="2726" Count="0" />
+      <LineId Id="2724" Count="0" />
+      <LineId Id="2706" Count="8" />
+      <LineId Id="2701" Count="0" />
+      <LineId Id="2715" Count="0" />
+      <LineId Id="2727" Count="0" />
+      <LineId Id="2005" Count="13" />
+      <LineId Id="2297" Count="0" />
+      <LineId Id="2019" Count="2" />
+      <LineId Id="2298" Count="0" />
+      <LineId Id="2300" Count="1" />
+      <LineId Id="2299" Count="0" />
+      <LineId Id="2302" Count="0" />
+      <LineId Id="2022" Count="0" />
+      <LineId Id="2513" Count="0" />
+      <LineId Id="2516" Count="1" />
+      <LineId Id="2515" Count="0" />
+      <LineId Id="2518" Count="0" />
+      <LineId Id="2521" Count="2" />
+      <LineId Id="2519" Count="0" />
+      <LineId Id="2514" Count="0" />
+      <LineId Id="2023" Count="3" />
+      <LineId Id="2524" Count="0" />
+      <LineId Id="2028" Count="1" />
+      <LineId Id="2525" Count="3" />
+      <LineId Id="2030" Count="4" />
+      <LineId Id="2569" Count="3" />
+      <LineId Id="2035" Count="2" />
+      <LineId Id="2310" Count="0" />
+      <LineId Id="2359" Count="0" />
+      <LineId Id="2311" Count="0" />
+      <LineId Id="2039" Count="1" />
+      <LineId Id="2555" Count="0" />
+      <LineId Id="2560" Count="3" />
+      <LineId Id="2565" Count="0" />
+      <LineId Id="2568" Count="0" />
+      <LineId Id="2567" Count="0" />
+      <LineId Id="2559" Count="0" />
+      <LineId Id="2041" Count="0" />
+      <LineId Id="2321" Count="0" />
+      <LineId Id="2498" Count="0" />
+      <LineId Id="2500" Count="0" />
+      <LineId Id="2499" Count="0" />
+      <LineId Id="2322" Count="0" />
+      <LineId Id="2497" Count="0" />
+      <LineId Id="2320" Count="0" />
+      <LineId Id="2323" Count="1" />
+      <LineId Id="2327" Count="0" />
+      <LineId Id="2329" Count="2" />
+      <LineId Id="2325" Count="1" />
+      <LineId Id="2056" Count="1" />
+      <LineId Id="2284" Count="0" />
+      <LineId Id="2501" Count="2" />
+      <LineId Id="2360" Count="1" />
+      <LineId Id="2286" Count="0" />
+      <LineId Id="2293" Count="0" />
+      <LineId Id="2363" Count="0" />
+      <LineId Id="2367" Count="3" />
+      <LineId Id="2694" Count="0" />
+      <LineId Id="2696" Count="0" />
+      <LineId Id="2366" Count="0" />
+      <LineId Id="2362" Count="0" />
+      <LineId Id="2292" Count="0" />
+      <LineId Id="2372" Count="0" />
+      <LineId Id="2385" Count="1" />
+      <LineId Id="2375" Count="6" />
+      <LineId Id="2387" Count="0" />
+      <LineId Id="2389" Count="4" />
+      <LineId Id="2395" Count="3" />
+      <LineId Id="2400" Count="0" />
+      <LineId Id="2388" Count="0" />
+      <LineId Id="2287" Count="0" />
+      <LineId Id="2697" Count="1" />
+      <LineId Id="2668" Count="1" />
+      <LineId Id="2671" Count="1" />
+      <LineId Id="2677" Count="1" />
+      <LineId Id="2673" Count="0" />
+      <LineId Id="2679" Count="1" />
+      <LineId Id="2674" Count="0" />
+      <LineId Id="2681" Count="1" />
+      <LineId Id="2675" Count="0" />
+      <LineId Id="2683" Count="1" />
+      <LineId Id="2676" Count="0" />
+      <LineId Id="2685" Count="1" />
+      <LineId Id="2670" Count="0" />
+      <LineId Id="2285" Count="0" />
+      <LineId Id="2691" Count="0" />
+      <LineId Id="2695" Count="0" />
+      <LineId Id="2699" Count="0" />
+      <LineId Id="2058" Count="7" />
+      <LineId Id="2504" Count="2" />
+      <LineId Id="2066" Count="8" />
+      <LineId Id="2371" Count="0" />
+      <LineId Id="2507" Count="2" />
+      <LineId Id="2075" Count="0" />
+      <LineId Id="2077" Count="7" />
+      <LineId Id="2510" Count="2" />
+      <LineId Id="2085" Count="3" />
+      <LineId Id="2304" Count="0" />
+      <LineId Id="2089" Count="0" />
+      <LineId Id="2305" Count="3" />
+      <LineId Id="2091" Count="1" />
+      <LineId Id="2402" Count="0" />
+      <LineId Id="2486" Count="0" />
+      <LineId Id="2403" Count="0" />
+      <LineId Id="2487" Count="0" />
+      <LineId Id="2490" Count="1" />
+      <LineId Id="2540" Count="0" />
+      <LineId Id="2492" Count="2" />
+      <LineId Id="2541" Count="0" />
+      <LineId Id="2496" Count="0" />
+      <LineId Id="2488" Count="0" />
+      <LineId Id="2336" Count="0" />
+      <LineId Id="2093" Count="10" />
+      <LineId Id="2105" Count="11" />
+      <LineId Id="2118" Count="19" />
+      <LineId Id="2140" Count="0" />
+      <LineId Id="2602" Count="1" />
+      <LineId Id="2141" Count="6" />
+      <LineId Id="2149" Count="0" />
+      <LineId Id="2153" Count="4" />
+      <LineId Id="2750" Count="0" />
+      <LineId Id="2158" Count="1" />
+      <LineId Id="2162" Count="10" />
+      <LineId Id="2174" Count="3" />
+      <LineId Id="2809" Count="1" />
+      <LineId Id="2806" Count="0" />
+      <LineId Id="2808" Count="0" />
+      <LineId Id="2807" Count="0" />
+      <LineId Id="2811" Count="0" />
+      <LineId Id="2178" Count="0" />
+      <LineId Id="2812" Count="0" />
+      <LineId Id="2179" Count="0" />
+      <LineId Id="2664" Count="0" />
+      <LineId Id="2752" Count="0" />
+      <LineId Id="2751" Count="0" />
+      <LineId Id="2753" Count="0" />
+      <LineId Id="2180" Count="0" />
+      <LineId Id="2747" Count="0" />
+      <LineId Id="2778" Count="0" />
+      <LineId Id="2746" Count="0" />
+      <LineId Id="2776" Count="1" />
+      <LineId Id="2756" Count="1" />
+      <LineId Id="2774" Count="1" />
+      <LineId Id="2760" Count="0" />
+      <LineId Id="2773" Count="0" />
+      <LineId Id="2761" Count="6" />
+      <LineId Id="2772" Count="0" />
+      <LineId Id="2759" Count="0" />
+      <LineId Id="2745" Count="0" />
+      <LineId Id="2181" Count="0" />
+      <LineId Id="2411" Count="1" />
+      <LineId Id="2532" Count="0" />
+      <LineId Id="2534" Count="1" />
+      <LineId Id="2813" Count="0" />
+      <LineId Id="2416" Count="1" />
+      <LineId Id="2814" Count="1" />
+      <LineId Id="2817" Count="0" />
+      <LineId Id="2820" Count="0" />
+      <LineId Id="2818" Count="1" />
+      <LineId Id="2816" Count="0" />
+      <LineId Id="2418" Count="0" />
+      <LineId Id="2427" Count="0" />
+      <LineId Id="2186" Count="2" />
+      <LineId Id="2544" Count="0" />
+      <LineId Id="2638" Count="0" />
+      <LineId Id="2545" Count="1" />
+      <LineId Id="2190" Count="14" />
+      <LineId Id="2575" Count="1" />
+      <LineId Id="2573" Count="1" />
+      <LineId Id="2205" Count="10" />
+      <LineId Id="2611" Count="0" />
+      <LineId Id="2216" Count="20" />
+      <LineId Id="2536" Count="0" />
+      <LineId Id="2538" Count="1" />
+      <LineId Id="2537" Count="0" />
+      <LineId Id="2241" Count="2" />
+      <LineId Id="2604" Count="1" />
+      <LineId Id="2609" Count="1" />
+      <LineId Id="2606" Count="1" />
+      <LineId Id="2249" Count="4" />
+      <LineId Id="2282" Count="0" />
+      <LineId Id="1843" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors.m_Main">
+      <LineId Id="6" Count="2" />
+      <LineId Id="10" Count="2" />
+      <LineId Id="163" Count="0" />
+      <LineId Id="165" Count="0" />
+      <LineId Id="167" Count="1" />
+      <LineId Id="166" Count="0" />
+      <LineId Id="164" Count="0" />
+      <LineId Id="157" Count="1" />
+      <LineId Id="86" Count="1" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="88" Count="2" />
+      <LineId Id="159" Count="0" />
+      <LineId Id="170" Count="1" />
+      <LineId Id="160" Count="0" />
+      <LineId Id="176" Count="0" />
+      <LineId Id="175" Count="0" />
+      <LineId Id="174" Count="0" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="133" Count="0" />
+      <LineId Id="143" Count="0" />
+      <LineId Id="135" Count="1" />
+      <LineId Id="144" Count="0" />
+      <LineId Id="138" Count="1" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="145" Count="3" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="93" Count="2" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="161" Count="1" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -7,9 +7,11 @@ VAR_INPUT
 END_VAR
 VAR_OUTPUT
 	Q : BOOL;
+	osrQ : BOOL;
 END_VAR
 VAR
 	s_osr : R_TRIG;
+	s_osrQ : R_TRIG;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -21,6 +23,9 @@ IF s_osr.Q AND Q THEN
 ELSIF s_osr.Q AND NOT(Q) THEN	
 	Q := TRUE;
 END_IF
+
+s_osrQ(CLK := Q);
+osrQ := s_osrQ.Q;
 ]]></ST>
     </Implementation>
     <LineIds Name="FB_Toggle">
@@ -30,6 +35,9 @@ END_IF
       <LineId Id="81" Count="0" />
       <LineId Id="79" Count="0" />
       <LineId Id="72" Count="0" />
+      <LineId Id="98" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="101" Count="0" />
       <LineId Id="22" Count="0" />
     </LineIds>
   </POU>

@@ -13,11 +13,13 @@ VAR
 	arr_bTestBoolCleanroomDoor : ARRAY[0..15] OF BOOL;
 	arr_bTestCmdCleanroomDoor : ARRAY[0..15] OF BOOL;
 	
-	cmValveDoorUnlockingPinUpper : CM_Valve;
-	cmValveDoorUnlockingPinLower : CM_Valve;
+	cmValveDoorUnlockingPinUpper : CM_ValveWithFB;
+	cmValveDoorUnlockingPinLower : CM_ValveWithFB;
+	arr_bTestBoolValvePinUpper : ARRAY[0..15] OF BOOL;
+	arr_bTestCmdValvePinUpper : ARRAY[0..15] OF BOOL;
 	
-	cmValveDockingClampsUpper : CM_Valve;
-	cmValveDockingClampsLower : CM_Valve;
+	cmValveDockingClampsUpper : CM_ValveWithDoubleFB;
+	cmValveDockingClampsLower : CM_ValveWithDoubleFB;
 	arr_bTestBoolValve : ARRAY[0..15] OF BOOL;
 	arr_bTestCmdValve : ARRAY[0..15] OF BOOL;
 
@@ -57,9 +59,11 @@ CmDoorLockCleanroomDoor(
 IF arr_bTestCmdCleanroomDoor[0] THEN cmDoorLockCleanroomDoor.m_Release(); arr_bTestCmdCleanroomDoor[0] := FALSE; END_IF;
 IF arr_bTestCmdCleanroomDoor[1] THEN cmDoorlockCleanroomDoor.m_Apply(); arr_bTestCmdCleanroomDoor[1] := FALSE; END_IF;
 
+cmDoorlockCleanroomDoor.p_bCfgAutoLockAtClosing := arr_bTestCmdCleanroomDoor[2]; 
+
 arr_bTestBoolCleanroomDoor[0] := cmDoorLockCleanroomDoor.p_bStaEnabled;
 arr_bTestBoolCleanroomDoor[1] := cmDoorLockCleanroomDoor.p_bStaError;
-arr_bTestBoolCleanroomDoor[2] := cmDoorLockCleanroomDoor.p_bReqReleaseLock;
+arr_bTestBoolCleanroomDoor[2] := cmDoorLockCleanroomDoor.p_bCfgAutoLockAtClosing;
 arr_bTestBoolCleanroomDoor[3] := cmDoorLockCleanroomDoor.p_bStaDoorIsClosed;
 arr_bTestBoolCleanroomDoor[4] := cmDoorLockCleanroomDoor.p_bStaLockIsApplied;
 arr_bTestBoolCleanroomDoor[5] := cmDoorLockCleanroomDoor.p_bStaLockIsReleased;
@@ -76,14 +80,55 @@ cmValveDockingClampsLower(
 	i_eCtrlMode := E_CtrlMode.AUTOMATIC,
 	i_bCmdReset := arr_bTestCmdValve[13],
 	i_sCmName := 'Docking Clamp Lower');
-	]]></ST>
+	
+//------	
+cmValveDoorUnlockingPinUpper(
+	i_bReqEnable := arr_bTestCmdValvePinUpper[0], 
+	i_eCtrlMode := E_CtrlMode.AUTOMATIC, 
+	i_bCmdReset := arr_bTestCmdValvePinUpper[1], 
+	i_sCmName := 'Door unlocking pin upper', 
+	i_stSettings := );	
+	
+//Configuration
+cmValveDoorUnlockingPinUpper.p_bCfgBiStableValve := arr_bTestCmdValvePinUpper[2];
+cmValveDoorUnlockingPinUpper.p_bCfgReverseValve := arr_bTestCmdValvePinUpper[3];
+
+//Write methodes
+IF arr_bTestCmdValvePinUpper[4] THEN cmValveDoorUnlockingPinUpper.m_Off(); arr_bTestCmdValvePinUpper[4] := FALSE; END_IF;
+IF arr_bTestCmdValvePinUpper[5] THEN cmValveDoorUnlockingPinUpper.m_On(); arr_bTestCmdValvePinUpper[5] := FALSE; END_IF;
+IF arr_bTestCmdValvePinUpper[5] THEN cmValveDoorUnlockingPinUpper.m_Stop(); arr_bTestCmdValvePinUpper[6] := FALSE; END_IF;
+
+arr_bTestBoolValvePinUpper[0] := cmValveDoorUnlockingPinUpper.p_bCfgBiStableValve;
+arr_bTestBoolValvePinUpper[1] := cmValveDoorUnlockingPinUpper.p_bCfgReverseValve;
+arr_bTestBoolValvePinUpper[2] := cmValveDoorUnlockingPinUpper.p_bStaEnabled;
+arr_bTestBoolValvePinUpper[3] := cmValveDoorUnlockingPinUpper.p_bStaError;
+arr_bTestBoolValvePinUpper[4] := cmValveDoorUnlockingPinUpper.p_bStaIsOff;
+arr_bTestBoolValvePinUpper[5] := cmValveDoorUnlockingPinUpper.p_bStaIsOn;
+arr_bTestBoolValvePinUpper[6] := cmValveDoorUnlockingPinUpper.p_bStaValve;
+]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
       <LineId Id="189" Count="17" />
       <LineId Id="243" Count="9" />
+      <LineId Id="286" Count="1" />
       <LineId Id="255" Count="5" />
       <LineId Id="242" Count="0" />
-      <LineId Id="207" Count="13" />
+      <LineId Id="207" Count="12" />
+      <LineId Id="290" Count="0" />
+      <LineId Id="299" Count="0" />
+      <LineId Id="293" Count="4" />
+      <LineId Id="292" Count="0" />
+      <LineId Id="220" Count="0" />
+      <LineId Id="298" Count="0" />
+      <LineId Id="300" Count="1" />
+      <LineId Id="314" Count="0" />
+      <LineId Id="313" Count="0" />
+      <LineId Id="318" Count="2" />
+      <LineId Id="303" Count="0" />
+      <LineId Id="302" Count="0" />
+      <LineId Id="304" Count="3" />
+      <LineId Id="309" Count="1" />
+      <LineId Id="308" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>

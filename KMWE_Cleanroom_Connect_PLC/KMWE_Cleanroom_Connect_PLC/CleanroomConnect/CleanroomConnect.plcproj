@@ -7,7 +7,7 @@
     <DownloadApplicationInfo>true</DownloadApplicationInfo>
     <WriteProductVersion>true</WriteProductVersion>
     <GenerateTpy>false</GenerateTpy>
-    <Name>KMWE_Cleanroom_Connect_PLC</Name>
+    <Name>CleanroomConnect</Name>
     <ProgramVersion>3.1.4024.0</ProgramVersion>
     <Application>{2a88a6f4-d55a-4a98-a281-3e2594d8209b}</Application>
     <TypeSystem>{2db9f395-d563-4837-92a1-e6a80483527c}</TypeSystem>
@@ -26,10 +26,25 @@
     <Compile Include="POUs\01 Management layer\HAL\HAL.TcPOU">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="POUs\03 Equipment layer\Equipment %28EM%29\DUTs\E_ManualMode_Steps.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\03 Equipment layer\Equipment %28EM%29\DUTs\E_TestMode.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\03 Equipment layer\Equipment %28EM%29\DUTs\E_TestProcedure_Steps.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\03 Equipment layer\Equipment %28EM%29\EM_Doors.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="POUs\04 Control layer\Control %28CM%29\CM_DoorLock\FB_Flash.TcPOU">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="POUs\04 Control layer\Control %28CM%29\CM_DoorLock\FB_Toggle.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\04 Control layer\Control %28CM%29\CM_DoorLock\ST_SettingsDoorLock.TcDUT">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="POUs\04 Control layer\Control %28CM%29\CM_SpeedDoor\CM_SpeedDoor.TcPOU">
@@ -41,14 +56,15 @@
     <Compile Include="POUs\04 Control layer\Control %28CM%29\CM_DoorLock\CM_DoorLock.TcPOU">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="POUs\04 Control layer\Control %28CM%29\CM_Valve\CM_Valve.TcPOU">
+    <Compile Include="POUs\04 Control layer\Control %28CM%29\CM_ValveWithFB\CM_ValveWithDoubleFB.TcPOU">
       <SubType>Code</SubType>
-      <ExcludeFromBuild>true</ExcludeFromBuild>
+      <ExcludeFromBuild>false</ExcludeFromBuild>
     </Compile>
-    <Compile Include="POUs\04 Control layer\Control %28CM%29\CM_Valve\ST_ValveFeedback.TcDUT">
+    <Compile Include="POUs\04 Control layer\Control %28CM%29\CM_ValveWithFB\CM_ValveWithFB.TcPOU">
       <SubType>Code</SubType>
+      <ExcludeFromBuild>false</ExcludeFromBuild>
     </Compile>
-    <Compile Include="POUs\04 Control layer\Control %28CM%29\CM_Valve\ST_ValveFeedback_1.TcDUT">
+    <Compile Include="POUs\04 Control layer\Control %28CM%29\CM_ValveWithFB\ST_SettingsValveWithFB.TcDUT">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="POUs\MAIN.TcPOU">
@@ -61,10 +77,11 @@
     <Folder Include="POUs\01 Management layer\HAL" />
     <Folder Include="POUs\02 Unit layer\Unit %28UN%29" />
     <Folder Include="POUs\03 Equipment layer\Equipment %28EM%29" />
+    <Folder Include="POUs\03 Equipment layer\Equipment %28EM%29\DUTs" />
     <Folder Include="POUs\04 Control layer\Control %28CM%29" />
     <Folder Include="POUs\04 Control layer\Control %28CM%29\CM_SpeedDoor" />
     <Folder Include="POUs\04 Control layer\Control %28CM%29\CM_DoorLock" />
-    <Folder Include="POUs\04 Control layer\Control %28CM%29\CM_Valve" />
+    <Folder Include="POUs\04 Control layer\Control %28CM%29\CM_ValveWithFB" />
     <Folder Include="POUs\01 Management layer" />
     <Folder Include="POUs\02 Unit layer" />
     <Folder Include="POUs\03 Equipment layer" />
@@ -90,15 +107,23 @@
     </PlaceholderReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="KMWE_Cleanroom_Connect_PLC.tmc">
+    <None Include="CleanroomConnect.tmc">
       <SubType>Content</SubType>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <SubObject Include="EM_Doors._m_HmiPlots">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </SubObject>
+    <SubObject Include="EM_Doors._m_HmiPlots_Test">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </SubObject>
   </ItemGroup>
   <ProjectExtensions>
     <PlcProjectOptions>
       <XmlArchive>
-  <Data>
-    <o xml:space="preserve" t="OptionKey">
+        <Data>
+          <o xml:space="preserve" t="OptionKey">
       <v n="Name">"&lt;ProjectRoot&gt;"</v>
       <d n="SubKeys" t="Hashtable" ckt="String" cvt="OptionKey">
         <v>{40450F57-0AA3-4216-96F3-5444ECB29763}</v>
@@ -113,13 +138,13 @@
       </d>
       <d n="Values" t="Hashtable" />
     </o>
-  </Data>
-  <TypeList>
-    <Type n="Hashtable">System.Collections.Hashtable</Type>
-    <Type n="OptionKey">{54dd0eac-a6d8-46f2-8c27-2f43c7e49861}</Type>
-    <Type n="String">System.String</Type>
-  </TypeList>
-</XmlArchive>
+        </Data>
+        <TypeList>
+          <Type n="Hashtable">System.Collections.Hashtable</Type>
+          <Type n="OptionKey">{54dd0eac-a6d8-46f2-8c27-2f43c7e49861}</Type>
+          <Type n="String">System.String</Type>
+        </TypeList>
+      </XmlArchive>
     </PlcProjectOptions>
   </ProjectExtensions>
 </Project>

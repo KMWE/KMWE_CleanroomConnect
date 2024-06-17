@@ -14,12 +14,10 @@ VAR
 
 //------------------------------------------//
 //Inputs
-	s_diTableDownSensor	: FB_DigInput;
-	s_diBtnTableDown	: FB_DigInput;
-	s_diBtnStop			: FB_DigInput;
-	
+	s_diBtnToggleLock	: FB_DigInput;
+
 //------------------------------------------//
-	s_doRelayTableDown : FB_DigOutput;
+	s_doLedLockState  : FB_DigOutput;
 //------------------------------------------//
 //Outputs
 
@@ -57,6 +55,14 @@ VAR
 	
 	s_eCurrentTest						: E_TestMode;
 	s_stCommandsTesla					: ST_SCPI_TeslaCommands;
+	
+	
+	// Interlocks
+	s_bIlckSpeedDoorOuterToOpen 		: BOOL := TRUE;
+	s_bIlckSpeedDoorOuterToClose 		: BOOL := TRUE;
+	
+	s_bIlckDoorLockCleanroomToOpen 		: BOOL := TRUE;
+	
 //------------------------------------------//
 
 //------------------------------------------//
@@ -113,13 +119,16 @@ SUPER^();
     <Folder Name="Procedures" Id="{4fbebc8d-2e5e-4843-ba3a-d70401e17a8b}" />
     <Folder Name="Sensors" Id="{b84b418c-1139-4453-87ba-182257d5dca9}" />
     <Method Name="_m_Alarms" Id="{34703853-800b-4320-8e6c-49abce8785b7}" FolderPath="General\">
-      <Declaration><![CDATA[METHOD Protected _m_Alarms : BOOL]]></Declaration>
+      <Declaration><![CDATA[METHOD PROTECTED _m_Alarms : BOOL
+]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF NOT SUPER^._m_Alarms() THEN
+        <ST><![CDATA[
+IF NOT SUPER^._m_Alarms() THEN
 	RETURN;
 END_IF
 
-_m_Alarms := TRUE;]]></ST>
+_m_Alarms := TRUE;
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_DatabaseMagnetic" Id="{bb78cd83-18a1-4e68-a34c-6c165cb86cbd}" FolderPath="Administrative\">
@@ -195,28 +204,54 @@ _m_DatabaseMagnetic := s_nCounterDbLogging > GVL_DataLogging.c_nDbColumnMagnetic
       </Implementation>
     </Method>
     <Method Name="_m_Devices" Id="{c18c3403-a619-4da8-8c16-d38b3f2bd5db}" FolderPath="General\">
-      <Declaration><![CDATA[METHOD Protected _m_Devices : BOOL
-VAR_INPUT
-END_VAR
+      <Declaration><![CDATA[METHOD PROTECTED _m_Devices : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF NOT SUPER^._m_Devices() THEN
+        <ST><![CDATA[
+IF NOT SUPER^._m_Devices() THEN
 	RETURN;
 END_IF
 
-s_CmProbeMotor(
-	i_bReqEnable					:= , //written in test procedure or manual 
-	i_eCtrlMode						:= i_eCtrlMode, 
-	i_bCmdReset						:= i_bCmdReset, 
-	i_sCmName						:= 'Probe motor');	
+s_cmSpeedDoorOuter(
+	i_bReqEnable := i_bReqEnable, 
+	i_eCtrlMode := i_eCtrlMode, 
+	i_bCmdReset := i_bCmdReset, 
+	i_sCmName := 'Speed door outer', 
+	i_stSettings := );
 	
-s_CmTeslaMeter(
-	i_bReqEnable					:= , //written in test procedure or manual  
-	i_eCtrlMode						:= i_eCtrlMode, 
-	i_bCmdReset						:= i_bCmdReset, 
-	i_sCmName						:= 'Tesla meter');
+s_cmDoorLockCleanroom(
+	i_bReqEnable := i_bReqEnable, 
+	i_eCtrlMode := i_eCtrlMode, 
+	i_bCmdReset := i_bCmdReset, 
+	i_sCmName := 'Door lock cleanroom', 
+	i_stSettings := );	
+
 	
-_m_Devices := TRUE;]]></ST>
+	// Interlocks (doors must work as an airlock, only one door may be opened at all times)
+	s_bIlckSpeedDoorOuterToOpen :=
+		s_cmDoorLockCleanroom.p_bStaError
+		OR NOT(s_cmDoorLockCleanroom.p_bStaEnabled)
+		NOT(s_cmDoorLockCleanroom.p_bStaDoorIsClosed)
+		OR NOT (s_cmDoorLockCleanroom.p_bStaLockIsApplied)
+		OR s_cmDoorLockCleanroom.p_bStaLockIsReleased
+		OR TRUE (*Air treathment unit must be running and ok*)
+		OR TRUE (*Add more..*);
+	s_bIlckSpeedDoorOuterToClose :=
+		TRUE (*Opening must be free*)
+		OR TRUE (*Add more..*);
+	
+	s_bIlckDoorLockCleanroomToOpen :=
+		s_cmSpeedDoorOuter.p_bStaError
+		OR NOT(s_cmSpeedDoorOuter.p_bStaEnabled)
+		OR NOT(s_cmSpeedDoorOuter.p_bStaIsClosed)
+		OR s_cmSpeedDoorOuter.p_bStaIsClosing
+		OR s_cmSpeedDoorOuter.p_bStaIsOpened
+		OR s_cmSpeedDoorOuter.p_bStaIsOpening
+		OR TRUE (*Air treathment unit must be running and ok*)
+		OR TRUE (*Add more..*);
+	
+_m_Devices := TRUE;
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_GetMagneticField" Id="{d945ccf2-8199-4155-868a-7f8c730d83f6}" FolderPath="Sensors\">
@@ -534,16 +569,18 @@ END_IF]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_Init" Id="{f5588ebd-495a-4c31-a7f5-23415377d40e}" FolderPath="General\">
-      <Declaration><![CDATA[METHOD Protected _m_Init : BOOL
-VAR_INPUT
-END_VAR]]></Declaration>
+      <Declaration><![CDATA[METHOD PROTECTED _m_Init : BOOL
+]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF NOT SUPER^._m_Init() THEN
+        <ST><![CDATA[
+IF NOT SUPER^._m_Init() THEN
 	RETURN;
 END_IF
 
 //----------------------------------//
 //CM
+	s_cmSpeedDoorOuter.i_stSettings.
+
 	s_CmProbeMotor.i_bReqEnable						:= FALSE;
 	s_CmProbeMotor.i_sCmName 						:= 'Probe motor';
 	s_CmProbeMotor.i_eBtnCtrlType					:= E_HmiButtonType.PUSHBUTTON;
@@ -619,11 +656,10 @@ _m_Init := TRUE;]]></ST>
     </Method>
     <Method Name="_m_Inputs" Id="{08e3676c-19d2-4657-8762-4d7303d85c82}" FolderPath="General\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Inputs : BOOL
-VAR_INPUT
-END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF NOT SUPER^._m_Inputs() THEN
+        <ST><![CDATA[
+IF NOT SUPER^._m_Inputs() THEN
 	RETURN;
 END_IF
 
@@ -847,11 +883,10 @@ END_CASE]]></ST>
     </Method>
     <Method Name="_m_Outputs" Id="{f763b42e-2a14-49e4-aeec-3b4dc606af2b}" FolderPath="General\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Outputs : BOOL
-VAR_INPUT
-END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF NOT SUPER^._m_Outputs() THEN
+        <ST><![CDATA[
+IF NOT SUPER^._m_Outputs() THEN
 	RETURN;
 END_IF
 
@@ -870,7 +905,8 @@ VAR_INST
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF NOT SUPER^._m_Params() THEN
+        <ST><![CDATA[
+IF NOT SUPER^._m_Params() THEN
 	RETURN;
 END_IF
 
@@ -954,7 +990,8 @@ s_fToHmiXAxisMax	:= 2*s_fbParamaMaxMagnitudeCriteria.p_fValue;
 s_fToHmiYAxisMin	:= s_CmProbeMotor.p_fHomePosition;
 s_fToHmiYAxisMax	:= s_fbParamRefCpValve.p_fValue*1.2;
 
-_m_Params := TRUE;]]></ST>
+_m_Params := TRUE;
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_PrepareDataFile" Id="{fb1741c7-802f-41e2-a9c9-3469959c243c}" FolderPath="Administrative\">
@@ -1597,7 +1634,8 @@ END_CASE
       <Declaration><![CDATA[METHOD PUBLIC m_Main : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF NOT SUPER^.m_Main() THEN
+        <ST><![CDATA[
+IF NOT SUPER^.m_Main() THEN
 	RETURN;
 END_IF
 
@@ -1647,7 +1685,8 @@ CASE i_eCtrlMode OF
 	E_CtrlMode.MANUAL:
 		_m_Manual(i_bCmdReset			:= GVL.g_UnRMMT.s_fbHmiBtnManual.p_osfBtnPress OR GVL_KMWEGenericLib.g_fbAlarmManager.p_osrReset, 
 					i_bStaError			:= GVL_KMWEGenericLib.g_fbAlarmManager.p_bAlarmActive OR s_fbHmiBtnStop.p_osrBtnPress OR s_diBtnStop.p_osrOn);	
-END_CASE]]></ST>
+END_CASE
+]]></ST>
       </Implementation>
     </Method>
     <LineIds Name="EM_Doors">
@@ -1656,10 +1695,12 @@ END_CASE]]></ST>
       <LineId Id="222" Count="0" />
     </LineIds>
     <LineIds Name="EM_Doors._m_Alarms">
+      <LineId Id="12" Count="0" />
       <LineId Id="8" Count="1" />
       <LineId Id="7" Count="0" />
       <LineId Id="11" Count="0" />
       <LineId Id="10" Count="0" />
+      <LineId Id="14" Count="0" />
     </LineIds>
     <LineIds Name="EM_Doors._m_DatabaseMagnetic">
       <LineId Id="216" Count="14" />
@@ -1676,14 +1717,39 @@ END_CASE]]></ST>
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="EM_Doors._m_Devices">
+      <LineId Id="35" Count="0" />
       <LineId Id="6" Count="2" />
-      <LineId Id="11" Count="4" />
-      <LineId Id="10" Count="0" />
-      <LineId Id="28" Count="0" />
-      <LineId Id="9" Count="0" />
-      <LineId Id="21" Count="3" />
-      <LineId Id="33" Count="0" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="38" Count="4" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="45" Count="4" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="77" Count="1" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="57" Count="0" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="74" Count="1" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="54" Count="0" />
       <LineId Id="5" Count="0" />
+      <LineId Id="50" Count="0" />
     </LineIds>
     <LineIds Name="EM_Doors._m_GetMagneticField">
       <LineId Id="14" Count="4" />
@@ -1817,7 +1883,10 @@ END_CASE]]></ST>
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="EM_Doors._m_Init">
+      <LineId Id="203" Count="0" />
       <LineId Id="5" Count="5" />
+      <LineId Id="205" Count="0" />
+      <LineId Id="204" Count="0" />
       <LineId Id="175" Count="0" />
       <LineId Id="121" Count="0" />
       <LineId Id="126" Count="1" />
@@ -1853,6 +1922,7 @@ END_CASE]]></ST>
       <LineId Id="4" Count="0" />
     </LineIds>
     <LineIds Name="EM_Doors._m_Inputs">
+      <LineId Id="46" Count="0" />
       <LineId Id="6" Count="2" />
       <LineId Id="40" Count="2" />
       <LineId Id="39" Count="0" />
@@ -1970,6 +2040,7 @@ END_CASE]]></ST>
       <LineId Id="215" Count="0" />
     </LineIds>
     <LineIds Name="EM_Doors._m_Outputs">
+      <LineId Id="20" Count="0" />
       <LineId Id="6" Count="2" />
       <LineId Id="16" Count="0" />
       <LineId Id="18" Count="0" />
@@ -1977,6 +2048,7 @@ END_CASE]]></ST>
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="EM_Doors._m_Params">
+      <LineId Id="291" Count="0" />
       <LineId Id="164" Count="0" />
       <LineId Id="166" Count="1" />
       <LineId Id="165" Count="0" />
@@ -2026,6 +2098,7 @@ END_CASE]]></ST>
       <LineId Id="281" Count="0" />
       <LineId Id="283" Count="0" />
       <LineId Id="282" Count="0" />
+      <LineId Id="292" Count="0" />
     </LineIds>
     <LineIds Name="EM_Doors._m_PrepareDataFile">
       <LineId Id="115" Count="0" />
@@ -2264,6 +2337,7 @@ END_CASE]]></ST>
       <LineId Id="1843" Count="0" />
     </LineIds>
     <LineIds Name="EM_Doors.m_Main">
+      <LineId Id="178" Count="0" />
       <LineId Id="6" Count="2" />
       <LineId Id="10" Count="2" />
       <LineId Id="163" Count="0" />
@@ -2297,6 +2371,7 @@ END_CASE]]></ST>
       <LineId Id="60" Count="0" />
       <LineId Id="161" Count="1" />
       <LineId Id="5" Count="0" />
+      <LineId Id="179" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>

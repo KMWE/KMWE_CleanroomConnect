@@ -4,6 +4,10 @@
     <Declaration><![CDATA[PROGRAM MAIN
 VAR
 
+
+
+// TEST SIMULATION
+(*
 	// Control Module SIM/TEST
 	cmSpeedDoorOuter : CM_SpeedDoor;
 	arr_bTestBoolSpeeddoor : ARRAY[0..15] OF BOOL;
@@ -27,10 +31,16 @@ VAR
 	Q_bErrorAcknowledgement AT %Q* : BOOL;
 	Q_bRun AT %Q* : BOOL;
 	Q_SafetyRestart AT %Q* : BOOL;
+*)
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[// Speed Door simulation/test
+      <ST><![CDATA[
+GVL_KMWEGenericLib.g_fbAlarmManager();
+
+// TEST SIMULATION
+(*
+// Speed Door simulation/test
 cmSpeedDoorOuter(
 	i_bReqEnable := arr_bTestCmdSpeeddoor[10],
 	i_eCtrlMode := E_CtrlMode.AUTOMATIC,
@@ -122,9 +132,14 @@ arr_bTestBoolValvePinUpper[3] := cmValveDoorUnlockingPinUpper.p_bStaError;
 arr_bTestBoolValvePinUpper[4] := cmValveDoorUnlockingPinUpper.p_bStaIsOff;
 arr_bTestBoolValvePinUpper[5] := cmValveDoorUnlockingPinUpper.p_bStaIsOn;
 arr_bTestBoolValvePinUpper[6] := cmValveDoorUnlockingPinUpper.p_bStaValve;
+*)
 ]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
+      <LineId Id="378" Count="1" />
+      <LineId Id="374" Count="0" />
+      <LineId Id="376" Count="0" />
+      <LineId Id="375" Count="0" />
       <LineId Id="189" Count="17" />
       <LineId Id="243" Count="9" />
       <LineId Id="286" Count="1" />
@@ -149,6 +164,7 @@ arr_bTestBoolValvePinUpper[6] := cmValveDoorUnlockingPinUpper.p_bStaValve;
       <LineId Id="304" Count="3" />
       <LineId Id="309" Count="1" />
       <LineId Id="308" Count="0" />
+      <LineId Id="377" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>

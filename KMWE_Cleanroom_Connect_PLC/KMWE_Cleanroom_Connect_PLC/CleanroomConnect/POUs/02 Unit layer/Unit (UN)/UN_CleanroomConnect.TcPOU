@@ -1,0 +1,633 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="UN_CleanroomConnect" Id="{8b93890b-f796-4713-9491-f75e01fbeba7}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK UN_CleanroomConnect EXTENDS Un_Base
+VAR
+//------------------------------------------//
+//Function Blocks
+
+//------------------------------------------//
+
+//------------------------------------------//
+//Control Modules (Devices)
+	s_CmKmweLeds 				: CM_KmweLeds;
+//------------------------------------------//
+
+//------------------------------------------//
+//Inputs
+	s_diEmergencyBtn			: FB_DigInput;
+//------------------------------------------//
+
+//------------------------------------------//
+//Alarms
+	s_errEmergencyBtn			: FB_AlarmHandler;
+//------------------------------------------//
+	
+//------------------------------------------//
+//Params
+
+//------------------------------------------//
+
+//------------------------------------------//
+//Variables
+	s_stSqldbSettings			: ST_SqLdbConfiguration;
+//------------------------------------------//
+
+//------------------------------------------//
+//Properties
+
+//------------------------------------------//
+
+//------------------------------------------//
+//Hmi
+	s_fbHmiBtnAutomatic			: FB_HmiBtn;
+	s_fbHmiBtnManual			: FB_HmiBtn;
+	s_fbHmiBtnTesterConfig		: FB_HmiBtn;
+	s_fbHmiBtnAlarms			: FB_HmiBtn;
+//------------------------------------------//
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[SUPER^();
+]]></ST>
+    </Implementation>
+    <Method Name="_m_Alarms" Id="{c0f56159-8f50-4d36-acac-c259038873b1}">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Alarms : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Alarms() THEN
+	RETURN;
+END_IF
+
+//overbruggen in automode tot en met place table blablabla
+s_errEmergencyBtn(i_bStaActive 			:= NOT s_DiEmergencyBtn.p_bStaInput AND NOT GVL.g_fbHmiBtnSimulation.p_bStaBtn AND GVL.g_bConnectTestEquipment ,
+				  i_eAlarmLevel 		:= E_AlarmLevel.Alarm,
+				  i_sAlarmText 			:= 'Emergency button pressed');
+
+IF GVL_KMWEGenericLib.g_fbAlarmManager.p_bAlarmActive THEN 
+	GVL.g_eStaLedColor := E_KmweLedColors.Red;
+END_IF
+
+s_bStaError := s_errEmergencyBtn.q_bStaActive;
+
+_m_Alarms := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Devices" Id="{68eeb98b-de01-4c23-9e4b-e0a75e4ed7ba}">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Devices : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Devices() THEN
+	RETURN;
+END_IF
+
+//------------------------------------------//
+//CM
+	s_CmKmweLeds(i_bReqEnable := TRUE,
+			 i_bCmdReset  := s_bCmdReset,
+			 i_eCtrlMode  := s_eCtrlMode,
+			 i_eColor 	  := GVL.g_eStaLedColor);
+			 
+	s_CmKmweLeds.p_bFlashFast := GVL.g_bLedFlashFast;
+	s_CmKmweLeds.p_bFlashSlow := GVL.g_bLedFlashSlow;
+
+//------------------------------------------//
+
+//------------------------------------------//
+//Outputs
+//------------------------------------------//
+
+//------------------------------------------//
+//Inputs
+	s_diEmergencyBtn();	
+//------------------------------------------//
+
+_m_Devices := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Hmi" Id="{6e489294-edbd-4c11-9b41-7f97eb3787da}">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Hmi : BOOL
+VAR_INST
+	s_sPrevPageAlarms 		: STRING;
+	s_sPrevBottom1Alarms	: STRING;
+	
+	s_sCompanySelectionVisible	: STRING;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Hmi() THEN
+	RETURN;
+END_IF
+
+//------------------------------------------//
+//Mode management
+IF GVL_KMWEGenericLib.g_fbHmiBtnReturnToStart.p_osfBtnPress THEN
+	s_eCtrlMode := E_CtrlMode.IDLE;
+
+	GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaVisible	:= TRUE;
+	GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaEnabled	:= TRUE;	
+END_IF
+//------------------------------------------//
+
+//------------------------------------------//
+//Alarm Button can always be pressed
+IF s_fbHmiBtnAlarms.p_osrBtnPress AND GVL.g_sToHmiMiddleContent <> GVL.g_stHmiMiddle.AlarmManager THEN
+	s_sPrevPageAlarms			:= GVL.g_sToHmiMiddleContent;
+	s_sPrevBottom1Alarms		:= GvL.g_sToHmiBottomContent;
+	GVL.g_sToHmiMiddleContent 	:= GVL.g_stHmiMiddle.AlarmManager;
+	GVL.g_sToHmiBottomContent	:= GVL.g_stHmiBottomBar.Alarm;
+	
+	GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible 			:= TRUE;
+	GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled 			:= TRUE;
+END_IF
+
+IF GVL.g_sToHmiMiddleContent = GVL.g_stHmiMiddle.AlarmManager AND GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_osfBtnPress THEN
+	GVL.g_sToHmiMiddleContent 	:=	s_sPrevPageAlarms;
+	GVL.g_sToHmiBottomContent	:=	s_sPrevBottom1Alarms;
+	
+	GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible 			:= FALSE;
+	GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled 			:= FALSE;
+END_IF
+//------------------------------------------//
+
+//------------------------------------------//
+//Hmi view management (General, Em can set module specific pages)
+CASE s_eCtrlMode OF
+	E_CtrlMode.IDLE:
+		GVL.g_bConnectTestEquipment		:= TRUE;
+
+		IF NOT GVL_KMWEGenericLib.g_fbAlarmManager.p_bAlarmActive THEN
+			GVL.g_bLedFlashFast	:= FALSE;
+			GVL.g_bLedFlashSlow	:= FALSE;
+			GVL.g_eStaLedColor := E_KmweLedColors.Idle;
+		END_IF
+	
+		s_fbHmiBtnTesterConfig.p_sBtnText		:= 'Tester Configuration';	
+	
+		IF GVL_KMWEGenericLib.g_fbHmiBtnReturnToStart.p_osfBtnPress THEN
+			GVL_KMWEGenericLib.g_fbParamManager.p_bShowHmiParam := FALSE;
+
+			GVL.g_sToHmiMiddleContent 	:= GVL.g_stHmiMiddle.Start;
+			GVL.g_sToHmiBottomContent	:= GVL.g_stHmiBottomBar.Start;
+		END_IF
+		
+		IF s_fbHmiBtnTesterConfig.p_osrBtnPress THEN
+			GVL_KMWEGenericLib.g_fbParamManager.p_nFolderIndex 	:= 1;
+			GVL_KMWEGenericLib.g_fbParamManager.p_bShowHmiParam := TRUE;
+
+			GVL.g_sToHmiMiddleContent 	:= GVL.g_stHmiMiddle.TesterConfig;
+			GVL.g_sToHmiBottomContent	:= GVL.g_stHmiBottomBar.General_ReturnToStart;
+		END_IF
+		
+		IF s_fbHmiBtnAutomatic.p_osrBtnPress THEN
+			s_eCtrlMode 					:= E_CtrlMode.AUTOMATIC;
+			GVL.g_bConnectTestEquipment		:= FALSE;
+			
+			GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_sBtnText		:= 'Acknowledge';
+			
+			GVL_KMWEGenericLib.g_fbParamManager.p_nFolderIndex 		:= 2;
+			
+			GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaVisible	:= FALSE;
+			GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaEnabled	:= FALSE;
+	
+			GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible		:= TRUE;
+			GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled		:= TRUE;
+			
+			GVL.g_sToHmiMiddleContent 	:= GVL.g_stHmiMiddle.OperatorInputData;
+			GVL.g_sToHmiBottomContent	:= GVL.g_stHmiBottomBar.Procedure;
+		END_IF
+		
+		IF s_fbHmiBtnManual.p_osrBtnPress THEN
+			s_eCtrlMode := E_CtrlMode.MANUAL;
+			
+			GVL.g_sToHmiMiddleContent 	:= GVL.g_stHmiMiddle.Manual;
+			GVL.g_sToHmiBottomContent	:= GVL.g_stHmiBottomBar.General_ReturnToStart;
+		END_IF
+
+	E_CtrlMode.AUTOMATIC:
+		s_fbHmiBtnTesterConfig.p_sBtnText		:= 'Procedure Configuration';
+		
+		IF GVL.g_sToHmiMiddleContent = GVL.g_stHmiMiddle.OperatorInputData 
+			AND GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_osrBtnPress 
+		THEN
+			GVL_KMWEGenericLib.g_fbParamManager.p_bShowHmiParam := FALSE;
+
+			GVL.g_sToHmiMiddleContent 							:= GVL.g_stHmiMiddle.Start;
+			GVL.g_sToHmiBottomContent							:= GVL.g_stHmiBottomBar.Start;
+			
+			s_eCtrlMode 										:= E_CtrlMode.IDLE;	
+		END_IF
+		
+		IF s_fbHmiBtnTesterConfig.p_osrBtnPress THEN
+			GVL_KMWEGenericLib.g_fbParamManager.p_nFolderIndex 	:= 2;
+			GVL_KMWEGenericLib.g_fbParamManager.p_bShowHmiParam := TRUE;
+
+			GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaVisible	:= FALSE;
+			GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaEnabled	:= FALSE;
+			
+			GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible		:= TRUE;
+			GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled		:= TRUE;
+
+			GVL.g_sToHmiMiddleContent 	:= GVL.g_stHmiMiddle.TesterConfig;
+			GVL.g_sToHmiBottomContent	:= GVL.g_stHmiBottomBar.General_Return;
+		END_IF
+		
+		IF GVL.g_sToHmiMiddleContent = GVL.g_stHmiMiddle.TesterConfig THEN
+			IF GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_osrBtnPress THEN
+				GVL.g_sToHmiMiddleContent 	:= GVL.g_stHmiMiddle.OperatorInputData;
+				GVL.g_sToHmiBottomContent	:= GVL.g_stHmiBottomBar.Procedure;
+				
+				GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible		:= FALSE;
+				GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled		:= FALSE;
+			END_IF
+		END_IF
+		
+	E_CtrlMode.MANUAL:
+		IF GVL_KMWEGenericLib.g_fbAlarmManager.p_osrAlarmsResolved THEN
+			GVL.g_eStaLedColor := E_KmweLedColors.Green;
+		END_IF
+	
+		GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaVisible	:= FALSE;
+		GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaEnabled	:= FALSE;
+		
+//		IF GVL_KMWEGenericLib.g_fbHmiBtnReturnToStart.p_osrBtnPress THEN
+//			GVL.g_sToHmiMiddleContent 	:= ST_HmiMiddle.Start;
+//			GVL.g_sToHmiBottomContect	:= ST_HmiBottomBar.Start;
+//		END_IF
+		;
+END_CASE
+//------------------------------------------//
+
+//------------------------------------------//
+//Hmi Buttons
+s_fbHmiBtnAutomatic();
+s_fbHmiBtnManual();
+s_fbHmiBtnTesterConfig();
+s_fbHmiBtnAlarms();
+GVL.g_fbHmiBtnSimulation();
+//------------------------------------------//
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Init" Id="{71192b96-a840-4eae-8166-473534974241}">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Init : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Init() THEN
+	RETURN;
+END_IF
+
+_m_AddModule(i_itfModuleBase := GVL_Modules.g_EmRMMTTester);
+
+//------------------------------------------//
+//Hmi Startup
+GVL.g_sToHmiTopContent 		:= GVL.g_stHmiTopBar.GeneralTopbar;
+GVL.g_sToHmiMiddleContent 	:= GVL.g_stHmiMiddle.Start;
+GVL.g_sToHmiBottomContent	:= GVL.g_stHmiBottomBar.Start;
+//------------------------------------------//
+
+//------------------------------------------//
+//Buttons
+	s_fbHmiBtnAutomatic.p_bStaEnabled 		:= TRUE;
+	s_fbHmiBtnAutomatic.p_bStaVisible 		:= TRUE;
+	s_fbHmiBtnAutomatic.p_eButtontype		:= E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnAutomatic.p_sBtnText			:= 'RMMT Test';
+
+	s_fbHmiBtnManual.p_bStaEnabled 			:= TRUE;
+	s_fbHmiBtnManual.p_bStaVisible 			:= TRUE;
+	s_fbHmiBtnManual.p_eButtontype			:= E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnManual.p_sBtnText				:= 'Manual';
+	
+	s_fbHmiBtnTesterConfig.p_bStaEnabled 	:= TRUE;
+	s_fbHmiBtnTesterConfig.p_bStaVisible 	:= TRUE;
+	s_fbHmiBtnTesterConfig.p_eButtontype	:= E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnTesterConfig.p_sBtnText		:= 'Tester Configuration';
+	
+	s_fbHmiBtnAlarms.p_bStaVisible 			:= TRUE;
+	s_fbHmiBtnAlarms.p_bStaEnabled			:= TRUE;
+	s_fbHmiBtnAlarms.p_eButtontype 			:= E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnAlarms.p_sBtnText				:= 'Alarms';
+
+	GVL.g_fbHmiBtnSimulation.p_bStaVisible 	:= TRUE;
+	GVL.g_fbHmiBtnSimulation.p_bStaEnabled	:= TRUE;
+	GVL.g_fbHmiBtnSimulation.p_eButtontype 	:= E_HmiButtonType.TOGGLEBUTTON;
+	GVL.g_fbHmiBtnSimulation.p_sBtnText		:= 'Simulation';
+	
+	GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible 	:= FALSE;
+	GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled 	:= FALSE;
+//------------------------------------------//
+
+
+//------------------------------------------//
+//Database information
+s_stSqldbSettings.sServer				:= 'plc-db\sqlexpress';
+s_stSqldbSettings.sProvider				:= 'SQLOLEDB';
+s_stSqldbSettings.sDatabase				:= 'RMMT_Tester';
+s_stSqldbSettings.sUserID				:= 'RMMT_Tester';
+s_stSqldbSettings.sPassword				:= 'dCH9FTVALtsukUQMv5yjWr';
+s_stSqldbSettings.bAuthentification		:= TRUE;
+//------------------------------------------//
+
+_m_Init := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Modules" Id="{2372c80a-8810-4c92-8500-979916e08046}">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Modules : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+GVL_Modules.g_EmRMMTTester(
+	i_bReqEnable	:= TRUE, 
+	i_eCtrlMode		:= s_eCtrlMode, 
+	i_bCmdReset		:= p_bCmdReset, 
+	i_sEmName		:= 'RMMT Tester Tool', 
+	q_bStaError		=> s_bStaError );
+
+_m_Modules := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_SelectConfigFile" Id="{7c7e81b7-08ef-4473-8a6d-b20d88aaf565}">
+      <Declaration><![CDATA[METHOD PRIVATE _m_SelectConfigFile : BOOL
+VAR_INPUT
+	i_bCmdReset 			: BOOL;
+END_VAR
+VAR_INST	
+	i, x					: UDINT;
+		
+	s_aPossibleRevs			: ARRAY[0..TO_DINT(Param_Project.n_MaxParamFiles)] OF T_MAXSTRING;
+	
+	s_aConfigFileNames 		: ARRAY[0..Param_Project.n_MaxParamFiles] OF T_MAXSTRING;
+	s_aConfigFileDUTs		: ARRAY[0..TO_DINT(Param_Project.n_MaxParamFiles)] OF T_MAXSTRING;	
+	s_aConfigFileRev		: ARRAY[0..Param_Project.n_MaxParamFiles] OF T_MAXSTRING;
+	
+	s_aSingleDUTs			: ARRAY[0..TO_DINT(Param_Project.n_MaxParamFiles)] OF T_MAXSTRING;
+	s_aSingleREVs			: ARRAY[0..TO_DINT(Param_Project.n_MaxParamFiles)] OF T_MAXSTRING;
+		
+	s_nIndexDut				: INT;
+//	s_nIndexSR				: INT;
+	s_nIndexRev				: INT;
+	
+	s_nIndexDutPrev			: INT;
+	s_nIndexRevPrev			: INT;
+	
+	s_sChosenFile			: T_MAXSTRING;
+	s_sToHmiChosenFile		: T_MAXSTRING;
+	
+	s_bCmdResetInternal	 	: BOOL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+//1413824/E test bestand met deze naam.
+
+IF i_bCmdReset OR s_bCmdResetInternal THEN	
+	MEMSET(ADR(s_aConfigFileNames), 0, SIZEOF(s_aConfigFileNames));
+	MEMSET(ADR(s_aConfigFileDUTs), 0, SIZEOF(s_aConfigFileDUTs));
+	MEMSET(ADR(s_aSingleDUTs), 0, SIZEOF(s_aSingleDUTs));
+	
+	MEMCPY(ADR(s_aConfigFileNames), ADR(GVL_KMWEGenericLib.g_fbParamManager.s_aFileListHmi), SIZEOF(GVL_KMWEGenericLib.g_fbParamManager.s_aFileListHmi));
+	
+	s_nIndexDut		:= -1;
+//	s_nIndexSR		:= -1;
+	s_nIndexRev		:= -1;
+	
+	FOR i := 0 TO Param_Project.n_MaxParamFiles DO 
+		FindAndSplit(pSeparator:= ADR('^'),
+							 pSrcString:= ADR(s_aConfigFileNames[i]),
+							 pLeftString:= ADR(s_aConfigFileDUTs[i]),
+							 nLeftSize:= SIZEOF(s_aConfigFileDUTs[i]),
+							 pRightString:= ADR(s_aConfigFileRev[i]),
+							 nRightSize:= SIZEOF(s_aConfigFileRev[i]),
+							 bSearchFromRight:= FALSE);	
+
+		s_aConfigFileRev[i] := 	DELETE(s_aConfigFileRev[i], 6, 2);			
+	END_FOR
+	
+	F_CheckDuplicatesInArray(iq_aOriginalArray := s_aConfigFileDUTs, iq_aUniqueArray := s_aSingleDUTs);
+
+	IF s_aConfigFileNames[0] = '' THEN
+		s_bCmdResetInternal := TRUE;	
+	ELSE
+		s_bCmdResetInternal := FALSE;	
+	END_IF
+END_IF
+
+IF s_nIndexDutPrev <> s_nIndexDut AND s_nIndexDutPrev <> -1 THEN
+	s_nIndexRev := -1;
+	
+	MEMSET(ADR(s_aSingleREVs), 0, SIZEOF(s_aSingleREVs));
+END_IF
+
+IF s_nIndexDut <> -1 AND s_nIndexRev = -1 THEN 
+	x := 0;
+	MEMSET(ADR(s_aSingleREVs), 0, SIZEOF(s_aSingleREVs));
+	MEMSET(ADR(s_aPossibleRevs), 0, SIZEOF(s_aPossibleRevs));
+	FOR i:= 0 TO Param_Project.n_MaxParamFiles DO
+		IF FIND(s_aConfigFileNames[i], s_aSingleDUTs[s_nIndexDut]) <> 0 THEN
+			s_aPossibleRevs[x] := MID(s_aConfigFileNames[i],1,FIND(s_aConfigFileNames[i], '^')+1);
+			x := x + 1;
+		END_IF					
+	END_FOR	
+	
+	F_CheckDuplicatesInArray(iq_aOriginalArray := s_aPossibleRevs, iq_aUniqueArray := s_aSingleREVs); 
+END_IF
+
+IF s_nIndexDut <> -1 AND s_nIndexRev <> -1 AND s_nIndexRevPrev <> s_nIndexRev THEN
+	FOR i := 0 TO Param_Project.n_MaxParamFiles DO
+		IF s_aConfigFileNames[i] = CONCAT(s_aSingleDUTs[s_nIndexDut], 
+										CONCAT('^', 
+										CONCAT(s_aSingleRevs[s_nIndexRev], '.csv')))
+		THEN
+			s_sChosenFile := s_aConfigFileNames[i];
+		END_IF
+	END_FOR
+	
+	FOR i := 0 TO Param_Project.n_MaxParamFiles DO
+		IF GVL_KMWEGenericLib.g_fbParamManager.s_aFileListHmi[i] = s_sChosenFile THEN
+			GVL_KMWEGenericLib.g_fbParamManager.p_nHmiFileSelected := TO_UDINT(i);
+		END_IF
+	END_FOR 
+END_IF
+
+IF s_aConfigFileNames[GVL_KMWEGenericLib.g_fbParamManager.p_nHmiFileSelected] <> s_sChosenFile THEN
+	s_nIndexDut	:= -1;
+	s_nIndexRev	:= -1;
+	
+	MEMSET(ADR(s_aSingleREVs), 0, SIZEOF(s_aSingleREVs));
+END_IF
+
+s_sChosenFile 		:= GVL_KMWEGenericLib.g_fbParamManager.s_aFileListHmi[GVL_KMWEGenericLib.g_fbParamManager.p_nHmiFileSelected];
+s_sToHmiChosenFile 	:= DELETE(s_sChosenFile, 4, FIND(s_sChosenFile, '.csv'));
+
+s_nIndexRevPrev := s_nIndexRev;
+s_nIndexDutPrev	:= s_nIndexDut;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_FastTask" Id="{d7f04e67-2f14-466a-aab3-c133442def96}">
+      <Declaration><![CDATA[METHOD PUBLIC m_FastTask : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+CASE GVL_DataLogging.g_eDataAction OF
+	E_DataReadWriteActions.MagneticProcedure:
+			GVL_DataLogging.g_fbDataLogger.m_FastTask(iq_aCSVFieldFast 			:= GVL_Datalogging.g_aLoggingDataMagnetic,
+														i_bCmdResetReadFast 	:= GVL_Datalogging.g_bCmdResetReadFast,
+														i_bCmdResetWriteFast 	:= GVL_Datalogging.g_bCmdResetWriteFast,
+														i_sFileName 			:= GVL_Datalogging.g_sFilenameFast);				
+END_CASE
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_Main" Id="{bf5d9d9d-3881-4722-ad23-ed0781ff35d5}">
+      <Declaration><![CDATA[METHOD PUBLIC m_Main : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^.m_Main() THEN
+	RETURN;
+END_IF
+
+GVL.g_osrNotify();
+
+GVL_DataLogging.g_fbDataLogger(i_sPathName := 'C:\RMMT\', i_bCmdReset := s_bCmdReset);
+
+GVL_DataLogging.g_fbSqlDatabase(i_stSettings := s_stSqlDbSettings, i_bCmdReset := s_bCmdReset);
+
+_m_SelectConfigFile(i_bCmdReset := s_fbHmiBtnAutomatic.p_osfBtnPress);
+
+GVL.g_osrNotify.CLK 	:= FALSE;	
+
+m_Main := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="UN_CleanroomConnect">
+      <LineId Id="9" Count="0" />
+      <LineId Id="62" Count="0" />
+    </LineIds>
+    <LineIds Name="UN_CleanroomConnect._m_Alarms">
+      <LineId Id="28" Count="0" />
+      <LineId Id="6" Count="2" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="11" Count="3" />
+      <LineId Id="16" Count="6" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="29" Count="0" />
+    </LineIds>
+    <LineIds Name="UN_CleanroomConnect._m_Devices">
+      <LineId Id="35" Count="0" />
+      <LineId Id="6" Count="9" />
+      <LineId Id="30" Count="3" />
+      <LineId Id="16" Count="10" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="36" Count="0" />
+    </LineIds>
+    <LineIds Name="UN_CleanroomConnect._m_Hmi">
+      <LineId Id="286" Count="0" />
+      <LineId Id="9" Count="38" />
+      <LineId Id="274" Count="1" />
+      <LineId Id="240" Count="0" />
+      <LineId Id="254" Count="1" />
+      <LineId Id="242" Count="1" />
+      <LineId Id="241" Count="0" />
+      <LineId Id="233" Count="1" />
+      <LineId Id="51" Count="16" />
+      <LineId Id="277" Count="1" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="184" Count="1" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="191" Count="2" />
+      <LineId Id="235" Count="0" />
+      <LineId Id="237" Count="0" />
+      <LineId Id="239" Count="0" />
+      <LineId Id="160" Count="0" />
+      <LineId Id="76" Count="4" />
+      <LineId Id="84" Count="4" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="231" Count="1" />
+      <LineId Id="187" Count="0" />
+      <LineId Id="189" Count="1" />
+      <LineId Id="196" Count="2" />
+      <LineId Id="195" Count="0" />
+      <LineId Id="199" Count="0" />
+      <LineId Id="188" Count="0" />
+      <LineId Id="186" Count="0" />
+      <LineId Id="207" Count="0" />
+      <LineId Id="209" Count="2" />
+      <LineId Id="216" Count="1" />
+      <LineId Id="215" Count="0" />
+      <LineId Id="228" Count="2" />
+      <LineId Id="212" Count="2" />
+      <LineId Id="208" Count="0" />
+      <LineId Id="218" Count="0" />
+      <LineId Id="220" Count="7" />
+      <LineId Id="219" Count="0" />
+      <LineId Id="159" Count="0" />
+      <LineId Id="141" Count="0" />
+      <LineId Id="263" Count="0" />
+      <LineId Id="265" Count="1" />
+      <LineId Id="264" Count="0" />
+      <LineId Id="244" Count="2" />
+      <LineId Id="142" Count="11" />
+      <LineId Id="155" Count="3" />
+      <LineId Id="8" Count="0" />
+    </LineIds>
+    <LineIds Name="UN_CleanroomConnect._m_Init">
+      <LineId Id="77" Count="0" />
+      <LineId Id="6" Count="24" />
+      <LineId Id="36" Count="3" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="41" Count="24" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="78" Count="0" />
+    </LineIds>
+    <LineIds Name="UN_CleanroomConnect._m_Modules">
+      <LineId Id="19" Count="0" />
+      <LineId Id="11" Count="6" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="20" Count="0" />
+    </LineIds>
+    <LineIds Name="UN_CleanroomConnect._m_SelectConfigFile">
+      <LineId Id="202" Count="0" />
+      <LineId Id="172" Count="1" />
+      <LineId Id="3" Count="30" />
+      <LineId Id="40" Count="1" />
+      <LineId Id="43" Count="2" />
+      <LineId Id="47" Count="14" />
+      <LineId Id="79" Count="5" />
+      <LineId Id="143" Count="0" />
+      <LineId Id="87" Count="12" />
+      <LineId Id="101" Count="2" />
+      <LineId Id="105" Count="6" />
+      <LineId Id="203" Count="0" />
+    </LineIds>
+    <LineIds Name="UN_CleanroomConnect.m_FastTask">
+      <LineId Id="51" Count="0" />
+      <LineId Id="6" Count="5" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="UN_CleanroomConnect.m_Main">
+      <LineId Id="30" Count="0" />
+      <LineId Id="6" Count="2" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="9" Count="3" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="31" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

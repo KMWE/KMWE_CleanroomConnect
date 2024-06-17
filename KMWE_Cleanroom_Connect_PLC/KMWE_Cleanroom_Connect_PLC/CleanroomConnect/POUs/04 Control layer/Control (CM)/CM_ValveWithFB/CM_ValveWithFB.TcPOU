@@ -100,6 +100,16 @@ IF NOT SUPER^._m_Devices() THEN
 	RETURN;
 END_IF
 
+// Reset request
+IF s_bCfgBiStableValve THEN
+	IF NOT(i_bReqEnable) THEN
+		s_bReqOff := FALSE;
+		s_bReqOn := FALSE;
+	END_IF
+ELSE
+	; //Keep request unchanged to avoid unexpected movements 
+END_IF
+
 _m_Devices := TRUE;
 ]]></ST>
       </Implementation>
@@ -173,7 +183,7 @@ ELSE// MONO-STABLE
 	END_IF
 	
 END_IF
-	
+
 _m_Outputs := TRUE;
 ]]></ST>
       </Implementation>
@@ -330,6 +340,15 @@ p_bStaValve := s_bStaValveIsOn AND NOT(s_bStaValveIsOff);
     </LineIds>
     <LineIds Name="CM_ValveWithFB._m_Devices">
       <LineId Id="6" Count="3" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="35" Count="1" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="38" Count="0" />
       <LineId Id="14" Count="0" />
       <LineId Id="5" Count="0" />
       <LineId Id="13" Count="0" />
@@ -375,7 +394,7 @@ p_bStaValve := s_bStaValveIsOn AND NOT(s_bStaValveIsOff);
       <LineId Id="48" Count="0" />
       <LineId Id="68" Count="0" />
       <LineId Id="46" Count="0" />
-      <LineId Id="27" Count="0" />
+      <LineId Id="73" Count="0" />
       <LineId Id="10" Count="0" />
       <LineId Id="32" Count="0" />
     </LineIds>

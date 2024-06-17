@@ -3,8 +3,16 @@
   <POU Name="CM_ValveWithDoubleFB" Id="{fa1c28a2-56d2-405b-8a48-8aed0a8180fb}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK CM_ValveWithDoubleFB EXTENDS CM_ValveWithFB
 VAR_INPUT
+	//Inputs (extra on top of the base valve)
 	I_bStaValveIsOn2 AT %I* : BOOL; //Valve is on (on = positive logic of fuction)
 	I_bStaValveIsOff2 AT %I* : BOOL; //Valve is off
+	
+	//Status
+	s_bStaValveIsOff1 : BOOL;
+	s_bStaValveIsOff2 : BOOL;
+	s_bStaValveIsOn1 : BOOL;
+	s_bStaValveIsOn2 : BOOL;
+	
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -12,6 +20,74 @@ END_VAR
 SUPER^();
 ]]></ST>
     </Implementation>
+    <Method Name="_m_Alarms" Id="{325d43c3-5745-4ae0-9bdb-3517c36b11b7}">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Alarms : BOOL
+VAR_INST
+	s_sTempStringOff : STRING(3);
+	s_sTempStringOn : STRING(3);
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Alarms() THEN
+	RETURN;
+END_IF
+
+// Timeout (timers)
+s_tonFeedBackOffTimeout(
+	IN := i_bReqEnable AND s_bReqOff AND NOT(s_bStaValveIsOff),
+	PT := i_stSettings.tValveOffTimeout );
+	
+s_tonFeedbackOnTimeout(
+	IN := i_bReqEnable AND s_bReqOn AND NOT(s_bStaValveIsOn),
+	PT := i_stSettings.tValveOnTimeout );
+
+// Set error bits
+s_errFeedbackOffTimeout := (s_tonFeedBackOffTimeout.Q OR s_errFeedbackOffTimeout) AND NOT(i_bCmdReset);
+s_errFeedbackOnTimeout := (s_tonFeedbackOnTimeout.Q OR s_errFeedbackOnTimeout) AND NOT(i_bCmdReset);
+
+IF s_errFeedbackOffTimeout THEN 
+	IF NOT(s_bStaValveIsOff1) AND NOT(s_bStaValveIsOff2) THEN
+		s_sTempStringOff := '1&2';
+	ELSIF NOT(s_bStaValveIsOff1) THEN
+		s_sTempStringOff := '1';
+	ELSIF NOT(s_bStaValveIsOff2) THEN
+		s_sTempStringOff := '2';
+	END_IF
+ELSE
+	s_sTempStringOff := '-';		
+END_IF
+
+IF s_errFeedbackOnTimeout THEN 
+	IF NOT(s_bStaValveIsOn1) AND NOT(s_bStaValveIsOn2) THEN
+		s_sTempStringOn := '1&2';
+	ELSIF NOT(s_bStaValveIsOn1) THEN
+		s_sTempStringOn := '1';
+	ELSIF NOT(s_bStaValveIsOn2) THEN
+		s_sTempStringOn := '2';
+	END_IF
+ELSE
+	s_sTempStringOn := '-';		
+END_IF
+
+s_fbAlarmHandlerFeedbackOffTimeout(
+	i_bStaActive := i_bReqEnable AND s_errFeedbackOffTimeout, 
+	i_eAlarmLevel := E_AlarmLevel.Alarm,
+	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Feedback off timeout - Feedback: ', s_sTempStringOff)));
+	
+s_fbAlarmHandlerFeedbackOnTimeout(
+	i_bStaActive := i_bReqEnable AND s_errFeedbackOnTimeout, 
+	i_eAlarmLevel := E_AlarmLevel.Alarm,
+	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Feedback on timeout - Feedback: ', s_sTempStringOn)));
+
+s_bStaError := 
+	s_fbAlarmHandlerFeedbackOffTimeout.q_bStaActive
+	OR s_fbAlarmHandlerFeedbackOnTimeout.q_bStaActive;
+
+_m_Alarms := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
     <Method Name="_m_Inputs" Id="{575f2f03-5155-4a44-a733-1df6472e24f5}">
       <Declaration><![CDATA[METHOD PROTECTED _m_Inputs : BOOL
 ]]></Declaration>
@@ -21,8 +97,13 @@ IF NOT SUPER^._m_Inputs() THEN
 	RETURN;
 END_IF
 
-s_bStaValveIsOff := I_bStaValveIsOff AND I_bStaValveIsOff2;
-s_bStaValveIsOn := I_bStaValveIsOn AND I_bStaValveIsOn2;
+s_bStaValveIsOff1 := I_bStaValveIsOff;
+s_bStaValveIsOff2 := I_bStaValveIsOff2;
+s_bStaValveIsOff := s_bStaValveIsOff1 AND s_bStaValveIsOff2;
+
+s_bStaValveIsOn1 := I_bStaValveIsOn;
+s_bStaValveIsOn2 := I_bStaValveIsOn2; 
+s_bStaValveIsOn := s_bStaValveIsOn1 AND s_bStaValveIsOn2;
 
 _m_Inputs := TRUE;
 ]]></ST>
@@ -33,10 +114,53 @@ _m_Inputs := TRUE;
       <LineId Id="9" Count="0" />
       <LineId Id="14" Count="0" />
     </LineIds>
+    <LineIds Name="CM_ValveWithDoubleFB._m_Alarms">
+      <LineId Id="28" Count="0" />
+      <LineId Id="19" Count="2" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="79" Count="6" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="94" Count="0" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="103" Count="1" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="133" Count="0" />
+      <LineId Id="132" Count="0" />
+      <LineId Id="109" Count="0" />
+      <LineId Id="105" Count="0" />
+      <LineId Id="113" Count="0" />
+      <LineId Id="116" Count="0" />
+      <LineId Id="114" Count="1" />
+      <LineId Id="106" Count="0" />
+      <LineId Id="120" Count="1" />
+      <LineId Id="134" Count="0" />
+      <LineId Id="136" Count="0" />
+      <LineId Id="135" Count="0" />
+      <LineId Id="123" Count="2" />
+      <LineId Id="128" Count="2" />
+      <LineId Id="119" Count="0" />
+      <LineId Id="107" Count="0" />
+      <LineId Id="45" Count="3" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="56" Count="2" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="97" Count="1" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="29" Count="0" />
+    </LineIds>
     <LineIds Name="CM_ValveWithDoubleFB._m_Inputs">
       <LineId Id="13" Count="0" />
       <LineId Id="5" Count="2" />
-      <LineId Id="10" Count="1" />
+      <LineId Id="19" Count="2" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="26" Count="0" />
       <LineId Id="14" Count="0" />
       <LineId Id="9" Count="0" />
       <LineId Id="8" Count="0" />

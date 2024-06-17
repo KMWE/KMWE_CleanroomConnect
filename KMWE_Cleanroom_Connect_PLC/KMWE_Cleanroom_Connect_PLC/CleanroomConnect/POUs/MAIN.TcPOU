@@ -20,8 +20,8 @@ VAR
 	
 	cmValveDockingClampsUpper : CM_ValveWithDoubleFB;
 	cmValveDockingClampsLower : CM_ValveWithDoubleFB;
-	arr_bTestBoolValve : ARRAY[0..15] OF BOOL;
-	arr_bTestCmdValve : ARRAY[0..15] OF BOOL;
+	arr_bTestBoolValveDouble : ARRAY[0..15] OF BOOL;
+	arr_bTestCmdValveDouble : ARRAY[0..15] OF BOOL;
 
 	// PLC --> SAFETY IO
 	Q_bErrorAcknowledgement AT %Q* : BOOL;
@@ -70,16 +70,33 @@ arr_bTestBoolCleanroomDoor[5] := cmDoorLockCleanroomDoor.p_bStaLockIsReleased;
 
 // Valves simulation/test
 cmValveDockingClampsUpper(
-	i_bReqEnable := arr_bTestCmdValve[10],
+	i_bReqEnable := arr_bTestCmdValveDouble[10],
 	i_eCtrlMode := E_CtrlMode.AUTOMATIC,
-	i_bCmdReset := arr_bTestCmdValve[11],
+	i_bCmdReset := arr_bTestCmdValveDouble[11],
 	i_sCmName := 'Docking Clamp Upper');
 	
 cmValveDockingClampsLower(
-	i_bReqEnable := arr_bTestCmdValve[12],
+	i_bReqEnable := arr_bTestCmdValveDouble[12],
 	i_eCtrlMode := E_CtrlMode.AUTOMATIC,
-	i_bCmdReset := arr_bTestCmdValve[13],
+	i_bCmdReset := arr_bTestCmdValveDouble[13],
 	i_sCmName := 'Docking Clamp Lower');
+	
+//Configuration
+cmValveDockingClampsLower.p_bCfgBiStableValve := arr_bTestCmdValveDouble[2];
+cmValveDockingClampsLower.p_bCfgReverseValve := arr_bTestCmdValveDouble[3];
+
+//Write methodes
+IF arr_bTestCmdValveDouble[4] THEN cmValveDockingClampsLower.m_Off(); arr_bTestCmdValveDouble[4] := FALSE; END_IF;
+IF arr_bTestCmdValveDouble[5] THEN cmValveDockingClampsLower.m_On(); arr_bTestCmdValveDouble[5] := FALSE; END_IF;
+IF arr_bTestCmdValveDouble[5] THEN cmValveDockingClampsLower.m_Stop(); arr_bTestCmdValveDouble[6] := FALSE; END_IF;
+
+arr_bTestBoolValveDouble[0] := cmValveDockingClampsLower.p_bCfgBiStableValve;
+arr_bTestBoolValveDouble[1] := cmValveDockingClampsLower.p_bCfgReverseValve;
+arr_bTestBoolValveDouble[2] := cmValveDockingClampsLower.p_bStaEnabled;
+arr_bTestBoolValveDouble[3] := cmValveDockingClampsLower.p_bStaError;
+arr_bTestBoolValveDouble[4] := cmValveDockingClampsLower.p_bStaIsOff;
+arr_bTestBoolValveDouble[5] := cmValveDockingClampsLower.p_bStaIsOn;
+arr_bTestBoolValveDouble[6] := cmValveDockingClampsLower.p_bStaValve;
 	
 //------	
 cmValveDoorUnlockingPinUpper(
@@ -114,6 +131,9 @@ arr_bTestBoolValvePinUpper[6] := cmValveDoorUnlockingPinUpper.p_bStaValve;
       <LineId Id="255" Count="5" />
       <LineId Id="242" Count="0" />
       <LineId Id="207" Count="12" />
+      <LineId Id="348" Count="0" />
+      <LineId Id="350" Count="14" />
+      <LineId Id="349" Count="0" />
       <LineId Id="290" Count="0" />
       <LineId Id="299" Count="0" />
       <LineId Id="293" Count="4" />

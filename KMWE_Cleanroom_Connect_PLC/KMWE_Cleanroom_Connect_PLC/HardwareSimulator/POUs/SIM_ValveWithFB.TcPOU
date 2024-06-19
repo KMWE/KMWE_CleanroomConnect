@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="SIM_ValveWithFB" Id="{09601eef-f9e1-47f9-b679-e64bd657cf22}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK SIM_ValveWithFB
+VAR 
+	// Outputs from PLC --> HW
+	I_bCmdValveOn AT %I* : BOOL;
+	I_bCmdValveOff AT %I* : BOOL;
+	
+	// Inputs from HW --> PLC
+	Q_bStaFeedbackOn AT %Q* : BOOL;
+	Q_bStaFeedbackOff AT %Q* : BOOL;
+	
+	s_tonOn : TON;
+	s_tonOff : TON;
+	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+s_tonOn(IN := I_bCmdValveOn, PT := T#3S);
+Q_bStaFeedbackOn := s_tonOn.Q;
+
+s_tonOff(IN := I_bCmdValveOff, PT := T#3S);
+Q_bStaFeedbackOff := s_tonOff.Q;
+]]></ST>
+    </Implementation>
+    <LineIds Name="SIM_ValveWithFB">
+      <LineId Id="22" Count="1" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="25" Count="1" />
+      <LineId Id="29" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

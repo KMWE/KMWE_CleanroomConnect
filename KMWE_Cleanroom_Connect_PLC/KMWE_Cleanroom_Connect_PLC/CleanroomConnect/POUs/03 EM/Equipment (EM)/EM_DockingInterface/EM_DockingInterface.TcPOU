@@ -8,10 +8,6 @@ END_VAR
 VAR
 //------------------------------------------//
 //Control Modules (Devices)
-	//--cmValveDockingClampsUpper : CM_ValveWithDoubleFB;
-	//--cmValveDockingClampsLower : CM_ValveWithDoubleFB;
-	//--cmValveUnlockingPinsUpper : CM_ValveWithFB;
-	//--cmValveUnlockingPinsLower : CM_ValveWithFB;
 	cmDockingClamps : CM_DockingClamps;
 	cmUnlockingPins : CM_UnlockingPins; 
 	
@@ -196,14 +192,14 @@ s_diStaBoxAtDockedPosition();
 cmDockingClamps(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
-	i_bCmdReset := i_bCmdReset,
-	i_sCmName := 'Docking Clamps');
+	i_bCmdReset := i_bCmdReset);
+	//--i_sCmName := 'Docking Clamps');
 	
 cmUnlockingPins(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
-	i_bCmdReset := i_bCmdReset,
-	i_sCmName := 'Unloading Pins');
+	i_bCmdReset := i_bCmdReset);
+	//--i_sCmName := 'Unloading Pins');
 	
 (*	
 	// Interlocks (doors must work as an airlock, only one door may be opened at all times)
@@ -289,22 +285,6 @@ cmUnlockingPins.i_sCmName := 'Unloading Pins';
 cmUnlockingPins.i_stSettings.tPinsLockTimeout := T#10S;
 cmUnlockingPins.i_stSettings.tPinsUnlockTimeout := T#10S;
 {warning '#TODO: Dot we need to added configuration parameters? Seperate struct or via settings or dedicateed variables'}
-	
-//--	s_CmProbeMotor.i_bReqEnable						:= FALSE;
-//--	s_CmProbeMotor.i_sCmName 						:= 'Probe motor';
-//--	s_CmProbeMotor.i_eBtnCtrlType					:= E_HmiButtonType.PUSHBUTTON;
-//--	s_CmProbeMotor.i_bCfgReverseDirection			:= FALSE;
-//--	s_CmProbeMotor.p_bCfgMovingForward				:= TRUE;
-//--	s_CmProbeMotor.p_bCfgMovingReverse				:= TRUE;
-//--	s_CmProbeMotor.p_fSetMotorVelo					:= 10;
-	
-//--	s_CmProbeMotor.i_stSettings.i_fAccelaration 	:= 1000;
-//--	s_CmProbeMotor.i_stSettings.i_fDecelaration		:= 1000;
-//--	s_CmProbeMotor.i_stSettings.i_fJerk				:= 10000;
-	
-//--	s_CmTeslaMeter.i_bReqEnable						:= FALSE;
-//--	s_CmTeslaMeter.i_stSettings.tConnectionTimeOut	:= T#5S;
-
 	
 //---------------------------------//	
 	
@@ -584,15 +564,11 @@ CASE i_eCtrlMode OF
 			E_SeqDockingInterface.DOCKING_CLOSE_CLAMPS:
 				
 				IF s_fbSeqDockingInterface.q_bStaEntry THEN 
-					//--cmValveDockingClampsUpper.m_On();
-					//--cmValveDockingClampsLower.m_On();
 					cmDockingClamps.m_Close();
 				END_IF
 				
-				//--IF cmValveDockingClampsUpper.p_bStaIsOn AND cmValveDockingClampsLower.p_bStaIsOn THEN
 				IF cmDockingClamps.p_bStaIsClosed THEN
 					s_eSeqDockingInterface := E_SeqDockingInterface.DOCKING_UNLOCK_DOOR;
-				//--ELSIF cmValveDockingClampsUpper.p_bStaError OR cmValveDockingClampsLower.p_bStaError THEN
 				ELSIF cmDockingClamps.p_bStaError THEN 
 					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
 					// write down some info?
@@ -604,15 +580,11 @@ CASE i_eCtrlMode OF
 			E_SeqDockingInterface.DOCKING_UNLOCK_DOOR:
 			
 				IF s_fbSeqDockingInterface.q_bStaEntry THEN 
-					//--cmValveUnlockingPinsUpper.m_On();
-					//--cmValveUnlockingPinsLower.m_On();
 					cmUnlockingPins.m_Unlock();
 				END_IF
 				
-				//--IF cmValveUnlockingPinsUpper.p_bStaIsOn AND cmValveUnlockingPinsLower.p_bStaIsOn THEN
 				IF cmUnlockingPins.p_bStaIsUnlocked THEN
 					s_eSeqDockingInterface := E_SeqDockingInterface.DOCKING_DONE;
-				//--ELSIF cmValveUnlockingPinsUpper.p_bStaError OR cmValveUnlockingPinsLower.p_bStaError THEN
 				ELSIF cmUnlockingPins.p_bStaError THEN 
 					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
 					// write down some info?
@@ -628,15 +600,11 @@ CASE i_eCtrlMode OF
 			E_SeqDockingInterface.UNDOCKING_LOCK_DOOR:
 			
 				IF s_fbSeqDockingInterface.q_bStaEntry THEN 
-					//--cmValveUnlockingPinsUpper.m_Off();
-					//--cmValveUnlockingPinsLower.m_Off();
 					cmUnlockingPins.m_Lock();
 				END_IF
 				
-				//--IF cmValveUnlockingPinsUpper.p_bStaIsOff AND cmValveUnlockingPinsLower.p_bStaIsOff THEN
 				IF cmUnlockingPins.p_bStaIsLocked THEN
 					s_eSeqDockingInterface := E_SeqDockingInterface.UNDOCKING_OPEN_CLAMPS;
-				//--ELSIF cmValveUnlockingPinsUpper.p_bStaError OR cmValveUnlockingPinsLower.p_bStaError THEN
 				ELSIF cmUnlockingPins.p_bStaError THEN 
 					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
 					// write down some info?
@@ -653,10 +621,8 @@ CASE i_eCtrlMode OF
 					cmDockingClamps.m_Open();
 				END_IF
 				
-				//--IF cmValveDockingClampsUpper.p_bStaIsOff AND cmValveDockingClampsLower.p_bStaIsOff THEN
 				IF cmDockingClamps.p_bStaIsOpened THEN
 					s_eSeqDockingInterface := E_SeqDockingInterface.UNDOCKING_DONE;
-				//--ELSIF cmValveDockingClampsUpper.p_bStaError OR cmValveDockingClampsLower.p_bStaError THEN
 				ELSIF cmDockingClamps.p_bStaError THEN 
 					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
 					// write down some info?
@@ -689,57 +655,7 @@ CASE i_eCtrlMode OF
 		{warning '#TODO: Add manual control from hmi'}
 
 END_CASE
-
-//-- Old code as an example
-(*
-CASE i_eCtrlMode OF
-	E_CtrlMode.IDLE:
-		IF s_CmProbeMotor.p_bStaEnabled THEN
-			s_CmProbeMotor.m_DisableAxis();
-			s_fbHmiBtnEnableMotor.m_Off();
-			s_fbHmiBtnHomeMotor.p_bStaEnabled := FALSE;
-		END_IF
-		
-		s_eCurrentTest	:= 	E_TestMode.IDLE;
-	
-		s_fbHmiBtnStop.p_bStaVisible := FALSE;
-		s_fbHmiBtnStop.p_bStaEnabled := FALSE;		
-		
-	E_CtrlMode.AUTOMATIC:
-		
-		CASE s_eCurrentTest OF
-			E_TestMode.IDLE:
-				GVL.g_bLedFlashSlow			:= FALSE;
-				
-				s_CmProbeMotor.i_bReqEnable	:= FALSE;
-			
-				GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled 	:= TRUE;
-				GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible 	:= TRUE;
-				
-				IF GVL.g_sToHmiMiddleContent = GVL.g_stHmiMiddle.OperatorInputData THEN
-					IF NOT GVL_KMWEGenericLib.g_fbAlarmManager.p_bAlarmActive THEN
-						s_fbHmiBtnStart.p_bStaVisible	:= TRUE;
-						s_fbHmiBtnStart.p_bStaEnabled	:= TRUE;
-					ELSE
-						s_fbHmiBtnStart.p_bStaVisible	:= FALSE;
-						s_fbHmiBtnStart.p_bStaEnabled	:= FALSE;
-					END_IF
-				END_IF
-				
-				IF s_fbHmiBtnStart.p_osrBtnPress THEN
-					s_eCurrentTest := E_TestMode.Magnetic; 
-				END_IF 
-				
-			E_TestMode.Magnetic:	
-				_m_Procedure_Test(i_bCmdReset			:= s_fbHmiBtnStart.p_osfBtnPress, 
-									i_bStaError			:= GVL_KMWEGenericLib.g_fbAlarmManager.p_bAlarmActive OR s_fbHmiBtnStop.p_osrBtnPress OR s_diBtnStop.p_osrOn);
-		END_CASE
-		
-	E_CtrlMode.MANUAL:
-		_m_Manual(i_bCmdReset			:= GVL.g_UnRMMT.s_fbHmiBtnManual.p_osfBtnPress OR GVL_KMWEGenericLib.g_fbAlarmManager.p_osrReset, 
-					i_bStaError			:= GVL_KMWEGenericLib.g_fbAlarmManager.p_bAlarmActive OR s_fbHmiBtnStop.p_osrBtnPress OR s_diBtnStop.p_osrOn);	
-END_CASE
-*)]]></ST>
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="m_UndockBox" Id="{b328f671-5464-49bf-836c-f1f93f3d32af}">
@@ -811,7 +727,9 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="6" Count="2" />
       <LineId Id="150" Count="2" />
       <LineId Id="149" Count="0" />
-      <LineId Id="134" Count="5" />
+      <LineId Id="134" Count="3" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="139" Count="0" />
       <LineId Id="141" Count="0" />
       <LineId Id="146" Count="2" />
       <LineId Id="145" Count="0" />
@@ -871,18 +789,6 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="230" Count="0" />
       <LineId Id="244" Count="2" />
       <LineId Id="222" Count="0" />
-      <LineId Id="175" Count="0" />
-      <LineId Id="121" Count="0" />
-      <LineId Id="126" Count="1" />
-      <LineId Id="129" Count="0" />
-      <LineId Id="132" Count="0" />
-      <LineId Id="135" Count="0" />
-      <LineId Id="162" Count="0" />
-      <LineId Id="136" Count="2" />
-      <LineId Id="141" Count="0" />
-      <LineId Id="176" Count="0" />
-      <LineId Id="198" Count="1" />
-      <LineId Id="146" Count="0" />
       <LineId Id="35" Count="3" />
       <LineId Id="271" Count="2" />
       <LineId Id="269" Count="1" />
@@ -922,9 +828,10 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="312" Count="0" />
       <LineId Id="119" Count="0" />
       <LineId Id="168" Count="0" />
-      <LineId Id="170" Count="2" />
-      <LineId Id="174" Count="0" />
-      <LineId Id="169" Count="0" />
+      <LineId Id="170" Count="1" />
+      <LineId Id="323" Count="0" />
+      <LineId Id="322" Count="0" />
+      <LineId Id="321" Count="0" />
       <LineId Id="120" Count="0" />
       <LineId Id="4" Count="0" />
     </LineIds>
@@ -1048,14 +955,11 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="209" Count="0" />
       <LineId Id="219" Count="0" />
       <LineId Id="261" Count="0" />
-      <LineId Id="339" Count="0" />
-      <LineId Id="338" Count="0" />
       <LineId Id="336" Count="0" />
       <LineId Id="262" Count="0" />
-      <LineId Id="251" Count="1" />
+      <LineId Id="251" Count="0" />
       <LineId Id="340" Count="0" />
       <LineId Id="253" Count="0" />
-      <LineId Id="255" Count="0" />
       <LineId Id="341" Count="0" />
       <LineId Id="257" Count="0" />
       <LineId Id="259" Count="0" />
@@ -1066,11 +970,11 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="220" Count="0" />
       <LineId Id="210" Count="0" />
       <LineId Id="276" Count="0" />
-      <LineId Id="263" Count="2" />
+      <LineId Id="263" Count="0" />
       <LineId Id="342" Count="0" />
-      <LineId Id="266" Count="2" />
+      <LineId Id="266" Count="1" />
       <LineId Id="343" Count="0" />
-      <LineId Id="269" Count="1" />
+      <LineId Id="269" Count="0" />
       <LineId Id="344" Count="0" />
       <LineId Id="271" Count="4" />
       <LineId Id="221" Count="1" />
@@ -1079,11 +983,11 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="224" Count="0" />
       <LineId Id="212" Count="1" />
       <LineId Id="310" Count="0" />
-      <LineId Id="283" Count="2" />
+      <LineId Id="283" Count="0" />
       <LineId Id="348" Count="0" />
-      <LineId Id="286" Count="2" />
+      <LineId Id="286" Count="1" />
       <LineId Id="349" Count="0" />
-      <LineId Id="289" Count="1" />
+      <LineId Id="289" Count="0" />
       <LineId Id="350" Count="0" />
       <LineId Id="291" Count="4" />
       <LineId Id="225" Count="1" />
@@ -1091,9 +995,9 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="309" Count="0" />
       <LineId Id="296" Count="2" />
       <LineId Id="351" Count="0" />
-      <LineId Id="299" Count="2" />
+      <LineId Id="299" Count="1" />
       <LineId Id="352" Count="0" />
-      <LineId Id="302" Count="1" />
+      <LineId Id="302" Count="0" />
       <LineId Id="353" Count="0" />
       <LineId Id="304" Count="4" />
       <LineId Id="227" Count="1" />
@@ -1104,7 +1008,9 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="230" Count="1" />
       <LineId Id="218" Count="0" />
       <LineId Id="277" Count="1" />
-      <LineId Id="280" Count="2" />
+      <LineId Id="280" Count="0" />
+      <LineId Id="355" Count="0" />
+      <LineId Id="282" Count="0" />
       <LineId Id="232" Count="0" />
       <LineId Id="204" Count="0" />
       <LineId Id="279" Count="0" />
@@ -1114,40 +1020,6 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="190" Count="0" />
       <LineId Id="188" Count="0" />
       <LineId Id="187" Count="0" />
-      <LineId Id="185" Count="0" />
-      <LineId Id="182" Count="0" />
-      <LineId Id="10" Count="2" />
-      <LineId Id="163" Count="0" />
-      <LineId Id="165" Count="0" />
-      <LineId Id="167" Count="1" />
-      <LineId Id="166" Count="0" />
-      <LineId Id="164" Count="0" />
-      <LineId Id="157" Count="1" />
-      <LineId Id="86" Count="1" />
-      <LineId Id="67" Count="0" />
-      <LineId Id="72" Count="0" />
-      <LineId Id="88" Count="2" />
-      <LineId Id="159" Count="0" />
-      <LineId Id="170" Count="1" />
-      <LineId Id="160" Count="0" />
-      <LineId Id="176" Count="0" />
-      <LineId Id="175" Count="0" />
-      <LineId Id="174" Count="0" />
-      <LineId Id="173" Count="0" />
-      <LineId Id="133" Count="0" />
-      <LineId Id="143" Count="0" />
-      <LineId Id="135" Count="1" />
-      <LineId Id="144" Count="0" />
-      <LineId Id="138" Count="1" />
-      <LineId Id="130" Count="0" />
-      <LineId Id="145" Count="3" />
-      <LineId Id="131" Count="0" />
-      <LineId Id="93" Count="2" />
-      <LineId Id="91" Count="0" />
-      <LineId Id="128" Count="0" />
-      <LineId Id="60" Count="0" />
-      <LineId Id="161" Count="1" />
-      <LineId Id="5" Count="0" />
       <LineId Id="179" Count="0" />
     </LineIds>
     <LineIds Name="EM_DockingInterface.m_UndockBox">

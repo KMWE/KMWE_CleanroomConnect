@@ -8,20 +8,34 @@ END_VAR
 VAR
 //------------------------------------------//
 //Control Modules (Devices)
-	s_cmSpeedDoorOuter : CM_SpeedDoor;
-	s_cmDoorLockCleanroom : CM_DoorLock;
+	s_cmOuterDoor : CM_SpeedDoor;	
+	s_cmCleanroomDoor : CM_DoorLock;
 //------------------------------------------//
 
 //------------------------------------------//
 //Inputs
-	s_diBtnToggleLock	: FB_DigInput;
+	//..
 
-//------------------------------------------//
-	s_doLedLockState  : FB_DigOutput;
 //------------------------------------------//
 //Outputs
+	//..
 
 //------------------------------------------//
+
+//Requests
+	s_bReqOpenOuterDoor : BOOL := FALSE;
+	s_bReqCloseOuterDoor : BOOL := FALSE;
+	s_bReqReleaseLockCleanroomDoor : BOOL := FALSE;
+	s_bReqApplyLockCleanroomDoor : BOOL := FALSE;
+	
+//Properties
+	s_bStaOuterDoorOpened : BOOL := FALSE;
+	s_bStaOuterDoorClosed : BOOL := FALSE;
+	
+	s_bStaCleanroomDoorOpened : BOOL := FALSE;
+	s_bStaCleanroomDoorClosed : BOOL := FALSE;
+	s_bStaCleanroomLockReleased : BOOL := FALSE;
+	s_bStaCleanroomLockApplied : BOOL := FALSE;
 
 //------------------------------------------//
 //Params
@@ -53,9 +67,8 @@ VAR
 //Variables
 	s_sTestResult 						: STRING;
 	
-	s_eCurrentTest						: E_TestMode;
-	s_stCommandsTesla					: ST_SCPI_TeslaCommands;
-	
+	s_eSeqDoors : E_SeqDoors;
+	s_fbSeqDoors : FB_SeqControl;
 	
 	// Interlocks
 	s_bIlckSpeedDoorOuterToOpen 		: BOOL := TRUE;
@@ -82,6 +95,11 @@ VAR
 
 //------------------------------------------//
 //Alarms
+	
+	s_bWrnOuterDoorNoAllowedToOpen : BOOL;
+	s_bWrnOuterDoorNoAllowedToClose : BOOL;
+	s_bWrnCleanroomDoorNoAllowedToRelease : BOOL;
+	s_bWrnCleanroomDoorNoAllowedToLock : BOOL;
 
 //------------------------------------------//
 
@@ -92,20 +110,22 @@ VAR
 	s_sToHmiInstructionText				: T_MAXSTRING;
 	s_sToHmiProcedure					: T_MAXSTRING;
 	
-	s_fbHmiBtnStart						: FB_HmiBtn;
-	s_fbHmiBtnStop						: FB_HmiBtn;	
-	s_fbHmiBtnDiagnosticsLogging		: FB_HmiBtn;
+	s_fbHmiBtnReset						: FB_HmiBtn;
 	
-	s_fbHmiProbeMotor 					: Hmi_Motor_Base;
+	s_fbHmiBtnCloseOuterDoor			: FB_HmiBtn;
+	s_fbHmiBtnOpenOuterDoor				: FB_HmiBtn;
 	
-	s_fbHmiBtnEnableMotor				: FB_HmiBtn;
-	s_fbHmiBtnHomeMotor					: FB_HmiBtn;
-	s_fbHmiBtnGetField					: FB_HmiBtn;
+	s_fbHmiBtnApplyLockCleanroomDoor	: FB_HmiBtn;
+	s_fbHmiBtnReleaseLockCleanroomDoor	: FB_HmiBtn;
 	
-	s_fbHmiLedHomedMotor				: FB_HmiLed;
-	s_fbHmiTableDownPressed				: FB_HmiLed;
-	s_fbHmiStopPressed					: FB_HmiLed;
-	s_fbHmiTableDownSensor				: FB_HmiLed;
+	s_fbHmiLedOuterDoorClosed			: FB_HmiLed;
+	s_fbHmiLedOuterDoorOpened			: FB_HmiLed;
+	
+	s_fbHmiLedCleanDoorClosed			: FB_HmiLed;
+	s_fbHmiLedCleanDoorOpened			: FB_HmiLed;
+	s_fbHmiLedCleanroomDoorLocked		: FB_HmiLed;
+	s_fbHmiLedCleanroomDoorReleased		: FB_HmiLed;
+	
 //------------------------------------------//
 END_VAR
 ]]></Declaration>
@@ -114,9 +134,7 @@ END_VAR
 SUPER^();
 ]]></ST>
     </Implementation>
-    <Folder Name="Methods" Id="{743af6a4-b0c9-4597-8470-ed8437c4e009}" />
-    <Folder Name="Properties" Id="{ab544e78-bef9-455b-a1de-3328ca2e31c7}" />
-    <Method Name="_m_Alarms" Id="{34703853-800b-4320-8e6c-49abce8785b7}" FolderPath="Methods\">
+    <Method Name="_m_Alarms" Id="{34703853-800b-4320-8e6c-49abce8785b7}">
       <Declaration><![CDATA[METHOD PROTECTED _m_Alarms : BOOL
 ]]></Declaration>
       <Implementation>
@@ -129,7 +147,7 @@ _m_Alarms := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Devices" Id="{c18c3403-a619-4da8-8c16-d38b3f2bd5db}" FolderPath="Methods\">
+    <Method Name="_m_Devices" Id="{c18c3403-a619-4da8-8c16-d38b3f2bd5db}">
       <Declaration><![CDATA[METHOD PROTECTED _m_Devices : BOOL
 ]]></Declaration>
       <Implementation>
@@ -138,78 +156,63 @@ IF NOT SUPER^._m_Devices() THEN
 	RETURN;
 END_IF
 
-s_cmSpeedDoorOuter(
-	i_bReqEnable := i_bReqEnable, 
-	i_eCtrlMode := i_eCtrlMode, 
-	i_bCmdReset := i_bCmdReset, 
-	i_sCmName := 'Speed door outer', 
-	i_stSettings := );
+s_cmCleanroomDoor(
+	i_bReqEnable := i_bReqEnable,
+	i_eCtrlMode := i_eCtrlMode,
+	i_bCmdReset := i_bCmdReset);
+	//--i_sCmName := 'Speed door outer');
 	
-s_cmDoorLockCleanroom(
-	i_bReqEnable := i_bReqEnable, 
-	i_eCtrlMode := i_eCtrlMode, 
-	i_bCmdReset := i_bCmdReset, 
-	i_sCmName := 'Door lock cleanroom', 
-	i_stSettings := );	
+s_cmOuterDoor(
+	i_bReqEnable := i_bReqEnable,
+	i_eCtrlMode := i_eCtrlMode,
+	i_bCmdReset := i_bCmdReset);
+	//--i_sCmName := 'Door lock cleanroom');	
 
-(*	
-	// Interlocks (doors must work as an airlock, only one door may be opened at all times)
-	s_bIlckSpeedDoorOuterToOpen :=
-		s_cmDoorLockCleanroom.p_bStaError
-		OR NOT(s_cmDoorLockCleanroom.p_bStaEnabled)
-		NOT(s_cmDoorLockCleanroom.p_bStaDoorIsClosed)
-		OR NOT (s_cmDoorLockCleanroom.p_bStaLockIsApplied)
-		OR s_cmDoorLockCleanroom.p_bStaLockIsReleased
-		OR TRUE (*Air treathment unit must be running and ok*)
-		OR TRUE (*Add more..*);
-	s_bIlckSpeedDoorOuterToClose :=
-		TRUE (*Opening must be free*)
-		OR TRUE (*Add more..*);
+//Statusses
+s_bStaOuterDoorClosed := s_cmOuterDoor.p_bStaIsClosed;
+s_bStaOuterDoorOpened := s_cmOuterDoor.p_bStaIsOpened;
+s_bStaCleanroomLockApplied := s_cmCleanroomDoor.p_bStaLockIsApplied;
+s_bStaCleanroomLockReleased := s_cmCleanroomDoor.p_bStaLockIsReleased;
+s_bStaCleanroomDoorClosed := s_cmCleanroomDoor.p_bStaDoorIsClosed;
+s_bStaCleanroomDoorOpened := NOT(s_cmCleanroomDoor.p_bStaDoorIsClosed);
+s_bStaError := s_cmOuterDoor.p_bStaError OR s_cmCleanroomDoor.p_bStaError;
 	
-	s_bIlckDoorLockCleanroomToOpen :=
-		s_cmSpeedDoorOuter.p_bStaError
-		OR NOT(s_cmSpeedDoorOuter.p_bStaEnabled)
-		OR NOT(s_cmSpeedDoorOuter.p_bStaIsClosed)
-		OR s_cmSpeedDoorOuter.p_bStaIsClosing
-		OR s_cmSpeedDoorOuter.p_bStaIsOpened
-		OR s_cmSpeedDoorOuter.p_bStaIsOpening
-		OR TRUE (*Air treathment unit must be running and ok*)
-		OR TRUE (*Add more..*);
-*)	
 _m_Devices := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Hmi" Id="{06e9697b-07d7-4e29-8455-791381b5d99d}" FolderPath="Methods\">
-      <Declaration><![CDATA[METHOD Protected _m_Hmi : BOOL
-VAR_INPUT
-END_VAR
-VAR_INST
-END_VAR]]></Declaration>
+    <Method Name="_m_Hmi" Id="{06e9697b-07d7-4e29-8455-791381b5d99d}">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Hmi : BOOL
+]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF NOT SUPER^._m_Hmi() THEN
+        <ST><![CDATA[
+IF NOT SUPER^._m_Hmi() THEN
 	RETURN;
 END_IF
 
-s_fbHmiBtnDiagnosticsLogging();
-s_fbHmiBtnStart();
-s_fbHmiBtnStop();
+//Buttons
+s_fbHmiBtnReset();
+	
+s_fbHmiBtnCloseOuterDoor();
+s_fbHmiBtnOpenOuterDoor();
+	
+s_fbHmiBtnApplyLockCleanroomDoor();;
+s_fbHmiBtnReleaseLockCleanroomDoor();
 
-s_fbHmiBtnEnableMotor();
-s_fbHmiBtnHomeMotor();
-s_fbHmiBtnGetField();
+//Leds	
+s_fbHmiLedOuterDoorClosed(i_bStaLed := s_bStaOuterDoorClosed);
+s_fbHmiLedOuterDoorOpened(i_bStaLed := s_bStaOuterDoorOpened);
+	
+s_fbHmiLedCleanDoorClosed(i_bStaLed := s_bStaCleanroomDoorClosed);
+s_fbHmiLedCleanDoorOpened(i_bStaLed := s_bStaCleanroomDoorOpened);
+s_fbHmiLedCleanroomDoorLocked(i_bStaLed := s_bStaCleanroomLockApplied);
+s_fbHmiLedCleanroomDoorReleased(i_bStaLed := s_bStaCleanroomLockReleased);
 
-s_fbHmiProbeMotor(i_IMotor := s_CmProbeMotor);
-
-s_fbHmiLedHomedMotor(i_bStaLed := s_CmProbeMotor.p_bStaMotorHomed);
-s_fbHmiTableDownPressed(i_bStaLed := s_diBtnTableDown.p_bStaInput);
-s_fbHmiTableDownSensor(i_bStaLed := s_diTableDownSensor.p_bStaInput);
-s_fbHmiStopPressed(i_bStaLed := s_diBtnStop.p_bStaInput);
-
-_m_Hmi := TRUE;]]></ST>
+_m_Hmi := TRUE;
+]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Init" Id="{f5588ebd-495a-4c31-a7f5-23415377d40e}" FolderPath="Methods\">
+    <Method Name="_m_Init" Id="{f5588ebd-495a-4c31-a7f5-23415377d40e}">
       <Declaration><![CDATA[METHOD PROTECTED _m_Init : BOOL
 ]]></Declaration>
       <Implementation>
@@ -218,84 +221,93 @@ IF NOT SUPER^._m_Init() THEN
 	RETURN;
 END_IF
 
-//----------------------------------//
-//CM
-	s_cmSpeedDoorOuter.i_stSettings.
-
-	s_CmProbeMotor.i_bReqEnable						:= FALSE;
-	s_CmProbeMotor.i_sCmName 						:= 'Probe motor';
-	s_CmProbeMotor.i_eBtnCtrlType					:= E_HmiButtonType.PUSHBUTTON;
-	s_CmProbeMotor.i_bCfgReverseDirection			:= FALSE;
-	s_CmProbeMotor.p_bCfgMovingForward				:= TRUE;
-	s_CmProbeMotor.p_bCfgMovingReverse				:= TRUE;
-	s_CmProbeMotor.p_fSetMotorVelo					:= 10;
+//Control Modules
+s_cmOuterDoor.i_bReqEnable := FALSE;
+s_cmOuterDoor.i_eCtrlMode := E_CtrlMode.IDLE;
+s_cmOuterDoor.i_sCmName := 'Outer Door';
+s_cmOuterDoor.i_stSettings.tDoorClosingTimeout := T#10S;
+s_cmOuterDoor.i_stSettings.tDoorOpeningTimeout := T#10S;
+s_cmOuterDoor.i_stSettings.tResetPulseDuration := T#1S;
+{warning '#TODO: Dot we need to added configuration parameters? Seperate struct or via settings or dedicateed variables'}
 	
-	s_CmProbeMotor.i_stSettings.i_fAccelaration 	:= 1000;
-	s_CmProbeMotor.i_stSettings.i_fDecelaration		:= 1000;
-	s_CmProbeMotor.i_stSettings.i_fJerk				:= 10000;
-	
-	s_CmTeslaMeter.i_bReqEnable						:= FALSE;
-	s_CmTeslaMeter.i_stSettings.tConnectionTimeOut	:= T#5S;
-
+s_cmCleanroomDoor.i_bReqEnable := FALSE;
+s_cmCleanroomDoor.i_eCtrlMode := E_CtrlMode.IDLE;
+s_cmCleanroomDoor.i_sCmName := 'Cleanroom Door';
+s_cmCleanroomDoor.i_stSettings.tApplyingLockTimeout := T#3S;
+s_cmCleanroomDoor.i_stSettings.tReleasingLockTimeout := T#3S;
+{warning '#TODO: Dot we need to added configuration parameters? Seperate struct or via settings or dedicateed variables'}
 	
 //---------------------------------//	
+
+//----------------------------------//
+
 	
 //----------------------------------//	
-//Hmi 
-	s_fbHmiBtnDiagnosticsLogging.p_eButtontype 			:= E_HmiButtonType.TOGGLEBUTTON;
-	s_fbHmiBtnDiagnosticsLogging.p_bStaVisible 			:= TRUE;
-	s_fbHmiBtnDiagnosticsLogging.p_bStaEnabled 			:= TRUE;
-	s_fbHmiBtnDiagnosticsLogging.p_sBtnText				:= 'Diagnostics Logging';
+//Hmi
+	s_fbHmiBtnReset.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnReset.p_bStaVisible := FALSE;
+	s_fbHmiBtnReset.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnReset.p_sBtnText := 'Reset';
 	
-	s_fbHmiBtnStart.p_eButtontype 						:= E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnStart.p_bStaVisible 						:= FALSE;
-	s_fbHmiBtnStart.p_bStaEnabled 						:= FALSE;		
-	s_fbHmiBtnStart.p_sBtnText							:= 'Start';
+	s_fbHmiBtnCloseOuterDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnCloseOuterDoor.p_bStaVisible := FALSE;
+	s_fbHmiBtnCloseOuterDoor.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnCloseOuterDoor.p_sBtnText := 'Close Outer Door';
+	
+	s_fbHmiBtnOpenOuterDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnOpenOuterDoor.p_bStaVisible := FALSE;
+	s_fbHmiBtnOpenOuterDoor.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnOpenOuterDoor.p_sBtnText := 'Open Outer Door';
+	
+	s_fbHmiBtnApplyLockCleanroomDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnApplyLockCleanroomDoor.p_bStaVisible := FALSE;
+	s_fbHmiBtnApplyLockCleanroomDoor.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnApplyLockCleanroomDoor.p_sBtnText := 'Lock Cleanroom Door';
+	
+	s_fbHmiBtnReleaseLockCleanroomDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnReleaseLockCleanroomDoor.p_bStaVisible := FALSE;
+	s_fbHmiBtnReleaseLockCleanroomDoor.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnReleaseLockCleanroomDoor.p_sBtnText := 'Release Cleanroom Door';
 
-	s_fbHmiBtnStop.p_eButtontype 						:= E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnStop.p_bStaVisible 						:= FALSE;
-	s_fbHmiBtnStop.p_bStaEnabled 						:= FALSE;		
-	s_fbHmiBtnStop.p_sBtnText							:= 'Stop';
+	s_fbHmiLedOuterDoorClosed.p_bStaVisible := FALSE;
+	s_fbHmiLedOuterDoorClosed.p_sToHmiDescriptionLed := 'Outer Door Closed';
 	
-	s_fbHmiBtnEnableMotor.p_eButtontype 				:= E_HmiButtonType.TOGGLEBUTTON;
-	s_fbHmiBtnEnableMotor.p_bStaVisible 				:= TRUE;
-	s_fbHmiBtnEnableMotor.p_bStaEnabled 				:= FALSE;		
-	s_fbHmiBtnEnableMotor.p_sBtnText					:= 'Enable motor';
+	s_fbHmiLedOuterDoorOpened.p_bStaVisible := FALSE;
+	s_fbHmiLedOuterDoorOpened.p_sToHmiDescriptionLed := 'Outer Door Opened';
 	
-	s_fbHmiBtnGetField.p_eButtontype 					:= E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnGetField.p_bStaVisible 					:= TRUE;
-	s_fbHmiBtnGetField.p_bStaEnabled 					:= FALSE;		
-	s_fbHmiBtnGetField.p_sBtnText						:= 'Get magnetic field';
+	s_fbHmiLedCleanDoorClosed.p_bStaVisible := FALSE;
+	s_fbHmiLedCleanDoorClosed.p_sToHmiDescriptionLed := 'Cleanroom Door Closed';
 	
-	s_fbHmiBtnHomeMotor.p_eButtontype 					:= E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnHomeMotor.p_bStaVisible 					:= TRUE;
-	s_fbHmiBtnHomeMotor.p_bStaEnabled 					:= FALSE;		
-	s_fbHmiBtnHomeMotor.p_sBtnText						:= 'Home motor';
-//----------------------------------//	
-
-
-//----------------------------------//	
+	s_fbHmiLedCleanDoorOpened.p_bStaVisible := FALSE;
+	s_fbHmiLedCleanDoorOpened.p_sToHmiDescriptionLed := 'Cleanroom Door Opened';
+	
+	s_fbHmiLedCleanroomDoorLocked.p_bStaVisible := FALSE;
+	s_fbHmiLedCleanroomDoorLocked.p_sToHmiDescriptionLed := 'Cleanroom Door Locked';
+	
+	s_fbHmiLedCleanroomDoorReleased.p_bStaVisible := FALSE;
+	s_fbHmiLedCleanroomDoorReleased.p_sToHmiDescriptionLed := 'Cleanroom Door Released';
+ 
 //Initialize all moving averages
 
 //----------------------------------//	
 
 //----------------------------------//	
 //Inputs
-s_diTableDownSensor.i_stSettings.tmInputDelay	:= T#0S;	
-s_diBtnTableDown.i_stSettings.tmInputDelay		:= T#0S;
-s_diBtnStop.i_stSettings.tmInputDelay			:= T#0S;
+//--s_diTableDownSensor.i_stSettings.tmInputDelay	:= T#0S;	
+//--s_diBtnTableDown.i_stSettings.tmInputDelay		:= T#0S;
+//--s_diBtnStop.i_stSettings.tmInputDelay			:= T#0S;
 //----------------------------------//	
 
 //----------------------------------//	
 //Inputs
-s_doRelayTableDown.i_stSettings.bCfgDelay		:= FALSE;	
-s_doRelayTableDown.i_stSettings.tmOutputDelay	:= T#0S;	
+//--s_doRelayTableDown.i_stSettings.bCfgDelay		:= FALSE;	
+//--s_doRelayTableDown.i_stSettings.tmOutputDelay	:= T#0S;	
 //----------------------------------//	
 
 _m_Init := TRUE;]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Inputs" Id="{08e3676c-19d2-4657-8762-4d7303d85c82}" FolderPath="Methods\">
+    <Method Name="_m_Inputs" Id="{08e3676c-19d2-4657-8762-4d7303d85c82}">
       <Declaration><![CDATA[METHOD PROTECTED _m_Inputs : BOOL
 ]]></Declaration>
       <Implementation>
@@ -304,14 +316,11 @@ IF NOT SUPER^._m_Inputs() THEN
 	RETURN;
 END_IF
 
-s_diTableDownSensor();
-s_diBtnTableDown();	
-s_diBtnStop();			
-
-_m_Inputs := TRUE;]]></ST>
+_m_Inputs := TRUE;
+]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Outputs" Id="{f763b42e-2a14-49e4-aeec-3b4dc606af2b}" FolderPath="Methods\">
+    <Method Name="_m_Outputs" Id="{f763b42e-2a14-49e4-aeec-3b4dc606af2b}">
       <Declaration><![CDATA[METHOD PROTECTED _m_Outputs : BOOL
 ]]></Declaration>
       <Implementation>
@@ -320,12 +329,11 @@ IF NOT SUPER^._m_Outputs() THEN
 	RETURN;
 END_IF
 
-s_doRelayTableDown(); //i_bStaOutput written in procedure or manual mode
-
-_m_Outputs := TRUE;]]></ST>
+_m_Outputs := TRUE;
+]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Params" Id="{02936153-be53-403e-812d-8d9a77c13756}" FolderPath="Methods\">
+    <Method Name="_m_Params" Id="{02936153-be53-403e-812d-8d9a77c13756}">
       <Declaration><![CDATA[METHOD PROTECTED _m_Params : BOOL
 VAR_INST
 	s_fToHmiXAxisMin	: LREAL;
@@ -424,7 +432,43 @@ _m_Params := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="m_Main" Id="{c1559ad6-cc3e-4059-9eff-299ddfbeac7b}" FolderPath="Methods\">
+    <Method Name="m_ApplyLockCleanroomDoor" Id="{4499f858-1c66-4e87-af48-eca8a833d6ae}">
+      <Declaration><![CDATA[METHOD PUBLIC m_ApplyLockCleanroomDoor : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+s_bReqOpenOuterDoor := FALSE;
+s_bReqCloseOuterDoor := FALSE;
+s_bReqReleaseLockCleanroomDoor := FALSE;
+s_bReqApplyLockCleanroomDoor := TRUE;
+
+m_ApplyLockCleanroomDoor := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_CloseOuterDoor" Id="{9c407a35-74a6-401d-8a18-b21be8c2d1a1}">
+      <Declaration><![CDATA[METHOD PUBLIC m_CloseOuterDoor : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+s_bReqOpenOuterDoor := FALSE;
+s_bReqCloseOuterDoor := TRUE;
+s_bReqReleaseLockCleanroomDoor := FALSE;
+s_bReqApplyLockCleanroomDoor := FALSE;
+
+m_CloseOuterDoor := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_Main" Id="{c1559ad6-cc3e-4059-9eff-299ddfbeac7b}">
       <Declaration><![CDATA[METHOD PUBLIC m_Main : BOOL
 ]]></Declaration>
       <Implementation>
@@ -434,55 +478,289 @@ IF NOT SUPER^.m_Main() THEN
 END_IF
 
 CASE i_eCtrlMode OF
+
 	E_CtrlMode.IDLE:
-		IF s_CmProbeMotor.p_bStaEnabled THEN
-			s_CmProbeMotor.m_DisableAxis();
-			s_fbHmiBtnEnableMotor.m_Off();
-			s_fbHmiBtnHomeMotor.p_bStaEnabled := FALSE;
-		END_IF
-		
-		s_eCurrentTest	:= 	E_TestMode.IDLE;
-	
-		s_fbHmiBtnStop.p_bStaVisible := FALSE;
-		s_fbHmiBtnStop.p_bStaEnabled := FALSE;		
+		s_cmOuterDoor.m_Stop();
+		s_cmCleanroomDoor.m_Apply();
 		
 	E_CtrlMode.AUTOMATIC:
 		
-		CASE s_eCurrentTest OF
-			E_TestMode.IDLE:
-				GVL.g_bLedFlashSlow			:= FALSE;
-				
-				s_CmProbeMotor.i_bReqEnable	:= FALSE;
+		s_fbSeqDoors(
+			i_nSeqStep := s_eSeqDoors, 
+			i_sStepName := TO_STRING(s_fbSeqDoors.q_eActState), 
+			i_bCmdReset := i_bCmdReset, 
+			i_bStaError := s_bStaError);
+	
+		CASE s_eSeqDoors OF
 			
-				GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled 	:= TRUE;
-				GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible 	:= TRUE;
-				
-				IF GVL.g_sToHmiMiddleContent = GVL.g_stHmiMiddle.OperatorInputData THEN
-					IF NOT GVL_KMWEGenericLib.g_fbAlarmManager.p_bAlarmActive THEN
-						s_fbHmiBtnStart.p_bStaVisible	:= TRUE;
-						s_fbHmiBtnStart.p_bStaEnabled	:= TRUE;
+			E_SeqDoors.IDLE:
+				IF s_bStaOuterDoorClosed AND (s_bStaCleanroomDoorClosed AND s_bStaCleanroomLockApplied) THEN
+					s_eSeqDoors := E_SeqDoors.BOTH_DOORS_CLOSED;
+				END_IF
+						
+			E_SeqDoors.BOTH_DOORS_CLOSED:
+			
+				IF s_bReqCloseOuterDoor THEN
+					IF FALSE THEN
+						
+						s_eSeqDoors := E_SeqDoors.CLOSE_OUTER_DOOR;
 					ELSE
-						s_fbHmiBtnStart.p_bStaVisible	:= FALSE;
-						s_fbHmiBtnStart.p_bStaEnabled	:= FALSE;
+						s_bWrnOuterDoorNoAllowedToClose := TRUE;	
 					END_IF
 				END_IF
 				
-				IF s_fbHmiBtnStart.p_osrBtnPress THEN
-					s_eCurrentTest := E_TestMode.Magnetic; 
-				END_IF 
+				IF s_bReqOpenOuterDoor THEN
+					IF FALSE THEN
+						
+						s_eSeqDoors := E_SeqDoors.OPEN_OUTER_DOOR;
+					ELSE
+						s_bWrnOuterDoorNoAllowedToOpen := TRUE;	
+					END_IF	
+				END_IF
 				
-			E_TestMode.Magnetic:	
-				_m_Procedure_Test(i_bCmdReset			:= s_fbHmiBtnStart.p_osfBtnPress, 
-									i_bStaError			:= GVL_KMWEGenericLib.g_fbAlarmManager.p_bAlarmActive OR s_fbHmiBtnStop.p_osrBtnPress OR s_diBtnStop.p_osrOn);
-		END_CASE
+				IF s_bReqApplyLockCleanroomDoor THEN
+					IF FALSE THEN
+						
+						s_eSeqDoors := E_SeqDoors.LOCK_CLEANROOM_DOOR;
+					ELSE
+						s_bWrnCleanroomDoorNoAllowedToLock := TRUE;	
+					END_IF
+				END_IF
+			
+				IF s_bReqReleaseLockCleanroomDoor THEN
+					IF FALSE THEN
+						
+						s_eSeqDoors := E_SeqDoors.RELEASE_CLEANROOM_DOOR;
+					ELSE
+						s_bWrnCleanroomDoorNoAllowedToRelease := TRUE;	
+					END_IF
+				END_IF
+				
+			
+				IF s_bReqDockBox THEN
+					IF s_diStaBoxAtPreDockingPosition.p_bStaInputDelayed THEN
+						s_bStaUndockingDone := FALSE;
+						s_eSeqDockingInterface := E_SeqDockingInterface.DOCKING_CLOSE_CLAMPS;
+					ELSE
+						s_bWrnNoBoxPresentAtPreDockingPosition := TRUE;	
+					END_IF
+				END_IF
+				
+				IF s_bReqUndockBox THEN
+					IF s_diStaBoxAtDockedPosition.p_bStaInputDelayed THEN
+						s_bStaDockingDone := FALSE;
+						s_eSeqDockingInterface := E_SeqDockingInterface.UNDOCKING_LOCK_DOOR;
+					ELSE
+						s_bWrnNoBoxPresentAtDockedPosition := TRUE;	
+					END_IF	
+					
+				END_IF
+			
+				IF s_bReqDockBox AND s_diStaBoxAtPreDockingPosition.p_bStaInputDelayed THEN
+					s_eSeqDockingInterface := E_SeqDockingInterface.DOCKING_CLOSE_CLAMPS; 
+				ELSIF s_bReqUndockBox THEN	
+					s_eSeqDockingInterface := E_SeqDockingInterface.UNDOCKING_LOCK_DOOR;
+				END_IF
+				
+			E_SeqDockingInterface.DOCKING_CLOSE_CLAMPS:
+				
+				IF s_fbSeqDockingInterface.q_bStaEntry THEN 
+					cmDockingClamps.m_Close();
+				END_IF
+				
+				IF cmDockingClamps.p_bStaIsClosed THEN
+					s_eSeqDockingInterface := E_SeqDockingInterface.DOCKING_UNLOCK_DOOR;
+				ELSIF cmDockingClamps.p_bStaError THEN 
+					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
+					// write down some info?
+				ELSIF s_fbSeqDockingInterface.q_tmStepTime >= T#30S THEN
+ 					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
+					// write down some info?
+				END_IF
+			
+			E_SeqDockingInterface.DOCKING_UNLOCK_DOOR:
+			
+				IF s_fbSeqDockingInterface.q_bStaEntry THEN 
+					cmUnlockingPins.m_Unlock();
+				END_IF
+				
+				IF cmUnlockingPins.p_bStaIsUnlocked THEN
+					s_eSeqDockingInterface := E_SeqDockingInterface.DOCKING_DONE;
+				ELSIF cmUnlockingPins.p_bStaError THEN 
+					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
+					// write down some info?
+				ELSIF s_fbSeqDockingInterface.q_tmStepTime >= T#30S THEN
+ 					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
+					// write down some info?
+				END_IF
+			
+			E_SeqDockingInterface.DOCKING_DONE:
+				s_bStaDockingDone := TRUE;
+				s_eSeqDockingInterface := E_SeqDockingInterface.IDLE;
+			
+			E_SeqDockingInterface.UNDOCKING_LOCK_DOOR:
+			
+				IF s_fbSeqDockingInterface.q_bStaEntry THEN 
+					cmUnlockingPins.m_Lock();
+				END_IF
+				
+				IF cmUnlockingPins.p_bStaIsLocked THEN
+					s_eSeqDockingInterface := E_SeqDockingInterface.UNDOCKING_OPEN_CLAMPS;
+				ELSIF cmUnlockingPins.p_bStaError THEN 
+					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
+					// write down some info?
+				ELSIF s_fbSeqDockingInterface.q_tmStepTime >= T#30S THEN
+ 					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
+					// write down some info?
+				END_IF
+				
+			E_SeqDockingInterface.UNDOCKING_OPEN_CLAMPS:
+			
+				IF s_fbSeqDockingInterface.q_bStaEntry THEN 
+					//--cmValveDockingClampsUpper.m_Off();
+					//--cmValveDockingClampsLower.m_Off();
+					cmDockingClamps.m_Open();
+				END_IF
+				
+				IF cmDockingClamps.p_bStaIsOpened THEN
+					s_eSeqDockingInterface := E_SeqDockingInterface.UNDOCKING_DONE;
+				ELSIF cmDockingClamps.p_bStaError THEN 
+					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
+					// write down some info?
+				ELSIF s_fbSeqDockingInterface.q_tmStepTime >= T#30S THEN
+ 					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
+					// write down some info?
+				END_IF
+				
+			E_SeqDockingInterface.UNDOCKING_DONE:
+				s_bStaUndockingDone := TRUE;
+				s_eSeqDockingInterface := E_SeqDockingInterface.IDLE;
+				
+			E_SeqDockingInterface.READY:
+				;
+			
+			E_SeqDockingInterface.ERROR:
+				
+				IF i_bCmdReset THEN
+					//Reset errors (probebly alredy done in the methode devices)
+					//--cmValveDockingClampsUpper.i_bCmdReset := TRUE;
+				
+					s_eSeqDockingInterface := E_SeqDockingInterface.IDLE;
+				END_IF
+				
+		END_CASE		
+	
 		
 	E_CtrlMode.MANUAL:
-		_m_Manual(i_bCmdReset			:= GVL.g_UnRMMT.s_fbHmiBtnManual.p_osfBtnPress OR GVL_KMWEGenericLib.g_fbAlarmManager.p_osrReset, 
-					i_bStaError			:= GVL_KMWEGenericLib.g_fbAlarmManager.p_bAlarmActive OR s_fbHmiBtnStop.p_osrBtnPress OR s_diBtnStop.p_osrOn);	
+		;
+		{warning '#TODO: Add manual control from hmi'}
+
 END_CASE
 ]]></ST>
       </Implementation>
     </Method>
+    <Method Name="m_OpenOuterDoor" Id="{cacb32c9-2f39-45b3-a10f-fdd38f341162}">
+      <Declaration><![CDATA[METHOD PUBLIC m_OpenOuterDoor : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+s_bReqOpenOuterDoor := TRUE;
+s_bReqCloseOuterDoor := FALSE;
+s_bReqReleaseLockCleanroomDoor := FALSE;
+s_bReqApplyLockCleanroomDoor := FALSE;
+
+m_OpenOuterDoor := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_ReleaseLockCleanroomDoor" Id="{145de249-cc49-4a2e-a93a-16f786c2ecb4}">
+      <Declaration><![CDATA[METHOD PUBLIC m_ReleaseLockCleanroomDoor : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+s_bReqOpenOuterDoor := FALSE;
+s_bReqCloseOuterDoor := FALSE;
+s_bReqReleaseLockCleanroomDoor := TRUE;
+s_bReqApplyLockCleanroomDoor := FALSE;
+
+m_ReleaseLockCleanroomDoor := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="p_bStaCleanroomDoorClosed" Id="{3e867690-16e1-4e81-ad03-19ccedfb22c2}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaCleanroomDoorClosed : BOOL]]></Declaration>
+      <Get Name="Get" Id="{9548d166-8d83-4477-b001-d95261ddbc06}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaCleanroomDoorClosed := s_bStaCleanroomDoorClosed;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaCleanroomDoorOpened" Id="{bb117a50-1725-4cdb-9157-fc2597312e4e}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaCleanroomDoorOpened : BOOL]]></Declaration>
+      <Get Name="Get" Id="{e91b025b-dae0-4ea7-97b1-57ee28a26a9b}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaCleanroomDoorOpened := s_bStaCleanroomDoorOpened;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaCleanroomLockApplied" Id="{e6feb3e3-3717-426d-b652-dbbaa9ba0f43}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaCleanroomLockApplied : BOOL]]></Declaration>
+      <Get Name="Get" Id="{0d6adf81-f180-40fd-b901-f0c227800da7}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaCleanroomLockApplied := s_bStaCleanroomLockApplied;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaCleanroomLockReleased" Id="{a2b1d59d-5e34-4c2d-b724-72237d669c65}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaCleanroomLockReleased : BOOL]]></Declaration>
+      <Get Name="Get" Id="{8ba433c5-2593-4dbc-a0e7-7b9acd8e39d7}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaCleanroomLockReleased := s_bStaCleanroomLockReleased;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaOuterDoorClosed" Id="{e8474055-2ea6-4b59-a386-3fcee4ae9262}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaOuterDoorClosed : BOOL]]></Declaration>
+      <Get Name="Get" Id="{38689063-15e9-462f-9650-3e7d7a523f33}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaOuterDoorClosed := s_bStaOuterDoorClosed;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaOuterDoorOpened" Id="{bc66e39f-ee2c-4f79-9694-10ac484efe5a}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaOuterDoorOpened : BOOL]]></Declaration>
+      <Get Name="Get" Id="{d7cea33e-5fa5-438f-8145-a6950abb53e6}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaOuterDoorOpened := s_bStaOuterDoorOpened;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
     <LineIds Name="EM_Doors">
       <LineId Id="221" Count="0" />
       <LineId Id="9" Count="0" />
@@ -500,85 +778,68 @@ END_CASE
       <LineId Id="35" Count="0" />
       <LineId Id="6" Count="2" />
       <LineId Id="36" Count="0" />
-      <LineId Id="38" Count="4" />
-      <LineId Id="37" Count="0" />
-      <LineId Id="43" Count="0" />
+      <LineId Id="38" Count="5" />
       <LineId Id="45" Count="4" />
-      <LineId Id="44" Count="0" />
-      <LineId Id="51" Count="0" />
-      <LineId Id="11" Count="0" />
-      <LineId Id="52" Count="0" />
-      <LineId Id="56" Count="0" />
-      <LineId Id="77" Count="1" />
-      <LineId Id="59" Count="0" />
-      <LineId Id="71" Count="0" />
-      <LineId Id="73" Count="0" />
-      <LineId Id="60" Count="0" />
-      <LineId Id="62" Count="0" />
-      <LineId Id="57" Count="0" />
-      <LineId Id="61" Count="0" />
-      <LineId Id="63" Count="0" />
-      <LineId Id="58" Count="0" />
-      <LineId Id="55" Count="0" />
-      <LineId Id="74" Count="1" />
-      <LineId Id="53" Count="0" />
-      <LineId Id="69" Count="0" />
-      <LineId Id="65" Count="0" />
-      <LineId Id="70" Count="0" />
-      <LineId Id="76" Count="0" />
-      <LineId Id="66" Count="0" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="80" Count="0" />
       <LineId Id="54" Count="0" />
+      <LineId Id="84" Count="2" />
+      <LineId Id="88" Count="0" />
+      <LineId Id="92" Count="1" />
+      <LineId Id="81" Count="0" />
       <LineId Id="5" Count="0" />
       <LineId Id="50" Count="0" />
     </LineIds>
     <LineIds Name="EM_Doors._m_Hmi">
+      <LineId Id="222" Count="0" />
       <LineId Id="7" Count="2" />
       <LineId Id="199" Count="0" />
-      <LineId Id="197" Count="1" />
-      <LineId Id="191" Count="0" />
-      <LineId Id="206" Count="0" />
-      <LineId Id="205" Count="0" />
-      <LineId Id="208" Count="0" />
-      <LineId Id="207" Count="0" />
-      <LineId Id="200" Count="0" />
-      <LineId Id="192" Count="0" />
-      <LineId Id="210" Count="0" />
-      <LineId Id="209" Count="0" />
-      <LineId Id="190" Count="0" />
-      <LineId Id="217" Count="0" />
-      <LineId Id="215" Count="1" />
+      <LineId Id="225" Count="0" />
+      <LineId Id="248" Count="6" />
+      <LineId Id="262" Count="0" />
+      <LineId Id="255" Count="6" />
+      <LineId Id="247" Count="0" />
+      <LineId Id="216" Count="0" />
       <LineId Id="6" Count="0" />
+      <LineId Id="224" Count="0" />
     </LineIds>
     <LineIds Name="EM_Doors._m_Init">
       <LineId Id="203" Count="0" />
-      <LineId Id="5" Count="5" />
-      <LineId Id="205" Count="0" />
-      <LineId Id="204" Count="0" />
-      <LineId Id="175" Count="0" />
-      <LineId Id="121" Count="0" />
-      <LineId Id="126" Count="1" />
-      <LineId Id="129" Count="0" />
-      <LineId Id="132" Count="0" />
-      <LineId Id="135" Count="0" />
-      <LineId Id="162" Count="0" />
-      <LineId Id="136" Count="2" />
-      <LineId Id="141" Count="0" />
-      <LineId Id="176" Count="0" />
-      <LineId Id="198" Count="1" />
-      <LineId Id="146" Count="0" />
+      <LineId Id="5" Count="2" />
+      <LineId Id="207" Count="0" />
+      <LineId Id="209" Count="5" />
+      <LineId Id="225" Count="0" />
+      <LineId Id="215" Count="8" />
+      <LineId Id="208" Count="0" />
+      <LineId Id="8" Count="1" />
       <LineId Id="35" Count="3" />
-      <LineId Id="147" Count="12" />
-      <LineId Id="88" Count="0" />
-      <LineId Id="181" Count="0" />
-      <LineId Id="189" Count="0" />
-      <LineId Id="182" Count="3" />
-      <LineId Id="190" Count="0" />
-      <LineId Id="186" Count="2" />
-      <LineId Id="191" Count="0" />
-      <LineId Id="193" Count="2" />
-      <LineId Id="192" Count="0" />
-      <LineId Id="89" Count="4" />
-      <LineId Id="97" Count="4" />
+      <LineId Id="239" Count="2" />
+      <LineId Id="238" Count="0" />
+      <LineId Id="232" Count="0" />
+      <LineId Id="243" Count="2" />
+      <LineId Id="242" Count="0" />
+      <LineId Id="233" Count="0" />
+      <LineId Id="247" Count="2" />
+      <LineId Id="246" Count="0" />
+      <LineId Id="235" Count="0" />
+      <LineId Id="251" Count="2" />
+      <LineId Id="250" Count="0" />
+      <LineId Id="227" Count="0" />
+      <LineId Id="255" Count="2" />
+      <LineId Id="254" Count="0" />
+      <LineId Id="265" Count="0" />
+      <LineId Id="273" Count="2" />
+      <LineId Id="269" Count="0" />
+      <LineId Id="277" Count="0" />
+      <LineId Id="276" Count="0" />
+      <LineId Id="278" Count="10" />
+      <LineId Id="226" Count="0" />
+      <LineId Id="294" Count="0" />
+      <LineId Id="293" Count="0" />
+      <LineId Id="292" Count="0" />
+      <LineId Id="291" Count="0" />
+      <LineId Id="290" Count="0" />
+      <LineId Id="289" Count="0" />
       <LineId Id="166" Count="1" />
       <LineId Id="118" Count="1" />
       <LineId Id="168" Count="0" />
@@ -591,18 +852,16 @@ END_CASE
     <LineIds Name="EM_Doors._m_Inputs">
       <LineId Id="46" Count="0" />
       <LineId Id="6" Count="2" />
-      <LineId Id="40" Count="2" />
-      <LineId Id="39" Count="0" />
-      <LineId Id="35" Count="0" />
+      <LineId Id="40" Count="0" />
       <LineId Id="5" Count="0" />
+      <LineId Id="48" Count="0" />
     </LineIds>
     <LineIds Name="EM_Doors._m_Outputs">
       <LineId Id="20" Count="0" />
       <LineId Id="6" Count="2" />
       <LineId Id="16" Count="0" />
-      <LineId Id="18" Count="0" />
-      <LineId Id="11" Count="0" />
       <LineId Id="5" Count="0" />
+      <LineId Id="22" Count="0" />
     </LineIds>
     <LineIds Name="EM_Doors._m_Params">
       <LineId Id="291" Count="0" />
@@ -657,42 +916,101 @@ END_CASE
       <LineId Id="282" Count="0" />
       <LineId Id="292" Count="0" />
     </LineIds>
-    <LineIds Name="EM_Doors.m_Main">
-      <LineId Id="178" Count="0" />
-      <LineId Id="6" Count="2" />
-      <LineId Id="10" Count="2" />
-      <LineId Id="163" Count="0" />
-      <LineId Id="165" Count="0" />
-      <LineId Id="167" Count="1" />
-      <LineId Id="166" Count="0" />
-      <LineId Id="164" Count="0" />
-      <LineId Id="157" Count="1" />
-      <LineId Id="86" Count="1" />
-      <LineId Id="67" Count="0" />
-      <LineId Id="72" Count="0" />
-      <LineId Id="88" Count="2" />
-      <LineId Id="159" Count="0" />
-      <LineId Id="170" Count="1" />
-      <LineId Id="160" Count="0" />
-      <LineId Id="176" Count="0" />
-      <LineId Id="175" Count="0" />
-      <LineId Id="174" Count="0" />
-      <LineId Id="173" Count="0" />
-      <LineId Id="133" Count="0" />
-      <LineId Id="143" Count="0" />
-      <LineId Id="135" Count="1" />
-      <LineId Id="144" Count="0" />
-      <LineId Id="138" Count="1" />
-      <LineId Id="130" Count="0" />
-      <LineId Id="145" Count="3" />
-      <LineId Id="131" Count="0" />
-      <LineId Id="93" Count="2" />
-      <LineId Id="91" Count="0" />
-      <LineId Id="128" Count="0" />
-      <LineId Id="60" Count="0" />
-      <LineId Id="161" Count="1" />
-      <LineId Id="5" Count="0" />
+    <LineIds Name="EM_Doors.m_ApplyLockCleanroomDoor">
+      <LineId Id="182" Count="10" />
       <LineId Id="179" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors.m_CloseOuterDoor">
+      <LineId Id="182" Count="10" />
+      <LineId Id="179" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors.m_Main">
+      <LineId Id="330" Count="0" />
+      <LineId Id="186" Count="6" />
+      <LineId Id="331" Count="0" />
+      <LineId Id="333" Count="0" />
+      <LineId Id="195" Count="0" />
+      <LineId Id="199" Count="10" />
+      <LineId Id="375" Count="0" />
+      <LineId Id="381" Count="0" />
+      <LineId Id="380" Count="0" />
+      <LineId Id="377" Count="0" />
+      <LineId Id="376" Count="0" />
+      <LineId Id="210" Count="0" />
+      <LineId Id="334" Count="0" />
+      <LineId Id="352" Count="0" />
+      <LineId Id="370" Count="1" />
+      <LineId Id="355" Count="1" />
+      <LineId Id="354" Count="0" />
+      <LineId Id="338" Count="1" />
+      <LineId Id="341" Count="0" />
+      <LineId Id="358" Count="1" />
+      <LineId Id="372" Count="0" />
+      <LineId Id="360" Count="1" />
+      <LineId Id="342" Count="0" />
+      <LineId Id="340" Count="0" />
+      <LineId Id="343" Count="0" />
+      <LineId Id="345" Count="0" />
+      <LineId Id="362" Count="1" />
+      <LineId Id="373" Count="0" />
+      <LineId Id="364" Count="1" />
+      <LineId Id="346" Count="0" />
+      <LineId Id="344" Count="0" />
+      <LineId Id="335" Count="0" />
+      <LineId Id="349" Count="0" />
+      <LineId Id="366" Count="1" />
+      <LineId Id="374" Count="0" />
+      <LineId Id="368" Count="1" />
+      <LineId Id="350" Count="0" />
+      <LineId Id="347" Count="1" />
+      <LineId Id="336" Count="0" />
+      <LineId Id="211" Count="118" />
+      <LineId Id="179" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors.m_OpenOuterDoor">
+      <LineId Id="182" Count="0" />
+      <LineId Id="237" Count="1" />
+      <LineId Id="185" Count="1" />
+      <LineId Id="234" Count="1" />
+      <LineId Id="240" Count="0" />
+      <LineId Id="179" Count="0" />
+      <LineId Id="241" Count="0" />
+      <LineId Id="239" Count="0" />
+      <LineId Id="242" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors.m_ReleaseLockCleanroomDoor">
+      <LineId Id="182" Count="10" />
+      <LineId Id="179" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors.p_bStaCleanroomDoorClosed.Get">
+      <LineId Id="4" Count="0" />
+      <LineId Id="3" Count="0" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors.p_bStaCleanroomDoorOpened.Get">
+      <LineId Id="4" Count="0" />
+      <LineId Id="3" Count="0" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors.p_bStaCleanroomLockApplied.Get">
+      <LineId Id="4" Count="0" />
+      <LineId Id="3" Count="0" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors.p_bStaCleanroomLockReleased.Get">
+      <LineId Id="4" Count="0" />
+      <LineId Id="3" Count="0" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors.p_bStaOuterDoorClosed.Get">
+      <LineId Id="4" Count="0" />
+      <LineId Id="3" Count="0" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors.p_bStaOuterDoorOpened.Get">
+      <LineId Id="4" Count="0" />
+      <LineId Id="3" Count="0" />
+      <LineId Id="2" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>

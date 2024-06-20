@@ -506,7 +506,32 @@ _m_SelectConfigFile(i_bCmdReset := s_fbHmiBtnAutomatic.p_osfBtnPress);
 GVL.g_osrNotify.CLK 	:= FALSE;	
 
 m_Main := TRUE;
-]]></ST>
+
+
+(*	
+	// Interlocks (doors must work as an airlock, only one door may be opened at all times)
+	s_bIlckSpeedDoorOuterToOpen :=
+		s_cmDoorLockCleanroom.p_bStaError
+		OR NOT(s_cmDoorLockCleanroom.p_bStaEnabled)
+		NOT(s_cmDoorLockCleanroom.p_bStaDoorIsClosed)
+		OR NOT (s_cmDoorLockCleanroom.p_bStaLockIsApplied)
+		OR s_cmDoorLockCleanroom.p_bStaLockIsReleased
+		OR TRUE (*Air treathment unit must be running and ok*)
+		OR TRUE (*Add more..*);
+	s_bIlckSpeedDoorOuterToClose :=
+		TRUE (*Opening must be free*)
+		OR TRUE (*Add more..*);
+	
+	s_bIlckDoorLockCleanroomToOpen :=
+		s_cmSpeedDoorOuter.p_bStaError
+		OR NOT(s_cmSpeedDoorOuter.p_bStaEnabled)
+		OR NOT(s_cmSpeedDoorOuter.p_bStaIsClosed)
+		OR s_cmSpeedDoorOuter.p_bStaIsClosing
+		OR s_cmSpeedDoorOuter.p_bStaIsOpened
+		OR s_cmSpeedDoorOuter.p_bStaIsOpening
+		OR TRUE (*Air treathment unit must be running and ok*)
+		OR TRUE (*Add more..*);
+*)	]]></ST>
       </Implementation>
     </Method>
     <LineIds Name="UN_CleanroomConnect">
@@ -627,6 +652,7 @@ m_Main := TRUE;
       <LineId Id="28" Count="0" />
       <LineId Id="15" Count="0" />
       <LineId Id="5" Count="0" />
+      <LineId Id="33" Count="24" />
       <LineId Id="31" Count="0" />
     </LineIds>
   </POU>

@@ -8,6 +8,7 @@ VAR
 
 //------------------------------------------//
 
+
 //------------------------------------------//
 //Control Modules (Devices)
 	s_CmKmweLeds 				: CM_KmweLeds;
@@ -47,7 +48,8 @@ VAR
 //------------------------------------------//
 END_VAR]]></Declaration>
     <Implementation>
-      <ST><![CDATA[SUPER^();
+      <ST><![CDATA[
+SUPER^();
 ]]></ST>
     </Implementation>
     <Method Name="_m_Alarms" Id="{c0f56159-8f50-4d36-acac-c259038873b1}">
@@ -342,13 +344,45 @@ _m_Init := TRUE;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-GVL_Modules.g_EmRMMTTester(
-	i_bReqEnable	:= TRUE, 
-	i_eCtrlMode		:= s_eCtrlMode, 
-	i_bCmdReset		:= p_bCmdReset, 
-	i_sEmName		:= 'RMMT Tester Tool', 
-	q_bStaError		=> s_bStaError );
+//Interlocks (TRUE = interlocked)
+GVL_Modules.emDoors.i_bIlckOuterDoorToClose := 
+	GVL_Modules.emDockingInterface.p_bStaDockingDone;
+	
+GVL_Modules.emDoors.i_bIlckOuterDoorToOpen :=
+	NOT(GVL_Modules.emDoors.p_bStaCleanroomDoorClosed)
+	OR NOT(GVL_Modules.emDoors.p_bStaCleanroomLockApplied);
+//++	OR NOT(GVL_Modules.emAirTreathment.p_bStaRunningOk;
+ 
+GVL_Modules.emDoors.i_bIlckCleanroomDoorToLock := 
+	NOT(GVL_Modules.emDoors.p_bStaCleanroomDoorClosed);
 
+GVL_Modules.emDoors.i_bIlckCleanroomDoorToRelease :=
+	( NOT(GVL_Modules.emDoors.p_bStaOuterDoorClosed) AND NOT(GVL_Modules.emDockingInterface.p_bStaDockingDone) );
+	//++	OR NOT(GVL_Modules.emAirTreathment.p_bStaRunningOk;
+
+GVL_Modules.emDoors(
+	i_bReqEnable := TRUE,
+	i_eCtrlMode := s_eCtrlMode,
+	i_bCmdReset := p_bCmdReset,
+	i_sEmName := 'EM Doors',
+	q_bStaError => );
+
+	
+
+GVL_Modules.emDockingInterface.
+	
+GVL_Modules.emDockingInterface(
+	i_bReqEnable := TRUE,
+	i_eCtrlMode := s_eCtrlMode,
+	i_bCmdReset := p_bCmdReset,
+	i_sEmName := 'EM Docking Interface',
+ 
+	q_bStaError => );
+	
+s_bStaError :=
+	s_emDoors.q_bStaError
+	AND	s_emDockingInterface.q_bStaError;
+	
 _m_Modules := TRUE;
 ]]></ST>
       </Implementation>
@@ -535,6 +569,7 @@ m_Main := TRUE;
       </Implementation>
     </Method>
     <LineIds Name="UN_CleanroomConnect">
+      <LineId Id="115" Count="0" />
       <LineId Id="9" Count="0" />
       <LineId Id="62" Count="0" />
     </LineIds>
@@ -615,8 +650,30 @@ m_Main := TRUE;
       <LineId Id="78" Count="0" />
     </LineIds>
     <LineIds Name="UN_CleanroomConnect._m_Modules">
+      <LineId Id="45" Count="2" />
+      <LineId Id="51" Count="1" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="54" Count="2" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="57" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="59" Count="1" />
       <LineId Id="19" Count="0" />
-      <LineId Id="11" Count="6" />
+      <LineId Id="24" Count="4" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="43" Count="1" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="31" Count="4" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="38" Count="1" />
+      <LineId Id="37" Count="0" />
       <LineId Id="10" Count="0" />
       <LineId Id="20" Count="0" />
     </LineIds>

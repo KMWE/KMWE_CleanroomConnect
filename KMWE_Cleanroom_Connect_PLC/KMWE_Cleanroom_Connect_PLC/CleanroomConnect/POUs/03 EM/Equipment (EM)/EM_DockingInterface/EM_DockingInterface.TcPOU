@@ -5,6 +5,17 @@
 VAR CONSTANT 
 	c_nResultDataSize : UINT := 20;
 END_VAR
+
+VAR_INPUT
+//Inputs
+	i_stSettings : ST_SettingsDockingInterface;
+	
+	i_bIlckDockingClampsToClose : BOOL := TRUE; //TRUE = Interlocked
+	i_bIlckDockingClampsToOpen : BOOL := TRUE; //TRUE = Interlocked
+	i_bIlckUnlockingPinsToLock : BOOL := TRUE; //TRUE = Interlocked
+	i_bIlckUnlockingPinsToRelease : BOOL := TRUE; //TRUE = Interlocked	
+END_VAR
+
 VAR
 //------------------------------------------//
 //Control Modules (Devices)
@@ -33,6 +44,11 @@ VAR
 	s_bStaDockingDone : BOOL := FALSE;
 	s_bStaUndockingDone : BOOL := FALSE;
 	
+//Interlockes	
+	s_bIlckDockingClampsToClose : BOOL;
+	s_bIlckDockingClampsToOpen : BOOL;
+	s_bIlckUnlockingPinsToLock : BOOL;
+	s_bIlckUnlockingPinsToRelease : BOOL;
 	
 //Alarms
 
@@ -76,7 +92,7 @@ VAR
 	s_eSeqDockingInterface : E_SeqDockingInterface;
 	s_fbSeqDockingInterface : FB_SeqControl;
 	
-	s_eCurrentTest						: E_TestMode;
+	//--s_eCurrentTest						: E_TestMode;
 //--	s_stCommandsTesla					: ST_SCPI_TeslaCommands;
 	
 	
@@ -372,6 +388,12 @@ IF NOT SUPER^._m_Inputs() THEN
 	RETURN;
 END_IF
 
+//Interlocks
+s_bIlckDockingClampsToClose := i_bIlckDockingClampsToClose;
+s_bIlckDockingClampsToOpen := i_bIlckDockingClampsToOpen;
+s_bIlckUnlockingPinsToLock := i_bIlckUnlockingPinsToLock;
+s_bIlckUnlockingPinsToRelease := i_bIlckUnlockingPinsToRelease;
+
 s_diStaBoxAtPreDockingPosition();
 s_diStaBoxAtDockedPosition();
 
@@ -571,7 +593,7 @@ CASE i_eCtrlMode OF
 				ELSIF cmDockingClamps.p_bStaError THEN 
 					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
 					// write down some info?
-				ELSIF s_fbSeqDockingInterface.q_tmStepTime >= T#30S THEN
+				ELSIF (s_fbSeqDockingInterface.q_tmStepTime >= i_stSettings.tClampsTimeout) THEN
  					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
 					// write down some info?
 				END_IF
@@ -587,7 +609,7 @@ CASE i_eCtrlMode OF
 				ELSIF cmUnlockingPins.p_bStaError THEN 
 					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
 					// write down some info?
-				ELSIF s_fbSeqDockingInterface.q_tmStepTime >= T#30S THEN
+				ELSIF (s_fbSeqDockingInterface.q_tmStepTime >= i_stSettings.tReleasePinsTimeout) THEN
  					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
 					// write down some info?
 				END_IF
@@ -607,7 +629,7 @@ CASE i_eCtrlMode OF
 				ELSIF cmUnlockingPins.p_bStaError THEN 
 					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
 					// write down some info?
-				ELSIF s_fbSeqDockingInterface.q_tmStepTime >= T#30S THEN
+				ELSIF (s_fbSeqDockingInterface.q_tmStepTime >= i_stSettings.tReleasePinsTimeout) THEN
  					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
 					// write down some info?
 				END_IF
@@ -625,7 +647,7 @@ CASE i_eCtrlMode OF
 				ELSIF cmDockingClamps.p_bStaError THEN 
 					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
 					// write down some info?
-				ELSIF s_fbSeqDockingInterface.q_tmStepTime >= T#30S THEN
+				ELSIF (s_fbSeqDockingInterface.q_tmStepTime >= i_stSettings.tClampsTimeout) THEN
  					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
 					// write down some info?
 				END_IF
@@ -837,6 +859,9 @@ p_bStaUndockingDone := s_bStaUndockingDone;
     <LineIds Name="EM_DockingInterface._m_Inputs">
       <LineId Id="46" Count="0" />
       <LineId Id="6" Count="2" />
+      <LineId Id="56" Count="1" />
+      <LineId Id="59" Count="2" />
+      <LineId Id="58" Count="0" />
       <LineId Id="48" Count="0" />
       <LineId Id="51" Count="0" />
       <LineId Id="54" Count="0" />

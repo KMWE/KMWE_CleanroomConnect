@@ -8,6 +8,11 @@ VAR
 
 //------------------------------------------//
 
+//Interfaces (is this the correct wway to go?)
+
+itfEmDoors : I_EM_Doors := GVL_Modules.emDoors;
+itfEmDockingInterface : I_EM_DockingInterface := GVL_Modules.emDockingInterface;
+itfEmAirTreatment : I_EM_AirTreatment := GVL_Modules.emAirTreatment;
 
 //------------------------------------------//
 //Control Modules (Devices)
@@ -542,6 +547,16 @@ GVL.g_osrNotify.CLK 	:= FALSE;
 m_Main := TRUE;
 
 
+
+// Paul Schippers: just a test with the use of interfaces
+itfEmDoors.m_CloseOuterDoor();
+
+itfEmDockingInterface.m_OpenDockingClamps();
+
+IF NOT(itfEmAirTreatment.p_bStaPressurizingOK) THEN 
+	itfEmAirTreatment.m_Pressurize();
+END_IF
+
 (*	
 	// Interlocks (doors must work as an airlock, only one door may be opened at all times)
 	s_bIlckSpeedDoorOuterToOpen :=
@@ -569,8 +584,8 @@ m_Main := TRUE;
       </Implementation>
     </Method>
     <LineIds Name="UN_CleanroomConnect">
-      <LineId Id="115" Count="0" />
-      <LineId Id="9" Count="0" />
+      <LineId Id="171" Count="0" />
+      <LineId Id="168" Count="0" />
       <LineId Id="62" Count="0" />
     </LineIds>
     <LineIds Name="UN_CleanroomConnect._m_Alarms">
@@ -709,6 +724,10 @@ m_Main := TRUE;
       <LineId Id="28" Count="0" />
       <LineId Id="15" Count="0" />
       <LineId Id="5" Count="0" />
+      <LineId Id="59" Count="3" />
+      <LineId Id="66" Count="3" />
+      <LineId Id="64" Count="0" />
+      <LineId Id="63" Count="0" />
       <LineId Id="33" Count="24" />
       <LineId Id="31" Count="0" />
     </LineIds>

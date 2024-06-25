@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
   <POU Name="EM_Doors" Id="{0ea26ddd-052a-4260-bfaf-0daade60103a}" SpecialFunc="None">
-    <Declaration><![CDATA[FUNCTION_BLOCK EM_Doors EXTENDS EM_Base
+    <Declaration><![CDATA[FUNCTION_BLOCK EM_Doors EXTENDS EM_Base IMPLEMENTS I_EM_DOORS
 VAR CONSTANT 
 	c_nResultDataSize : UINT := 20;
 END_VAR
@@ -366,10 +366,11 @@ IF NOT SUPER^._m_Inputs() THEN
 END_IF
 
 
-s_bIlckOuterDoorToOpen		 		: BOOL := TRUE;
-s_bIlckOuterDoorToClose 			: BOOL := TRUE;
+s_bIlckOuterDoorToOpen := i_bIlckOuterDoorToOpen;
+s_bIlckOuterDoorToClose := i_bIlckOuterDoorToClose;
 	
-s_bIlckCleanroomDoorToOpen 			: BOOL := TRUE;
+s_bIlckCleanroomDoorToRelease := i_bIlckCleanroomDoorToRelease;
+s_bIlckCleanroomDoorToLock := i_bIlckCleanroomDoorToLock;
 
 _m_Inputs := TRUE;
 ]]></ST>
@@ -915,6 +916,7 @@ p_bStaOuterDoorOpened := s_bStaOuterDoorOpened;
       <LineId Id="50" Count="1" />
       <LineId Id="53" Count="2" />
       <LineId Id="52" Count="0" />
+      <LineId Id="57" Count="0" />
       <LineId Id="40" Count="0" />
       <LineId Id="5" Count="0" />
       <LineId Id="48" Count="0" />

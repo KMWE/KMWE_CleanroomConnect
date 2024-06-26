@@ -8,11 +8,7 @@ VAR
 
 //------------------------------------------//
 
-//Interfaces (is this the correct wway to go?)
 
-itfEmDoors : I_EM_Doors := GVL_Modules.emDoors;
-itfEmDockingInterface : I_EM_DockingInterface := GVL_Modules.emDockingInterface;
-itfEmAirTreatment : I_EM_AirTreatment := GVL_Modules.emAirTreatment;
 
 //------------------------------------------//
 //Control Modules (Devices)
@@ -303,7 +299,7 @@ GVL.g_sToHmiBottomContent	:= GVL.g_stHmiBottomBar.Start;
 	s_fbHmiBtnAutomatic.p_bStaEnabled 		:= TRUE;
 	s_fbHmiBtnAutomatic.p_bStaVisible 		:= TRUE;
 	s_fbHmiBtnAutomatic.p_eButtontype		:= E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnAutomatic.p_sBtnText			:= 'RMMT Test';
+	s_fbHmiBtnAutomatic.p_sBtnText			:= 'Auto';
 
 	s_fbHmiBtnManual.p_bStaEnabled 			:= TRUE;
 	s_fbHmiBtnManual.p_bStaVisible 			:= TRUE;
@@ -313,7 +309,7 @@ GVL.g_sToHmiBottomContent	:= GVL.g_stHmiBottomBar.Start;
 	s_fbHmiBtnTesterConfig.p_bStaEnabled 	:= TRUE;
 	s_fbHmiBtnTesterConfig.p_bStaVisible 	:= TRUE;
 	s_fbHmiBtnTesterConfig.p_eButtontype	:= E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnTesterConfig.p_sBtnText		:= 'Tester Configuration';
+	s_fbHmiBtnTesterConfig.p_sBtnText		:= 'Configuration';
 	
 	s_fbHmiBtnAlarms.p_bStaVisible 			:= TRUE;
 	s_fbHmiBtnAlarms.p_bStaEnabled			:= TRUE;
@@ -350,43 +346,51 @@ _m_Init := TRUE;
       <Implementation>
         <ST><![CDATA[
 //Interlocks (TRUE = interlocked)
-GVL_Modules.emDoors.i_bIlckOuterDoorToClose := 
-	GVL_Modules.emDockingInterface.p_bStaDockingDone;
+GVL_Modules.g_emDoors.i_bIlckOuterDoorToClose := 
+	GVL_Modules.g_emDockingInterface.p_bStaDockingDone;
 	
-GVL_Modules.emDoors.i_bIlckOuterDoorToOpen :=
-	NOT(GVL_Modules.emDoors.p_bStaCleanroomDoorClosed)
-	OR NOT(GVL_Modules.emDoors.p_bStaCleanroomLockApplied);
+GVL_Modules.g_emDoors.i_bIlckOuterDoorToOpen :=
+	NOT(GVL_Modules.g_emDoors.p_bStaCleanroomDoorClosed)
+	OR NOT(GVL_Modules.g_emDoors.p_bStaCleanroomLockApplied);
 //++	OR NOT(GVL_Modules.emAirTreathment.p_bStaRunningOk;
  
-GVL_Modules.emDoors.i_bIlckCleanroomDoorToLock := 
-	NOT(GVL_Modules.emDoors.p_bStaCleanroomDoorClosed);
+GVL_Modules.g_emDoors.i_bIlckCleanroomDoorToLock := 
+	NOT(GVL_Modules.g_emDoors.p_bStaCleanroomDoorClosed);
 
-GVL_Modules.emDoors.i_bIlckCleanroomDoorToRelease :=
-	( NOT(GVL_Modules.emDoors.p_bStaOuterDoorClosed) AND NOT(GVL_Modules.emDockingInterface.p_bStaDockingDone) );
+GVL_Modules.g_emDoors.i_bIlckCleanroomDoorToRelease :=
+	( NOT(GVL_Modules.g_emDoors.p_bStaOuterDoorClosed) AND NOT(GVL_Modules.g_emDockingInterface.p_bStaDockingDone) );
 	//++	OR NOT(GVL_Modules.emAirTreathment.p_bStaRunningOk;
 
-GVL_Modules.emDoors(
+GVL_Modules.g_emStateMachine(
 	i_bReqEnable := TRUE,
 	i_eCtrlMode := s_eCtrlMode,
 	i_bCmdReset := p_bCmdReset,
-	i_sEmName := 'EM Doors',
-	q_bStaError => );
+	i_sEmName := 'EM State Machine',
+	i_itfEmDoors := GVL_Modules.g_emDoors,
+	i_itfEmDockingInterface := GVL_Modules.g_emDockingInterface);
 
-	
-
-GVL_Modules.emDockingInterface.
-	
-GVL_Modules.emDockingInterface(
+GVL_Modules.g_emDoors(
 	i_bReqEnable := TRUE,
 	i_eCtrlMode := s_eCtrlMode,
 	i_bCmdReset := p_bCmdReset,
-	i_sEmName := 'EM Docking Interface',
- 
-	q_bStaError => );
+	i_sEmName := 'EM Doors');
+
+GVL_Modules.g_emDockingInterface(
+	i_bReqEnable := TRUE,
+	i_eCtrlMode := s_eCtrlMode,
+	i_bCmdReset := p_bCmdReset,
+	i_sEmName := 'EM Docking Interface');
+	
+//++GVL_Modules.g_emAirTreatment(
+//++	i_bReqEnable := TRUE,
+//++	i_eCtrlMode := s_eCtrlMode,
+//++	i_bCmdReset := p_bCmdReset,
+//++	i_sEmName := 'EM Air Treatment');	
 	
 s_bStaError :=
-	s_emDoors.q_bStaError
-	AND	s_emDockingInterface.q_bStaError;
+	GVL_Modules.g_emDoors.q_bStaError
+	OR GVL_Modules.g_emDockingInterface.q_bStaError;
+//++	OR GVL_Modules.g_emAirTreatment.q_bStaError;
 	
 _m_Modules := TRUE;
 ]]></ST>
@@ -536,13 +540,13 @@ END_IF
 
 GVL.g_osrNotify();
 
-GVL_DataLogging.g_fbDataLogger(i_sPathName := 'C:\RMMT\', i_bCmdReset := s_bCmdReset);
+//--GVL_DataLogging.g_fbDataLogger(i_sPathName := 'C:\RMMT\', i_bCmdReset := s_bCmdReset);
 
-GVL_DataLogging.g_fbSqlDatabase(i_stSettings := s_stSqlDbSettings, i_bCmdReset := s_bCmdReset);
+//--GVL_DataLogging.g_fbSqlDatabase(i_stSettings := s_stSqlDbSettings, i_bCmdReset := s_bCmdReset);
 
-_m_SelectConfigFile(i_bCmdReset := s_fbHmiBtnAutomatic.p_osfBtnPress);
+//--_m_SelectConfigFile(i_bCmdReset := s_fbHmiBtnAutomatic.p_osfBtnPress);
 
-GVL.g_osrNotify.CLK 	:= FALSE;	
+GVL.g_osrNotify.CLK := FALSE;	
 
 m_Main := TRUE;
 
@@ -553,9 +557,9 @@ itfEmDoors.m_CloseOuterDoor();
 
 itfEmDockingInterface.m_OpenDockingClamps();
 
-IF NOT(itfEmAirTreatment.p_bStaPressurizingOK) THEN 
-	itfEmAirTreatment.m_Pressurize();
-END_IF
+//IF NOT(itfEmAirTreatment.p_bStaPressurizingOK) THEN 
+//	itfEmAirTreatment.m_Pressurize();
+//END_IF
 
 (*	
 	// Interlocks (doors must work as an airlock, only one door may be opened at all times)
@@ -675,19 +679,24 @@ END_IF
       <LineId Id="57" Count="0" />
       <LineId Id="50" Count="0" />
       <LineId Id="59" Count="1" />
+      <LineId Id="70" Count="0" />
       <LineId Id="19" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="83" Count="1" />
+      <LineId Id="81" Count="0" />
       <LineId Id="24" Count="4" />
-      <LineId Id="17" Count="0" />
-      <LineId Id="41" Count="0" />
-      <LineId Id="29" Count="0" />
-      <LineId Id="43" Count="1" />
-      <LineId Id="42" Count="0" />
+      <LineId Id="43" Count="0" />
       <LineId Id="31" Count="4" />
-      <LineId Id="40" Count="0" />
-      <LineId Id="30" Count="0" />
+      <LineId Id="64" Count="0" />
+      <LineId Id="66" Count="3" />
+      <LineId Id="65" Count="0" />
       <LineId Id="23" Count="0" />
       <LineId Id="36" Count="0" />
-      <LineId Id="38" Count="1" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="62" Count="1" />
       <LineId Id="37" Count="0" />
       <LineId Id="10" Count="0" />
       <LineId Id="20" Count="0" />

@@ -189,40 +189,6 @@ _m_Alarms := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Devices" Id="{c18c3403-a619-4da8-8c16-d38b3f2bd5db}">
-      <Declaration><![CDATA[METHOD PROTECTED _m_Devices : BOOL
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[
-IF NOT SUPER^._m_Devices() THEN
-	RETURN;
-END_IF
-
-s_cmCleanroomDoor(
-	i_bReqEnable := i_bReqEnable,
-	i_eCtrlMode := i_eCtrlMode,
-	i_bCmdReset := i_bCmdReset);
-	//--i_sCmName := 'Speed door outer');
-	
-s_cmOuterDoor(
-	i_bReqEnable := i_bReqEnable,
-	i_eCtrlMode := i_eCtrlMode,
-	i_bCmdReset := i_bCmdReset);
-	//--i_sCmName := 'Door lock cleanroom');	
-
-//Statusses
-s_bStaOuterDoorClosed := s_cmOuterDoor.p_bStaIsClosed;
-s_bStaOuterDoorOpened := s_cmOuterDoor.p_bStaIsOpened;
-s_bStaCleanroomLockApplied := s_cmCleanroomDoor.p_bStaLockIsApplied;
-s_bStaCleanroomLockReleased := s_cmCleanroomDoor.p_bStaLockIsReleased;
-s_bStaCleanroomDoorClosed := s_cmCleanroomDoor.p_bStaDoorIsClosed;
-s_bStaCleanroomDoorOpened := NOT(s_cmCleanroomDoor.p_bStaDoorIsClosed);
-s_bStaError := s_cmOuterDoor.p_bStaError OR s_cmCleanroomDoor.p_bStaError;
-	
-_m_Devices := TRUE;
-]]></ST>
-      </Implementation>
-    </Method>
     <Method Name="_m_Hmi" Id="{06e9697b-07d7-4e29-8455-791381b5d99d}">
       <Declaration><![CDATA[METHOD PROTECTED _m_Hmi : BOOL
 ]]></Declaration>
@@ -373,6 +339,39 @@ s_bIlckCleanroomDoorToRelease := i_bIlckCleanroomDoorToRelease;
 s_bIlckCleanroomDoorToLock := i_bIlckCleanroomDoorToLock;
 
 _m_Inputs := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Modules" Id="{c18c3403-a619-4da8-8c16-d38b3f2bd5db}">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Modules : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT SUPER^._m_Devices() THEN
+	RETURN;
+END_IF
+
+s_cmCleanroomDoor(
+	i_bReqEnable := i_bReqEnable,
+	i_eCtrlMode := i_eCtrlMode,
+	i_bCmdReset := i_bCmdReset);
+	//--i_sCmName := 'Speed door outer');
+	
+s_cmOuterDoor(
+	i_bReqEnable := i_bReqEnable,
+	i_eCtrlMode := i_eCtrlMode,
+	i_bCmdReset := i_bCmdReset);
+	//--i_sCmName := 'Door lock cleanroom');	
+
+//Statusses
+s_bStaOuterDoorClosed := s_cmOuterDoor.p_bStaIsClosed;
+s_bStaOuterDoorOpened := s_cmOuterDoor.p_bStaIsOpened;
+s_bStaCleanroomLockApplied := s_cmCleanroomDoor.p_bStaLockIsApplied;
+s_bStaCleanroomLockReleased := s_cmCleanroomDoor.p_bStaLockIsReleased;
+s_bStaCleanroomDoorClosed := s_cmCleanroomDoor.p_bStaDoorIsClosed;
+s_bStaCleanroomDoorOpened := NOT(s_cmCleanroomDoor.p_bStaDoorIsClosed);
+s_bStaError := s_cmOuterDoor.p_bStaError OR s_cmCleanroomDoor.p_bStaError;
+	
+_m_Modules := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
@@ -830,22 +829,6 @@ p_bStaOuterDoorOpened := s_bStaOuterDoorOpened;
       <LineId Id="10" Count="0" />
       <LineId Id="14" Count="0" />
     </LineIds>
-    <LineIds Name="EM_Doors._m_Devices">
-      <LineId Id="35" Count="0" />
-      <LineId Id="6" Count="2" />
-      <LineId Id="36" Count="0" />
-      <LineId Id="38" Count="5" />
-      <LineId Id="45" Count="4" />
-      <LineId Id="82" Count="0" />
-      <LineId Id="80" Count="0" />
-      <LineId Id="54" Count="0" />
-      <LineId Id="84" Count="2" />
-      <LineId Id="88" Count="0" />
-      <LineId Id="92" Count="1" />
-      <LineId Id="81" Count="0" />
-      <LineId Id="5" Count="0" />
-      <LineId Id="50" Count="0" />
-    </LineIds>
     <LineIds Name="EM_Doors._m_Hmi">
       <LineId Id="222" Count="0" />
       <LineId Id="7" Count="2" />
@@ -920,6 +903,10 @@ p_bStaOuterDoorOpened := s_bStaOuterDoorOpened;
       <LineId Id="40" Count="0" />
       <LineId Id="5" Count="0" />
       <LineId Id="48" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors._m_Modules">
+      <LineId Id="96" Count="25" />
+      <LineId Id="50" Count="0" />
     </LineIds>
     <LineIds Name="EM_Doors._m_Outputs">
       <LineId Id="20" Count="0" />

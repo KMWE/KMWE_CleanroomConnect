@@ -3,173 +3,25 @@
   <POU Name="MAIN" Id="{c137dca6-2078-4081-8260-8d6099001278}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM MAIN
 VAR
-
-s_unCleanroomConnect : UN_CleanroomConnect;
-
-// TEST SIMULATION
-(*
-	// Control Module SIM/TEST
-	cmSpeedDoorOuter : CM_SpeedDoor;
-	arr_bTestBoolSpeeddoor : ARRAY[0..15] OF BOOL;
-	arr_bTestCmdSpeeddoor : ARRAY[0..15] OF BOOL;
-	
-	CmDoorLockCleanroomDoor : CM_DoorLock;
-	arr_bTestBoolCleanroomDoor : ARRAY[0..15] OF BOOL;
-	arr_bTestCmdCleanroomDoor : ARRAY[0..15] OF BOOL;
-	
-	cmValveDoorUnlockingPinUpper : CM_ValveWithFB;
-	cmValveDoorUnlockingPinLower : CM_ValveWithFB;
-	arr_bTestBoolValvePinUpper : ARRAY[0..15] OF BOOL;
-	arr_bTestCmdValvePinUpper : ARRAY[0..15] OF BOOL;
-	
-	cmValveDockingClampsUpper : CM_ValveWithDoubleFB;
-	cmValveDockingClampsLower : CM_ValveWithDoubleFB;
-	arr_bTestBoolValveDouble : ARRAY[0..15] OF BOOL;
-	arr_bTestCmdValveDouble : ARRAY[0..15] OF BOOL;
-
-	// PLC --> SAFETY IO
-	Q_bErrorAcknowledgement AT %Q* : BOOL;
-	Q_bRun AT %Q* : BOOL;
-	Q_SafetyRestart AT %Q* : BOOL;
-*)
+	//..
 END_VAR
 ]]></Declaration>
     <Implementation>
       <ST><![CDATA[
 GVL_KMWEGenericLib.g_fbAlarmManager();
 
-GVL_Modules.emDockingInterface();
+GVL.g_UnCleanroomConnect.p_bCmdReset := GVL_KMWEGenericLib.g_fbAlarmManager.p_osrReset;
+GVL.g_UnCleanroomConnect();
 
-s_unCleanroomConnect();
-
-// TEST SIMULATION
-(*
-// Speed Door simulation/test
-cmSpeedDoorOuter(
-	i_bReqEnable := arr_bTestCmdSpeeddoor[10],
-	i_eCtrlMode := E_CtrlMode.AUTOMATIC,
-	i_bCmdReset := arr_bTestCmdSpeeddoor[11],
-	i_sCmName := 'Speeddoor Outer');
-
-IF arr_bTestCmdSpeeddoor[0] THEN cmSpeedDoorOuter.m_Open(); arr_bTestCmdSpeeddoor[0] := FALSE; END_IF;
-IF arr_bTestCmdSpeeddoor[1] THEN cmSpeedDoorOuter.m_Close(); arr_bTestCmdSpeeddoor[1] := FALSE; END_IF;
-IF arr_bTestCmdSpeeddoor[2] THEN cmSpeedDoorOuter.m_Reset(); arr_bTestCmdSpeeddoor[2] := FALSE; END_IF;
-IF arr_bTestCmdSpeeddoor[3] THEN cmSpeedDoorOuter.m_Stop(); arr_bTestCmdSpeeddoor[3] := FALSE; END_IF;
-
-arr_bTestBoolSpeeddoor[0] := cmSpeedDoorOuter.p_bStaEnabled;
-arr_bTestBoolSpeeddoor[1] := cmSpeedDoorOuter.p_bStaError;
-arr_bTestBoolSpeeddoor[2] := cmSpeedDoorOuter.p_bStaIsOpening;
-arr_bTestBoolSpeeddoor[3] := cmSpeedDoorOuter.p_bStaIsOpened;
-arr_bTestBoolSpeeddoor[4] := cmSpeedDoorOuter.p_bStaIsClosing;
-arr_bTestBoolSpeeddoor[5] := cmSpeedDoorOuter.p_bStaIsClosed;
-
-// Cleanroom Door simulation/test
-CmDoorLockCleanroomDoor(
-	i_bReqEnable := arr_bTestCmdCleanroomDoor[10],
-	i_eCtrlMode := E_CtrlMode.AUTOMATIC,
-	i_bCmdReset := arr_bTestCmdCleanroomDoor[11],
-	i_sCmName := 'Speeddoor Outer');
-
-IF arr_bTestCmdCleanroomDoor[0] THEN cmDoorLockCleanroomDoor.m_Release(); arr_bTestCmdCleanroomDoor[0] := FALSE; END_IF;
-IF arr_bTestCmdCleanroomDoor[1] THEN cmDoorlockCleanroomDoor.m_Apply(); arr_bTestCmdCleanroomDoor[1] := FALSE; END_IF;
-
-cmDoorlockCleanroomDoor.p_bCfgAutoLockAtClosing := arr_bTestCmdCleanroomDoor[2]; 
-
-arr_bTestBoolCleanroomDoor[0] := cmDoorLockCleanroomDoor.p_bStaEnabled;
-arr_bTestBoolCleanroomDoor[1] := cmDoorLockCleanroomDoor.p_bStaError;
-arr_bTestBoolCleanroomDoor[2] := cmDoorLockCleanroomDoor.p_bCfgAutoLockAtClosing;
-arr_bTestBoolCleanroomDoor[3] := cmDoorLockCleanroomDoor.p_bStaDoorIsClosed;
-arr_bTestBoolCleanroomDoor[4] := cmDoorLockCleanroomDoor.p_bStaLockIsApplied;
-arr_bTestBoolCleanroomDoor[5] := cmDoorLockCleanroomDoor.p_bStaLockIsReleased;
-
-// Valves simulation/test
-cmValveDockingClampsUpper(
-	i_bReqEnable := arr_bTestCmdValveDouble[10],
-	i_eCtrlMode := E_CtrlMode.AUTOMATIC,
-	i_bCmdReset := arr_bTestCmdValveDouble[11],
-	i_sCmName := 'Docking Clamp Upper');
-	
-cmValveDockingClampsLower(
-	i_bReqEnable := arr_bTestCmdValveDouble[12],
-	i_eCtrlMode := E_CtrlMode.AUTOMATIC,
-	i_bCmdReset := arr_bTestCmdValveDouble[13],
-	i_sCmName := 'Docking Clamp Lower');
-	
-//Configuration
-cmValveDockingClampsLower.p_bCfgBiStableValve := arr_bTestCmdValveDouble[2];
-cmValveDockingClampsLower.p_bCfgReverseValve := arr_bTestCmdValveDouble[3];
-
-//Write methodes
-IF arr_bTestCmdValveDouble[4] THEN cmValveDockingClampsLower.m_Off(); arr_bTestCmdValveDouble[4] := FALSE; END_IF;
-IF arr_bTestCmdValveDouble[5] THEN cmValveDockingClampsLower.m_On(); arr_bTestCmdValveDouble[5] := FALSE; END_IF;
-IF arr_bTestCmdValveDouble[5] THEN cmValveDockingClampsLower.m_Stop(); arr_bTestCmdValveDouble[6] := FALSE; END_IF;
-
-arr_bTestBoolValveDouble[0] := cmValveDockingClampsLower.p_bCfgBiStableValve;
-arr_bTestBoolValveDouble[1] := cmValveDockingClampsLower.p_bCfgReverseValve;
-arr_bTestBoolValveDouble[2] := cmValveDockingClampsLower.p_bStaEnabled;
-arr_bTestBoolValveDouble[3] := cmValveDockingClampsLower.p_bStaError;
-arr_bTestBoolValveDouble[4] := cmValveDockingClampsLower.p_bStaIsOff;
-arr_bTestBoolValveDouble[5] := cmValveDockingClampsLower.p_bStaIsOn;
-arr_bTestBoolValveDouble[6] := cmValveDockingClampsLower.p_bStaValve;
-	
-//------	
-cmValveDoorUnlockingPinUpper(
-	i_bReqEnable := arr_bTestCmdValvePinUpper[0], 
-	i_eCtrlMode := E_CtrlMode.AUTOMATIC, 
-	i_bCmdReset := arr_bTestCmdValvePinUpper[1], 
-	i_sCmName := 'Door unlocking pin upper', 
-	i_stSettings := );	
-	
-//Configuration
-cmValveDoorUnlockingPinUpper.p_bCfgBiStableValve := arr_bTestCmdValvePinUpper[2];
-cmValveDoorUnlockingPinUpper.p_bCfgReverseValve := arr_bTestCmdValvePinUpper[3];
-
-//Write methodes
-IF arr_bTestCmdValvePinUpper[4] THEN cmValveDoorUnlockingPinUpper.m_Off(); arr_bTestCmdValvePinUpper[4] := FALSE; END_IF;
-IF arr_bTestCmdValvePinUpper[5] THEN cmValveDoorUnlockingPinUpper.m_On(); arr_bTestCmdValvePinUpper[5] := FALSE; END_IF;
-IF arr_bTestCmdValvePinUpper[5] THEN cmValveDoorUnlockingPinUpper.m_Stop(); arr_bTestCmdValvePinUpper[6] := FALSE; END_IF;
-
-arr_bTestBoolValvePinUpper[0] := cmValveDoorUnlockingPinUpper.p_bCfgBiStableValve;
-arr_bTestBoolValvePinUpper[1] := cmValveDoorUnlockingPinUpper.p_bCfgReverseValve;
-arr_bTestBoolValvePinUpper[2] := cmValveDoorUnlockingPinUpper.p_bStaEnabled;
-arr_bTestBoolValvePinUpper[3] := cmValveDoorUnlockingPinUpper.p_bStaError;
-arr_bTestBoolValvePinUpper[4] := cmValveDoorUnlockingPinUpper.p_bStaIsOff;
-arr_bTestBoolValvePinUpper[5] := cmValveDoorUnlockingPinUpper.p_bStaIsOn;
-arr_bTestBoolValvePinUpper[6] := cmValveDoorUnlockingPinUpper.p_bStaValve;
-*)
+GVL_Modules.g_emDockingInterface();
 ]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
       <LineId Id="378" Count="0" />
-      <LineId Id="456" Count="2" />
-      <LineId Id="494" Count="1" />
-      <LineId Id="455" Count="0" />
-      <LineId Id="376" Count="0" />
-      <LineId Id="375" Count="0" />
-      <LineId Id="189" Count="17" />
-      <LineId Id="243" Count="9" />
-      <LineId Id="286" Count="1" />
-      <LineId Id="255" Count="5" />
-      <LineId Id="242" Count="0" />
-      <LineId Id="207" Count="12" />
-      <LineId Id="348" Count="0" />
-      <LineId Id="350" Count="14" />
-      <LineId Id="349" Count="0" />
-      <LineId Id="290" Count="0" />
-      <LineId Id="299" Count="0" />
-      <LineId Id="293" Count="4" />
-      <LineId Id="292" Count="0" />
-      <LineId Id="220" Count="0" />
-      <LineId Id="298" Count="0" />
-      <LineId Id="300" Count="1" />
-      <LineId Id="314" Count="0" />
-      <LineId Id="313" Count="0" />
-      <LineId Id="318" Count="2" />
-      <LineId Id="303" Count="0" />
-      <LineId Id="302" Count="0" />
-      <LineId Id="304" Count="3" />
-      <LineId Id="309" Count="1" />
-      <LineId Id="308" Count="0" />
+      <LineId Id="456" Count="0" />
+      <LineId Id="530" Count="0" />
+      <LineId Id="528" Count="1" />
+      <LineId Id="457" Count="1" />
       <LineId Id="377" Count="0" />
     </LineIds>
   </POU>

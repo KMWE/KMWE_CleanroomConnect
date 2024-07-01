@@ -8,7 +8,7 @@ END_VAR
 
 VAR_INPUT
 //Inputs
-//todo	i_stSettings : ST_SettingsDoors;
+	i_stSettings : ST_SettingsMainStateMachine;
 END_VAR
 
 VAR
@@ -189,34 +189,11 @@ IF NOT SUPER^._m_Init() THEN
 	RETURN;
 END_IF
 
-s_emDoors.i_stSettings. :=
+s_emDoors.i_stSettings := i_stSettings.stSettingsDoors;
+s_emDockingInterface.i_stSettings := i_stSettings.stSettingsDockingInterface;
+s_emAirTreatment.i_stSettings := i_stSettings.stSettingsAirTrearment;
 
-s_emDockingInterface.i_stSettings. :=
-
-
-
-//Interlock (externala + internal interlock reasons)
-// Waarschijnlijk is het toch beter om de interlock uitsluited extern te verzamelen. Denk bijvoorbeeld aan de situatie dat er een box gedocked is (outer door is dan open), de claenroom deur mag in die sitiuatie geopende worden
-s_bIlckOuterDoorToClose := i_bReqEnable AND i_bIlckOuterDoorToClose;
-s_bIlckOuterDoorToOpen := i_bReqEnable AND i_bIlckOuterDoorToOpen;
-s_bIlckCleanroomDoorToLock := i_bReqEnable AND i_bIlckCleanroomDoorToLock;
-s_bIlckCleanroomDoorToRelease := i_bReqEnable AND i_bIlckCleanroomDoorToRelease;	
-
-//Control Modules
-s_cmOuterDoor.i_bReqEnable := FALSE;
-s_cmOuterDoor.i_eCtrlMode := E_CtrlMode.IDLE;
-s_cmOuterDoor.i_sCmName := 'Outer Door';
-s_cmOuterDoor.i_stSettings.tDoorClosingTimeout := T#10S;
-s_cmOuterDoor.i_stSettings.tDoorOpeningTimeout := T#10S;
-s_cmOuterDoor.i_stSettings.tResetPulseDuration := T#1S;
-{warning '#TODO: Dot we need to added configuration parameters? Seperate struct or via settings or dedicateed variables'}
-	
-s_cmCleanroomDoor.i_bReqEnable := FALSE;
-s_cmCleanroomDoor.i_eCtrlMode := E_CtrlMode.IDLE;
-s_cmCleanroomDoor.i_sCmName := 'Cleanroom Door';
-s_cmCleanroomDoor.i_stSettings.tApplyingLockTimeout := T#3S;
-s_cmCleanroomDoor.i_stSettings.tReleasingLockTimeout := T#3S;
-{warning '#TODO: Dot we need to added configuration parameters? Seperate struct or via settings or dedicateed variables'}
+//Equipment Module
 	
 //---------------------------------//	
 
@@ -317,21 +294,35 @@ IF NOT SUPER^._m_Devices() THEN
 	RETURN;
 END_IF
 
+{warning 'TODO: Chcek if other interlock'S need TO be added'}
+
 //Interlockes
 //EM_Doors
-s_emDoors.i_bIlckOuterDoorToClose := TRUE;
-s_emDoors.i_bIlckOuterDoorToOpen := TRUE;
-s_emDoors.i_bIlckCleanroomDoorToLock := TRUE;
-s_emDoors.i_bIlckCleanroomDoorToRelease := TRUE;
+s_emDoors.i_bIlckOuterDoorToClose :=
+	NOT(s_emDockingInterface.p_bStaDockingClampsClosed)
+	OR NOT(s_bStaBoxRemovedFromDockPosition);
+	 
+s_emDoors.i_bIlckOuterDoorToOpen :=
+	NOT(s_emDockingInterface.p_bStaDockingClampsClosed)
+	OR NOT(s_emDoors.p_bStaCleanroomDoorClosed
+	OR NOT(s_emDoors.p_bStaCleanroomLockApplied)
+	OR NOT (s_emAirTreatment.p_bStaPressurizingOK));
+
+s_emDoors.i_bIlckCleanroomDoorToLock :=
+	NOT(s_emDoors.p_bStaCleanroomDoorClosed);
+
+s_emDoors.i_bIlckCleanroomDoorToRelease := 
+	NOT(s_emDoors.p_bStaOuterDoorClosed)
+	OR NOT (s_emAirTreatment.p_bStaPressurizingOK);
+	
 
 //EM_DockingInterface
-s_emDockingInterface.i_bIlckDockingClampsToClose := TRUE; 
-s_emDockingInterface.i_bIlckDockingClampsToOpen := TRUE;
-s_emDockingInterface.i_bIlckUnlockingPinsToLock := TRUE;
-s_emDockingInterface.i_bIlckUnlockingPinsToRelease := TRUE;
+s_emDockingInterface.i_bIlckDockingClampsToClose := TRUE; //TODO 
+s_emDockingInterface.i_bIlckDockingClampsToOpen := TRUE; //TODO
+s_emDockingInterface.i_bIlckUnlockingPinsToLock := TRUE; //TODO
+s_emDockingInterface.i_bIlckUnlockingPinsToRelease := TRUE; //TODO
 
 //Call of all sub-modules (EM's)
-
 s_emDoors(
 	i_bReqEnable := i_bReqEnable, 
 	i_eCtrlMode := i_eCtrlMode,
@@ -729,17 +720,10 @@ END_CASE
       <LineId Id="5" Count="2" />
       <LineId Id="317" Count="1" />
       <LineId Id="320" Count="0" />
-      <LineId Id="319" Count="0" />
-      <LineId Id="321" Count="1" />
+      <LineId Id="337" Count="0" />
       <LineId Id="302" Count="0" />
-      <LineId Id="296" Count="0" />
-      <LineId Id="315" Count="0" />
-      <LineId Id="299" Count="2" />
-      <LineId Id="297" Count="0" />
-      <LineId Id="207" Count="0" />
-      <LineId Id="209" Count="5" />
-      <LineId Id="225" Count="0" />
-      <LineId Id="215" Count="8" />
+      <LineId Id="328" Count="0" />
+      <LineId Id="223" Count="0" />
       <LineId Id="208" Count="0" />
       <LineId Id="8" Count="1" />
       <LineId Id="35" Count="3" />
@@ -793,16 +777,27 @@ END_CASE
     <LineIds Name="EM_StateMachine._m_Modules">
       <LineId Id="122" Count="0" />
       <LineId Id="96" Count="2" />
+      <LineId Id="199" Count="1" />
       <LineId Id="149" Count="1" />
       <LineId Id="152" Count="0" />
       <LineId Id="151" Count="0" />
+      <LineId Id="202" Count="1" />
+      <LineId Id="201" Count="0" />
       <LineId Id="154" Count="0" />
+      <LineId Id="205" Count="3" />
+      <LineId Id="204" Count="0" />
       <LineId Id="153" Count="0" />
-      <LineId Id="155" Count="2" />
+      <LineId Id="213" Count="0" />
+      <LineId Id="212" Count="0" />
+      <LineId Id="155" Count="0" />
+      <LineId Id="211" Count="0" />
+      <LineId Id="210" Count="0" />
+      <LineId Id="209" Count="0" />
+      <LineId Id="156" Count="1" />
       <LineId Id="161" Count="2" />
       <LineId Id="159" Count="0" />
       <LineId Id="99" Count="0" />
-      <LineId Id="124" Count="1" />
+      <LineId Id="124" Count="0" />
       <LineId Id="127" Count="4" />
       <LineId Id="137" Count="0" />
       <LineId Id="139" Count="4" />

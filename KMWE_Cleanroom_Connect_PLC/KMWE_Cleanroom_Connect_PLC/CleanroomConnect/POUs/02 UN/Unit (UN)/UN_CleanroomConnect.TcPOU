@@ -8,8 +8,6 @@ VAR
 
 //------------------------------------------//
 
-
-
 //------------------------------------------//
 //Control Modules (Devices)
 	s_CmKmweLeds 				: CM_KmweLeds;
@@ -44,7 +42,6 @@ VAR
 //Hmi
 	s_fbHmiBtnAutomatic			: FB_HmiBtn;
 	s_fbHmiBtnManual			: FB_HmiBtn;
-	s_fbHmiBtnTesterConfig		: FB_HmiBtn;
 	s_fbHmiBtnAlarms			: FB_HmiBtn;
 //------------------------------------------//
 END_VAR]]></Declaration>
@@ -106,6 +103,9 @@ END_IF
 //Inputs
 	s_diEmergencyBtn();	
 //------------------------------------------//
+
+
+
 
 _m_Devices := TRUE;
 ]]></ST>
@@ -285,7 +285,24 @@ IF NOT SUPER^._m_Init() THEN
 	RETURN;
 END_IF
 
-_m_AddModule(i_itfModuleBase := GVL_Modules.g_EmRMMTTester);
+_m_AddModule(i_itfModuleBase := GVL_Modules.g_emStateMachine);
+
+GVL_Modules.g_emStateMachine.i_bReqEnable := FALSE;
+GVL_Modules.g_emStateMachine.i_eCtrlMode := E_CtrlMode.IDLE;
+GVL_Modules.g_emStateMachine.i_bCmdReset := FALSE;
+GVL_Modules.g_emStateMachine.i_sEmName  := 'EM State Machine';
+
+//Settings Doors
+GVL_Modules.g_emStateMachine.i_stSettings.stSettingsDoors.tOuterDoorTimeout := T#15S;
+GVL_Modules.g_emStateMachine.i_stSettings.stSettingsDoors.tCleanroomDoorTimeout := T#3S;
+GVL_Modules.g_emStateMachine.i_stSettings.stSettingsDoors.tResetPulseDuration := T#1S;
+
+//Settings Docking Interface
+GVL_Modules.g_emStateMachine.i_stSettings.stSettingsDockingInterface.tClampsTimeout := T#5S;
+GVL_Modules.g_emStateMachine.i_stSettings.stSettingsDockingInterface.tReleasePinsTimeout := T#5S;
+
+//Settings AirTreatment
+//..GVL_Modules.g_emStateMachine.i_stSettings.stSettingsAirTrearment.. := TODO;
 
 //------------------------------------------//
 //Hmi Startup
@@ -305,11 +322,6 @@ GVL.g_sToHmiBottomContent	:= GVL.g_stHmiBottomBar.Start;
 	s_fbHmiBtnManual.p_bStaVisible 			:= TRUE;
 	s_fbHmiBtnManual.p_eButtontype			:= E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnManual.p_sBtnText				:= 'Manual';
-	
-	s_fbHmiBtnTesterConfig.p_bStaEnabled 	:= TRUE;
-	s_fbHmiBtnTesterConfig.p_bStaVisible 	:= TRUE;
-	s_fbHmiBtnTesterConfig.p_eButtontype	:= E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnTesterConfig.p_sBtnText		:= 'Configuration';
 	
 	s_fbHmiBtnAlarms.p_bStaVisible 			:= TRUE;
 	s_fbHmiBtnAlarms.p_bStaEnabled			:= TRUE;
@@ -345,52 +357,13 @@ _m_Init := TRUE;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-//Interlocks (TRUE = interlocked)
-GVL_Modules.g_emDoors.i_bIlckOuterDoorToClose := 
-	GVL_Modules.g_emDockingInterface.p_bStaDockingDone;
-	
-GVL_Modules.g_emDoors.i_bIlckOuterDoorToOpen :=
-	NOT(GVL_Modules.g_emDoors.p_bStaCleanroomDoorClosed)
-	OR NOT(GVL_Modules.g_emDoors.p_bStaCleanroomLockApplied);
-//++	OR NOT(GVL_Modules.emAirTreathment.p_bStaRunningOk;
- 
-GVL_Modules.g_emDoors.i_bIlckCleanroomDoorToLock := 
-	NOT(GVL_Modules.g_emDoors.p_bStaCleanroomDoorClosed);
-
-GVL_Modules.g_emDoors.i_bIlckCleanroomDoorToRelease :=
-	( NOT(GVL_Modules.g_emDoors.p_bStaOuterDoorClosed) AND NOT(GVL_Modules.g_emDockingInterface.p_bStaDockingDone) );
-	//++	OR NOT(GVL_Modules.emAirTreathment.p_bStaRunningOk;
-
 GVL_Modules.g_emStateMachine(
 	i_bReqEnable := TRUE,
 	i_eCtrlMode := s_eCtrlMode,
 	i_bCmdReset := p_bCmdReset,
-	i_sEmName := 'EM State Machine',
-	i_itfEmDoors := GVL_Modules.g_emDoors,
-	i_itfEmDockingInterface := GVL_Modules.g_emDockingInterface);
+	i_sEmName := 'EM State Machine');
 
-GVL_Modules.g_emDoors(
-	i_bReqEnable := TRUE,
-	i_eCtrlMode := s_eCtrlMode,
-	i_bCmdReset := p_bCmdReset,
-	i_sEmName := 'EM Doors');
-
-GVL_Modules.g_emDockingInterface(
-	i_bReqEnable := TRUE,
-	i_eCtrlMode := s_eCtrlMode,
-	i_bCmdReset := p_bCmdReset,
-	i_sEmName := 'EM Docking Interface');
-	
-//++GVL_Modules.g_emAirTreatment(
-//++	i_bReqEnable := TRUE,
-//++	i_eCtrlMode := s_eCtrlMode,
-//++	i_bCmdReset := p_bCmdReset,
-//++	i_sEmName := 'EM Air Treatment');	
-	
-s_bStaError :=
-	GVL_Modules.g_emDoors.q_bStaError
-	OR GVL_Modules.g_emDockingInterface.q_bStaError;
-//++	OR GVL_Modules.g_emAirTreatment.q_bStaError;
+s_bStaError := GVL_Modules.g_emStateMachine.q_bStaError;
 	
 _m_Modules := TRUE;
 ]]></ST>
@@ -514,21 +487,6 @@ s_nIndexDutPrev	:= s_nIndexDut;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="m_FastTask" Id="{d7f04e67-2f14-466a-aab3-c133442def96}">
-      <Declaration><![CDATA[METHOD PUBLIC m_FastTask : BOOL
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[
-CASE GVL_DataLogging.g_eDataAction OF
-	E_DataReadWriteActions.MagneticProcedure:
-			GVL_DataLogging.g_fbDataLogger.m_FastTask(iq_aCSVFieldFast 			:= GVL_Datalogging.g_aLoggingDataMagnetic,
-														i_bCmdResetReadFast 	:= GVL_Datalogging.g_bCmdResetReadFast,
-														i_bCmdResetWriteFast 	:= GVL_Datalogging.g_bCmdResetWriteFast,
-														i_sFileName 			:= GVL_Datalogging.g_sFilenameFast);				
-END_CASE
-]]></ST>
-      </Implementation>
-    </Method>
     <Method Name="m_Main" Id="{bf5d9d9d-3881-4722-ad23-ed0781ff35d5}">
       <Declaration><![CDATA[METHOD PUBLIC m_Main : BOOL
 ]]></Declaration>
@@ -605,7 +563,9 @@ itfEmDockingInterface.m_OpenDockingClamps();
       <LineId Id="35" Count="0" />
       <LineId Id="6" Count="9" />
       <LineId Id="30" Count="3" />
-      <LineId Id="16" Count="10" />
+      <LineId Id="16" Count="9" />
+      <LineId Id="38" Count="2" />
+      <LineId Id="26" Count="0" />
       <LineId Id="5" Count="0" />
       <LineId Id="36" Count="0" />
     </LineIds>
@@ -661,44 +621,34 @@ itfEmDockingInterface.m_OpenDockingClamps();
     </LineIds>
     <LineIds Name="UN_CleanroomConnect._m_Init">
       <LineId Id="77" Count="0" />
-      <LineId Id="6" Count="24" />
-      <LineId Id="36" Count="3" />
-      <LineId Id="75" Count="0" />
+      <LineId Id="6" Count="2" />
+      <LineId Id="131" Count="1" />
+      <LineId Id="126" Count="0" />
+      <LineId Id="113" Count="2" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="127" Count="0" />
+      <LineId Id="121" Count="0" />
+      <LineId Id="118" Count="2" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="123" Count="0" />
+      <LineId Id="122" Count="0" />
+      <LineId Id="124" Count="0" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="125" Count="0" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="11" Count="19" />
       <LineId Id="41" Count="24" />
       <LineId Id="5" Count="0" />
       <LineId Id="78" Count="0" />
     </LineIds>
     <LineIds Name="UN_CleanroomConnect._m_Modules">
-      <LineId Id="45" Count="2" />
-      <LineId Id="51" Count="1" />
-      <LineId Id="48" Count="0" />
-      <LineId Id="54" Count="2" />
-      <LineId Id="53" Count="0" />
-      <LineId Id="49" Count="0" />
-      <LineId Id="58" Count="0" />
-      <LineId Id="57" Count="0" />
-      <LineId Id="50" Count="0" />
-      <LineId Id="59" Count="1" />
-      <LineId Id="70" Count="0" />
-      <LineId Id="19" Count="0" />
-      <LineId Id="76" Count="0" />
-      <LineId Id="82" Count="0" />
-      <LineId Id="77" Count="0" />
-      <LineId Id="79" Count="0" />
-      <LineId Id="83" Count="1" />
-      <LineId Id="81" Count="0" />
-      <LineId Id="24" Count="4" />
-      <LineId Id="43" Count="0" />
-      <LineId Id="31" Count="4" />
-      <LineId Id="64" Count="0" />
-      <LineId Id="66" Count="3" />
-      <LineId Id="65" Count="0" />
-      <LineId Id="23" Count="0" />
-      <LineId Id="36" Count="0" />
-      <LineId Id="38" Count="0" />
-      <LineId Id="62" Count="1" />
-      <LineId Id="37" Count="0" />
-      <LineId Id="10" Count="0" />
+      <LineId Id="94" Count="0" />
+      <LineId Id="96" Count="3" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="103" Count="0" />
+      <LineId Id="87" Count="0" />
       <LineId Id="20" Count="0" />
     </LineIds>
     <LineIds Name="UN_CleanroomConnect._m_SelectConfigFile">
@@ -714,12 +664,6 @@ itfEmDockingInterface.m_OpenDockingClamps();
       <LineId Id="101" Count="2" />
       <LineId Id="105" Count="6" />
       <LineId Id="203" Count="0" />
-    </LineIds>
-    <LineIds Name="UN_CleanroomConnect.m_FastTask">
-      <LineId Id="51" Count="0" />
-      <LineId Id="6" Count="5" />
-      <LineId Id="48" Count="0" />
-      <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="UN_CleanroomConnect.m_Main">
       <LineId Id="30" Count="0" />

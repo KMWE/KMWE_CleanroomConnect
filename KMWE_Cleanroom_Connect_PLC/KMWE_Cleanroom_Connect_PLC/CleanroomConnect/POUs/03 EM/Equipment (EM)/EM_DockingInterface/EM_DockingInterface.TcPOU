@@ -49,6 +49,9 @@ VAR
 	s_bStaDockingClampsClosed : BOOL := FALSE;
 	s_bStaDockingClampsOpened : BOOL := FALSE;
 	
+	s_bStaBoxAtPreDockingPosition : BOOL := FALSE;
+	s_bStaBoxAtDockedPosition : BOOL := FALSE;
+	s_bStaDockingPositionFree : BOOL := FALSE;
 	
 //Interlockes	
 	s_bIlckDockingClampsToClose : BOOL;
@@ -348,10 +351,12 @@ s_bIlckDockingClampsToOpen := i_bIlckDockingClampsToOpen;
 s_bIlckUnlockingPinsToLock := i_bIlckUnlockingPinsToLock;
 s_bIlckUnlockingPinsToRelease := i_bIlckUnlockingPinsToRelease;
 
-
-
 s_diStaBoxAtPreDockingPosition();
 s_diStaBoxAtDockedPosition();
+
+s_bStaBoxAtPreDockingPosition := s_diStaBoxAtPreDockingPosition.p_bStaInputDelayed AND NOT(s_diStaBoxAtDockedPosition.p_bStaInputDelayed);
+s_bStaBoxAtDockedPosition := s_diStaBoxAtPreDockingPosition.p_bStaInputDelayed AND s_diStaBoxAtDockedPosition.p_bStaInputDelayed;
+s_bStaDockingPositionFree := NOT(s_bStaBoxAtPreDockingPosition) AND NOT(s_bStaBoxAtDockedPosition);
 
 _m_Inputs := TRUE;]]></ST>
       </Implementation>
@@ -588,7 +593,8 @@ CASE i_eCtrlMode OF
 			E_SeqDockingInterface.IDLE:
 			
 				IF s_bReqDockBox THEN
-					IF s_diStaBoxAtPreDockingPosition.p_bStaInputDelayed THEN
+					//--IF s_diStaBoxAtPreDockingPosition.p_bStaInputDelayed THEN
+					IF s_bStaBoxAtPreDockingPosition THEN	
 						s_bStaUndockingDone := FALSE;
 						s_eSeqDockingInterface := E_SeqDockingInterface.DOCKING_CLOSE_CLAMPS;
 					ELSE
@@ -605,6 +611,8 @@ CASE i_eCtrlMode OF
 					END_IF	
 				END_IF
 			
+				// Seperatly opening/closing the clamps is nessescary to move these out of the way for moving of the outer door
+				// Clamps must be closed before the outer door can be moved
 				IF s_bReqClosDockingClamps THEN
 					s_eSeqDockingInterface := E_SeqDockingInterface.ONLY_CLOSE_CLAMPS;
 				END_IF
@@ -770,6 +778,28 @@ m_UndockBox := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
+    <Property Name="p_bStaBoxAtDockedPosition" Id="{95822bca-1047-492e-8877-1d8528242dc0}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaBoxAtDockedPosition : BOOL]]></Declaration>
+      <Get Name="Get" Id="{aa3a83b8-f468-44df-903c-150f557391f1}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaBoxAtDockedPosition := s_bStaBoxAtDockedPosition;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaBoxAtPreDockingPosition" Id="{edbe1074-bded-474c-9558-f67f08872474}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaBoxAtPreDockingPosition : BOOL]]></Declaration>
+      <Get Name="Get" Id="{cf71d052-481e-48f0-aa51-5a234c033608}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaBoxAtPreDockingPosition := s_bStaBoxAtPreDockingPosition;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
     <Property Name="p_bStaDockingClampsClosed" Id="{de32a338-e965-450c-a404-78adcd65d0d0}">
       <Declaration><![CDATA[PROPERTY PUBLIC p_bStaDockingClampsClosed : BOOL]]></Declaration>
       <Get Name="Get" Id="{7682c14a-e4ab-4156-bdf2-ba42269377d9}">
@@ -799,6 +829,17 @@ p_bStaDockingClampsOpened := s_bStaDockingClampsOpened;
         <Implementation>
           <ST><![CDATA[
 p_bStaDockingDone := s_bStaDockingDone;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaDockingPositionFree" Id="{1c1bcc1f-d42b-48d2-9743-d0c845e1b595}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaDockingPositionFree : BOOL]]></Declaration>
+      <Get Name="Get" Id="{8f44ecfc-2d8a-4e22-a3b9-d3876337bbab}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaDockingPositionFree := s_bStaDockingPositionFree;
 ]]></ST>
         </Implementation>
       </Get>
@@ -922,10 +963,11 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="56" Count="1" />
       <LineId Id="59" Count="2" />
       <LineId Id="58" Count="0" />
-      <LineId Id="63" Count="1" />
       <LineId Id="48" Count="0" />
       <LineId Id="51" Count="0" />
       <LineId Id="54" Count="0" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="70" Count="2" />
       <LineId Id="50" Count="0" />
       <LineId Id="5" Count="0" />
     </LineIds>
@@ -1033,6 +1075,7 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="242" Count="0" />
       <LineId Id="312" Count="0" />
       <LineId Id="314" Count="0" />
+      <LineId Id="391" Count="0" />
       <LineId Id="346" Count="0" />
       <LineId Id="316" Count="0" />
       <LineId Id="318" Count="1" />
@@ -1046,7 +1089,8 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="324" Count="0" />
       <LineId Id="321" Count="0" />
       <LineId Id="313" Count="0" />
-      <LineId Id="246" Count="0" />
+      <LineId Id="394" Count="1" />
+      <LineId Id="392" Count="0" />
       <LineId Id="357" Count="0" />
       <LineId Id="359" Count="4" />
       <LineId Id="223" Count="0" />
@@ -1150,6 +1194,14 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="5" Count="0" />
       <LineId Id="8" Count="0" />
     </LineIds>
+    <LineIds Name="EM_DockingInterface.p_bStaBoxAtDockedPosition.Get">
+      <LineId Id="11" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_DockingInterface.p_bStaBoxAtPreDockingPosition.Get">
+      <LineId Id="5" Count="2" />
+    </LineIds>
     <LineIds Name="EM_DockingInterface.p_bStaDockingClampsClosed.Get">
       <LineId Id="5" Count="0" />
       <LineId Id="2" Count="0" />
@@ -1164,6 +1216,11 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="4" Count="0" />
       <LineId Id="3" Count="0" />
       <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_DockingInterface.p_bStaDockingPositionFree.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
     </LineIds>
     <LineIds Name="EM_DockingInterface.p_bStaUndockingDone.Get">
       <LineId Id="5" Count="0" />

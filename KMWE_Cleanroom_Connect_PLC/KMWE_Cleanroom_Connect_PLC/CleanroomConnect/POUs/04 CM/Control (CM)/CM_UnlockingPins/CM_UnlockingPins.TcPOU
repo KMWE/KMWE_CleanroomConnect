@@ -9,8 +9,8 @@ END_VAR
 
 VAR
 	// Control Modules
-	cmValveUnlockingPinsUpper : CM_ValveWithFB;
-	cmValveUnlockingPinsLower : CM_ValveWithFB;
+	s_cmValveUnlockingPinsUpper : CM_ValveWithFB;
+	s_cmValveUnlockingPinsLower : CM_ValveWithFB;
 
 	// Request
 	s_bReqLock : BOOL;
@@ -45,8 +45,8 @@ IF NOT SUPER^._m_Alarms() THEN
 END_IF
 
 s_bStaError := 
-	cmValveUnlockingPinsUpper.p_bStaError
-	OR cmValveUnlockingPinsLower.p_bStaError;
+	s_cmValveUnlockingPinsUpper.p_bStaError
+	OR s_cmValveUnlockingPinsLower.p_bStaError;
 
 _m_Alarms := TRUE;
 ]]></ST>
@@ -62,13 +62,13 @@ IF NOT SUPER^._m_Devices() THEN
 END_IF
 
 //Call lower-layer devices
-cmValveUnlockingPinsUpper(
+s_cmValveUnlockingPinsUpper(
 	i_bReqEnable:= i_bReqEnable, 
 	i_eCtrlMode:= i_eCtrlMode, 
 	i_bCmdReset:= i_bCmdReset, 
 	i_sCmName:= 'Upper Unlocking Pins');
 	
-cmValveUnlockingPinsLower(
+s_cmValveUnlockingPinsLower(
 	i_bReqEnable:= i_bReqEnable, 
 	i_eCtrlMode:= i_eCtrlMode, 
 	i_bCmdReset:= i_bCmdReset, 
@@ -76,19 +76,19 @@ cmValveUnlockingPinsLower(
 
 //Control lower-layer devcies
 IF s_bReqLock THEN
-	cmValveUnlockingPinsUpper.m_Off();
-	cmValveUnlockingPinsLower.m_Off();
+	s_cmValveUnlockingPinsUpper.m_Off();
+	s_cmValveUnlockingPinsLower.m_Off();
 ELSIF s_bReqUnlock THEN
-	cmValveUnlockingPinsUpper.m_On();
-	cmValveUnlockingPinsLower.m_On();
+	s_cmValveUnlockingPinsUpper.m_On();
+	s_cmValveUnlockingPinsLower.m_On();
 ELSE
-	cmValveUnlockingPinsUpper.m_Stop();
-	cmValveUnlockingPinsLower.m_Stop();
+	s_cmValveUnlockingPinsUpper.m_Stop();
+	s_cmValveUnlockingPinsLower.m_Stop();
 END_IF
 
 //Statusses
-s_bStaIsLocked := cmValveUnlockingPinsUpper.p_bStaIsOff AND cmValveUnlockingPinsLower.p_bStaIsOff;
-s_bStaIsUnlocked := cmValveUnlockingPinsUpper.p_bStaIsOn AND cmValveUnlockingPinsLower.p_bStaIsOn;
+s_bStaIsLocked := s_cmValveUnlockingPinsUpper.p_bStaIsOff AND s_cmValveUnlockingPinsLower.p_bStaIsOff;
+s_bStaIsUnlocked := s_cmValveUnlockingPinsUpper.p_bStaIsOn AND s_cmValveUnlockingPinsLower.p_bStaIsOn;
 
 s_bStaPins := NOT(s_bStaIsLocked) AND s_bStaIsUnlocked;
 
@@ -118,11 +118,11 @@ IF NOT SUPER^._m_Init() THEN
 	RETURN;
 END_IF
 
-cmValveUnlockingPinsUpper.i_stSettings.tValveOffTimeout := i_stSettings.tPinsLockTimeout;
-cmValveUnlockingPinsUpper.i_stSettings.tValveOnTimeout := i_stSettings.tPinsUnlockTimeout;
+s_cmValveUnlockingPinsUpper.i_stSettings.tValveOffTimeout := i_stSettings.tPinsLockTimeout;
+s_cmValveUnlockingPinsUpper.i_stSettings.tValveOnTimeout := i_stSettings.tPinsUnlockTimeout;
 
-cmValveUnlockingPinsLower.i_stSettings.tValveOffTimeout := i_stSettings.tPinsLockTimeout;
-cmValveUnlockingPinsLower.i_stSettings.tValveOnTimeout := i_stSettings.tPinsUnlockTimeout;
+s_cmValveUnlockingPinsLower.i_stSettings.tValveOffTimeout := i_stSettings.tPinsLockTimeout;
+s_cmValveUnlockingPinsLower.i_stSettings.tValveOnTimeout := i_stSettings.tPinsUnlockTimeout;
 
 _m_Init := TRUE;
 ]]></ST>

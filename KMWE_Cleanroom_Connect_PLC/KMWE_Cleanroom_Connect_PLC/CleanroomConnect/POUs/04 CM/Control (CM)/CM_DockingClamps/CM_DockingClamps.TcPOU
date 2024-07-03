@@ -9,8 +9,8 @@ END_VAR
 
 VAR
 	// Control Modules
-	cmValveDockingClampsUpper : CM_ValveWithDoubleFB;
-	cmValveDockingClampsLower : CM_ValveWithDoubleFB;
+	s_cmValveDockingClampsUpper : CM_ValveWithDoubleFB;
+	s_cmValveDockingClampsLower : CM_ValveWithDoubleFB;
 
 	// Request
 	s_bReqOpen : BOOL;
@@ -45,8 +45,8 @@ IF NOT SUPER^._m_Alarms() THEN
 END_IF
 
 s_bStaError := 
-	cmValveDockingClampsUpper.p_bStaError
-	OR cmValveDockingClampsLower.p_bStaError;
+	s_cmValveDockingClampsUpper.p_bStaError
+	OR s_cmValveDockingClampsLower.p_bStaError;
 
 _m_Alarms := TRUE;
 ]]></ST>
@@ -62,13 +62,13 @@ IF NOT SUPER^._m_Devices() THEN
 END_IF
 
 //Call lower-layer devices
-cmValveDockingClampsUpper(
+s_cmValveDockingClampsUpper(
 	i_bReqEnable	:= i_bReqEnable, 
 	i_eCtrlMode		:= i_eCtrlMode,
 	i_bCmdReset		:= i_bCmdReset,
 	i_sCmName		:= 'Upper Docking Clamps'); 
 	
-cmValveDockingClampsLower(
+s_cmValveDockingClampsLower(
 	i_bReqEnable	:= i_bReqEnable, 
 	i_eCtrlMode		:= i_eCtrlMode,
 	i_bCmdReset		:= i_bCmdReset,
@@ -76,19 +76,19 @@ cmValveDockingClampsLower(
 
 //Control lower-layer devcies
 IF s_bReqOpen THEN
-	cmValveDockingClampsUpper.m_Off();
-	cmValveDockingClampsLower.m_Off();
+	s_cmValveDockingClampsUpper.m_Off();
+	s_cmValveDockingClampsLower.m_Off();
 ELSIF s_bReqClose THEN
-	cmValveDockingClampsUpper.m_On();
-	cmValveDockingClampsLower.m_On();
+	s_cmValveDockingClampsUpper.m_On();
+	s_cmValveDockingClampsLower.m_On();
 ELSE
-	cmValveDockingClampsUpper.m_Stop();
-	cmValveDockingClampsLower.m_Stop();
+	s_cmValveDockingClampsUpper.m_Stop();
+	s_cmValveDockingClampsLower.m_Stop();
 END_IF
 	
 //Statusses
-s_bStaIsOpened := cmValveDockingClampsUpper.p_bStaIsOff AND cmValveDockingClampsLower.p_bStaIsOff;
-s_bStaIsClosed := cmValveDockingClampsUpper.p_bStaIsOn AND cmValveDockingClampsLower.p_bStaIsOn;
+s_bStaIsOpened := s_cmValveDockingClampsUpper.p_bStaIsOff AND s_cmValveDockingClampsLower.p_bStaIsOff;
+s_bStaIsClosed := s_cmValveDockingClampsUpper.p_bStaIsOn AND s_cmValveDockingClampsLower.p_bStaIsOn;
 
 s_bStaClamps := NOT(s_bStaIsOpened) AND s_bStaIsClosed; 
 
@@ -117,11 +117,11 @@ _m_Hmi := TRUE;
 	RETURN;
 END_IF
 
-cmValveDockingClampsUpper.i_stSettings.tValveOffTimeout := i_stSettings.tClampsOpenTimeout;
-cmValveDockingClampsUpper.i_stSettings.tValveOnTimeout := i_stSettings.tClampsCloseTimeout;
+s_cmValveDockingClampsUpper.i_stSettings.tValveOffTimeout := i_stSettings.tClampsOpenTimeout;
+s_cmValveDockingClampsUpper.i_stSettings.tValveOnTimeout := i_stSettings.tClampsCloseTimeout;
 
-cmValveDockingClampsLower.i_stSettings.tValveOffTimeout := i_stSettings.tClampsOpenTimeout;
-cmValveDockingClampsLower.i_stSettings.tValveOnTimeout := i_stSettings.tClampsCloseTimeout;
+s_cmValveDockingClampsLower.i_stSettings.tValveOffTimeout := i_stSettings.tClampsOpenTimeout;
+s_cmValveDockingClampsLower.i_stSettings.tValveOnTimeout := i_stSettings.tClampsCloseTimeout;
 
 _m_Init := TRUE;
 ]]></ST>

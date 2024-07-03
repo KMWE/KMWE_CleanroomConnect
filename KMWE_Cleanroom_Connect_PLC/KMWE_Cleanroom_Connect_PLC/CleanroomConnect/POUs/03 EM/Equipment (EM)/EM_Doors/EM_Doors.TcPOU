@@ -88,23 +88,9 @@ VAR
 //------------------------------------------//
 
 //------------------------------------------//
-//Sensor data	
-	s_aMagneticX						: ARRAY[0..c_nResultDataSize] OF LREAL;
-	s_aMagneticY						: ARRAY[0..c_nResultDataSize] OF LREAL;
-	s_aMagneticZ						: ARRAY[0..c_nResultDataSize] OF LREAL;
-	s_aMagneticMagnitude				: ARRAY[0..c_nResultDataSize] OF LREAL;
-	s_aProbePositionZ					: ARRAY[0..c_nResultDataSize] OF LREAL;
-	
-	s_sXMLData							: STRING(Param_Project.n_MaxLenghtXmlDbRow*Param_Project.n_NumberofRowsXmlDb);
-	
-	s_aHmi_MagneticTest					: ARRAY[1..3,0..c_nResultDataSize] OF ST_POINT;
-	
-//	s_aHmi_ProbePositionZ				: ARRAY[1..1,1..GVL_Datalogging.c_nHmiLogSize] OF ST_POINT;
-//------------------------------------------//
 
 //------------------------------------------//
 //Alarms
-	
 	s_bWrnOuterDoorNoAllowedToOpen : BOOL;
 	s_bWrnOuterDoorNoAllowedToClose : BOOL;
 	s_bWrnCleanroomDoorNoAllowedToRelease : BOOL;
@@ -678,6 +664,20 @@ CASE i_eCtrlMode OF
 		;
 		{warning '#TODO: Add manual control from hmi'}
 
+		// Outer Door
+		IF s_fbHmiBtnOpenOuterDoor.p_osrBtnPress THEN
+			s_cmOuterDoor.m_Open();
+		ELSIF s_fbHmiBtnCloseOuterDoor.p_osrBtnPress THEN
+			s_cmOuterDoor.m_Close();
+		END_IF
+		
+		// Door Lock
+		IF s_fbHmiBtnReleaseLockCleanroomDoor.p_osrBtnPress THEN
+			s_cmCleanroomDoor.m_Release();
+		ELSIF s_fbHmiBtnApplyLockCleanroomDoor.p_osrBtnPress THEN
+			s_cmCleanroomDoor.m_Apply();
+		END_IF
+		
 END_CASE
 ]]></ST>
       </Implementation>
@@ -1062,7 +1062,18 @@ p_bStaOuterDoorOpened := s_bStaOuterDoorOpened;
       <LineId Id="492" Count="0" />
       <LineId Id="494" Count="0" />
       <LineId Id="493" Count="0" />
-      <LineId Id="315" Count="14" />
+      <LineId Id="315" Count="12" />
+      <LineId Id="503" Count="0" />
+      <LineId Id="496" Count="0" />
+      <LineId Id="328" Count="0" />
+      <LineId Id="499" Count="0" />
+      <LineId Id="501" Count="1" />
+      <LineId Id="500" Count="0" />
+      <LineId Id="504" Count="0" />
+      <LineId Id="506" Count="4" />
+      <LineId Id="505" Count="0" />
+      <LineId Id="498" Count="0" />
+      <LineId Id="329" Count="0" />
       <LineId Id="179" Count="0" />
     </LineIds>
     <LineIds Name="EM_Doors.m_OpenOuterDoor">

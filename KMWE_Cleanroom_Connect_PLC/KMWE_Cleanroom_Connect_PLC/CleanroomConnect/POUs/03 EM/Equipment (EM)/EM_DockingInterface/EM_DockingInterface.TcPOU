@@ -19,8 +19,8 @@ END_VAR
 VAR
 //------------------------------------------//
 //Control Modules (Devices)
-	cmDockingClamps : CM_DockingClamps;
-	cmUnlockingPins : CM_UnlockingPins; 
+	s_cmDockingClamps : CM_DockingClamps;
+	s_cmUnlockingPins : CM_UnlockingPins; 
 	
 //------------------------------------------//
 
@@ -62,8 +62,8 @@ VAR
 //Alarms
 
 //Warnings
-	fbAlarmHandlerNoBoxPresentAtPreDockingPosition : FB_AlarmHandler;
-	fbAlarmHandlerNoBoxPresentAtDockedPosition : FB_AlarmHandler;
+	s_fbAlarmHandlerNoBoxPresentAtPreDockingPosition : FB_AlarmHandler;
+	s_fbAlarmHandlerNoBoxPresentAtDockedPosition : FB_AlarmHandler;
 
 	s_bWrnNoBoxPresentAtPreDockingPosition : BOOL;
 	s_bWrnNoBoxPresentAtDockedPosition : BOOL;
@@ -181,12 +181,12 @@ END_IF
 // Set error bits
 
 // Alarm Handlers
-fbAlarmHandlerNoBoxPresentAtPreDockingPosition(
+s_fbAlarmHandlerNoBoxPresentAtPreDockingPosition(
 	i_bStaActive := s_bWrnNoBoxPresentAtPreDockingPosition, 
 	i_eAlarmLevel := E_AlarmLevel.Warning, 
 	i_sAlarmText := 'No box present at per-docking position');
 	
-fbAlarmHandlerNoBoxPresentAtDockedPosition(
+s_fbAlarmHandlerNoBoxPresentAtDockedPosition(
 	i_bStaActive := s_bWrnNoBoxPresentAtDockedPosition, 
 	i_eAlarmLevel := E_AlarmLevel.Warning, 
 	i_sAlarmText := 'No box present at docked position');
@@ -222,11 +222,11 @@ s_fbHmiBtnManualLockPins();
 s_fbHmiBtnManualUnlockPins();
 
 //Leds
-s_fbHmiLedClampsOpened(i_bStaLed := cmDockingClamps.p_bStaIsOpened);
-s_fbHmiLedClampsClosed(i_bStaLed := cmDockingClamps.p_bStaIsClosed);
+s_fbHmiLedClampsOpened(i_bStaLed := s_cmDockingClamps.p_bStaIsOpened);
+s_fbHmiLedClampsClosed(i_bStaLed := s_cmDockingClamps.p_bStaIsClosed);
 	
-s_fbHmiLedPinsLocked(i_bStaLed := cmUnlockingPins.p_bStaIsLocked);
-s_fbHmiLedPinsUnloacked(i_bStaLed := cmUnlockingPins.p_bStaIsUnlocked);
+s_fbHmiLedPinsLocked(i_bStaLed := s_cmUnlockingPins.p_bStaIsLocked);
+s_fbHmiLedPinsUnloacked(i_bStaLed := s_cmUnlockingPins.p_bStaIsUnlocked);
 
 s_fbHmiLedBoxAtPreDockPosition(i_bStaLed := s_diStaBoxAtPreDockingPosition.p_bStaInputDelayed);
 s_fbHmiLedBoxAtDockedPosition(i_bStaLed := s_diStaBoxAtDockedPosition.p_bStaInputDelayed);
@@ -244,18 +244,18 @@ IF NOT SUPER^._m_Init() THEN
 END_IF
 
 //Control Modules
-cmDockingClamps.i_bReqEnable := FALSE;
-cmDockingClamps.i_eCtrlMode := E_CtrlMode.IDLE;
-cmDockingClamps.i_sCmName := 'Docking Clamps';
-cmDockingClamps.i_stSettings.tClampsOpenTimeout := T#10S;
-cmDockingClamps.i_stSettings.tClampsCloseTimeout := T#10S;
+s_cmDockingClamps.i_bReqEnable := FALSE;
+s_cmDockingClamps.i_eCtrlMode := E_CtrlMode.IDLE;
+s_cmDockingClamps.i_sCmName := 'Docking Clamps';
+s_cmDockingClamps.i_stSettings.tClampsOpenTimeout := T#10S;
+s_cmDockingClamps.i_stSettings.tClampsCloseTimeout := T#10S;
 {warning '#TODO: Dot we need to added configuration parameters? Seperate struct or via settings or dedicateed variables'}
 	
-cmUnlockingPins.i_bReqEnable := FALSE;
-cmUnlockingPins.i_eCtrlMode := E_CtrlMode.IDLE;
-cmUnlockingPins.i_sCmName := 'Unloading Pins';
-cmUnlockingPins.i_stSettings.tPinsLockTimeout := T#10S;
-cmUnlockingPins.i_stSettings.tPinsUnlockTimeout := T#10S;
+s_cmUnlockingPins.i_bReqEnable := FALSE;
+s_cmUnlockingPins.i_eCtrlMode := E_CtrlMode.IDLE;
+s_cmUnlockingPins.i_sCmName := 'Unloading Pins';
+s_cmUnlockingPins.i_stSettings.tPinsLockTimeout := T#10S;
+s_cmUnlockingPins.i_stSettings.tPinsUnlockTimeout := T#10S;
 {warning '#TODO: Dot we need to added configuration parameters? Seperate struct or via settings or dedicateed variables'}
 	
 //---------------------------------//	
@@ -372,16 +372,16 @@ END_IF
 s_diStaBoxAtPreDockingPosition();
 s_diStaBoxAtDockedPosition();
 
-cmDockingClamps(
+s_cmDockingClamps(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
 	i_bCmdReset := i_bCmdReset);
 	//--i_sCmName := 'Docking Clamps');
 	
-s_bStaDockingClampsClosed := cmDockingClamps.p_bStaIsClosed;
-s_bStaDockingClampsOpened := cmDockingClamps.p_bStaIsOpened;
+s_bStaDockingClampsClosed := s_cmDockingClamps.p_bStaIsClosed;
+s_bStaDockingClampsOpened := s_cmDockingClamps.p_bStaIsOpened;
 	
-cmUnlockingPins(
+s_cmUnlockingPins(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
 	i_bCmdReset := i_bCmdReset);
@@ -574,8 +574,8 @@ END_IF
 CASE i_eCtrlMode OF
 
 	E_CtrlMode.IDLE:
-		cmDockingClamps.m_Stop();
-		cmUnlockingPins.m_Stop();
+		s_cmDockingClamps.m_Stop();
+		s_cmUnlockingPins.m_Stop();
 		
 		s_bReqDockBox := FALSE;
 		s_bReqUndockBox := FALSE;
@@ -624,12 +624,12 @@ CASE i_eCtrlMode OF
 			E_SeqDockingInterface.DOCKING_CLOSE_CLAMPS:
 				
 				IF s_fbSeqDockingInterface.q_bStaEntry THEN 
-					cmDockingClamps.m_Close();
+					s_cmDockingClamps.m_Close();
 				END_IF
 				
-				IF cmDockingClamps.p_bStaIsClosed THEN
+				IF s_cmDockingClamps.p_bStaIsClosed THEN
 					s_eSeqDockingInterface := E_SeqDockingInterface.DOCKING_UNLOCK_DOOR;
-				ELSIF cmDockingClamps.p_bStaError THEN 
+				ELSIF s_cmDockingClamps.p_bStaError THEN 
 					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
 					// write down some info?
 				ELSIF (s_fbSeqDockingInterface.q_tmStepTime >= i_stSettings.tClampsTimeout) THEN
@@ -640,12 +640,12 @@ CASE i_eCtrlMode OF
 			E_SeqDockingInterface.DOCKING_UNLOCK_DOOR:
 			
 				IF s_fbSeqDockingInterface.q_bStaEntry THEN 
-					cmUnlockingPins.m_Unlock();
+					s_cmUnlockingPins.m_Unlock();
 				END_IF
 				
-				IF cmUnlockingPins.p_bStaIsUnlocked THEN
+				IF s_cmUnlockingPins.p_bStaIsUnlocked THEN
 					s_eSeqDockingInterface := E_SeqDockingInterface.DOCKING_DONE;
-				ELSIF cmUnlockingPins.p_bStaError THEN 
+				ELSIF s_cmUnlockingPins.p_bStaError THEN 
 					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
 					// write down some info?
 				ELSIF (s_fbSeqDockingInterface.q_tmStepTime >= i_stSettings.tReleasePinsTimeout) THEN
@@ -660,12 +660,12 @@ CASE i_eCtrlMode OF
 			E_SeqDockingInterface.UNDOCKING_LOCK_DOOR:
 			
 				IF s_fbSeqDockingInterface.q_bStaEntry THEN 
-					cmUnlockingPins.m_Lock();
+					s_cmUnlockingPins.m_Lock();
 				END_IF
 				
-				IF cmUnlockingPins.p_bStaIsLocked THEN
+				IF s_cmUnlockingPins.p_bStaIsLocked THEN
 					s_eSeqDockingInterface := E_SeqDockingInterface.UNDOCKING_OPEN_CLAMPS;
-				ELSIF cmUnlockingPins.p_bStaError THEN 
+				ELSIF s_cmUnlockingPins.p_bStaError THEN 
 					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
 					// write down some info?
 				ELSIF (s_fbSeqDockingInterface.q_tmStepTime >= i_stSettings.tReleasePinsTimeout) THEN
@@ -676,12 +676,12 @@ CASE i_eCtrlMode OF
 			E_SeqDockingInterface.UNDOCKING_OPEN_CLAMPS:
 			
 				IF s_fbSeqDockingInterface.q_bStaEntry THEN 
-					cmDockingClamps.m_Open();
+					s_cmDockingClamps.m_Open();
 				END_IF
 				
-				IF cmDockingClamps.p_bStaIsOpened THEN
+				IF s_cmDockingClamps.p_bStaIsOpened THEN
 					s_eSeqDockingInterface := E_SeqDockingInterface.UNDOCKING_DONE;
-				ELSIF cmDockingClamps.p_bStaError THEN 
+				ELSIF s_cmDockingClamps.p_bStaError THEN 
 					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
 					// write down some info?
 				ELSIF (s_fbSeqDockingInterface.q_tmStepTime >= i_stSettings.tClampsTimeout) THEN
@@ -696,10 +696,10 @@ CASE i_eCtrlMode OF
 			E_SeqDockingInterface.ONLY_CLOSE_CLAMPS:
 			
 				IF s_fbSeqDockingInterface.q_bStaEntry THEN
-					cmDockingClamps.m_Close();
+					s_cmDockingClamps.m_Close();
 				END_IF
 			
-				IF cmDockingClamps.p_bStaIsClosed THEN
+				IF s_cmDockingClamps.p_bStaIsClosed THEN
 					s_eSeqDockingInterface := E_SeqDockingInterface.IDLE;
 				ELSIF (s_fbSeqDockingInterface.q_tmStepTime >= i_stSettings.tClampsTimeout) THEN
  					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
@@ -709,10 +709,10 @@ CASE i_eCtrlMode OF
 			E_SeqDockingInterface.ONLY_OPEN_CLAMPS:	
 				
 				IF s_fbSeqDockingInterface.q_bStaEntry THEN
-					cmDockingClamps.m_Open();
+					s_cmDockingClamps.m_Open();
 				END_IF
 			
-				IF cmDockingClamps.p_bStaIsOpened THEN
+				IF s_cmDockingClamps.p_bStaIsOpened THEN
 					s_eSeqDockingInterface := E_SeqDockingInterface.IDLE;
 				ELSIF (s_fbSeqDockingInterface.q_tmStepTime >= i_stSettings.tClampsTimeout) THEN
  					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;

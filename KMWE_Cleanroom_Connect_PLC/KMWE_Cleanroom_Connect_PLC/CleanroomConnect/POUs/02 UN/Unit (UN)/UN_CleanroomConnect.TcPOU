@@ -285,24 +285,24 @@ IF NOT SUPER^._m_Init() THEN
 	RETURN;
 END_IF
 
-_m_AddModule(i_itfModuleBase := GVL_Modules.g_emStateMachine);
+_m_AddModule(i_itfModuleBase := GVL_Modules.g_emDockingCabin);
 
-GVL_Modules.g_emStateMachine.i_bReqEnable := FALSE;
-GVL_Modules.g_emStateMachine.i_eCtrlMode := E_CtrlMode.IDLE;
-GVL_Modules.g_emStateMachine.i_bCmdReset := FALSE;
-GVL_Modules.g_emStateMachine.i_sEmName  := 'EM State Machine';
+GVL_Modules.g_emDockingCabin.i_bReqEnable := FALSE;
+GVL_Modules.g_emDockingCabin.i_eCtrlMode := E_CtrlMode.IDLE;
+GVL_Modules.g_emDockingCabin.i_bCmdReset := FALSE;
+GVL_Modules.g_emDockingCabin.i_sEmName  := 'EM State Machine';
 
 //Settings Doors
-GVL_Modules.g_emStateMachine.i_stSettings.stSettingsDoors.tOuterDoorTimeout := T#15S;
-GVL_Modules.g_emStateMachine.i_stSettings.stSettingsDoors.tCleanroomDoorTimeout := T#3S;
-GVL_Modules.g_emStateMachine.i_stSettings.stSettingsDoors.tResetPulseDuration := T#1S;
+GVL_Modules.g_emDockingCabin.i_stSettings.stSettingsDoors.tOuterDoorTimeout := T#15S;
+GVL_Modules.g_emDockingCabin.i_stSettings.stSettingsDoors.tCleanroomDoorTimeout := T#3S;
+GVL_Modules.g_emDockingCabin.i_stSettings.stSettingsDoors.tResetPulseDuration := T#1S;
 
 //Settings Docking Interface
-GVL_Modules.g_emStateMachine.i_stSettings.stSettingsDockingInterface.tClampsTimeout := T#5S;
-GVL_Modules.g_emStateMachine.i_stSettings.stSettingsDockingInterface.tReleasePinsTimeout := T#5S;
+GVL_Modules.g_emDockingCabin.i_stSettings.stSettingsDockingInterface.tClampsTimeout := T#5S;
+GVL_Modules.g_emDockingCabin.i_stSettings.stSettingsDockingInterface.tReleasePinsTimeout := T#5S;
 
 //Settings AirTreatment
-//..GVL_Modules.g_emStateMachine.i_stSettings.stSettingsAirTrearment.. := TODO;
+//..GVL_Modules.g_emDockingCabin.i_stSettings.stSettingsAirTrearment.. := TODO;
 
 //------------------------------------------//
 //Hmi Startup
@@ -357,13 +357,13 @@ _m_Init := TRUE;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-GVL_Modules.g_emStateMachine(
+GVL_Modules.g_emDockingCabin(
 	i_bReqEnable := TRUE,
 	i_eCtrlMode := s_eCtrlMode,
 	i_bCmdReset := p_bCmdReset,
 	i_sEmName := 'EM State Machine');
 
-s_bStaError := GVL_Modules.g_emStateMachine.q_bStaError;
+s_bStaError := GVL_Modules.g_emDockingCabin.q_bStaError;
 	
 _m_Modules := TRUE;
 ]]></ST>

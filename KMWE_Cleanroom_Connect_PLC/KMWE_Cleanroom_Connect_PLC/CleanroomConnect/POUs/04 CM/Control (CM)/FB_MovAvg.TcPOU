@@ -13,17 +13,54 @@ VAR_OUTPUT
 	o_rOut : LREAL;
 END_VAR
 VAR
-	s_nSampleCounter : UINT;
-	s_rVar : LREAL;
+	s_nSampleCounter : UINT := 0;
+	s_rAvgPrev : LREAL := 0;
 END_VAR
 ]]></Declaration>
     <Implementation>
       <ST><![CDATA[
-//o_rOut := 
+IF (s_nSampleCounter < i_nSamples) THEN
+	s_nSampleCounter := s_nSampleCounter + 1;
+END_IF
+
+//Limit
+IF s_nSampleCounter < 1 THEN
+	s_nSampleCounter := 1;
+ELSIF s_nSampleCounter > i_nSamples THEN
+	s_nSampleCounter := i_nSamples;
+END_IF	
+
+IF s_nSampleCounter = 1 THEN
+	s_rAvgPrev := i_rIn;
+END_IF
+
+s_rAvgPrev := (s_rAvgPrev * (s_nSampleCounter-1) + i_rIn) / s_nSampleCounter;
+
+o_rOut := s_rAvgPrev;
+
 ]]></ST>
     </Implementation>
     <LineIds Name="FB_MovAvg">
-      <LineId Id="22" Count="1" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="76" Count="0" />
       <LineId Id="9" Count="0" />
     </LineIds>
   </POU>

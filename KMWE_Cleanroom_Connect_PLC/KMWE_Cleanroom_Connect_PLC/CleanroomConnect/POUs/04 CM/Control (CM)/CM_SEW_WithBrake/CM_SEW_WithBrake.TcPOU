@@ -1,0 +1,580 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="CM_SEW_WithBrake" Id="{d8988437-f8ba-4649-8850-7b7474b271b5}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK CM_SEW_WithBrake EXTENDS CM_Base IMPLEMENTS I_Motor_base
+VAR_INPUT
+	i_stSettings : ST_SettingsSEW_WithBrake;
+END_VAR
+VAR
+	// Inputs
+	I_bStaReadyForOperation AT %I* : BOOL; // Drive is ready operation (no error)
+	
+	// Outputs
+	Q_bCmdStart AT %Q* : BOOL; // Command to start (+ reset one shot)
+	Q_bCmdReverseDirection AT %Q* : BOOL; // Command to reverse direction
+	Q_bCmdReleaseBrake AT %Q* : BOOL; // Command to release brake
+	Q_nSetTargetSpeed AT %Q* : INT; // Target speed
+		
+	// Requests
+	s_bReqStop : BOOL;
+	s_bReqStartForward : BOOL;
+	s_bReqStartBackward : BOOL;
+	s_bReqReleaseBrake : BOOL;
+	s_bReqReset : BOOL;
+	
+	// States
+	s_bStaReadyForOperation: BOOL;
+	s_bStaDriveError: BOOL;
+	s_bStaBrakeReleased : BOOL;
+	s_bStaMotorStopped : BOOL;
+	
+	// Setpoints
+	s_rTargetSpeed : LREAL; // Target speed [mm/s]
+	
+	// Timers
+	s_tofResetPulse : TOF;
+	s_tonMotorStoppedDelay : TON;
+	s_tonBrakeReleasedDelay : TON;
+	
+	// Alarms
+	s_fbAlarmHandlerDriveError : FB_AlarmHandler;
+	s_fbAlarmHandlerApplyingBrakeNotAllowed : FB_AlarmHandler;
+	s_fbAlarmHandlerStartMotorNotAllowed : FB_AlarmHandler;
+	
+	s_errDriveError : BOOL;
+	s_wrnApplyingBrakeNotAllowed : BOOL;
+	s_wrnStartMotorNotAllowed : BOOL;
+		
+END_VAR
+
+VAR CONSTANT
+	cMAX_INT_VALUE : INT := 32767;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+SUPER^();
+]]></ST>
+    </Implementation>
+    <Folder Name="Methods" Id="{fea5fc79-9587-4159-bfcb-2bdf1bcbabe5}" />
+    <Folder Name="Properties" Id="{90bb6a76-9d90-4e6c-a11c-e7f0ed29a681}" />
+    <Method Name="_m_Alarms" Id="{4deaa654-c608-48ef-b852-683d2aa00f57}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Alarms : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Alarms() THEN
+	RETURN;
+END_IF
+
+// Set error bits
+s_errDriveError := i_bReqEnable AND s_bStaDriveError AND NOT(i_bCmdReset);
+
+// Alarm Handlers
+s_fbAlarmHandlerDriveError(
+	i_bStaActive := s_errDriveError,
+	i_eAlarmLevel := E_AlarmLevel.Alarm,
+	i_sAlarmText := CONCAT(i_sCmName, ': Drive - has error (check SEW-drive).'));
+	
+s_fbAlarmHandlerApplyingBrakeNotAllowed(
+	i_bStaActive := s_wrnApplyingBrakeNotAllowed,
+	i_eAlarmLevel := E_AlarmLevel.Warning,
+	i_sAlarmText := CONCAT(i_sCmName, ': Brake - not allowed to be applied (motor not stopped).'));
+	
+s_wrnApplyingBrakeNotAllowed R= s_bStaMotorStopped;
+	
+s_fbAlarmHandlerStartMotorNotAllowed(
+	i_bStaActive := s_wrnStartMotorNotAllowed,
+	i_eAlarmLevel := E_AlarmLevel.Warning,
+	i_sAlarmText := CONCAT(i_sCmName, ': Motor - not allowed to start (brake not released).'));
+	
+s_wrnStartMotorNotAllowed R= s_bStaBrakeReleased;
+	
+// Alarm collector	
+s_bStaError := 
+	s_fbAlarmHandlerDriveError.q_bStaActive;
+
+_m_Alarms := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Devices" Id="{7cf2b106-f168-4b96-b992-17948b9589f2}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Devices : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Devices() THEN
+	RETURN;
+END_IF
+
+//--// Reset request
+//--IF s_bStaDoorIsOpened THEN
+//--	s_bReqOpen := FALSE;
+//--ELSIF s_bStaDoorIsClosed THEN
+//--	s_bReqClose := FALSE;	
+//--ELSIF s_bStaError THEN
+//--	s_bReqOpen := FALSE;
+//--	s_bReqClose := FALSE;
+//--END_IF
+
+_m_Devices := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Hmi" Id="{247a12f4-0dca-4cad-aba1-676ebffdadcb}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Hmi : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Hmi() THEN
+	RETURN;
+END_IF
+
+_m_Hmi := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Init" Id="{e95de6ba-8291-48d3-aa10-18b69b93d9d4}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Init : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Init() THEN
+	RETURN;
+END_IF
+
+{warning '#TODO: Not sure if this control module needs initialzation'}
+//--s_DOValve.i_stSettings.bCfgDelay 		:= FALSE;
+//--s_DOValve.i_stSettings.tmOutputDelay 	:= T#0S;
+
+_m_Init := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Inputs" Id="{3dd66686-d1af-4a23-8b08-c424814fad43}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Inputs : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Inputs() THEN
+	RETURN;
+END_IF
+
+s_bStaReadyForOperation := I_bStaReadyForOperation;
+s_bStaDriveError := NOT(I_bStaReadyForOperation);
+
+_m_Inputs := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Outputs" Id="{f0e0fd71-b4a5-4c65-b115-0d3a3aae58a1}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Outputs : BOOL
+VAR
+	bCmdStart : BOOL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Outputs() THEN
+	RETURN;
+END_IF
+
+// Generate reset pulse for resetting SEW-drive (via IO, one-shot on start)
+s_tofResetPulse(
+	IN := s_bReqReset AND s_bStaDriveError AND NOT(s_tofResetPulse.Q),
+	PT := i_stSettings.tResetPulseDuration);
+s_bReqReset := FALSE;
+
+// Generate time delays for starting motor and brake
+s_tonMotorStoppedDelay(
+	IN := NOT(Q_bCmdStart),
+	PT := i_stSettings.tMotorStoppedDelay,
+	Q => s_bStaMotorStopped);
+
+s_tonBrakeReleasedDelay(
+	IN := Q_bCmdReleaseBrake,
+	PT := i_stSettings.tBrakeReleasedDelay,
+	Q => s_bStaBrakeReleased); 
+	
+Q_bCmdReleaseBrake := (i_bReqEnable AND s_bReqReleaseBrake)
+						OR NOT(s_bStaMotorStopped); // Make sure the brake can't be applied when drive is not stopped	
+
+bCmdStart := i_bReqEnable AND (s_bReqStartForward OR s_bReqStartBackward);
+Q_bCmdStart := s_tofResetPulse.Q OR (bCmdStart AND s_bStaBrakeReleased); // Make sure that drive can't start when brake is not released	
+				
+Q_bCmdReverseDirection := i_bReqEnable AND s_bReqStartBackward;
+
+// Write (convert) target speed drive (analog output)
+IF i_bReqEnable AND (s_bReqStartForward OR s_bReqStartBackward) THEN
+	Q_nSetTargetSpeed := LREAL_TO_INT(s_rTargetSpeed / i_stSettings.rMaxTargetSpeed * cMAX_INT_VALUE);
+ELSE
+	Q_nSetTargetSpeed := 0;	
+END_IF	
+	
+_m_Outputs := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_ApplyBrake" Id="{84406420-53a7-4cd1-828e-c4d2ed555d95}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PUBLIC m_ApplyBrake : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+s_bReqReleaseBrake := TRUE;
+
+m_ReleaseBrake := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_ReleaseBrake" Id="{710cca1b-1464-4a44-9af2-adc97e3f5673}" FolderPath="Methods\">
+      <Declaration><![CDATA[/// Release brake
+METHOD PUBLIC m_ReleaseBrake : BOOL
+VAR_INPUT
+	i_bValue : BOOL; /// FALSE = apply, TRUE = release
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+IF i_bValue THEN
+	s_bReqReleaseBrake := TRUE;
+ELSIF NOT(i_bValue) THEN
+	IF s_bStaMotorStopped THEN
+		s_bReqReleaseBrake := FALSE;
+	ELSE
+		{warning: #TODO: Generate warning that }
+	END_IF	
+END_IF
+
+m_ReleaseBrake := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_Reset" Id="{7a4bff47-bee3-4de3-b793-bf5b0f24ba84}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PUBLIC m_Reset : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+s_bReqStop := FALSE;
+s_bReqStartForward := FALSE;
+s_bReqStartBackward := FALSE;
+s_bReqReleaseBrake := FALSE;
+s_bReqReset := TRUE;
+
+m_Reset := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_StartBackward" Id="{49196a88-b792-4b99-9376-81b43964f03b}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PUBLIC m_StartBackward : BOOL
+VAR_INPUT
+	i_rTargetSpeed : LREAL; // Target speed [mm/s]
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+s_bReqStop := FALSE;
+s_bReqStartForward := FALSE;
+s_bReqStartBackward := TRUE;
+s_bReqReleaseBrake := FALSE;
+s_bReqReset := FALSE;
+
+IF i_rTargetSpeed < 0 THEN
+	s_rTargetSpeed := 0;
+ELSIF i_rTargetSpeed > cMAX_INT_VALUE THEN	
+	i_rTargetSpeed := cMAX_INT_VALUE;
+ELSE 
+	s_rTargetSpeed := i_rTargetSpeed;
+END_IF
+	
+m_StartBackward := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_StartForward" Id="{551b77ef-9474-4bb1-9b3d-8c47176aa994}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PUBLIC m_StartForward : BOOL
+VAR_INPUT
+	i_rTargetSpeed : LREAL; // Target speed [mm/s]
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+s_bReqStop := FALSE;
+s_bReqStartForward := TRUE;
+s_bReqStartBackward := FALSE;
+s_bReqReleaseBrake := FALSE;
+s_bReqReset := FALSE;
+
+IF i_rTargetSpeed < 0 THEN
+	s_rTargetSpeed := 0;
+ELSIF i_rTargetSpeed > cMAX_INT_VALUE THEN	
+	i_rTargetSpeed := cMAX_INT_VALUE;
+ELSE 
+	s_rTargetSpeed := i_rTargetSpeed;
+END_IF
+
+m_StartForward := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_Stop" Id="{e9ddf609-54b2-4594-bc3c-53ac00446898}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PUBLIC m_Stop : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+s_bReqStop := TRUE;
+s_bReqStartForward := FALSE;
+s_bReqStartBackward := FALSE;
+s_bReqReleaseBrake := FALSE;
+s_bReqReset := FALSE;
+
+m_Stop := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="p_bStaBrakeReleased" Id="{9fbced02-9547-4710-b53f-47079111072e}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bStaBrakeReleased : BOOL]]></Declaration>
+      <Get Name="Get" Id="{4b22f759-5b10-4a1a-8c0a-aa7be90f3a40}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaBrakeReleased := s_bStaBrakeReleased;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaMotorRunning" Id="{05cc9b52-a456-4963-9313-489e38d28904}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bStaMotorRunning : BOOL]]></Declaration>
+      <Get Name="Get" Id="{48de4f54-9de3-4f86-a416-721c15990310}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaMotorRunning := s_bStaReadyForOperation AND NOT(s_bStaMotorStopped);
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaMotorStopped" Id="{a6d82e37-5355-4a67-b5f0-d07baedba186}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bStaMotorStopped : BOOL]]></Declaration>
+      <Get Name="Get" Id="{88de46fd-3b89-42e4-ad0b-d4b96e0ab51a}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaMotorStopped := s_bStaMotorStopped;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <LineIds Name="CM_SEW_WithBrake">
+      <LineId Id="410" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="411" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SEW_WithBrake._m_Alarms">
+      <LineId Id="28" Count="0" />
+      <LineId Id="19" Count="2" />
+      <LineId Id="103" Count="0" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="34" Count="1" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="122" Count="3" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="133" Count="1" />
+      <LineId Id="129" Count="3" />
+      <LineId Id="121" Count="0" />
+      <LineId Id="136" Count="0" />
+      <LineId Id="135" Count="0" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="110" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="29" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SEW_WithBrake._m_Devices">
+      <LineId Id="6" Count="3" />
+      <LineId Id="14" Count="1" />
+      <LineId Id="65" Count="6" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="13" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SEW_WithBrake._m_Hmi">
+      <LineId Id="17" Count="3" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="87" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SEW_WithBrake._m_Init">
+      <LineId Id="21" Count="0" />
+      <LineId Id="15" Count="2" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="23" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SEW_WithBrake._m_Inputs">
+      <LineId Id="13" Count="0" />
+      <LineId Id="5" Count="2" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="17" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SEW_WithBrake._m_Outputs">
+      <LineId Id="29" Count="0" />
+      <LineId Id="7" Count="2" />
+      <LineId Id="57" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="59" Count="1" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="83" Count="1" />
+      <LineId Id="95" Count="2" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="89" Count="2" />
+      <LineId Id="94" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="114" Count="0" />
+      <LineId Id="109" Count="1" />
+      <LineId Id="112" Count="1" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="39" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SEW_WithBrake.m_ApplyBrake">
+      <LineId Id="34" Count="0" />
+      <LineId Id="26" Count="2" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="23" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SEW_WithBrake.m_ReleaseBrake">
+      <LineId Id="34" Count="0" />
+      <LineId Id="26" Count="2" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="23" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SEW_WithBrake.m_Reset">
+      <LineId Id="34" Count="0" />
+      <LineId Id="26" Count="2" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="40" Count="3" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="23" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SEW_WithBrake.m_StartBackward">
+      <LineId Id="34" Count="0" />
+      <LineId Id="26" Count="2" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="40" Count="3" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="50" Count="1" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="52" Count="2" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="23" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SEW_WithBrake.m_StartForward">
+      <LineId Id="34" Count="0" />
+      <LineId Id="26" Count="2" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="40" Count="3" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="50" Count="5" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="23" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SEW_WithBrake.m_Stop">
+      <LineId Id="34" Count="0" />
+      <LineId Id="26" Count="2" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="40" Count="3" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="23" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SEW_WithBrake.p_bStaBrakeReleased.Get">
+      <LineId Id="4" Count="0" />
+      <LineId Id="6" Count="0" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SEW_WithBrake.p_bStaMotorRunning.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SEW_WithBrake.p_bStaMotorStopped.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

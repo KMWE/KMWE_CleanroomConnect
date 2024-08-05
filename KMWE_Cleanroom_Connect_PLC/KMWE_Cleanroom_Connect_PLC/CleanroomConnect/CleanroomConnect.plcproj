@@ -29,6 +29,9 @@
     <Compile Include="DUTs\ST_HmiTopBar.TcDUT">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="GlobalTextList.TcGTLO">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="GVLs\GVL.TcGVL">
       <SubType>Code</SubType>
       <LinkAlways>true</LinkAlways>
@@ -45,7 +48,7 @@
     </Compile>
     <Compile Include="POUs\02 UN\Unit %28UN%29\UN_CleanroomConnect.TcPOU">
       <SubType>Code</SubType>
-      <ExcludeFromBuild>false</ExcludeFromBuild>
+      <ExcludeFromBuild>true</ExcludeFromBuild>
     </Compile>
     <Compile Include="POUs\03 EM\Equipment %28EM%29\EM_AirTreatment\DUTs\I_EM_AirTreatment.TcIO">
       <SubType>Code</SubType>
@@ -64,6 +67,7 @@
     </Compile>
     <Compile Include="POUs\03 EM\Equipment %28EM%29\EM_DockingCabin\EM_DockingCabin.TcPOU">
       <SubType>Code</SubType>
+      <ExcludeFromBuild>false</ExcludeFromBuild>
     </Compile>
     <Compile Include="POUs\03 EM\Equipment %28EM%29\EM_DockingInterface\DUTs\E_SeqDockingInterface.TcDUT">
       <SubType>Code</SubType>
@@ -89,6 +93,21 @@
     <Compile Include="POUs\03 EM\Equipment %28EM%29\EM_Doors\EM_Doors.TcPOU">
       <SubType>Code</SubType>
       <ExcludeFromBuild>false</ExcludeFromBuild>
+    </Compile>
+    <Compile Include="POUs\03 EM\Equipment %28EM%29\EM_PalletConveyor\EM_PalletConveyor.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\03 EM\Equipment %28EM%29\EM_PalletConveyor\I_EM_PalletConveyor.TcIO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\03 EM\Equipment %28EM%29\EM_PalletConveyor\ST_SettingsPalletConveyor.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\04 CM\Control %28CM%29\CM_SEW_WithBrake\CM_SEW_WithBrake.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\04 CM\Control %28CM%29\CM_SEW_WithBrake\ST_SettingsSEW_WithBrake.TcDUT">
+      <SubType>Code</SubType>
     </Compile>
     <Compile Include="POUs\04 CM\Control %28CM%29\CM_UnlockingPins\CM_UnlockingPins.TcPOU">
       <SubType>Code</SubType>
@@ -145,11 +164,30 @@
     </Compile>
     <Compile Include="POUs\04 CM\Control %28CM%29\OBJ_Carrier\OBJ_Carrier.TcPOU">
       <SubType>Code</SubType>
+      <ExcludeFromBuild>false</ExcludeFromBuild>
     </Compile>
     <Compile Include="POUs\04 CM\Control %28CM%29\OBJ_Carrier\ST_Carrier.TcDUT">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="POUs\MAIN.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="VISUs\MainScreen.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>VISUs\VisualizationManager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="VISUs\VisualizationManager.TcVMO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="VISUs\PalletConveyor.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>VISUs\VisualizationManager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="VISUs\DockingStation.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>VISUs\VisualizationManager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="VISU_TASK.TcTTO">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
@@ -167,7 +205,9 @@
     <Folder Include="POUs\03 EM\Equipment %28EM%29\EM_DockingInterface" />
     <Folder Include="POUs\03 EM\Equipment %28EM%29\EM_AirTreatment" />
     <Folder Include="POUs\03 EM\Equipment %28EM%29\EM_DockingCabin" />
+    <Folder Include="POUs\03 EM\Equipment %28EM%29\EM_PalletConveyor" />
     <Folder Include="POUs\04 CM\Control %28CM%29" />
+    <Folder Include="POUs\04 CM\Control %28CM%29\CM_SEW_WithBrake" />
     <Folder Include="POUs\04 CM\Control %28CM%29\CM_UnlockingPins" />
     <Folder Include="POUs\04 CM\Control %28CM%29\CM_SpeedDoor" />
     <Folder Include="POUs\04 CM\Control %28CM%29\CM_DoorLock" />
@@ -184,6 +224,49 @@
   <ItemGroup>
     <PlaceholderReference Include="KMWE Generic Library">
       <DefaultResolution>KMWE Generic Library, * (KMWE)</DefaultResolution>
+      <Namespace>KMWE_Generic_Library</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="System_VisuElemMeter">
+      <DefaultResolution>VisuElemMeter, 3.5.13.0 (System)</DefaultResolution>
+      <Namespace>VisuElemMeter</Namespace>
+      <SystemLibrary>true</SystemLibrary>
+      <ResolverGuid>2717eb6a-dd07-4c66-8d8d-cacebd7b18ae</ResolverGuid>
+    </PlaceholderReference>
+    <PlaceholderReference Include="System_VisuElems">
+      <DefaultResolution>VisuElems, 3.5.13.40 (System)</DefaultResolution>
+      <Namespace>VisuElems</Namespace>
+      <SystemLibrary>true</SystemLibrary>
+      <ResolverGuid>2717eb6a-dd07-4c66-8d8d-cacebd7b18ae</ResolverGuid>
+    </PlaceholderReference>
+    <PlaceholderReference Include="System_VisuElemsSpecialControls">
+      <DefaultResolution>VisuElemsSpecialControls, 3.5.13.0 (System)</DefaultResolution>
+      <Namespace>VisuElemsSpecialControls</Namespace>
+      <SystemLibrary>true</SystemLibrary>
+      <ResolverGuid>2717eb6a-dd07-4c66-8d8d-cacebd7b18ae</ResolverGuid>
+    </PlaceholderReference>
+    <PlaceholderReference Include="System_VisuElemsWinControls">
+      <DefaultResolution>VisuElemsWinControls, 3.5.13.20 (System)</DefaultResolution>
+      <Namespace>VisuElemsWinControls</Namespace>
+      <SystemLibrary>true</SystemLibrary>
+      <ResolverGuid>2717eb6a-dd07-4c66-8d8d-cacebd7b18ae</ResolverGuid>
+    </PlaceholderReference>
+    <PlaceholderReference Include="System_VisuElemTextEditor">
+      <DefaultResolution>VisuElemTextEditor, 3.5.13.0 (System)</DefaultResolution>
+      <Namespace>VisuElemTextEditor</Namespace>
+      <SystemLibrary>true</SystemLibrary>
+      <ResolverGuid>2717eb6a-dd07-4c66-8d8d-cacebd7b18ae</ResolverGuid>
+    </PlaceholderReference>
+    <PlaceholderReference Include="system_visuinputs">
+      <DefaultResolution>visuinputs, 3.5.13.0 (system)</DefaultResolution>
+      <Namespace>visuinputs</Namespace>
+      <SystemLibrary>true</SystemLibrary>
+      <ResolverGuid>2717eb6a-dd07-4c66-8d8d-cacebd7b18ae</ResolverGuid>
+    </PlaceholderReference>
+    <PlaceholderReference Include="System_VisuNativeControl">
+      <DefaultResolution>VisuNativeControl, 3.5.13.0 (System)</DefaultResolution>
+      <Namespace>VisuNativeControl</Namespace>
+      <SystemLibrary>true</SystemLibrary>
+      <ResolverGuid>2717eb6a-dd07-4c66-8d8d-cacebd7b18ae</ResolverGuid>
     </PlaceholderReference>
     <PlaceholderReference Include="Tc2_Standard">
       <DefaultResolution>Tc2_Standard, * (Beckhoff Automation GmbH)</DefaultResolution>
@@ -207,12 +290,29 @@
     <SubObject Include="EM_DockingInterface._m_Params">
       <ExcludeFromBuild>true</ExcludeFromBuild>
     </SubObject>
+    <SubObject Include="EM_PalletConveyor._m_Params">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </SubObject>
+    <SubObject Include="EM_Doors._m_Params">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </SubObject>
+    <SubObject Include="OBJ_Carrier.m_initNewCarrier">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </SubObject>
+    <SubObject Include="UN_CleanroomConnect._m_Alarms">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </SubObject>
     <SubObject Include="UN_CleanroomConnect._m_SelectConfigFile">
       <ExcludeFromBuild>true</ExcludeFromBuild>
     </SubObject>
   </ItemGroup>
   <ItemGroup>
     <PinnedGlobalDataType Include="AMSADDR" />
+  </ItemGroup>
+  <ItemGroup>
+    <LibraryReference Include="VisuSymbols,3.5.10.0,System">
+      <Namespace>VisuSymbols</Namespace>
+    </LibraryReference>
   </ItemGroup>
   <ProjectExtensions>
     <PlcProjectOptions>

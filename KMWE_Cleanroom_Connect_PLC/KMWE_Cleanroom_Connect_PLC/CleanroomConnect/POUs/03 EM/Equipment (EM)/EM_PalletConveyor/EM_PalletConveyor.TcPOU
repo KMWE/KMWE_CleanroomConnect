@@ -1,35 +1,39 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
-  <POU Name="EM_DockingInterface" Id="{1a98308c-f0e0-4a53-963d-dfa6a727e4cb}" SpecialFunc="None">
-    <Declaration><![CDATA[FUNCTION_BLOCK EM_DockingInterface EXTENDS EM_Base IMPLEMENTS I_EM_DockingInterface
+  <POU Name="EM_PalletConveyor" Id="{53c7f34e-04c1-49dd-bb7e-a79d410146b3}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK EM_PalletConveyor EXTENDS EM_Base IMPLEMENTS I_EM_PalletConveyor
 VAR CONSTANT 
 	c_nResultDataSize : UINT := 20;
 END_VAR
 
 VAR_INPUT
 //Inputs
-	i_stSettings : ST_SettingsDockingInterface;
+	i_stSettings : ST_SettingsPalletConveyor;
 	
-	i_bIlckDockingClampsToClose : BOOL := TRUE; //TRUE = Interlocked
-	i_bIlckDockingClampsToOpen : BOOL := TRUE; //TRUE = Interlocked
-	i_bIlckUnlockingPinsToLock : BOOL := TRUE; //TRUE = Interlocked
-	i_bIlckUnlockingPinsToRelease : BOOL := TRUE; //TRUE = Interlocked	
+//??	i_bIlckDockingClampsToClose : BOOL := TRUE; //TRUE = Interlocked
+//??	i_bIlckDockingClampsToOpen : BOOL := TRUE; //TRUE = Interlocked
+//??	i_bIlckUnlockingPinsToLock : BOOL := TRUE; //TRUE = Interlocked
+//??	i_bIlckUnlockingPinsToRelease : BOOL := TRUE; //TRUE = Interlocked
+
+	i_refTB : REFERENCE TO OBJ_Carrier;
+	
 END_VAR
 
 VAR
 //------------------------------------------//
 //Control Modules (Devices)
-	s_cmDockingClamps : CM_DockingClamps;
-	s_cmUnlockingPins : CM_UnlockingPins;
-	s_cmDoorOpener : CM_ValveWithFB;
-	s_cmDoorCloser : CM_ValveWithFB; 
+	s_cmPalletConveyor : CM_SEW_WithBrake;
+	s_cmCenteringUnit : CM_ValveWithFB; 
 	
 //------------------------------------------//
 
 //------------------------------------------//
 //Inputs
-	s_diStaBoxAtPreDockingPosition : FB_DigInput;
-	s_diStaBoxAtDockedPosition : FB_DigInput;
+	s_diStaAtInfeedPositionRear : FB_DigInput;
+	s_diStaAtInfeedPositionFront : FB_DigInput;
+	s_diStaAtCenteringPosition : FB_DigInput;
+	s_diStaAtDockingPosition : FB_DigInput;
+	s_diStaDoorOpened : FB_DigInput;
 		
 //------------------------------------------//
 	
@@ -39,36 +43,36 @@ VAR
 //------------------------------------------//
 
 //Requests
-	s_bReqDockBox : BOOL := FALSE;
-	s_bReqUndockBox : BOOL := FALSE;
-	s_bReqOpenDockingClamps : BOOL := FALSE;
-	s_bReqClosDockingClamps : BOOL := FALSE;
+//??	s_bReqDockBox : BOOL := FALSE;
+//??	s_bReqUndockBox : BOOL := FALSE;
+//??	s_bReqOpenDockingClamps : BOOL := FALSE;
+//??	s_bReqClosDockingClamps : BOOL := FALSE;
 	
 //Properties
-	s_bStaDockingDone : BOOL := FALSE;
-	s_bStaUndockingDone : BOOL := FALSE;
+//??	s_bStaDockingDone : BOOL := FALSE;
+//??	s_bStaUndockingDone : BOOL := FALSE;
 	
-	s_bStaDockingClampsClosed : BOOL := FALSE;
-	s_bStaDockingClampsOpened : BOOL := FALSE;
+//??	s_bStaDockingClampsClosed : BOOL := FALSE;
+//??	s_bStaDockingClampsOpened : BOOL := FALSE;
 	
-	s_bStaBoxAtPreDockingPosition : BOOL := FALSE;
-	s_bStaBoxAtDockedPosition : BOOL := FALSE;
-	s_bStaDockingPositionFree : BOOL := FALSE;
+//??	s_bStaBoxAtPreDockingPosition : BOOL := FALSE;
+//??	s_bStaBoxAtDockedPosition : BOOL := FALSE;
+//??	s_bStaDockingPositionFree : BOOL := FALSE;
 	
 //Interlockes	
-	s_bIlckDockingClampsToClose : BOOL;
-	s_bIlckDockingClampsToOpen : BOOL;
-	s_bIlckUnlockingPinsToLock : BOOL;
-	s_bIlckUnlockingPinsToRelease : BOOL;
+//??	s_bIlckDockingClampsToClose : BOOL;
+//??	s_bIlckDockingClampsToOpen : BOOL;
+//??	s_bIlckUnlockingPinsToLock : BOOL;
+//??	s_bIlckUnlockingPinsToRelease : BOOL;
 	
 //Alarms
 
 //Warnings
-	s_fbAlarmHandlerNoBoxPresentAtPreDockingPosition : FB_AlarmHandler;
-	s_fbAlarmHandlerNoBoxPresentAtDockedPosition : FB_AlarmHandler;
+//??	s_fbAlarmHandlerNoBoxPresentAtPreDockingPosition : FB_AlarmHandler;
+//??	s_fbAlarmHandlerNoBoxPresentAtDockedPosition : FB_AlarmHandler;
 
-	s_bWrnNoBoxPresentAtPreDockingPosition : BOOL;
-	s_bWrnNoBoxPresentAtDockedPosition : BOOL;
+//??	s_bWrnNoBoxPresentAtPreDockingPosition : BOOL;
+//??	s_bWrnNoBoxPresentAtDockedPosition : BOOL;
 	
 //------------------------------------------//
 //Params
@@ -100,32 +104,32 @@ VAR
 //Variables
 	s_sTestResult 						: STRING;
 	
-	s_eSeqDockingInterface : E_SeqDockingInterface;
-	s_fbSeqDockingInterface : FB_SeqControl;
+//??	s_eSeqDockingInterface : E_SeqDockingInterface;
+//??	s_fbSeqDockingInterface : FB_SeqControl;
 	
 	//--s_eCurrentTest						: E_TestMode;
 //--	s_stCommandsTesla					: ST_SCPI_TeslaCommands;
 	
 	
 	// Interlocks
-	s_bIlckSpeedDoorOuterToOpen 		: BOOL := TRUE;
-	s_bIlckSpeedDoorOuterToClose 		: BOOL := TRUE;
+//??	s_bIlckSpeedDoorOuterToOpen 		: BOOL := TRUE;
+//??	s_bIlckSpeedDoorOuterToClose 		: BOOL := TRUE;
 	
-	s_bIlckDoorLockCleanroomToOpen 		: BOOL := TRUE;
+//??	s_bIlckDoorLockCleanroomToOpen 		: BOOL := TRUE;
 	
 //------------------------------------------//
 
 //------------------------------------------//
 //Sensor data	
-	s_aMagneticX						: ARRAY[0..c_nResultDataSize] OF LREAL;
-	s_aMagneticY						: ARRAY[0..c_nResultDataSize] OF LREAL;
-	s_aMagneticZ						: ARRAY[0..c_nResultDataSize] OF LREAL;
-	s_aMagneticMagnitude				: ARRAY[0..c_nResultDataSize] OF LREAL;
-	s_aProbePositionZ					: ARRAY[0..c_nResultDataSize] OF LREAL;
+//??	s_aMagneticX						: ARRAY[0..c_nResultDataSize] OF LREAL;
+//??	s_aMagneticY						: ARRAY[0..c_nResultDataSize] OF LREAL;
+//??	s_aMagneticZ						: ARRAY[0..c_nResultDataSize] OF LREAL;
+//??	s_aMagneticMagnitude				: ARRAY[0..c_nResultDataSize] OF LREAL;
+//??	s_aProbePositionZ					: ARRAY[0..c_nResultDataSize] OF LREAL;
 	
-	s_sXMLData							: STRING(Param_Project.n_MaxLenghtXmlDbRow*Param_Project.n_NumberofRowsXmlDb);
+//??	s_sXMLData							: STRING(Param_Project.n_MaxLenghtXmlDbRow*Param_Project.n_NumberofRowsXmlDb);
 	
-	s_aHmi_MagneticTest					: ARRAY[1..3,0..c_nResultDataSize] OF ST_POINT;
+//??	s_aHmi_MagneticTest					: ARRAY[1..3,0..c_nResultDataSize] OF ST_POINT;
 	
 //	s_aHmi_ProbePositionZ				: ARRAY[1..1,1..GVL_Datalogging.c_nHmiLogSize] OF ST_POINT;
 //------------------------------------------//
@@ -143,35 +147,34 @@ VAR
 	s_sToHmiProcedure				: T_MAXSTRING;
 	
 	//Buttons
-	s_fbHmiBtnDock					: FB_HmiBtn;
-	s_fbHmiBtnUndock				: FB_HmiBtn;
+	s_fbHmiBtnManualConveyorStop	: FB_HmiBtn;
+	s_fbHmiBtnManualConveyorReleaseBrake	: FB_HmiBtn;
+	s_fbHmiBtnManualConveyorApplyBrake	: FB_HmiBtn;
+	s_fbHmiBtnManualConveyorForward	: FB_HmiBtn;
+	s_fbHmiBtnManualConveyorBackward: FB_HmiBtn;
 	s_fbHmiBtnReset					: FB_HmiBtn;
 	
-	s_fbHmiBtnManualOpenClamps		: FB_HmiBtn;
-	s_fbHmiBtnManualCloseClamps		: FB_HmiBtn;
-	
-	s_fbHmiBtnManualLockPins		: FB_HmiBtn;
-	s_fbHmiBtnManualUnlockPins		: FB_HmiBtn;
+	s_fbHmiBtnManualExtractCenterUnit	: FB_HmiBtn;
+	s_fbHmiBtnManualRetractCenterUnit	: FB_HmiBtn;
+	s_fbHmiBtnManualIdleCenterUnit	: FB_HmiBtn;
 	
 	//Leds
-	s_fbHmiLedClampsOpened			: FB_HmiLed;
-	s_fbHmiLedClampsClosed			: FB_HmiLed;
+	s_fbHmiLedBrakeReleased			: FB_HmiLed;
 	
-	s_fbHmiLedPinsLocked			: FB_HmiLed;
-	s_fbHmiLedPinsUnloacked			: FB_HmiLed;
-	
-	s_fbHmiLedBoxAtPreDockPosition	: FB_HmiLed;
-	s_fbHmiLedBoxAtDockedPosition	: FB_HmiLed;
+	s_fbHmiLedCenterUnitRetracted	: FB_HmiLed;
+	s_fbHmiLedCenterUnitExtracted	: FB_HmiLed;
 	
 //------------------------------------------//
 END_VAR
 ]]></Declaration>
     <Implementation>
       <ST><![CDATA[
+
+
 SUPER^();
 ]]></ST>
     </Implementation>
-    <Method Name="_m_Alarms" Id="{c0cf83f3-e704-4016-bd6f-2d30156087ff}">
+    <Method Name="_m_Alarms" Id="{aee2feff-cbd9-4478-9815-a567a5153a13}">
       <Declaration><![CDATA[METHOD PROTECTED _m_Alarms : BOOL
 ]]></Declaration>
       <Implementation>
@@ -181,6 +184,9 @@ IF NOT SUPER^._m_Alarms() THEN
 END_IF
 
 // Set error bits
+
+// Create error message for unexpected position detections: 2 TB places, swapped sensors> etc...
+
 
 // Alarm Handlers
 s_fbAlarmHandlerNoBoxPresentAtPreDockingPosition(
@@ -203,7 +209,7 @@ _m_Alarms := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Hmi" Id="{5090ba0a-8e2b-4ba6-88b3-b451c7c7863d}">
+    <Method Name="_m_Hmi" Id="{afc38d7b-1a6b-4465-996c-ac4ea040e152}">
       <Declaration><![CDATA[METHOD PROTECTED _m_Hmi : BOOL
 ]]></Declaration>
       <Implementation>
@@ -236,7 +242,7 @@ s_fbHmiLedBoxAtDockedPosition(i_bStaLed := s_diStaBoxAtDockedPosition.p_bStaInpu
 _m_Hmi := TRUE;]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Init" Id="{f248bb7d-4543-4fa5-93e5-377095a1130a}">
+    <Method Name="_m_Init" Id="{a6194918-083d-460c-8c8c-f7fff673bb61}">
       <Declaration><![CDATA[METHOD PROTECTED _m_Init : BOOL
 ]]></Declaration>
       <Implementation>
@@ -246,20 +252,30 @@ IF NOT SUPER^._m_Init() THEN
 END_IF
 
 //Control Modules
-s_cmDockingClamps.i_bReqEnable := FALSE;
-s_cmDockingClamps.i_eCtrlMode := E_CtrlMode.IDLE;
-s_cmDockingClamps.i_sCmName := 'Docking Clamps';
-s_cmDockingClamps.i_stSettings.tClampsOpenTimeout := T#10S;
-s_cmDockingClamps.i_stSettings.tClampsCloseTimeout := T#10S;
+s_cmPalletConveyor.i_bReqEnable := FALSE;
+s_cmPalletConveyor.i_eCtrlMode := E_CtrlMode.IDLE;
+s_cmPalletConveyor.i_sCmName := 'Pallet Conveyor';
+s_cmPalletConveyor.i_stSettings.tResetPulseDuration := T#1S;
+s_cmPalletConveyor.i_stSettings.tBrakeReleasedDelay := T#600MS;
+s_cmPalletConveyor.i_stSettings.tMotorStoppedDelay := T#3S;
+s_cmPalletConveyor.i_stSettings.rMaxTargetSpeed := 200.0; // mm/s
 {warning '#TODO: Dot we need to added configuration parameters? Seperate struct or via settings or dedicateed variables'}
-	
-s_cmUnlockingPins.i_bReqEnable := FALSE;
-s_cmUnlockingPins.i_eCtrlMode := E_CtrlMode.IDLE;
-s_cmUnlockingPins.i_sCmName := 'Unloading Pins';
-s_cmUnlockingPins.i_stSettings.tPinsLockTimeout := T#10S;
-s_cmUnlockingPins.i_stSettings.tPinsUnlockTimeout := T#10S;
+
+s_cmCenteringUnit.i_bReqEnable := FALSE;
+s_cmCenteringUnit.i_eCtrlMode := E_CtrlMode.IDLE;
+s_cmCenteringUnit.i_sCmName := 'Centering Unit';
+s_cmCenteringUnit.i_stSettings.tValveOnTimeout := T#5S;
+s_cmCenteringUnit.i_stSettings.tValveOffTimeout := T#5S;
 {warning '#TODO: Dot we need to added configuration parameters? Seperate struct or via settings or dedicateed variables'}
-	
+s_cmCenteringUnit.p_bCfgBiStableValve := FALSE;
+s_cmCenteringUnit.p_bCfgReverseValve := FALSE;
+
+s_diStaAtInfeedPositionRear.i_stSettings.tmInputDelay := T#100MS;
+s_diStaAtInfeedPositionFront.i_stSettings.tmInputDelay := T#100MS;
+s_diStaAtCenteringPosition.i_stSettings.tmInputDelay := T#100MS;
+s_diStaAtDockingPosition.i_stSettings.tmInputDelay := T#100MS;
+s_diStaDoorOpened.i_stSettings.tmInputDelay := T#100MS;
+
 //---------------------------------//	
 	
 //----------------------------------//	
@@ -338,7 +354,7 @@ s_diStaBoxAtDockedPosition.i_stSettings.tmInputDelay := T#3S;
 _m_Init := TRUE;]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Inputs" Id="{15e5d91e-088b-4383-82aa-ad9257b81a9b}">
+    <Method Name="_m_Inputs" Id="{6338a124-287d-498f-bd5c-dc8edaa7899d}">
       <Declaration><![CDATA[METHOD PROTECTED _m_Inputs : BOOL
 ]]></Declaration>
       <Implementation>
@@ -363,7 +379,7 @@ s_bStaDockingPositionFree := NOT(s_bStaBoxAtPreDockingPosition) AND NOT(s_bStaBo
 _m_Inputs := TRUE;]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Modules" Id="{b43c077f-3abc-4642-868d-7667cd19393f}">
+    <Method Name="_m_Modules" Id="{72f3cdd7-58c3-44c6-9f8f-bde48a5098a2}">
       <Declaration><![CDATA[METHOD PROTECTED _m_Modules : BOOL
 ]]></Declaration>
       <Implementation>
@@ -371,14 +387,23 @@ _m_Inputs := TRUE;]]></ST>
 	RETURN;
 END_IF
 
-s_diStaBoxAtPreDockingPosition();
-s_diStaBoxAtDockedPosition();
 
-s_cmDockingClamps(
+s_cmPalletConveyor(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
 	i_bCmdReset := i_bCmdReset);
-	//--i_sCmName := 'Docking Clamps');
+
+s_cmCenteringUnit(
+	i_bReqEnable := i_bReqEnable,
+	i_eCtrlMode := i_eCtrlMode,
+	i_bCmdReset := i_bCmdReset);
+	
+s_diStaAtInfeedPositionRear();
+s_diStaAtInfeedPositionFront();
+s_diStaAtCenteringPosition();
+s_diStaAtDockingPosition();
+s_diStaDoorOpened();	
+	
 	
 s_bStaDockingClampsClosed := s_cmDockingClamps.p_bStaIsClosed;
 s_bStaDockingClampsOpened := s_cmDockingClamps.p_bStaIsOpened;
@@ -417,7 +442,7 @@ _m_Modules := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Outputs" Id="{748b7abf-6524-428b-ad1f-dd34bf2d901c}">
+    <Method Name="_m_Outputs" Id="{dde91033-d57b-467b-929e-41cce55dae6e}">
       <Declaration><![CDATA[METHOD PROTECTED _m_Outputs : BOOL
 ]]></Declaration>
       <Implementation>
@@ -429,7 +454,7 @@ END_IF
 _m_Outputs := TRUE;]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Params" Id="{78648659-4a86-4875-84af-aa8b2b68e067}">
+    <Method Name="_m_Params" Id="{b7688a2b-8ea9-42be-9d82-c5b14e9212e5}">
       <Declaration><![CDATA[METHOD PROTECTED _m_Params : BOOL
 VAR_INST
 	s_fToHmiXAxisMin	: LREAL;
@@ -528,7 +553,7 @@ _m_Params := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="m_CloseDockingClamps" Id="{410bcb72-5351-4d55-ac55-5d0e27ce8155}">
+    <Method Name="m_CloseDockingClamps" Id="{d5f8c393-7f08-4f48-a1ae-aa39eb87698a}">
       <Declaration><![CDATA[METHOD PUBLIC m_CloseDockingClamps : BOOL
 ]]></Declaration>
       <Implementation>
@@ -546,7 +571,7 @@ m_CloseDockingClamps := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="m_DockBox" Id="{8e382bf6-1d32-4474-a8a5-7c183a3c7036}">
+    <Method Name="m_DockBox" Id="{756726d7-4a1f-46eb-806b-f0f5d2ce1cf2}">
       <Declaration><![CDATA[METHOD PUBLIC m_DockBox : BOOL
 ]]></Declaration>
       <Implementation>
@@ -564,7 +589,7 @@ m_DockBox := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="m_Main" Id="{13829dfc-fc98-4f3a-8520-8dee66cb84d9}">
+    <Method Name="m_Main" Id="{aa6670a8-50a5-40e7-bcf1-bbb60244f9de}">
       <Declaration><![CDATA[METHOD PUBLIC m_Main : BOOL
 ]]></Declaration>
       <Implementation>
@@ -573,6 +598,48 @@ IF NOT SUPER^.m_Main() THEN
 	RETURN;
 END_IF
 
+// Pallet Conveyor
+IF i_refTB.p_eLocation = E_Location.INFEED
+	AND i_refTB.p_eDestination > E_Location.INFEED
+	THEN
+	
+	s_cmPalletConveyor.m_ReleaseBrake(TRUE);
+
+	IF s_cmPalletConveyor.p_bStaBrakeReleased THEN
+		s_cmPalletConveyor.m_StartForward(i_stSettings.rSpeedGoToCentering);
+	END_IF
+	
+END_IF
+
+CASE i_refTB.p_eLocation OF
+	E_Location.INFEED :
+
+	E_Location.ALLIGNMENT :
+
+	E_Location.DOCKING :	
+		
+		IF i_refTB.p_eDestination < E_Location.DOCKING 
+			AND NOT(i_refTB.Docked)
+			THEN
+			 s_cmPalletConveyor.m_StartBackward(i_stSettings.rSpeedReturnToInfeed);
+		END_IF
+
+END_CASE
+
+
+// Centering
+IF i_refTB.p_eLocation = E_Location.ALLIGNMENT
+	AND s_diStaAtCenteringPosition.p_bStaInputDelayed
+	AND NOT(i_refTB.p_bAlligned)
+	THEN
+		s_cmCenteringUnit.m_On();
+		
+		IF s_cmCenteringUnit.p_bStaIsOn THEN
+			i_refTB.p_bAlligned := TRUE;
+		END_IF
+ELSE
+	s_cmCenteringUnit.m_Off();
+END_IF
 
 
 
@@ -748,7 +815,7 @@ END_CASE
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="m_OpenDockingClamps" Id="{8be47e79-6c29-4713-b252-eb11a6bb46fb}">
+    <Method Name="m_OpenDockingClamps" Id="{fdbc4c86-9963-45ec-8883-8d52d85dfe4c}">
       <Declaration><![CDATA[METHOD PUBLIC m_OpenDockingClamps : BOOL
 ]]></Declaration>
       <Implementation>
@@ -766,7 +833,7 @@ m_OpenDockingClamps := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="m_UndockBox" Id="{b328f671-5464-49bf-836c-f1f93f3d32af}">
+    <Method Name="m_UndockBox" Id="{87a273ce-924f-4f5a-87e9-ca76e4b519fd}">
       <Declaration><![CDATA[METHOD PUBLIC m_UndockBox : BOOL
 ]]></Declaration>
       <Implementation>
@@ -784,9 +851,9 @@ m_UndockBox := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Property Name="p_bStaBoxAtDockedPosition" Id="{95822bca-1047-492e-8877-1d8528242dc0}">
+    <Property Name="p_bStaBoxAtDockedPosition" Id="{15c657ec-976f-406a-af61-b74a1bc4da62}">
       <Declaration><![CDATA[PROPERTY PUBLIC p_bStaBoxAtDockedPosition : BOOL]]></Declaration>
-      <Get Name="Get" Id="{aa3a83b8-f468-44df-903c-150f557391f1}">
+      <Get Name="Get" Id="{85ddebd8-bb8c-4495-b028-3fffc96ce272}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
@@ -795,9 +862,9 @@ p_bStaBoxAtDockedPosition := s_bStaBoxAtDockedPosition;
         </Implementation>
       </Get>
     </Property>
-    <Property Name="p_bStaBoxAtPreDockingPosition" Id="{edbe1074-bded-474c-9558-f67f08872474}">
+    <Property Name="p_bStaBoxAtPreDockingPosition" Id="{5cf86758-94a7-4c83-8655-89df68776a6a}">
       <Declaration><![CDATA[PROPERTY PUBLIC p_bStaBoxAtPreDockingPosition : BOOL]]></Declaration>
-      <Get Name="Get" Id="{cf71d052-481e-48f0-aa51-5a234c033608}">
+      <Get Name="Get" Id="{390e3a8f-be51-4ead-b7d1-b375781ae098}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
@@ -806,9 +873,9 @@ p_bStaBoxAtPreDockingPosition := s_bStaBoxAtPreDockingPosition;
         </Implementation>
       </Get>
     </Property>
-    <Property Name="p_bStaDockingClampsClosed" Id="{de32a338-e965-450c-a404-78adcd65d0d0}">
+    <Property Name="p_bStaDockingClampsClosed" Id="{aeec2c84-5a33-42bf-8206-358bf0e881f7}">
       <Declaration><![CDATA[PROPERTY PUBLIC p_bStaDockingClampsClosed : BOOL]]></Declaration>
-      <Get Name="Get" Id="{7682c14a-e4ab-4156-bdf2-ba42269377d9}">
+      <Get Name="Get" Id="{f6a5df60-e1c4-43aa-ad06-c40db7782890}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
@@ -817,9 +884,9 @@ p_bStaDockingClampsClosed := s_bStaDockingClampsClosed;
         </Implementation>
       </Get>
     </Property>
-    <Property Name="p_bStaDockingClampsOpened" Id="{20b689ca-7b07-4e51-a3ea-324f8cec92e0}">
+    <Property Name="p_bStaDockingClampsOpened" Id="{326ed6bf-3886-45dd-9f57-ea2919c9ffcb}">
       <Declaration><![CDATA[PROPERTY PUBLIC p_bStaDockingClampsOpened : BOOL]]></Declaration>
-      <Get Name="Get" Id="{31c09844-15c2-48d5-9a5b-8c43458c7d91}">
+      <Get Name="Get" Id="{411149f2-11dd-4d52-acbb-b2029ab5c78e}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
@@ -828,9 +895,9 @@ p_bStaDockingClampsOpened := s_bStaDockingClampsOpened;
         </Implementation>
       </Get>
     </Property>
-    <Property Name="p_bStaDockingDone" Id="{a61394df-c5f0-450a-8cdf-e47379cb8b81}">
+    <Property Name="p_bStaDockingDone" Id="{5b03a1fd-28fa-4e4c-8b16-120ff29fbe65}">
       <Declaration><![CDATA[PROPERTY PUBLIC p_bStaDockingDone : BOOL]]></Declaration>
-      <Get Name="Get" Id="{e6843217-13bc-4765-b8f6-a237563e9d39}">
+      <Get Name="Get" Id="{ea2f8f74-0ea7-460e-89df-2b5449737ea6}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
@@ -839,9 +906,9 @@ p_bStaDockingDone := s_bStaDockingDone;
         </Implementation>
       </Get>
     </Property>
-    <Property Name="p_bStaDockingPositionFree" Id="{1c1bcc1f-d42b-48d2-9743-d0c845e1b595}">
+    <Property Name="p_bStaDockingPositionFree" Id="{2bc723ff-f9a5-42af-b160-e4dc5b057a50}">
       <Declaration><![CDATA[PROPERTY PUBLIC p_bStaDockingPositionFree : BOOL]]></Declaration>
-      <Get Name="Get" Id="{8f44ecfc-2d8a-4e22-a3b9-d3876337bbab}">
+      <Get Name="Get" Id="{c30a314b-9757-4d3b-8e4f-ac9f4438d705}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
@@ -850,9 +917,9 @@ p_bStaDockingPositionFree := s_bStaDockingPositionFree;
         </Implementation>
       </Get>
     </Property>
-    <Property Name="p_bStaUndockingDone" Id="{bb261a88-cc34-4fd6-bf54-1089f44f9408}">
+    <Property Name="p_bStaUndockingDone" Id="{78b40d33-5413-4f7d-b0d7-9c166ca5f648}">
       <Declaration><![CDATA[PROPERTY PUBLIC p_bStaUndockingDone : BOOL]]></Declaration>
-      <Get Name="Get" Id="{44b7df0c-94a7-4b6d-a3a8-e5b8bd6f931a}">
+      <Get Name="Get" Id="{ed85bc2c-166d-4354-8f24-cb6305b95ef7}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
@@ -861,16 +928,18 @@ p_bStaUndockingDone := s_bStaUndockingDone;
         </Implementation>
       </Get>
     </Property>
-    <LineIds Name="EM_DockingInterface">
+    <LineIds Name="EM_PalletConveyor">
+      <LineId Id="567" Count="1" />
       <LineId Id="221" Count="0" />
       <LineId Id="9" Count="0" />
       <LineId Id="222" Count="0" />
     </LineIds>
-    <LineIds Name="EM_DockingInterface._m_Alarms">
+    <LineIds Name="EM_PalletConveyor._m_Alarms">
       <LineId Id="12" Count="0" />
       <LineId Id="8" Count="1" />
       <LineId Id="7" Count="0" />
       <LineId Id="16" Count="1" />
+      <LineId Id="38" Count="2" />
       <LineId Id="21" Count="0" />
       <LineId Id="20" Count="0" />
       <LineId Id="23" Count="2" />
@@ -887,7 +956,7 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="10" Count="0" />
       <LineId Id="14" Count="0" />
     </LineIds>
-    <LineIds Name="EM_DockingInterface._m_Hmi">
+    <LineIds Name="EM_PalletConveyor._m_Hmi">
       <LineId Id="222" Count="0" />
       <LineId Id="7" Count="2" />
       <LineId Id="246" Count="0" />
@@ -904,19 +973,23 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="210" Count="0" />
       <LineId Id="6" Count="0" />
     </LineIds>
-    <LineIds Name="EM_DockingInterface._m_Init">
+    <LineIds Name="EM_PalletConveyor._m_Init">
       <LineId Id="203" Count="0" />
       <LineId Id="5" Count="3" />
       <LineId Id="10" Count="0" />
-      <LineId Id="231" Count="0" />
-      <LineId Id="233" Count="1" />
-      <LineId Id="241" Count="1" />
-      <LineId Id="248" Count="0" />
-      <LineId Id="236" Count="1" />
-      <LineId Id="239" Count="0" />
-      <LineId Id="230" Count="0" />
-      <LineId Id="244" Count="2" />
-      <LineId Id="222" Count="0" />
+      <LineId Id="325" Count="0" />
+      <LineId Id="327" Count="1" />
+      <LineId Id="342" Count="0" />
+      <LineId Id="331" Count="3" />
+      <LineId Id="343" Count="0" />
+      <LineId Id="335" Count="2" />
+      <LineId Id="341" Count="0" />
+      <LineId Id="339" Count="1" />
+      <LineId Id="353" Count="1" />
+      <LineId Id="344" Count="0" />
+      <LineId Id="348" Count="3" />
+      <LineId Id="346" Count="0" />
+      <LineId Id="326" Count="0" />
       <LineId Id="35" Count="3" />
       <LineId Id="271" Count="2" />
       <LineId Id="269" Count="1" />
@@ -963,7 +1036,7 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="120" Count="0" />
       <LineId Id="4" Count="0" />
     </LineIds>
-    <LineIds Name="EM_DockingInterface._m_Inputs">
+    <LineIds Name="EM_PalletConveyor._m_Inputs">
       <LineId Id="46" Count="0" />
       <LineId Id="6" Count="2" />
       <LineId Id="56" Count="1" />
@@ -977,21 +1050,28 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="50" Count="0" />
       <LineId Id="5" Count="0" />
     </LineIds>
-    <LineIds Name="EM_DockingInterface._m_Modules">
-      <LineId Id="156" Count="12" />
+    <LineIds Name="EM_PalletConveyor._m_Modules">
+      <LineId Id="156" Count="3" />
+      <LineId Id="205" Count="5" />
+      <LineId Id="212" Count="2" />
+      <LineId Id="162" Count="0" />
+      <LineId Id="211" Count="0" />
+      <LineId Id="168" Count="0" />
+      <LineId Id="217" Count="3" />
+      <LineId Id="215" Count="1" />
       <LineId Id="200" Count="0" />
       <LineId Id="202" Count="0" />
       <LineId Id="201" Count="0" />
       <LineId Id="169" Count="30" />
       <LineId Id="50" Count="0" />
     </LineIds>
-    <LineIds Name="EM_DockingInterface._m_Outputs">
+    <LineIds Name="EM_PalletConveyor._m_Outputs">
       <LineId Id="20" Count="0" />
       <LineId Id="6" Count="2" />
       <LineId Id="16" Count="0" />
       <LineId Id="5" Count="0" />
     </LineIds>
-    <LineIds Name="EM_DockingInterface._m_Params">
+    <LineIds Name="EM_PalletConveyor._m_Params">
       <LineId Id="291" Count="0" />
       <LineId Id="164" Count="0" />
       <LineId Id="166" Count="1" />
@@ -1044,12 +1124,12 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="282" Count="0" />
       <LineId Id="292" Count="0" />
     </LineIds>
-    <LineIds Name="EM_DockingInterface.m_CloseDockingClamps">
+    <LineIds Name="EM_PalletConveyor.m_CloseDockingClamps">
       <LineId Id="4" Count="9" />
       <LineId Id="3" Count="0" />
       <LineId Id="14" Count="0" />
     </LineIds>
-    <LineIds Name="EM_DockingInterface.m_DockBox">
+    <LineIds Name="EM_PalletConveyor.m_DockBox">
       <LineId Id="13" Count="2" />
       <LineId Id="12" Count="0" />
       <LineId Id="9" Count="0" />
@@ -1061,10 +1141,46 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="5" Count="0" />
       <LineId Id="8" Count="0" />
     </LineIds>
-    <LineIds Name="EM_DockingInterface.m_Main">
+    <LineIds Name="EM_PalletConveyor.m_Main">
       <LineId Id="178" Count="0" />
       <LineId Id="6" Count="2" />
-      <LineId Id="397" Count="3" />
+      <LineId Id="433" Count="0" />
+      <LineId Id="397" Count="0" />
+      <LineId Id="403" Count="0" />
+      <LineId Id="410" Count="0" />
+      <LineId Id="409" Count="0" />
+      <LineId Id="405" Count="0" />
+      <LineId Id="408" Count="0" />
+      <LineId Id="411" Count="0" />
+      <LineId Id="407" Count="0" />
+      <LineId Id="413" Count="1" />
+      <LineId Id="412" Count="0" />
+      <LineId Id="406" Count="0" />
+      <LineId Id="415" Count="0" />
+      <LineId Id="434" Count="0" />
+      <LineId Id="436" Count="0" />
+      <LineId Id="441" Count="0" />
+      <LineId Id="440" Count="0" />
+      <LineId Id="443" Count="0" />
+      <LineId Id="442" Count="0" />
+      <LineId Id="439" Count="0" />
+      <LineId Id="444" Count="0" />
+      <LineId Id="447" Count="1" />
+      <LineId Id="445" Count="1" />
+      <LineId Id="438" Count="0" />
+      <LineId Id="437" Count="0" />
+      <LineId Id="435" Count="0" />
+      <LineId Id="416" Count="1" />
+      <LineId Id="419" Count="0" />
+      <LineId Id="426" Count="0" />
+      <LineId Id="421" Count="0" />
+      <LineId Id="420" Count="0" />
+      <LineId Id="422" Count="0" />
+      <LineId Id="429" Count="3" />
+      <LineId Id="424" Count="1" />
+      <LineId Id="423" Count="0" />
+      <LineId Id="427" Count="1" />
+      <LineId Id="404" Count="0" />
       <LineId Id="181" Count="0" />
       <LineId Id="184" Count="0" />
       <LineId Id="189" Count="0" />
@@ -1185,11 +1301,11 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="187" Count="0" />
       <LineId Id="179" Count="0" />
     </LineIds>
-    <LineIds Name="EM_DockingInterface.m_OpenDockingClamps">
+    <LineIds Name="EM_PalletConveyor.m_OpenDockingClamps">
       <LineId Id="4" Count="10" />
       <LineId Id="3" Count="0" />
     </LineIds>
-    <LineIds Name="EM_DockingInterface.m_UndockBox">
+    <LineIds Name="EM_PalletConveyor.m_UndockBox">
       <LineId Id="18" Count="2" />
       <LineId Id="12" Count="0" />
       <LineId Id="9" Count="0" />
@@ -1201,35 +1317,35 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="5" Count="0" />
       <LineId Id="8" Count="0" />
     </LineIds>
-    <LineIds Name="EM_DockingInterface.p_bStaBoxAtDockedPosition.Get">
+    <LineIds Name="EM_PalletConveyor.p_bStaBoxAtDockedPosition.Get">
       <LineId Id="11" Count="0" />
       <LineId Id="9" Count="0" />
       <LineId Id="2" Count="0" />
     </LineIds>
-    <LineIds Name="EM_DockingInterface.p_bStaBoxAtPreDockingPosition.Get">
+    <LineIds Name="EM_PalletConveyor.p_bStaBoxAtPreDockingPosition.Get">
       <LineId Id="5" Count="2" />
     </LineIds>
-    <LineIds Name="EM_DockingInterface.p_bStaDockingClampsClosed.Get">
+    <LineIds Name="EM_PalletConveyor.p_bStaDockingClampsClosed.Get">
       <LineId Id="5" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="6" Count="0" />
     </LineIds>
-    <LineIds Name="EM_DockingInterface.p_bStaDockingClampsOpened.Get">
+    <LineIds Name="EM_PalletConveyor.p_bStaDockingClampsOpened.Get">
       <LineId Id="3" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="4" Count="0" />
     </LineIds>
-    <LineIds Name="EM_DockingInterface.p_bStaDockingDone.Get">
+    <LineIds Name="EM_PalletConveyor.p_bStaDockingDone.Get">
       <LineId Id="4" Count="0" />
       <LineId Id="3" Count="0" />
       <LineId Id="2" Count="0" />
     </LineIds>
-    <LineIds Name="EM_DockingInterface.p_bStaDockingPositionFree.Get">
+    <LineIds Name="EM_PalletConveyor.p_bStaDockingPositionFree.Get">
       <LineId Id="5" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="6" Count="0" />
     </LineIds>
-    <LineIds Name="EM_DockingInterface.p_bStaUndockingDone.Get">
+    <LineIds Name="EM_PalletConveyor.p_bStaUndockingDone.Get">
       <LineId Id="5" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="6" Count="0" />

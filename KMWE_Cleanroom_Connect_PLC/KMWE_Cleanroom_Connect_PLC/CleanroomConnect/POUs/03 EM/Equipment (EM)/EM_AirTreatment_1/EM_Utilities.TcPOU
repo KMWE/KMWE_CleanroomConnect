@@ -1,0 +1,300 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="EM_Utilities" Id="{d3bdaf93-23e0-447c-addf-e1fdaa10e5f0}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK EM_Utilities EXTENDS EM_Base IMPLEMENTS I_EM_AirTreatment
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+END_VAR
+VAR
+	//Control modules
+	s_cmSafetyOk : FB_DigInput;
+	s_cm24VdcOk : FB_DigInput;
+	s_cmAirPressureOk : FB_DigInput;
+
+	s_cmBeacon : CM_KmweLeds;	
+
+	//States
+	s_bStaSafetyOK : BOOL := FALSE;
+	s_bSts24VdcOk : BOOL := FALSE;
+	s_bStaAirPressureOk : BOOL := FALSE;
+	
+	s_bStaRunning : BOOL := FALSE; //green
+	s_bStaWarning : BOOL := FALSE; //yellow
+	s_bStaError : BOOL := FALSE; //red
+	
+	s_eKmweLedColors : E_KmweLedColors;
+	
+	
+	//Hmi
+	s_fbHmiLedSafetyOk : FB_HmiLed;
+	s_fbHmiLed24VdcOk : FB_HmiLed;
+	s_fbHmiLedAirPressureOk : FB_HmiLed;
+	s_fbHmiLedBeaconGreen : FB_HmiLed;
+	s_fbHmiLedBeaconYellow : FB_HmiLed;
+	s_fbHmiLedBeaconRed : FB_HmiLed;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Method Name="_m_Alarms" Id="{91068a31-fcc6-4281-af61-d7a6e7120f8c}">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Alarms : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Alarms() THEN
+	RETURN;
+END_IF
+	
+_m_Alarms := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Hmi" Id="{97417a1d-1af2-4f07-b43b-e4325d410b41}">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Hmi : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Hmi() THEN
+	RETURN;
+END_IF
+
+//Leds
+s_fbHmiLedSafetyOk(i_bStaLed := s_bStaSafetyOK);
+s_fbHmiLed24VdcOk(i_bStaLed := s_bSts24VdcOk);
+s_fbHmiLedAirPressureOk(i_bStaLed := s_bStaAirPressureOk);
+s_fbHmiLedBeaconGreen(i_bStaLed := s_bStaRunning);
+s_fbHmiLedBeaconYellow(i_bStaLed := s_bStaWarning);
+s_fbHmiLedBeaconRed(i_bStaLed := s_bStaError);
+
+_m_Hmi := TRUE;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Init" Id="{7f1871a0-83c4-4557-ac15-5a15f84be50f}">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Init : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Init() THEN
+	RETURN;
+END_IF
+
+//Control Modules
+s_cmSafetyOk.i_stSettings.tmInputDelay := T#1S;
+s_cm24VdcOk.i_stSettings.tmInputDelay := T#1S;
+s_cmAirPressureOk.i_stSettings.tmInputDelay := T#3S;
+
+s_cmBeacon.i_bReqEnable := FALSE;
+s_cmBeacon.i_eCtrlMode := E_CtrlMode.IDLE; 
+s_cmBeacon.i_sCmName := 'Beacon';
+s_cmBeacon.i_eColor := E_KmweLedColors.Idle;
+
+//---------------------------------//	
+	
+//----------------------------------//	
+//Hmi 
+s_fbHmiLedSafetyOk.p_bStaVisible := FALSE;
+s_fbHmiLedSafetyOk.p_sToHmiDescriptionLed := 'Safety Ok';
+
+s_fbHmiLed24VdcOk.p_bStaVisible := FALSE;
+s_fbHmiLed24VdcOk.p_sToHmiDescriptionLed := '24Vdc Ok';
+
+s_fbHmiLedAirPressureOk.p_bStaVisible := FALSE;
+s_fbHmiLedAirPressureOk.p_sToHmiDescriptionLed := 'Air pressure Ok';
+
+s_fbHmiLedBeaconGreen.p_bStaVisible := FALSE;
+s_fbHmiLedBeaconGreen.p_sToHmiDescriptionLed := 'Beacon green led';
+
+s_fbHmiLedBeaconYellow.p_bStaVisible := FALSE;
+s_fbHmiLedBeaconYellow.p_sToHmiDescriptionLed := 'Beacon yellow led';
+
+s_fbHmiLedBeaconRed.p_bStaVisible := FALSE;
+s_fbHmiLedBeaconRed.p_sToHmiDescriptionLed := 'Beacon red led';
+	
+_m_Init := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Inputs" Id="{458358e5-23ba-4231-abac-3325a6a209a2}">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Inputs : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Inputs() THEN
+	RETURN;
+END_IF
+
+s_bStaSafetyOK := s_cmSafetyOk.p_bStaInputDelayed;
+s_bSts24VdcOk := s_cm24VdcOk.p_bStaInputDelayed;
+s_bStaAirPressureOk := s_cmAirPressureOk.p_bStaInputDelayed;
+
+_m_Inputs := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Modules" Id="{97b8a94d-21c8-46ff-ac2c-0f330eabe3be}">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Modules : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT SUPER^._m_Devices() THEN
+	RETURN;
+END_IF
+
+//Control module
+s_cmSafetyOk();
+s_cm24VdcOk();
+s_cmAirPressureOk();
+
+s_cmBeacon(
+	i_bReqEnable := TRUE,
+	i_eCtrlMode := i_eCtrlMode,
+	i_bCmdReset := i_bCmdReset,
+	i_eColor := );
+	
+_m_Modules := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Outputs" Id="{535a3bcf-7515-4ea2-9150-50d7560b683c}">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Outputs : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Outputs() THEN
+	RETURN;
+END_IF
+
+s_cmBeacon.i_eColor := s_eKmweLedColors;
+
+_m_Outputs := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="p_bStaAirPressureOk" Id="{0af5c43c-8953-4fa1-af7f-5b3f4e44e13a}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaAirPressureOk : BOOL]]></Declaration>
+      <Get Name="Get" Id="{4dede668-7bed-49aa-adc6-f4d7ad59be53}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaAirPressureOk := s_bStaAirPressureOk;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaSafetyOK" Id="{7ea03187-b7ec-46c2-a694-807e2d1d70bb}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaSafetyOK : BOOL]]></Declaration>
+      <Get Name="Get" Id="{7f5e3440-eaae-47cd-8f92-6961cd1007ef}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaSafetyOK := s_bStaSafetyOK;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bSts24VdcOk" Id="{4313e908-4780-46b5-aee4-16ddce14fbff}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bSts24VdcOk : BOOL]]></Declaration>
+      <Get Name="Get" Id="{b2a078c1-b0bd-4ba8-8232-d29d32a14d28}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bSts24VdcOk := s_bSts24VdcOk;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <LineIds Name="EM_Utilities">
+      <LineId Id="9" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Utilities._m_Alarms">
+      <LineId Id="12" Count="0" />
+      <LineId Id="8" Count="1" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="14" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Utilities._m_Hmi">
+      <LineId Id="222" Count="0" />
+      <LineId Id="7" Count="2" />
+      <LineId Id="248" Count="0" />
+      <LineId Id="239" Count="0" />
+      <LineId Id="256" Count="4" />
+      <LineId Id="253" Count="0" />
+      <LineId Id="210" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Utilities._m_Init">
+      <LineId Id="203" Count="0" />
+      <LineId Id="5" Count="3" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="326" Count="1" />
+      <LineId Id="329" Count="1" />
+      <LineId Id="328" Count="0" />
+      <LineId Id="331" Count="0" />
+      <LineId Id="333" Count="2" />
+      <LineId Id="35" Count="3" />
+      <LineId Id="354" Count="0" />
+      <LineId Id="344" Count="1" />
+      <LineId Id="355" Count="0" />
+      <LineId Id="346" Count="1" />
+      <LineId Id="356" Count="0" />
+      <LineId Id="348" Count="1" />
+      <LineId Id="357" Count="0" />
+      <LineId Id="350" Count="1" />
+      <LineId Id="358" Count="0" />
+      <LineId Id="352" Count="1" />
+      <LineId Id="359" Count="0" />
+      <LineId Id="338" Count="0" />
+      <LineId Id="318" Count="0" />
+      <LineId Id="4" Count="0" />
+      <LineId Id="360" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Utilities._m_Inputs">
+      <LineId Id="46" Count="0" />
+      <LineId Id="6" Count="2" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="79" Count="1" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="81" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Utilities._m_Modules">
+      <LineId Id="156" Count="2" />
+      <LineId Id="208" Count="0" />
+      <LineId Id="159" Count="0" />
+      <LineId Id="206" Count="1" />
+      <LineId Id="205" Count="0" />
+      <LineId Id="204" Count="0" />
+      <LineId Id="209" Count="3" />
+      <LineId Id="161" Count="0" />
+      <LineId Id="168" Count="0" />
+      <LineId Id="199" Count="0" />
+      <LineId Id="50" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Utilities._m_Outputs">
+      <LineId Id="20" Count="0" />
+      <LineId Id="6" Count="2" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="23" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Utilities.p_bStaAirPressureOk.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Utilities.p_bStaSafetyOK.Get">
+      <LineId Id="5" Count="1" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Utilities.p_bSts24VdcOk.Get">
+      <LineId Id="5" Count="1" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -23,7 +23,7 @@ VAR
 //------------------------------------------//
 //Control Modules (Devices)
 	s_cmPalletConveyor : CM_SEW_WithBrake;
-	s_cmCenteringUnit : CM_ValveWithFB; 
+	s_cmCentringUnit : CM_ValveWithFB; 
 	
 //------------------------------------------//
 
@@ -31,7 +31,7 @@ VAR
 //Inputs
 	s_diStaAtInfeedPositionRear : FB_DigInput;
 	s_diStaAtInfeedPositionFront : FB_DigInput;
-	s_diStaAtCenteringPosition : FB_DigInput;
+	s_diStaAtCentringPosition : FB_DigInput;
 	s_diStaAtDockingPosition : FB_DigInput;
 	s_diStaDoorOpened : FB_DigInput;
 		
@@ -43,11 +43,23 @@ VAR
 //------------------------------------------//
 
 //Requests
-//??	s_bReqDockBox : BOOL := FALSE;
-//??	s_bReqUndockBox : BOOL := FALSE;
-//??	s_bReqOpenDockingClamps : BOOL := FALSE;
-//??	s_bReqClosDockingClamps : BOOL := FALSE;
-	
+
+//States
+s_bStaBrakeReleased : BOOL := FALSE;
+s_bStaDriveError : BOOL := FALSE;
+
+s_bStaInfeedRearPosition : BOOL := FALSE;
+s_bStaInfeedFrontPosition : BOOL := FALSE;
+s_bStaCentringPosition : BOOL := FALSE;
+s_bStaDockingPosition : BOOL := FALSE;
+s_bStaDoorOpened : BOOL := FALSE;
+
+s_bStaCentringCenterL : BOOL := FALSE;
+s_bStaCentringCenterR : BOOL := FALSE;
+s_bStaCentringIdleL : BOOL := FALSE;
+s_bStaCentringIdleR : BOOL := FALSE;
+
+
 //Properties
 //??	s_bStaDockingDone : BOOL := FALSE;
 //??	s_bStaUndockingDone : BOOL := FALSE;
@@ -147,22 +159,36 @@ VAR
 	s_sToHmiProcedure				: T_MAXSTRING;
 	
 	//Buttons
-	s_fbHmiBtnManualConveyorStop	: FB_HmiBtn;
-	s_fbHmiBtnManualConveyorReleaseBrake	: FB_HmiBtn;
-	s_fbHmiBtnManualConveyorApplyBrake	: FB_HmiBtn;
-	s_fbHmiBtnManualConveyorForward	: FB_HmiBtn;
-	s_fbHmiBtnManualConveyorBackward: FB_HmiBtn;
-	s_fbHmiBtnReset					: FB_HmiBtn;
+	s_fbHmiBtnReset						: FB_HmiBtn;
 	
-	s_fbHmiBtnManualExtractCenterUnit	: FB_HmiBtn;
-	s_fbHmiBtnManualRetractCenterUnit	: FB_HmiBtn;
-	s_fbHmiBtnManualIdleCenterUnit	: FB_HmiBtn;
+	s_fbHmiBtnManualConveyorReleaseBrake: FB_HmiBtn;
+	s_fbHmiBtnManualConveyorApplyBrake	: FB_HmiBtn;
+	s_fbHmiBtnManualConveyorForward		: FB_HmiBtn;
+	s_fbHmiBtnManualConveyorBackward	: FB_HmiBtn;
+	s_fbHmiBtnManualConveyorStop		: FB_HmiBtn;
+	
+	s_fbHmiBtnManualCentringCenter		: FB_HmiBtn;
+	s_fbHmiBtnManualCentringIdle		: FB_HmiBtn;
+	
+	s_fbHmiBtnTB_ToInfeed				: FB_HmiBtn;
+	s_fbHmiBtnTB_ToCentring				: FB_HmiBtn;
+	s_fbHmiBtnTB_ToDocking				: FB_HmiBtn;
+	
+	s_fbHmiBtnTB_Centring				: FB_HmiBtn;
 	
 	//Leds
-	s_fbHmiLedBrakeReleased			: FB_HmiLed;
+	s_fbHmiLedBrakeReleased				: FB_HmiLed;
 	
-	s_fbHmiLedCenterUnitRetracted	: FB_HmiLed;
-	s_fbHmiLedCenterUnitExtracted	: FB_HmiLed;
+	s_fbHmiLedInfeedRearPosition		: FB_HmiLed;
+	s_fbHmiLedInfeedFrontPosition		: FB_HmiLed;
+	s_fbHmiLedCentringPosition			: FB_HmiLed;
+	s_fbHmiLedDockingPosition			: FB_HmiLed;
+	s_fbHmiLedDoorOpened				: FB_HmiLed;
+	
+	s_fbHmiLedCentringIdleL				: FB_HmiLed;
+	s_fbHmiLedCentringIdleR				: FB_HmiLed;
+	s_fbHmiLedCentringCenterL			: FB_HmiLed;
+	s_fbHmiLedCentringCenterR			: FB_HmiLed;
 	
 //------------------------------------------//
 END_VAR
@@ -219,25 +245,35 @@ IF NOT SUPER^._m_Hmi() THEN
 END_IF
 
 //Buttons
-s_fbHmiBtnDock();
-s_fbHmiBtnUndock();
 s_fbHmiBtnReset();
 	
-s_fbHmiBtnManualOpenClamps();
-s_fbHmiBtnManualCloseClamps();
+s_fbHmiBtnManualConveyorReleaseBrake();
+s_fbHmiBtnManualConveyorApplyBrake();
+s_fbHmiBtnManualConveyorForward();
+s_fbHmiBtnManualConveyorBackward();
+s_fbHmiBtnManualConveyorStop();
 	
-s_fbHmiBtnManualLockPins();
-s_fbHmiBtnManualUnlockPins();
+s_fbHmiBtnManualCentringCenter();
+s_fbHmiBtnManualCentringIdle();
+
+s_fbHmiBtnTB_ToInfeed();
+s_fbHmiBtnTB_ToCentring();
+s_fbHmiBtnTB_ToDocking();
+s_fbHmiBtnTB_Centring();
 
 //Leds
-s_fbHmiLedClampsOpened(i_bStaLed := s_cmDockingClamps.p_bStaIsOpened);
-s_fbHmiLedClampsClosed(i_bStaLed := s_cmDockingClamps.p_bStaIsClosed);
-	
-s_fbHmiLedPinsLocked(i_bStaLed := s_cmUnlockingPins.p_bStaIsLocked);
-s_fbHmiLedPinsUnloacked(i_bStaLed := s_cmUnlockingPins.p_bStaIsUnlocked);
+s_fbHmiLedBrakeReleased(i_bStaLed := s_bStaBrakeReleased);
 
-s_fbHmiLedBoxAtPreDockPosition(i_bStaLed := s_diStaBoxAtPreDockingPosition.p_bStaInputDelayed);
-s_fbHmiLedBoxAtDockedPosition(i_bStaLed := s_diStaBoxAtDockedPosition.p_bStaInputDelayed);
+s_fbHmiLedInfeedRearPosition(i_bStaLed := s_bStaInfeedRearPosition);
+s_fbHmiLedInfeedFrontPosition(i_bStaLed := s_bStaInfeedFrontPosition);
+s_fbHmiLedCentringPosition(i_bStaLed := s_bStaCentringPosition);
+s_fbHmiLedDockingPosition(i_bStaLed := s_bStaDockingPosition);
+s_fbHmiLedDoorOpened(i_bStaLed := s_bStaDoorOpened);
+
+s_fbHmiLedCentringCenterL(i_bStaLed := s_bStaCentringCenterL);
+s_fbHmiLedCentringCenterR(i_bStaLed := s_bStaCentringCenterR);
+s_fbHmiLedCentringIdleL(i_bStaLed := s_bStaCentringIdleL);
+s_fbHmiLedCentringIdleR(i_bStaLed := s_bStaCentringIdleR);
 
 _m_Hmi := TRUE;]]></ST>
       </Implementation>
@@ -261,18 +297,18 @@ s_cmPalletConveyor.i_stSettings.tMotorStoppedDelay := T#3S;
 s_cmPalletConveyor.i_stSettings.rMaxTargetSpeed := 200.0; // mm/s
 {warning '#TODO: Dot we need to added configuration parameters? Seperate struct or via settings or dedicateed variables'}
 
-s_cmCenteringUnit.i_bReqEnable := FALSE;
-s_cmCenteringUnit.i_eCtrlMode := E_CtrlMode.IDLE;
-s_cmCenteringUnit.i_sCmName := 'Centering Unit';
-s_cmCenteringUnit.i_stSettings.tValveOnTimeout := T#5S;
-s_cmCenteringUnit.i_stSettings.tValveOffTimeout := T#5S;
+s_cmCentringUnit.i_bReqEnable := FALSE;
+s_cmCentringUnit.i_eCtrlMode := E_CtrlMode.IDLE;
+s_cmCentringUnit.i_sCmName := 'Centering Unit';
+s_cmCentringUnit.i_stSettings.tValveOnTimeout := T#5S;
+s_cmCentringUnit.i_stSettings.tValveOffTimeout := T#5S;
 {warning '#TODO: Dot we need to added configuration parameters? Seperate struct or via settings or dedicateed variables'}
-s_cmCenteringUnit.p_bCfgBiStableValve := FALSE;
-s_cmCenteringUnit.p_bCfgReverseValve := FALSE;
+s_cmCentringUnit.p_bCfgBiStableValve := FALSE;
+s_cmCentringUnit.p_bCfgReverseValve := FALSE;
 
 s_diStaAtInfeedPositionRear.i_stSettings.tmInputDelay := T#100MS;
 s_diStaAtInfeedPositionFront.i_stSettings.tmInputDelay := T#100MS;
-s_diStaAtCenteringPosition.i_stSettings.tmInputDelay := T#100MS;
+s_diStaAtCentringPosition.i_stSettings.tmInputDelay := T#100MS;
 s_diStaAtDockingPosition.i_stSettings.tmInputDelay := T#100MS;
 s_diStaDoorOpened.i_stSettings.tmInputDelay := T#100MS;
 
@@ -280,59 +316,86 @@ s_diStaDoorOpened.i_stSettings.tmInputDelay := T#100MS;
 	
 //----------------------------------//	
 //Hmi 
-	s_fbHmiBtnDock.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnDock.p_bStaVisible := FALSE;
-	s_fbHmiBtnDock.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnDock.p_sBtnText := 'Start Docking';
-	
-	s_fbHmiBtnUndock.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnUndock.p_bStaVisible := FALSE;
-	s_fbHmiBtnUndock.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnUndock.p_sBtnText := 'Start Un-Docking';
-	
 	s_fbHmiBtnReset.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnReset.p_bStaVisible := FALSE;
 	s_fbHmiBtnReset.p_bStaEnabled := FALSE;		
 	s_fbHmiBtnReset.p_sBtnText := 'Reset';
 	
-	s_fbHmiBtnManualOpenClamps.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnManualOpenClamps.p_bStaVisible := FALSE;
-	s_fbHmiBtnManualOpenClamps.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnManualOpenClamps.p_sBtnText := 'Open Clamps';
+	s_fbHmiBtnManualConveyorReleaseBrake.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnManualConveyorReleaseBrake.p_bStaVisible := FALSE;
+	s_fbHmiBtnManualConveyorReleaseBrake.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnManualConveyorReleaseBrake.p_sBtnText := 'Release Brake';
 	
-	s_fbHmiBtnManualCloseClamps.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnManualCloseClamps.p_bStaVisible := FALSE;
-	s_fbHmiBtnManualCloseClamps.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnManualCloseClamps.p_sBtnText := 'Close Clamps';
+	s_fbHmiBtnManualConveyorApplyBrake.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnManualConveyorApplyBrake.p_bStaVisible := FALSE;
+	s_fbHmiBtnManualConveyorApplyBrake.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnManualConveyorApplyBrake.p_sBtnText := 'Apply Brake';
 	
-	s_fbHmiBtnManualLockPins.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnManualLockPins.p_bStaVisible := FALSE;
-	s_fbHmiBtnManualLockPins.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnManualLockPins.p_sBtnText := 'Lock Pins';
+	s_fbHmiBtnManualConveyorForward.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnManualConveyorForward.p_bStaVisible := FALSE;
+	s_fbHmiBtnManualConveyorForward.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnManualConveyorForward.p_sBtnText := 'Move Forward';
 	
-	s_fbHmiBtnManualUnlockPins.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnManualUnlockPins.p_bStaVisible := FALSE;
-	s_fbHmiBtnManualUnlockPins.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnManualUnlockPins.p_sBtnText := 'Unlock Pins';
+	s_fbHmiBtnManualConveyorBackward.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnManualConveyorBackward.p_bStaVisible := FALSE;
+	s_fbHmiBtnManualConveyorBackward.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnManualConveyorBackward.p_sBtnText := 'Move Backward';
 	
-	s_fbHmiLedClampsOpened.p_bStaVisible := FALSE;
-	s_fbHmiLedClampsOpened.p_sToHmiDescriptionLed := 'Clamps Opened';
-		
-	s_fbHmiLedClampsClosed.p_bStaVisible := FALSE;
-	s_fbHmiLedClampsClosed.p_sToHmiDescriptionLed := 'Clamps Closed';
+	s_fbHmiBtnManualConveyorStop.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnManualConveyorStop.p_bStaVisible := FALSE;
+	s_fbHmiBtnManualConveyorStop.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnManualConveyorStop.p_sBtnText := 'Stop';
 	
-	s_fbHmiLedPinsLocked.p_bStaVisible := FALSE;
-	s_fbHmiLedPinsLocked.p_sToHmiDescriptionLed := 'Pins Locked';
+	s_fbHmiBtnTB_ToInfeed.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnTB_ToInfeed.p_bStaVisible := FALSE;
+	s_fbHmiBtnTB_ToInfeed.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnTB_ToInfeed.p_sBtnText := 'TB To Infeed Position';
 	
-	s_fbHmiLedPinsUnloacked.p_bStaVisible := FALSE;
-	s_fbHmiLedPinsUnloacked.p_sToHmiDescriptionLed := 'Pins Unlocked';
+	s_fbHmiBtnTB_ToCentring.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnTB_ToCentring.p_bStaVisible := FALSE;
+	s_fbHmiBtnTB_ToCentring.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnTB_ToCentring.p_sBtnText := 'TB To Centring Position';
 	
-	s_fbHmiLedBoxAtPreDockPosition.p_bStaVisible := FALSE;
-	s_fbHmiLedBoxAtPreDockPosition.p_sToHmiDescriptionLed := 'Box At Pre Docking Position';
+	s_fbHmiBtnTB_ToInfeed.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnTB_ToInfeed.p_bStaVisible := FALSE;
+	s_fbHmiBtnTB_ToInfeed.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnTB_ToInfeed.p_sBtnText := 'TB To Docking Position';
 	
-	s_fbHmiLedBoxAtDockedPosition.p_bStaVisible := FALSE;
-	s_fbHmiLedBoxAtDockedPosition.p_sToHmiDescriptionLed := 'Box At Docked Position';
+	s_fbHmiBtnTB_Centring.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnTB_Centring.p_bStaVisible := FALSE;
+	s_fbHmiBtnTB_Centring.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnTB_Centring.p_sBtnText := 'TB To Centring Position';
 
+	s_fbHmiLedBrakeReleased.p_bStaVisible := FALSE;
+	s_fbHmiLedBrakeReleased.p_sToHmiDescriptionLed := 'Brake Released';
+	
+	s_fbHmiLedInfeedRearPosition.p_bStaVisible := FALSE;
+	s_fbHmiLedInfeedRearPosition.p_sToHmiDescriptionLed := 'Infeed Rear Position';
+	
+	s_fbHmiLedInfeedFrontPosition.p_bStaVisible := FALSE;
+	s_fbHmiLedInfeedFrontPosition.p_sToHmiDescriptionLed := 'Infeed Front Position';
+	
+	s_fbHmiLedCentringPosition.p_bStaVisible := FALSE;
+	s_fbHmiLedCentringPosition.p_sToHmiDescriptionLed := 'Centre Position';
+	
+	s_fbHmiLedDockingPosition.p_bStaVisible := FALSE;
+	s_fbHmiLedDockingPosition.p_sToHmiDescriptionLed := 'Docking Position';
+	
+	s_fbHmiLedDoorOpened.p_bStaVisible := FALSE;
+	s_fbHmiLedDoorOpened.p_sToHmiDescriptionLed := 'Door Opened';
+	
+	s_fbHmiLedCentringIdleL.p_bStaVisible := FALSE;
+	s_fbHmiLedCentringIdleL.p_sToHmiDescriptionLed := 'Centring 1 Idle';
+	
+	s_fbHmiLedCentringIdleR.p_bStaVisible := FALSE;
+	s_fbHmiLedCentringIdleR.p_sToHmiDescriptionLed := 'Centring 2 Idle';
+	
+	s_fbHmiLedCentringCenterL.p_bStaVisible := FALSE;
+	s_fbHmiLedCentringCenterL.p_sToHmiDescriptionLed := 'Centring 1 Center';
+	
+	s_fbHmiLedCentringCenterR.p_bStaVisible := FALSE;
+	s_fbHmiLedCentringCenterR.p_sToHmiDescriptionLed := 'Centring 2 Center';
+	
 //----------------------------------//	
 //Initialize all moving averages
 
@@ -341,8 +404,6 @@ s_diStaDoorOpened.i_stSettings.tmInputDelay := T#100MS;
 //----------------------------------//	
 
 //Inputs
-s_diStaBoxAtPreDockingPosition.i_stSettings.tmInputDelay := T#3S;
-s_diStaBoxAtDockedPosition.i_stSettings.tmInputDelay := T#3S;
 //----------------------------------//	
 
 //----------------------------------//	
@@ -387,57 +448,36 @@ _m_Inputs := TRUE;]]></ST>
 	RETURN;
 END_IF
 
-
 s_cmPalletConveyor(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
 	i_bCmdReset := i_bCmdReset);
 
-s_cmCenteringUnit(
+s_bStaBrakeReleased := s_cmPalletConveyor.p_bStaBrakeReleased;
+s_bStaDriveError := s_cmPalletConveyor.p_bStaError; 
+	
+s_cmCentringUnit(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
 	i_bCmdReset := i_bCmdReset);
+	
+s_bStaCentringCenterL := s_cmCentringUnit.p_bStaIsOn; 
+s_bStaCentringCenterR := s_cmCentringUnit.p_bStaIsOn;
+s_bStaCentringIdleL := s_cmCentringUnit.p_bStaIsOff;
+s_bStaCentringIdleR := s_cmCentringUnit.p_bStaIsOff;
 	
 s_diStaAtInfeedPositionRear();
 s_diStaAtInfeedPositionFront();
-s_diStaAtCenteringPosition();
+s_diStaAtCentringPosition();
 s_diStaAtDockingPosition();
 s_diStaDoorOpened();	
+
+s_bStaInfeedRearPosition := s_diStaAtInfeedPositionRear.p_bStaInputDelayed;
+s_bStaInfeedFrontPosition := s_diStaAtInfeedPositionFront.p_bStaInputDelayed;
+s_bStaCentringPosition := s_diStaAtCentringPosition.p_bStaInputDelayed;
+s_bStaDockingPosition := s_diStaAtDockingPosition.p_bStaInputDelayed;
+s_bStaDoorOpened := s_diStaDoorOpened.p_bStaInputDelayed 
 	
-	
-s_bStaDockingClampsClosed := s_cmDockingClamps.p_bStaIsClosed;
-s_bStaDockingClampsOpened := s_cmDockingClamps.p_bStaIsOpened;
-	
-s_cmUnlockingPins(
-	i_bReqEnable := i_bReqEnable,
-	i_eCtrlMode := i_eCtrlMode,
-	i_bCmdReset := i_bCmdReset);
-	//--i_sCmName := 'Unloading Pins');
-	
-(*	
-	// Interlocks (doors must work as an airlock, only one door may be opened at all times)
-	s_bIlckSpeedDoorOuterToOpen :=
-		s_cmDoorLockCleanroom.p_bStaError
-		OR NOT(s_cmDoorLockCleanroom.p_bStaEnabled)
-		NOT(s_cmDoorLockCleanroom.p_bStaDoorIsClosed)
-		OR NOT (s_cmDoorLockCleanroom.p_bStaLockIsApplied)
-		OR s_cmDoorLockCleanroom.p_bStaLockIsReleased
-		OR TRUE (*Air treathment unit must be running and ok*)
-		OR TRUE (*Add more..*);
-	s_bIlckSpeedDoorOuterToClose :=
-		TRUE (*Opening must be free*)
-		OR TRUE (*Add more..*);
-	
-	s_bIlckDoorLockCleanroomToOpen :=
-		s_cmSpeedDoorOuter.p_bStaError
-		OR NOT(s_cmSpeedDoorOuter.p_bStaEnabled)
-		OR NOT(s_cmSpeedDoorOuter.p_bStaIsClosed)
-		OR s_cmSpeedDoorOuter.p_bStaIsClosing
-		OR s_cmSpeedDoorOuter.p_bStaIsOpened
-		OR s_cmSpeedDoorOuter.p_bStaIsOpening
-		OR TRUE (*Air treathment unit must be running and ok*)
-		OR TRUE (*Add more..*);
-*)	
 _m_Modules := TRUE;
 ]]></ST>
       </Implementation>
@@ -629,23 +669,23 @@ END_CASE
 
 // Centering
 IF i_refTB.p_eLocation = E_Location.ALLIGNMENT
-	AND s_diStaAtCenteringPosition.p_bStaInputDelayed
+	AND s_diStaAtCentringPosition.p_bStaInputDelayed
 	AND NOT(i_refTB.p_bAlligned)
 	THEN
-		s_cmCenteringUnit.m_On();
+		s_cmCentringUnit.m_On();
 		
-		IF s_cmCenteringUnit.p_bStaIsOn THEN
+		IF s_cmCentringUnit.p_bStaIsOn THEN
 			i_refTB.p_bAlligned := TRUE;
 		END_IF
 ELSE
-	s_cmCenteringUnit.m_Off();
+	s_cmCentringUnit.m_Off();
 END_IF
 
 
 
 
 CASE i_eCtrlMode OF
-
+(*
 	E_CtrlMode.IDLE:
 		s_cmDockingClamps.m_Stop();
 		s_cmUnlockingPins.m_Stop();
@@ -805,12 +845,43 @@ CASE i_eCtrlMode OF
 				END_IF
 				
 		END_CASE		
-	
+*)	
 		
 	E_CtrlMode.MANUAL:
 		;
 		{warning '#TODO: Add manual control from hmi'}
-
+		//Is het de bedoeling om op deze plekken de hmi knoppen aan te sturen, OF moet dat gedaan worden in METHOD hmi?		
+		s_fbHmiBtnManualConveyorApplyBrake.p_bStaVisible := TRUE;
+		s_fbHmiBtnManualConveyorApplyBrake.p_bStaEnabled := s_cmPalletConveyor.p_bStaMotorStopped;
+	
+		s_fbHmiBtnManualConveyorReleaseBrake.p_bStaVisible := TRUE;
+		s_fbHmiBtnManualConveyorReleaseBrake := s_cmPalletConveyor.p_bStaMotorStopped;
+		
+		s_fbHmiBtnManualConveyorStop.p_bStaVisible := TRUE;
+		s_fbHmiBtnManualConveyorStop := TRUE;
+	
+		s_fbHmiBtnManualConveyorForward.p_bStaVisible := TRUE;
+		s_fbHmiBtnManualConveyorForward := s_cmPalletConveyor.p_bStaMotorStopped;
+	
+		s_fbHmiBtnManualConveyorBackward.p_bStaVisible := TRUE;
+		s_fbHmiBtnManualConveyorBackward := s_cmPalletConveyor.p_bStaMotorStopped;
+		
+		IF s_fbHmiBtnManualConveyorApplyBrake.p_osrBtnPress THEN
+			s_cmPalletConveyor.m_ReleaseBrake(i_bValue := FALSE);
+		END_IF
+		
+		IF s_fbHmiBtnManualConveyorReleaseBrake.p_osrBtnPress THEN
+			s_cmPalletConveyor.m_ReleaseBrake(i_bValue := TRUE);
+		END_IF
+	
+		IF s_fbHmiBtnManualConveyorStop.p_osrBtnPress THEN
+			s_cmPalletConveyor.m_Stop();
+		ELSIF s_fbHmiBtnManualConveyorForward.p_osrBtnPress THEN
+			s_cmPalletConveyor.m_StartForward(i_rTargetSpeed := i_stSettings.rSpeedManual);
+		ELSIF s_fbHmiBtnManualConveyorBackward.p_osrBtnPress THEN
+			s_cmPalletConveyor.m_StartBackward(i_rTargetSpeed := i_stSettings.rSpeedManual);
+		END_IF
+		
 END_CASE
 ]]></ST>
       </Implementation>
@@ -961,16 +1032,23 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="7" Count="2" />
       <LineId Id="246" Count="0" />
       <LineId Id="224" Count="0" />
-      <LineId Id="229" Count="0" />
-      <LineId Id="245" Count="0" />
       <LineId Id="244" Count="0" />
-      <LineId Id="232" Count="5" />
+      <LineId Id="253" Count="0" />
+      <LineId Id="255" Count="4" />
+      <LineId Id="254" Count="0" />
+      <LineId Id="261" Count="2" />
+      <LineId Id="260" Count="0" />
+      <LineId Id="264" Count="0" />
+      <LineId Id="266" Count="1" />
       <LineId Id="248" Count="0" />
-      <LineId Id="239" Count="4" />
-      <LineId Id="226" Count="0" />
-      <LineId Id="250" Count="1" />
-      <LineId Id="249" Count="0" />
-      <LineId Id="210" Count="0" />
+      <LineId Id="239" Count="0" />
+      <LineId Id="270" Count="0" />
+      <LineId Id="277" Count="0" />
+      <LineId Id="271" Count="4" />
+      <LineId Id="278" Count="0" />
+      <LineId Id="276" Count="0" />
+      <LineId Id="279" Count="2" />
+      <LineId Id="292" Count="0" />
       <LineId Id="6" Count="0" />
     </LineIds>
     <LineIds Name="EM_PalletConveyor._m_Init">
@@ -991,42 +1069,59 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="346" Count="0" />
       <LineId Id="326" Count="0" />
       <LineId Id="35" Count="3" />
-      <LineId Id="271" Count="2" />
-      <LineId Id="269" Count="1" />
-      <LineId Id="276" Count="2" />
-      <LineId Id="274" Count="1" />
       <LineId Id="280" Count="2" />
       <LineId Id="279" Count="0" />
-      <LineId Id="257" Count="1" />
-      <LineId Id="286" Count="1" />
-      <LineId Id="283" Count="1" />
-      <LineId Id="259" Count="0" />
-      <LineId Id="289" Count="1" />
-      <LineId Id="260" Count="0" />
-      <LineId Id="291" Count="0" />
-      <LineId Id="261" Count="0" />
-      <LineId Id="294" Count="1" />
-      <LineId Id="292" Count="0" />
-      <LineId Id="296" Count="0" />
-      <LineId Id="298" Count="2" />
-      <LineId Id="297" Count="0" />
-      <LineId Id="263" Count="1" />
-      <LineId Id="305" Count="0" />
-      <LineId Id="301" Count="0" />
-      <LineId Id="266" Count="0" />
-      <LineId Id="306" Count="0" />
-      <LineId Id="304" Count="0" />
-      <LineId Id="267" Count="0" />
-      <LineId Id="308" Count="1" />
-      <LineId Id="250" Count="0" />
-      <LineId Id="311" Count="0" />
-      <LineId Id="315" Count="5" />
-      <LineId Id="91" Count="2" />
+      <LineId Id="357" Count="0" />
+      <LineId Id="370" Count="2" />
+      <LineId Id="361" Count="0" />
+      <LineId Id="369" Count="0" />
+      <LineId Id="373" Count="2" />
+      <LineId Id="362" Count="1" />
+      <LineId Id="377" Count="2" />
+      <LineId Id="376" Count="0" />
+      <LineId Id="365" Count="0" />
+      <LineId Id="380" Count="2" />
+      <LineId Id="366" Count="1" />
+      <LineId Id="384" Count="2" />
+      <LineId Id="383" Count="0" />
+      <LineId Id="359" Count="0" />
+      <LineId Id="396" Count="2" />
+      <LineId Id="395" Count="0" />
+      <LineId Id="388" Count="0" />
+      <LineId Id="400" Count="2" />
+      <LineId Id="399" Count="0" />
+      <LineId Id="390" Count="0" />
+      <LineId Id="404" Count="2" />
+      <LineId Id="403" Count="0" />
+      <LineId Id="360" Count="0" />
+      <LineId Id="408" Count="2" />
+      <LineId Id="407" Count="0" />
+      <LineId Id="393" Count="0" />
+      <LineId Id="412" Count="0" />
+      <LineId Id="423" Count="0" />
+      <LineId Id="413" Count="1" />
+      <LineId Id="424" Count="1" />
+      <LineId Id="415" Count="0" />
+      <LineId Id="426" Count="1" />
+      <LineId Id="416" Count="0" />
+      <LineId Id="428" Count="0" />
+      <LineId Id="417" Count="0" />
+      <LineId Id="429" Count="2" />
+      <LineId Id="418" Count="0" />
+      <LineId Id="432" Count="0" />
+      <LineId Id="419" Count="1" />
+      <LineId Id="433" Count="1" />
+      <LineId Id="421" Count="0" />
+      <LineId Id="435" Count="1" />
+      <LineId Id="422" Count="0" />
+      <LineId Id="437" Count="1" />
+      <LineId Id="392" Count="0" />
+      <LineId Id="439" Count="0" />
+      <LineId Id="411" Count="0" />
+      <LineId Id="92" Count="1" />
       <LineId Id="97" Count="3" />
       <LineId Id="314" Count="0" />
       <LineId Id="101" Count="0" />
-      <LineId Id="313" Count="0" />
-      <LineId Id="312" Count="0" />
       <LineId Id="119" Count="0" />
       <LineId Id="168" Count="0" />
       <LineId Id="170" Count="1" />
@@ -1051,18 +1146,24 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="EM_PalletConveyor._m_Modules">
-      <LineId Id="156" Count="3" />
-      <LineId Id="205" Count="5" />
+      <LineId Id="156" Count="2" />
+      <LineId Id="205" Count="4" />
+      <LineId Id="233" Count="2" />
+      <LineId Id="210" Count="0" />
       <LineId Id="212" Count="2" />
       <LineId Id="162" Count="0" />
+      <LineId Id="236" Count="0" />
+      <LineId Id="238" Count="2" />
+      <LineId Id="237" Count="0" />
       <LineId Id="211" Count="0" />
       <LineId Id="168" Count="0" />
       <LineId Id="217" Count="3" />
-      <LineId Id="215" Count="1" />
-      <LineId Id="200" Count="0" />
-      <LineId Id="202" Count="0" />
-      <LineId Id="201" Count="0" />
-      <LineId Id="169" Count="30" />
+      <LineId Id="231" Count="0" />
+      <LineId Id="224" Count="0" />
+      <LineId Id="228" Count="0" />
+      <LineId Id="225" Count="2" />
+      <LineId Id="216" Count="0" />
+      <LineId Id="199" Count="0" />
       <LineId Id="50" Count="0" />
     </LineIds>
     <LineIds Name="EM_PalletConveyor._m_Outputs">
@@ -1298,6 +1399,35 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="195" Count="2" />
       <LineId Id="190" Count="0" />
       <LineId Id="188" Count="0" />
+      <LineId Id="474" Count="0" />
+      <LineId Id="481" Count="0" />
+      <LineId Id="475" Count="0" />
+      <LineId Id="477" Count="0" />
+      <LineId Id="482" Count="0" />
+      <LineId Id="470" Count="0" />
+      <LineId Id="483" Count="0" />
+      <LineId Id="478" Count="0" />
+      <LineId Id="476" Count="0" />
+      <LineId Id="484" Count="0" />
+      <LineId Id="479" Count="0" />
+      <LineId Id="471" Count="0" />
+      <LineId Id="485" Count="0" />
+      <LineId Id="480" Count="0" />
+      <LineId Id="473" Count="0" />
+      <LineId Id="451" Count="0" />
+      <LineId Id="455" Count="0" />
+      <LineId Id="454" Count="0" />
+      <LineId Id="456" Count="0" />
+      <LineId Id="458" Count="1" />
+      <LineId Id="457" Count="0" />
+      <LineId Id="460" Count="0" />
+      <LineId Id="462" Count="0" />
+      <LineId Id="465" Count="0" />
+      <LineId Id="464" Count="0" />
+      <LineId Id="463" Count="0" />
+      <LineId Id="466" Count="1" />
+      <LineId Id="461" Count="0" />
+      <LineId Id="452" Count="0" />
       <LineId Id="187" Count="0" />
       <LineId Id="179" Count="0" />
     </LineIds>

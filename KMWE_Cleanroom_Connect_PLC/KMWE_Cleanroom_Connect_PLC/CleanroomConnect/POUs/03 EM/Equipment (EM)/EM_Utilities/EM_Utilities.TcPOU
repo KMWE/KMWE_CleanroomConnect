@@ -12,8 +12,10 @@ VAR
 	s_cm24VdcOk : FB_DigInput;
 	s_cmAirPressureOk : FB_DigInput;
 
-	s_cmBeacon : CM_KmweLeds;	
-
+	s_cmBeaconLedGreen : FB_DigOutput;
+	s_cmBeaconLedYellow : FB_DigOutput;
+	s_cmBeaconLedRed : FB_DigOutput;
+	
 	//States
 	s_bStaSafetyOK : BOOL := FALSE;
 	s_bSts24VdcOk : BOOL := FALSE;
@@ -22,8 +24,6 @@ VAR
 	s_bStaRunning : BOOL := FALSE; //green
 	s_bStaWarning : BOOL := FALSE; //yellow
 	s_bStaError : BOOL := FALSE; //red
-	
-	s_eKmweLedColors : E_KmweLedColors;
 	
 	
 	//Hmi
@@ -60,7 +60,7 @@ IF NOT SUPER^._m_Hmi() THEN
 	RETURN;
 END_IF
 
-//Leds
+//Hmi Leds
 s_fbHmiLedSafetyOk(i_bStaLed := s_bStaSafetyOK);
 s_fbHmiLed24VdcOk(i_bStaLed := s_bSts24VdcOk);
 s_fbHmiLedAirPressureOk(i_bStaLed := s_bStaAirPressureOk);
@@ -85,10 +85,12 @@ s_cmSafetyOk.i_stSettings.tmInputDelay := T#1S;
 s_cm24VdcOk.i_stSettings.tmInputDelay := T#1S;
 s_cmAirPressureOk.i_stSettings.tmInputDelay := T#3S;
 
-s_cmBeacon.i_bReqEnable := FALSE;
-s_cmBeacon.i_eCtrlMode := E_CtrlMode.IDLE; 
-s_cmBeacon.i_sCmName := 'Beacon';
-s_cmBeacon.i_eColor := E_KmweLedColors.Idle;
+s_cmBeaconLedGreen.i_stSettings.bCfgDelay := FALSE;
+s_cmBeaconLedGreen.i_stSettings.tmOutputDelay := T#0S;
+s_cmBeaconLedYellow.i_stSettings.bCfgDelay := FALSE;
+s_cmBeaconLedYellow.i_stSettings.tmOutputDelay := T#0S;
+s_cmBeaconLedRed.i_stSettings.bCfgDelay := FALSE;
+s_cmBeaconLedRed.i_stSettings.tmOutputDelay := T#0S;
 
 //---------------------------------//	
 	
@@ -146,11 +148,16 @@ s_cmSafetyOk();
 s_cm24VdcOk();
 s_cmAirPressureOk();
 
-s_cmBeacon(
-	i_bReqEnable := TRUE,
-	i_eCtrlMode := i_eCtrlMode,
-	i_bCmdReset := i_bCmdReset,
-	i_eColor := );
+s_cmBeaconLedGreen := FALSE; //TODO
+s_cmBeaconLedYellow := FALSE; //TODO
+s_cmBeaconLedRed := 
+	NOT(s_bStaSafetyOK) 
+	OR NOT(s_bSts24VdcOk)
+	OR NOT(s_bStaAirPressureOk);
+
+s_cmBeaconLedGreen();
+s_cmBeaconLedYellow();
+s_cmBeaconLedRed();
 	
 _m_Modules := TRUE;
 ]]></ST>
@@ -165,7 +172,9 @@ IF NOT SUPER^._m_Outputs() THEN
 	RETURN;
 END_IF
 
-s_cmBeacon.i_eColor := s_eKmweLedColors;
+s_cmBeaconLedGreen.i_bStaOutput := s_cmBeaconLedGreen;
+s_cmBeaconLedYellow.i_bStaOutput := s_cmBeaconLedYellow;
+s_cmBeaconLedRed.i_bStaOutput := s_cmBeaconLedRed;
 
 _m_Outputs := TRUE;
 ]]></ST>
@@ -230,10 +239,13 @@ p_bSts24VdcOk := s_bSts24VdcOk;
       <LineId Id="5" Count="3" />
       <LineId Id="10" Count="0" />
       <LineId Id="326" Count="1" />
-      <LineId Id="329" Count="1" />
-      <LineId Id="328" Count="0" />
-      <LineId Id="331" Count="0" />
-      <LineId Id="333" Count="2" />
+      <LineId Id="329" Count="0" />
+      <LineId Id="364" Count="2" />
+      <LineId Id="368" Count="0" />
+      <LineId Id="367" Count="0" />
+      <LineId Id="370" Count="0" />
+      <LineId Id="369" Count="0" />
+      <LineId Id="362" Count="0" />
       <LineId Id="35" Count="3" />
       <LineId Id="354" Count="0" />
       <LineId Id="344" Count="1" />
@@ -267,9 +279,13 @@ p_bSts24VdcOk := s_bSts24VdcOk;
       <LineId Id="159" Count="0" />
       <LineId Id="206" Count="1" />
       <LineId Id="205" Count="0" />
-      <LineId Id="204" Count="0" />
-      <LineId Id="209" Count="3" />
-      <LineId Id="161" Count="0" />
+      <LineId Id="216" Count="0" />
+      <LineId Id="224" Count="0" />
+      <LineId Id="228" Count="3" />
+      <LineId Id="225" Count="0" />
+      <LineId Id="220" Count="0" />
+      <LineId Id="215" Count="0" />
+      <LineId Id="222" Count="1" />
       <LineId Id="168" Count="0" />
       <LineId Id="199" Count="0" />
       <LineId Id="50" Count="0" />
@@ -278,7 +294,7 @@ p_bSts24VdcOk := s_bSts24VdcOk;
       <LineId Id="20" Count="0" />
       <LineId Id="6" Count="2" />
       <LineId Id="25" Count="0" />
-      <LineId Id="29" Count="0" />
+      <LineId Id="34" Count="2" />
       <LineId Id="22" Count="0" />
       <LineId Id="5" Count="0" />
       <LineId Id="23" Count="0" />

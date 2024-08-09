@@ -48,11 +48,12 @@ VAR
 s_bStaBrakeReleased : BOOL := FALSE;
 s_bStaDriveError : BOOL := FALSE;
 
-s_bStaInfeedRearPosition : BOOL := FALSE;
-s_bStaInfeedFrontPosition : BOOL := FALSE;
-s_bStaCentringPosition : BOOL := FALSE;
-s_bStaDockingPosition : BOOL := FALSE;
-s_bStaDoorOpened : BOOL := FALSE;
+
+s_bStaAtInfeedRearPosition : BOOL := FALSE;
+s_bStaAtInfeedFrontPosition : BOOL := FALSE;
+s_bStaAtCentringPosition : BOOL := FALSE;
+s_bStaAtDockingPosition : BOOL := FALSE;
+s_bStaAtDoorOpened : BOOL := FALSE;
 
 s_bStaCentringCenterL : BOOL := FALSE;
 s_bStaCentringCenterR : BOOL := FALSE;
@@ -215,20 +216,20 @@ END_IF
 
 
 // Alarm Handlers
-s_fbAlarmHandlerNoBoxPresentAtPreDockingPosition(
-	i_bStaActive := s_bWrnNoBoxPresentAtPreDockingPosition, 
-	i_eAlarmLevel := E_AlarmLevel.Warning, 
-	i_sAlarmText := 'No box present at per-docking position');
+//??s_fbAlarmHandlerNoBoxPresentAtPreDockingPosition(
+//??	i_bStaActive := s_bWrnNoBoxPresentAtPreDockingPosition, 
+//??	i_eAlarmLevel := E_AlarmLevel.Warning, 
+//??	i_sAlarmText := 'No box present at per-docking position');
 	
-s_fbAlarmHandlerNoBoxPresentAtDockedPosition(
-	i_bStaActive := s_bWrnNoBoxPresentAtDockedPosition, 
-	i_eAlarmLevel := E_AlarmLevel.Warning, 
-	i_sAlarmText := 'No box present at docked position');
+//??s_fbAlarmHandlerNoBoxPresentAtDockedPosition(
+//??	i_bStaActive := s_bWrnNoBoxPresentAtDockedPosition, 
+//??	i_eAlarmLevel := E_AlarmLevel.Warning, 
+//??	i_sAlarmText := 'No box present at docked position');
 
 // Reset warnings
 IF i_bCmdReset THEN
-	s_bWrnNoBoxPresentAtPreDockingPosition := FALSE;
-	s_bWrnNoBoxPresentAtDockedPosition := FALSE;
+//??	s_bWrnNoBoxPresentAtPreDockingPosition := FALSE;
+//??	s_bWrnNoBoxPresentAtDockedPosition := FALSE;
 END_IF	
 	
 _m_Alarms := TRUE;
@@ -264,11 +265,11 @@ s_fbHmiBtnTB_Centring();
 //Leds
 s_fbHmiLedBrakeReleased(i_bStaLed := s_bStaBrakeReleased);
 
-s_fbHmiLedInfeedRearPosition(i_bStaLed := s_bStaInfeedRearPosition);
-s_fbHmiLedInfeedFrontPosition(i_bStaLed := s_bStaInfeedFrontPosition);
-s_fbHmiLedCentringPosition(i_bStaLed := s_bStaCentringPosition);
-s_fbHmiLedDockingPosition(i_bStaLed := s_bStaDockingPosition);
-s_fbHmiLedDoorOpened(i_bStaLed := s_bStaDoorOpened);
+s_fbHmiLedInfeedRearPosition(i_bStaLed := s_bStaAtInfeedRearPosition);
+s_fbHmiLedInfeedFrontPosition(i_bStaLed := s_bStaAtInfeedFrontPosition);
+s_fbHmiLedCentringPosition(i_bStaLed := s_bStaAtCentringPosition);
+s_fbHmiLedDockingPosition(i_bStaLed := s_bStaAtDockingPosition);
+s_fbHmiLedDoorOpened(i_bStaLed := s_bStaAtDoorOpened);
 
 s_fbHmiLedCentringCenterL(i_bStaLed := s_bStaCentringCenterL);
 s_fbHmiLedCentringCenterR(i_bStaLed := s_bStaCentringCenterR);
@@ -425,17 +426,17 @@ IF NOT SUPER^._m_Inputs() THEN
 END_IF
 
 //Interlocks
-s_bIlckDockingClampsToClose := i_bIlckDockingClampsToClose;
-s_bIlckDockingClampsToOpen := i_bIlckDockingClampsToOpen;
-s_bIlckUnlockingPinsToLock := i_bIlckUnlockingPinsToLock;
-s_bIlckUnlockingPinsToRelease := i_bIlckUnlockingPinsToRelease;
+//??s_bIlckDockingClampsToClose := i_bIlckDockingClampsToClose;
+//??s_bIlckDockingClampsToOpen := i_bIlckDockingClampsToOpen;
+//??s_bIlckUnlockingPinsToLock := i_bIlckUnlockingPinsToLock;
+//??s_bIlckUnlockingPinsToRelease := i_bIlckUnlockingPinsToRelease;
 
-s_diStaBoxAtPreDockingPosition();
-s_diStaBoxAtDockedPosition();
+//??s_diStaBoxAtPreDockingPosition();
+//??s_diStaBoxAtDockedPosition();
 
-s_bStaBoxAtPreDockingPosition := s_diStaBoxAtPreDockingPosition.p_bStaInputDelayed AND NOT(s_diStaBoxAtDockedPosition.p_bStaInputDelayed);
-s_bStaBoxAtDockedPosition := s_diStaBoxAtPreDockingPosition.p_bStaInputDelayed AND s_diStaBoxAtDockedPosition.p_bStaInputDelayed;
-s_bStaDockingPositionFree := NOT(s_bStaBoxAtPreDockingPosition) AND NOT(s_bStaBoxAtDockedPosition);
+//??s_bStaBoxAtPreDockingPosition := s_diStaBoxAtPreDockingPosition.p_bStaInputDelayed AND NOT(s_diStaBoxAtDockedPosition.p_bStaInputDelayed);
+//??s_bStaBoxAtDockedPosition := s_diStaBoxAtPreDockingPosition.p_bStaInputDelayed AND s_diStaBoxAtDockedPosition.p_bStaInputDelayed;
+//??s_bStaDockingPositionFree := NOT(s_bStaBoxAtPreDockingPosition) AND NOT(s_bStaBoxAtDockedPosition);
 
 _m_Inputs := TRUE;]]></ST>
       </Implementation>
@@ -472,11 +473,11 @@ s_diStaAtCentringPosition();
 s_diStaAtDockingPosition();
 s_diStaDoorOpened();	
 
-s_bStaInfeedRearPosition := s_diStaAtInfeedPositionRear.p_bStaInputDelayed;
-s_bStaInfeedFrontPosition := s_diStaAtInfeedPositionFront.p_bStaInputDelayed;
-s_bStaCentringPosition := s_diStaAtCentringPosition.p_bStaInputDelayed;
-s_bStaDockingPosition := s_diStaAtDockingPosition.p_bStaInputDelayed;
-s_bStaDoorOpened := s_diStaDoorOpened.p_bStaInputDelayed 
+s_bStaAtInfeedRearPosition := s_diStaAtInfeedPositionRear.p_bStaInputDelayed;
+s_bStaAtInfeedFrontPosition := s_diStaAtInfeedPositionFront.p_bStaInputDelayed;
+s_bStaAtCentringPosition := s_diStaAtCentringPosition.p_bStaInputDelayed;
+s_bStaAtDockingPosition := s_diStaAtDockingPosition.p_bStaInputDelayed;
+s_bStaAtDoorOpened := s_diStaDoorOpened.p_bStaInputDelayed ;
 	
 _m_Modules := TRUE;
 ]]></ST>
@@ -633,8 +634,7 @@ m_DockBox := TRUE;
       <Declaration><![CDATA[METHOD PUBLIC m_Main : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[
-IF NOT SUPER^.m_Main() THEN
+        <ST><![CDATA[IF NOT SUPER^.m_Main() THEN
 	RETURN;
 END_IF
 
@@ -654,12 +654,12 @@ END_IF
 CASE i_refTB.p_eLocation OF
 	E_Location.INFEED :
 
-	E_Location.ALLIGNMENT :
+	E_Location.CENTRING :
 
 	E_Location.DOCKING :	
 		
 		IF i_refTB.p_eDestination < E_Location.DOCKING 
-			AND NOT(i_refTB.Docked)
+//??			AND NOT(i_refTB. Docked)
 			THEN
 			 s_cmPalletConveyor.m_StartBackward(i_stSettings.rSpeedReturnToInfeed);
 		END_IF
@@ -668,7 +668,7 @@ END_CASE
 
 
 // Centering
-IF i_refTB.p_eLocation = E_Location.ALLIGNMENT
+IF i_refTB.p_eLocation = E_Location.CENTRING
 	AND s_diStaAtCentringPosition.p_bStaInputDelayed
 	AND NOT(i_refTB.p_bAlligned)
 	THEN
@@ -855,16 +855,16 @@ CASE i_eCtrlMode OF
 		s_fbHmiBtnManualConveyorApplyBrake.p_bStaEnabled := s_cmPalletConveyor.p_bStaMotorStopped;
 	
 		s_fbHmiBtnManualConveyorReleaseBrake.p_bStaVisible := TRUE;
-		s_fbHmiBtnManualConveyorReleaseBrake := s_cmPalletConveyor.p_bStaMotorStopped;
+		s_fbHmiBtnManualConveyorReleaseBrake.p_bStaEnabled := s_cmPalletConveyor.p_bStaMotorStopped;
 		
 		s_fbHmiBtnManualConveyorStop.p_bStaVisible := TRUE;
-		s_fbHmiBtnManualConveyorStop := TRUE;
+		s_fbHmiBtnManualConveyorStop.p_bStaEnabled := TRUE;
 	
 		s_fbHmiBtnManualConveyorForward.p_bStaVisible := TRUE;
-		s_fbHmiBtnManualConveyorForward := s_cmPalletConveyor.p_bStaMotorStopped;
+		s_fbHmiBtnManualConveyorForward.p_bStaEnabled := s_cmPalletConveyor.p_bStaMotorStopped;
 	
 		s_fbHmiBtnManualConveyorBackward.p_bStaVisible := TRUE;
-		s_fbHmiBtnManualConveyorBackward := s_cmPalletConveyor.p_bStaMotorStopped;
+		s_fbHmiBtnManualConveyorBackward.p_bStaEnabled := s_cmPalletConveyor.p_bStaMotorStopped;
 		
 		IF s_fbHmiBtnManualConveyorApplyBrake.p_osrBtnPress THEN
 			s_cmPalletConveyor.m_ReleaseBrake(i_bValue := FALSE);
@@ -922,83 +922,6 @@ m_UndockBox := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Property Name="p_bStaBoxAtDockedPosition" Id="{15c657ec-976f-406a-af61-b74a1bc4da62}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaBoxAtDockedPosition : BOOL]]></Declaration>
-      <Get Name="Get" Id="{85ddebd8-bb8c-4495-b028-3fffc96ce272}">
-        <Declaration><![CDATA[]]></Declaration>
-        <Implementation>
-          <ST><![CDATA[
-p_bStaBoxAtDockedPosition := s_bStaBoxAtDockedPosition;
-]]></ST>
-        </Implementation>
-      </Get>
-    </Property>
-    <Property Name="p_bStaBoxAtPreDockingPosition" Id="{5cf86758-94a7-4c83-8655-89df68776a6a}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaBoxAtPreDockingPosition : BOOL]]></Declaration>
-      <Get Name="Get" Id="{390e3a8f-be51-4ead-b7d1-b375781ae098}">
-        <Declaration><![CDATA[]]></Declaration>
-        <Implementation>
-          <ST><![CDATA[
-p_bStaBoxAtPreDockingPosition := s_bStaBoxAtPreDockingPosition;
-]]></ST>
-        </Implementation>
-      </Get>
-    </Property>
-    <Property Name="p_bStaDockingClampsClosed" Id="{aeec2c84-5a33-42bf-8206-358bf0e881f7}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaDockingClampsClosed : BOOL]]></Declaration>
-      <Get Name="Get" Id="{f6a5df60-e1c4-43aa-ad06-c40db7782890}">
-        <Declaration><![CDATA[]]></Declaration>
-        <Implementation>
-          <ST><![CDATA[
-p_bStaDockingClampsClosed := s_bStaDockingClampsClosed; 
-]]></ST>
-        </Implementation>
-      </Get>
-    </Property>
-    <Property Name="p_bStaDockingClampsOpened" Id="{326ed6bf-3886-45dd-9f57-ea2919c9ffcb}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaDockingClampsOpened : BOOL]]></Declaration>
-      <Get Name="Get" Id="{411149f2-11dd-4d52-acbb-b2029ab5c78e}">
-        <Declaration><![CDATA[]]></Declaration>
-        <Implementation>
-          <ST><![CDATA[
-p_bStaDockingClampsOpened := s_bStaDockingClampsOpened;
-]]></ST>
-        </Implementation>
-      </Get>
-    </Property>
-    <Property Name="p_bStaDockingDone" Id="{5b03a1fd-28fa-4e4c-8b16-120ff29fbe65}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaDockingDone : BOOL]]></Declaration>
-      <Get Name="Get" Id="{ea2f8f74-0ea7-460e-89df-2b5449737ea6}">
-        <Declaration><![CDATA[]]></Declaration>
-        <Implementation>
-          <ST><![CDATA[
-p_bStaDockingDone := s_bStaDockingDone;
-]]></ST>
-        </Implementation>
-      </Get>
-    </Property>
-    <Property Name="p_bStaDockingPositionFree" Id="{2bc723ff-f9a5-42af-b160-e4dc5b057a50}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaDockingPositionFree : BOOL]]></Declaration>
-      <Get Name="Get" Id="{c30a314b-9757-4d3b-8e4f-ac9f4438d705}">
-        <Declaration><![CDATA[]]></Declaration>
-        <Implementation>
-          <ST><![CDATA[
-p_bStaDockingPositionFree := s_bStaDockingPositionFree;
-]]></ST>
-        </Implementation>
-      </Get>
-    </Property>
-    <Property Name="p_bStaUndockingDone" Id="{78b40d33-5413-4f7d-b0d7-9c166ca5f648}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaUndockingDone : BOOL]]></Declaration>
-      <Get Name="Get" Id="{ed85bc2c-166d-4354-8f24-cb6305b95ef7}">
-        <Declaration><![CDATA[]]></Declaration>
-        <Implementation>
-          <ST><![CDATA[
-p_bStaUndockingDone := s_bStaUndockingDone;
-]]></ST>
-        </Implementation>
-      </Get>
-    </Property>
     <LineIds Name="EM_PalletConveyor">
       <LineId Id="567" Count="1" />
       <LineId Id="221" Count="0" />
@@ -1243,192 +1166,7 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="8" Count="0" />
     </LineIds>
     <LineIds Name="EM_PalletConveyor.m_Main">
-      <LineId Id="178" Count="0" />
-      <LineId Id="6" Count="2" />
-      <LineId Id="433" Count="0" />
-      <LineId Id="397" Count="0" />
-      <LineId Id="403" Count="0" />
-      <LineId Id="410" Count="0" />
-      <LineId Id="409" Count="0" />
-      <LineId Id="405" Count="0" />
-      <LineId Id="408" Count="0" />
-      <LineId Id="411" Count="0" />
-      <LineId Id="407" Count="0" />
-      <LineId Id="413" Count="1" />
-      <LineId Id="412" Count="0" />
-      <LineId Id="406" Count="0" />
-      <LineId Id="415" Count="0" />
-      <LineId Id="434" Count="0" />
-      <LineId Id="436" Count="0" />
-      <LineId Id="441" Count="0" />
-      <LineId Id="440" Count="0" />
-      <LineId Id="443" Count="0" />
-      <LineId Id="442" Count="0" />
-      <LineId Id="439" Count="0" />
-      <LineId Id="444" Count="0" />
-      <LineId Id="447" Count="1" />
-      <LineId Id="445" Count="1" />
-      <LineId Id="438" Count="0" />
-      <LineId Id="437" Count="0" />
-      <LineId Id="435" Count="0" />
-      <LineId Id="416" Count="1" />
-      <LineId Id="419" Count="0" />
-      <LineId Id="426" Count="0" />
-      <LineId Id="421" Count="0" />
-      <LineId Id="420" Count="0" />
-      <LineId Id="422" Count="0" />
-      <LineId Id="429" Count="3" />
-      <LineId Id="424" Count="1" />
-      <LineId Id="423" Count="0" />
-      <LineId Id="427" Count="1" />
-      <LineId Id="404" Count="0" />
-      <LineId Id="181" Count="0" />
-      <LineId Id="184" Count="0" />
-      <LineId Id="189" Count="0" />
-      <LineId Id="186" Count="0" />
-      <LineId Id="191" Count="0" />
-      <LineId Id="331" Count="0" />
-      <LineId Id="192" Count="0" />
-      <LineId Id="333" Count="1" />
-      <LineId Id="332" Count="0" />
-      <LineId Id="193" Count="1" />
-      <LineId Id="235" Count="3" />
-      <LineId Id="233" Count="1" />
-      <LineId Id="201" Count="0" />
-      <LineId Id="205" Count="1" />
-      <LineId Id="242" Count="0" />
-      <LineId Id="312" Count="0" />
-      <LineId Id="314" Count="0" />
-      <LineId Id="391" Count="0" />
-      <LineId Id="346" Count="0" />
-      <LineId Id="316" Count="0" />
-      <LineId Id="318" Count="1" />
-      <LineId Id="317" Count="0" />
-      <LineId Id="315" Count="0" />
-      <LineId Id="320" Count="0" />
-      <LineId Id="322" Count="0" />
-      <LineId Id="325" Count="0" />
-      <LineId Id="347" Count="0" />
-      <LineId Id="326" Count="2" />
-      <LineId Id="324" Count="0" />
-      <LineId Id="321" Count="0" />
-      <LineId Id="313" Count="0" />
-      <LineId Id="394" Count="1" />
-      <LineId Id="392" Count="0" />
-      <LineId Id="357" Count="0" />
-      <LineId Id="359" Count="4" />
-      <LineId Id="223" Count="0" />
-      <LineId Id="209" Count="0" />
-      <LineId Id="219" Count="0" />
-      <LineId Id="261" Count="0" />
-      <LineId Id="336" Count="0" />
-      <LineId Id="262" Count="0" />
-      <LineId Id="251" Count="0" />
-      <LineId Id="340" Count="0" />
-      <LineId Id="253" Count="0" />
-      <LineId Id="341" Count="0" />
-      <LineId Id="257" Count="0" />
-      <LineId Id="259" Count="0" />
-      <LineId Id="256" Count="0" />
-      <LineId Id="258" Count="0" />
-      <LineId Id="260" Count="0" />
-      <LineId Id="254" Count="0" />
-      <LineId Id="220" Count="0" />
-      <LineId Id="210" Count="0" />
-      <LineId Id="276" Count="0" />
-      <LineId Id="263" Count="0" />
-      <LineId Id="342" Count="0" />
-      <LineId Id="266" Count="1" />
-      <LineId Id="343" Count="0" />
-      <LineId Id="269" Count="0" />
-      <LineId Id="344" Count="0" />
-      <LineId Id="271" Count="4" />
-      <LineId Id="221" Count="1" />
-      <LineId Id="211" Count="0" />
-      <LineId Id="345" Count="0" />
-      <LineId Id="224" Count="0" />
-      <LineId Id="212" Count="1" />
-      <LineId Id="310" Count="0" />
-      <LineId Id="283" Count="0" />
-      <LineId Id="348" Count="0" />
-      <LineId Id="286" Count="1" />
-      <LineId Id="349" Count="0" />
-      <LineId Id="289" Count="0" />
-      <LineId Id="350" Count="0" />
-      <LineId Id="291" Count="4" />
-      <LineId Id="225" Count="1" />
-      <LineId Id="214" Count="0" />
-      <LineId Id="309" Count="0" />
-      <LineId Id="296" Count="0" />
-      <LineId Id="351" Count="0" />
-      <LineId Id="299" Count="1" />
-      <LineId Id="352" Count="0" />
-      <LineId Id="302" Count="0" />
-      <LineId Id="353" Count="0" />
-      <LineId Id="304" Count="4" />
-      <LineId Id="227" Count="1" />
-      <LineId Id="215" Count="0" />
-      <LineId Id="354" Count="0" />
-      <LineId Id="229" Count="0" />
-      <LineId Id="216" Count="0" />
-      <LineId Id="364" Count="0" />
-      <LineId Id="370" Count="3" />
-      <LineId Id="368" Count="0" />
-      <LineId Id="374" Count="1" />
-      <LineId Id="378" Count="1" />
-      <LineId Id="377" Count="0" />
-      <LineId Id="376" Count="0" />
-      <LineId Id="367" Count="0" />
-      <LineId Id="369" Count="0" />
-      <LineId Id="365" Count="0" />
-      <LineId Id="381" Count="8" />
-      <LineId Id="380" Count="0" />
-      <LineId Id="366" Count="0" />
-      <LineId Id="217" Count="0" />
-      <LineId Id="230" Count="1" />
-      <LineId Id="218" Count="0" />
-      <LineId Id="277" Count="1" />
-      <LineId Id="280" Count="0" />
-      <LineId Id="355" Count="0" />
-      <LineId Id="282" Count="0" />
-      <LineId Id="232" Count="0" />
-      <LineId Id="204" Count="0" />
-      <LineId Id="279" Count="0" />
-      <LineId Id="203" Count="0" />
-      <LineId Id="200" Count="0" />
-      <LineId Id="195" Count="2" />
-      <LineId Id="190" Count="0" />
-      <LineId Id="188" Count="0" />
-      <LineId Id="474" Count="0" />
-      <LineId Id="481" Count="0" />
-      <LineId Id="475" Count="0" />
-      <LineId Id="477" Count="0" />
-      <LineId Id="482" Count="0" />
-      <LineId Id="470" Count="0" />
-      <LineId Id="483" Count="0" />
-      <LineId Id="478" Count="0" />
-      <LineId Id="476" Count="0" />
-      <LineId Id="484" Count="0" />
-      <LineId Id="479" Count="0" />
-      <LineId Id="471" Count="0" />
-      <LineId Id="485" Count="0" />
-      <LineId Id="480" Count="0" />
-      <LineId Id="473" Count="0" />
-      <LineId Id="451" Count="0" />
-      <LineId Id="455" Count="0" />
-      <LineId Id="454" Count="0" />
-      <LineId Id="456" Count="0" />
-      <LineId Id="458" Count="1" />
-      <LineId Id="457" Count="0" />
-      <LineId Id="460" Count="0" />
-      <LineId Id="462" Count="0" />
-      <LineId Id="465" Count="0" />
-      <LineId Id="464" Count="0" />
-      <LineId Id="463" Count="0" />
-      <LineId Id="466" Count="1" />
-      <LineId Id="461" Count="0" />
-      <LineId Id="452" Count="0" />
-      <LineId Id="187" Count="0" />
+      <LineId Id="487" Count="248" />
       <LineId Id="179" Count="0" />
     </LineIds>
     <LineIds Name="EM_PalletConveyor.m_OpenDockingClamps">
@@ -1446,39 +1184,6 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="7" Count="0" />
       <LineId Id="5" Count="0" />
       <LineId Id="8" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor.p_bStaBoxAtDockedPosition.Get">
-      <LineId Id="11" Count="0" />
-      <LineId Id="9" Count="0" />
-      <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor.p_bStaBoxAtPreDockingPosition.Get">
-      <LineId Id="5" Count="2" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor.p_bStaDockingClampsClosed.Get">
-      <LineId Id="5" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="6" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor.p_bStaDockingClampsOpened.Get">
-      <LineId Id="3" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="4" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor.p_bStaDockingDone.Get">
-      <LineId Id="4" Count="0" />
-      <LineId Id="3" Count="0" />
-      <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor.p_bStaDockingPositionFree.Get">
-      <LineId Id="5" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="6" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor.p_bStaUndockingDone.Get">
-      <LineId Id="5" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="6" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>

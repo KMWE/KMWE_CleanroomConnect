@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
   <POU Name="CM_SEW_WithBrake" Id="{d8988437-f8ba-4649-8850-7b7474b271b5}" SpecialFunc="None">
-    <Declaration><![CDATA[FUNCTION_BLOCK CM_SEW_WithBrake EXTENDS CM_Base IMPLEMENTS I_Motor_base
+    <Declaration><![CDATA[FUNCTION_BLOCK CM_SEW_WithBrake EXTENDS CM_Base //IMPLEMENTS I_Motor_base
 VAR_INPUT
 	i_stSettings : ST_SettingsSEW_WithBrake;
 END_VAR
@@ -20,6 +20,7 @@ VAR
 	s_bReqStartForward : BOOL;
 	s_bReqStartBackward : BOOL;
 	s_bReqReleaseBrake : BOOL;
+	s_bReqApplyBrake : BOOL;
 	s_bReqReset : BOOL;
 	
 	// States
@@ -223,9 +224,9 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-s_bReqReleaseBrake := TRUE;
+s_bReqApplyBrake := TRUE;
 
-m_ReleaseBrake := TRUE;
+m_ApplyBrake := TRUE;
 ]]></ST>
       </Implementation>
     </Method>

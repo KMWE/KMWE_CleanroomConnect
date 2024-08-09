@@ -161,7 +161,7 @@ END_IF
 //Hmi view management (General, Em can set module specific pages)
 CASE s_eCtrlMode OF
 	E_CtrlMode.IDLE:
-		GVL.g_bConnectTestEquipment		:= TRUE;
+(*		GVL.g_bConnectTestEquipment		:= TRUE;
 
 		IF NOT GVL_KMWEGenericLib.g_fbAlarmManager.p_bAlarmActive THEN
 			GVL.g_bLedFlashFast	:= FALSE;
@@ -210,9 +210,9 @@ CASE s_eCtrlMode OF
 			GVL.g_sToHmiMiddleContent 	:= GVL.g_stHmiMiddle.Manual;
 			GVL.g_sToHmiBottomContent	:= GVL.g_stHmiBottomBar.General_ReturnToStart;
 		END_IF
-
+*)
 	E_CtrlMode.AUTOMATIC:
-		s_fbHmiBtnTesterConfig.p_sBtnText		:= 'Procedure Configuration';
+(*		s_fbHmiBtnTesterConfig.p_sBtnText		:= 'Procedure Configuration';
 		
 		IF GVL.g_sToHmiMiddleContent = GVL.g_stHmiMiddle.OperatorInputData 
 			AND GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_osrBtnPress 
@@ -248,7 +248,7 @@ CASE s_eCtrlMode OF
 				GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled		:= FALSE;
 			END_IF
 		END_IF
-		
+*)		
 	E_CtrlMode.MANUAL:
 		IF GVL_KMWEGenericLib.g_fbAlarmManager.p_osrAlarmsResolved THEN
 			GVL.g_eStaLedColor := E_KmweLedColors.Green;
@@ -269,7 +269,7 @@ END_CASE
 //Hmi Buttons
 s_fbHmiBtnAutomatic();
 s_fbHmiBtnManual();
-s_fbHmiBtnTesterConfig();
+//??s_fbHmiBtnTesterConfig();
 s_fbHmiBtnAlarms();
 GVL.g_fbHmiBtnSimulation();
 //------------------------------------------//
@@ -285,6 +285,37 @@ IF NOT SUPER^._m_Init() THEN
 	RETURN;
 END_IF
 
+//EM Utilities
+_m_AddModule(i_itfModuleBase := GVL_Modules.g_emUtilities);
+
+GVL_Modules.g_emUtilities.i_bReqEnable := FALSE;
+GVL_Modules.g_emUtilities.i_eCtrlMode := E_CtrlMode.IDLE;
+GVL_Modules.g_emUtilities.i_bCmdReset := FALSE;
+GVL_Modules.g_emUtilities.i_sEmName  := 'EM Utilities';
+
+//Settings Doors
+//<none>
+
+//EM Pallet Conveyor
+_m_AddModule(i_itfModuleBase := GVL_Modules.g_emPalletConveyor);
+
+GVL_Modules.g_emPalletConveyor.i_bReqEnable := FALSE;
+GVL_Modules.g_emPalletConveyor.i_eCtrlMode := E_CtrlMode.IDLE;
+GVL_Modules.g_emPalletConveyor.i_bCmdReset := FALSE;
+GVL_Modules.g_emPalletConveyor.i_sEmName  := 'EM Pallet Conveyor';
+
+//Settings CM Pallet Conveyor
+GVL_Modules.g_emPalletConveyor.i_stSettings.rSpeedManual := 50.0; //mm/s
+GVL_Modules.g_emPalletConveyor.i_stSettings.rSpeedReturnToInfeed := 100.0; //mm/s
+GVL_Modules.g_emPalletConveyor.i_stSettings.rSpeedGoToCentering := 100.0; //mm/s
+GVL_Modules.g_emPalletConveyor.i_stSettings.rSpeedGoToDocking := 50.0; //mm/s
+
+//Settings CM Centring
+GVL_Modules.g_emPalletConveyor.i_stSettings.tTimeoutCentringToCenter := T#3S;
+GVL_Modules.g_emPalletConveyor.i_stSettings.tTimeoutCentringToIdle := T#3S;
+
+/////
+(*
 _m_AddModule(i_itfModuleBase := GVL_Modules.g_emDockingCabin);
 
 GVL_Modules.g_emDockingCabin.i_bReqEnable := FALSE;
@@ -300,7 +331,7 @@ GVL_Modules.g_emDockingCabin.i_stSettings.stSettingsDoors.tResetPulseDuration :=
 //Settings Docking Interface
 GVL_Modules.g_emDockingCabin.i_stSettings.stSettingsDockingInterface.tClampsTimeout := T#5S;
 GVL_Modules.g_emDockingCabin.i_stSettings.stSettingsDockingInterface.tReleasePinsTimeout := T#5S;
-
+*)
 //Settings AirTreatment
 //..GVL_Modules.g_emDockingCabin.i_stSettings.stSettingsAirTrearment.. := TODO;
 
@@ -357,14 +388,28 @@ _m_Init := TRUE;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-GVL_Modules.g_emDockingCabin(
+GVL_Modules.g_emUtilities(
 	i_bReqEnable := TRUE,
 	i_eCtrlMode := s_eCtrlMode,
 	i_bCmdReset := p_bCmdReset,
-	i_sEmName := 'EM State Machine',
-	i_ref_objCarrier := GVL_Modules.g_objCarrier);
+	i_sEmName := 'EM Utilities');
+	
+GVL_Modules.g_emPalletConveyor(
+	i_bReqEnable := TRUE,
+	i_eCtrlMode := s_eCtrlMode,
+	i_bCmdReset := p_bCmdReset,
+	i_sEmName := 'EM Pallet Conveyor');	
 
-s_bStaError := GVL_Modules.g_emDockingCabin.q_bStaError;
+//??GVL_Modules.g_emDockingCabin(
+//??	i_bReqEnable := TRUE,
+//??	i_eCtrlMode := s_eCtrlMode,
+//??	i_bCmdReset := p_bCmdReset,
+//??	i_sEmName := 'EM State Machine',
+//??	i_ref_objCarrier := GVL_Modules.g_objCarrier);
+
+s_bStaError :=
+	GVL_Modules.g_emUtilities.q_bStaError 
+	OR GVL_Modules.g_emPalletConveyor.q_bStaError;
 	
 _m_Modules := TRUE;
 ]]></ST>
@@ -512,9 +557,9 @@ m_Main := TRUE;
 
 
 // Paul Schippers: just a test with the use of interfaces
-itfEmDoors.m_CloseOuterDoor();
+//??itfEmDoors.m_CloseOuterDoor();
 
-itfEmDockingInterface.m_OpenDockingClamps();
+//??itfEmDockingInterface.m_OpenDockingClamps();
 
 //IF NOT(itfEmAirTreatment.p_bStaPressurizingOK) THEN 
 //	itfEmAirTreatment.m_Pressurize();
@@ -623,7 +668,18 @@ itfEmDockingInterface.m_OpenDockingClamps();
     <LineIds Name="UN_CleanroomConnect._m_Init">
       <LineId Id="77" Count="0" />
       <LineId Id="6" Count="2" />
-      <LineId Id="131" Count="1" />
+      <LineId Id="170" Count="0" />
+      <LineId Id="134" Count="0" />
+      <LineId Id="137" Count="7" />
+      <LineId Id="148" Count="0" />
+      <LineId Id="152" Count="1" />
+      <LineId Id="155" Count="8" />
+      <LineId Id="175" Count="3" />
+      <LineId Id="171" Count="0" />
+      <LineId Id="164" Count="2" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="179" Count="0" />
+      <LineId Id="132" Count="0" />
       <LineId Id="126" Count="0" />
       <LineId Id="113" Count="2" />
       <LineId Id="111" Count="0" />
@@ -643,12 +699,19 @@ itfEmDockingInterface.m_OpenDockingClamps();
       <LineId Id="78" Count="0" />
     </LineIds>
     <LineIds Name="UN_CleanroomConnect._m_Modules">
+      <LineId Id="107" Count="0" />
+      <LineId Id="109" Count="4" />
+      <LineId Id="116" Count="0" />
+      <LineId Id="118" Count="3" />
+      <LineId Id="117" Count="0" />
       <LineId Id="94" Count="0" />
       <LineId Id="96" Count="3" />
       <LineId Id="95" Count="0" />
       <LineId Id="105" Count="0" />
       <LineId Id="102" Count="0" />
       <LineId Id="101" Count="0" />
+      <LineId Id="115" Count="0" />
+      <LineId Id="114" Count="0" />
       <LineId Id="103" Count="0" />
       <LineId Id="87" Count="0" />
       <LineId Id="20" Count="0" />

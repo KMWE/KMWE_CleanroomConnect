@@ -43,6 +43,8 @@ VAR
 	s_fbHmiBtnAutomatic			: FB_HmiBtn;
 	s_fbHmiBtnManual			: FB_HmiBtn;
 	s_fbHmiBtnAlarms			: FB_HmiBtn;
+	
+	s_fbHmiBtnReset				: FB_HmiBtn;
 //------------------------------------------//
 END_VAR]]></Declaration>
     <Implementation>
@@ -271,6 +273,9 @@ s_fbHmiBtnAutomatic();
 s_fbHmiBtnManual();
 //??s_fbHmiBtnTesterConfig();
 s_fbHmiBtnAlarms();
+
+s_fbHmiBtnReset();
+
 GVL.g_fbHmiBtnSimulation();
 //------------------------------------------//
 ]]></ST>
@@ -358,6 +363,11 @@ GVL.g_sToHmiBottomContent	:= GVL.g_stHmiBottomBar.Start;
 	s_fbHmiBtnAlarms.p_bStaEnabled			:= TRUE;
 	s_fbHmiBtnAlarms.p_eButtontype 			:= E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnAlarms.p_sBtnText				:= 'Alarms';
+	
+	s_fbHmiBtnReset.p_bStaVisible 			:= TRUE;
+	s_fbHmiBtnReset.p_bStaEnabled			:= TRUE;
+	s_fbHmiBtnReset.p_eButtontype 			:= E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnReset.p_sBtnText				:= 'Reset';
 
 	GVL.g_fbHmiBtnSimulation.p_bStaVisible 	:= TRUE;
 	GVL.g_fbHmiBtnSimulation.p_bStaEnabled	:= TRUE;
@@ -391,13 +401,13 @@ _m_Init := TRUE;
 GVL_Modules.g_emUtilities(
 	i_bReqEnable := TRUE,
 	i_eCtrlMode := s_eCtrlMode,
-	i_bCmdReset := p_bCmdReset,
+	i_bCmdReset := p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn, //Add temp reset button
 	i_sEmName := 'EM Utilities');
 	
 GVL_Modules.g_emPalletConveyor(
 	i_bReqEnable := TRUE,
 	i_eCtrlMode := s_eCtrlMode,
-	i_bCmdReset := p_bCmdReset,
+	i_bCmdReset := p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn, //Add temp reset button
 	i_sEmName := 'EM Pallet Conveyor');	
 
 //??GVL_Modules.g_emDockingCabin(
@@ -662,7 +672,10 @@ m_Main := TRUE;
       <LineId Id="264" Count="0" />
       <LineId Id="244" Count="2" />
       <LineId Id="142" Count="11" />
-      <LineId Id="155" Count="3" />
+      <LineId Id="155" Count="1" />
+      <LineId Id="295" Count="1" />
+      <LineId Id="294" Count="0" />
+      <LineId Id="157" Count="1" />
       <LineId Id="8" Count="0" />
     </LineIds>
     <LineIds Name="UN_CleanroomConnect._m_Init">
@@ -694,7 +707,11 @@ m_Main := TRUE;
       <LineId Id="125" Count="0" />
       <LineId Id="130" Count="0" />
       <LineId Id="11" Count="19" />
-      <LineId Id="41" Count="24" />
+      <LineId Id="41" Count="3" />
+      <LineId Id="181" Count="0" />
+      <LineId Id="183" Count="2" />
+      <LineId Id="182" Count="0" />
+      <LineId Id="45" Count="20" />
       <LineId Id="5" Count="0" />
       <LineId Id="78" Count="0" />
     </LineIds>

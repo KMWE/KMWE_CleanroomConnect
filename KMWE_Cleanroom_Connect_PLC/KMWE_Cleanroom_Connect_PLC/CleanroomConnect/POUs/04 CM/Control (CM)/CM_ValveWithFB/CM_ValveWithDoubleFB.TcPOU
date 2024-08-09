@@ -32,13 +32,16 @@ IF NOT SUPER^._m_Alarms() THEN
 	RETURN;
 END_IF
 
+s_bSimFeedBackIsOff := i_stSettings.tValveOffTimeout = T#0S;
+s_bSimFeedBackIsOn := i_stSettings.tValveOnTimeout = T#0S;
+
 // Timeout (timers)
 s_tonFeedBackOffTimeout(
-	IN := i_bReqEnable AND s_bReqOff AND NOT(s_bStaValveIsOff),
+	IN := i_bReqEnable AND s_bReqOff AND NOT(s_bStaValveIsOff) AND NOT(s_bSimFeedBackIsOff),
 	PT := i_stSettings.tValveOffTimeout );
 	
 s_tonFeedbackOnTimeout(
-	IN := i_bReqEnable AND s_bReqOn AND NOT(s_bStaValveIsOn),
+	IN := i_bReqEnable AND s_bReqOn AND NOT(s_bStaValveIsOn)  AND NOT(s_bSimFeedBackIsOn),
 	PT := i_stSettings.tValveOnTimeout );
 
 // Set error bits
@@ -96,12 +99,12 @@ IF NOT SUPER^._m_Inputs() THEN
 	RETURN;
 END_IF
 
-s_bStaValveIsOff1 := I_bStaValveIsOff;
-s_bStaValveIsOff2 := I_bStaValveIsOff2;
+s_bStaValveIsOff1 := I_bStaValveIsOff OR (s_bSimFeedBackIsOff AND s_bReqOff);;
+s_bStaValveIsOff2 := I_bStaValveIsOff2 OR (s_bSimFeedBackIsOff AND s_bReqOff);;
 s_bStaValveIsOff := s_bStaValveIsOff1 AND s_bStaValveIsOff2;
 
-s_bStaValveIsOn1 := I_bStaValveIsOn;
-s_bStaValveIsOn2 := I_bStaValveIsOn2; 
+s_bStaValveIsOn1 := I_bStaValveIsOn OR (s_bSimFeedBackIsOff AND s_bReqOn);;
+s_bStaValveIsOn2 := I_bStaValveIsOn2 OR (s_bSimFeedBackIsOff AND s_bReqOn);; 
 s_bStaValveIsOn := s_bStaValveIsOn1 AND s_bStaValveIsOn2;
 
 _m_Inputs := TRUE;
@@ -116,6 +119,9 @@ _m_Inputs := TRUE;
     <LineIds Name="CM_ValveWithDoubleFB._m_Alarms">
       <LineId Id="28" Count="0" />
       <LineId Id="19" Count="2" />
+      <LineId Id="142" Count="0" />
+      <LineId Id="144" Count="0" />
+      <LineId Id="143" Count="0" />
       <LineId Id="75" Count="0" />
       <LineId Id="79" Count="6" />
       <LineId Id="77" Count="0" />

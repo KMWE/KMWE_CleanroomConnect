@@ -3,11 +3,20 @@
   <DUT Name="ST_SettingsPalletConveyor" Id="{17185faa-8192-4589-aff2-b3f618a709c5}">
     <Declaration><![CDATA[TYPE ST_SettingsPalletConveyor :
 STRUCT
-	rSpeedManual : LREAL := 50.0; //Speed for manual control [default: 50.0 mm/s]
-	rSpeedGoToCentering : LREAL := 100.0; //Speed to move to centering position [default: 100.0 mm/s]
-	rSpeedGoToDocking : LREAL := 50.0; //Speed to move to docking position [default: 50.0 mm/s]
-	rSpeedReturnToInfeed : LREAL := 100.0; //Speed to move (back) to infeed position [default: 100.0 mm/s]
+	fSpeedManual : LREAL := 50.0; //Speed for manual control [default: 50.0 mm/s]
+	fSpeedGoToInfeed : LREAL := 100.0; //Speed to move (back) to infeed position [default: 100.0 mm/s]	
+	fSpeedGoToCentering : LREAL := 100.0; //Speed to move to centering position [default: 100.0 mm/s]
+	fSpeedGoToDocking : LREAL := 50.0; //Speed to move to docking position [default: 50.0 mm/s]
 	
+	fDistanceToInfeed : LREAL := 1250.0; //[mm]
+	fDistanceToCentring : LREAL := 1000.0; //[mm]
+	fDistanceToDocking : LREAL := 250.0; //mm
+	
+	fDistanceOuteDoorCheck : LREAL := 500.0; //mm
+	
+	fTravelTollerance : LREAL := 1.2; //factor (1.2 = +20%)
+	
+	tCentringDuration : TIME := T#3S; //Centrin duration
 	tTimeoutCentringToCenter : TIME := T#3S; //Timeout for extracting
 	tTimeoutCentringToIdle : TIME := T#3S; //Timeout for idle 
 END_STRUCT

@@ -5,6 +5,8 @@
 
 VAR_INPUT
 	i_stSettings : ST_SettingsValveWithFB;
+	i_bIclkOn : BOOL := TRUE; //TRUE = interlocked
+	i_bIclkOff : BOOL := TRUE; //TRUE = interlocked
 END_VAR
 
 VAR
@@ -37,9 +39,13 @@ VAR
 	// Alarms
 	s_fbAlarmHandlerFeedbackOnTimeout : FB_AlarmHandler;
 	s_fbAlarmHandlerFeedbackOffTimeout : FB_AlarmHandler;
+	s_fbAlarmHandlerOnInterlocked : FB_AlarmHandler;
+	s_fbAlarmHandlerOffInterlocked : FB_AlarmHandler;
 	
 	s_errFeedbackOnTimeout : BOOL;
 	s_errFeedbackOffTimeout : BOOL;
+	s_wrnOnInterlocked : BOOL;
+	s_wrnOffInterlocked : BOOL;
 	
 	// Timers
 	s_tonFeedbackOnTimeout : TON;
@@ -51,8 +57,8 @@ VAR
 	
 	s_fbHmiLedIsOff			: FB_HmiLed;
 	s_fbHmiLedIsOn			: FB_HmiLed;
-	s_fbHmiLedErrorOff	: FB_HmiLed;
-	s_fbHmiLedErrorOn	: FB_HmiLed;
+	s_fbHmiLedErrorOff		: FB_HmiLed;
+	s_fbHmiLedErrorOn		: FB_HmiLed;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -74,6 +80,8 @@ END_IF
 s_bSimFeedBackIsOff := i_stSettings.tValveOffTimeout = T#0S;
 s_bSimFeedBackIsOn := i_stSettings.tValveOnTimeout = T#0S;
 
+
+
 // Timeout (timers)
 s_tonFeedBackOffTimeout(
 	IN := i_bReqEnable AND s_bReqOff AND NOT(s_bStaValveIsOff) AND NOT(s_bSimFeedBackIsOff),
@@ -86,6 +94,9 @@ s_tonFeedbackOnTimeout(
 // Set error bits
 s_errFeedbackOffTimeout := (s_tonFeedBackOffTimeout.Q OR s_errFeedbackOffTimeout) AND NOT(i_bCmdReset);
 s_errFeedbackOnTimeout := (s_tonFeedbackOnTimeout.Q OR s_errFeedbackOnTimeout) AND NOT(i_bCmdReset);
+
+s_wrnOnInterlocked := s_bReqOn AND NOT(i_bIclkOn);
+s_wrnOffInterlocked := s_bReqOff AND NOT(i_bIclkOff);
 	
 s_fbAlarmHandlerFeedbackOffTimeout(
 	i_bStaActive := i_bReqEnable AND s_errFeedbackOffTimeout, 
@@ -96,6 +107,16 @@ s_fbAlarmHandlerFeedbackOnTimeout(
 	i_bStaActive := i_bReqEnable AND s_errFeedbackOnTimeout, 
 	i_eAlarmLevel := E_AlarmLevel.Alarm,
 	i_sAlarmText := CONCAT(i_sCmName, ': Feedback on timeout.')	);
+	
+s_fbAlarmHandlerOnInterlocked(
+	i_bStaActive := s_wrnOnInterlocked, 
+	i_eAlarmLevel := E_AlarmLevel.Warning,
+	i_sAlarmText := CONCAT(i_sCmName, ': On interlocked')	);
+	
+s_fbAlarmHandlerOffInterlocked(
+	i_bStaActive := s_wrnOffInterlocked, 
+	i_eAlarmLevel := E_AlarmLevel.Warning,
+	i_sAlarmText := CONCAT(i_sCmName, ': Off interlocked')	);
 
 s_bStaError := 
 	s_fbAlarmHandlerFeedbackOffTimeout.q_bStaActive
@@ -225,24 +246,51 @@ IF NOT SUPER^._m_Outputs() THEN
 	RETURN;
 END_IF
 
-IF s_bCfgBiStableValve THEN
-	// BI-STABLE
-	Q_bCmdOff := i_bReqEnable AND s_bReqOff AND NOT s_bStaValveIsOff;
-	Q_bCmdOn := i_bReqEnable AND s_bReqOn AND NOT s_bStaValveIsOn;
+CASE BOOL_TO_USINT(s_bCfgBiStableValve) OF
+	0 : // MONO-STABLE
+		IF i_bReqEnable AND s_bReqOff AND NOT(i_bIclkOff) THEN
+			Q_bCmdOff := TRUE;
+			Q_bCmdOn := FALSE;
+		ELSIF i_bReqEnable AND s_bReqOn AND NOT(i_bIclkOn) THEN
+			Q_bCmdOff := FALSE;
+			Q_bCmdOn := TRUE;
+		ELSE
+			Q_bCmdOff := FALSE;
+			Q_bCmdOn := FALSE;	
+		END_IF
 		
-ELSE// MONO-STABLE
-	IF i_bReqEnable AND s_bReqOff THEN
-		Q_bCmdOff := TRUE;
-		Q_bCmdOn := FALSE;
-	ELSIF i_bReqEnable AND s_bReqOn THEN
-		Q_bCmdOff := FALSE;
-		Q_bCmdOn := TRUE;
-	ELSE
-		Q_bCmdOff := FALSE;
-		Q_bCmdOn := FALSE;	
-	END_IF
+		//Force interlock
+		IF NOT(i_bIclkOff) THEN
+			Q_bCmdOff := FALSE;
+		END_IF
+		
+		IF NOT(i_bIclkOn) THEN
+			Q_bCmdOn := FALSE;
+		END_IF
 	
-END_IF
+	1 : // BI-STABLE
+		Q_bCmdOff := i_bReqEnable AND s_bReqOff AND NOT(s_bStaValveIsOff) AND NOT(i_bIclkOff);
+		Q_bCmdOn := i_bReqEnable AND s_bReqOn AND NOT(s_bStaValveIsOn) AND NOT(i_bIclkOn);
+END_CASE
+
+//--IF s_bCfgBiStableValve THEN
+//--	// BI-STABLE
+//--	Q_bCmdOff := i_bReqEnable AND s_bReqOff AND NOT s_bStaValveIsOff;
+//--	Q_bCmdOn := i_bReqEnable AND s_bReqOn AND NOT s_bStaValveIsOn;
+		
+//--ELSE// MONO-STABLE
+//--	IF i_bReqEnable AND s_bReqOff THEN
+//--		Q_bCmdOff := TRUE;
+//--		Q_bCmdOn := FALSE;
+//--	ELSIF i_bReqEnable AND s_bReqOn THEN
+//--		Q_bCmdOff := FALSE;
+//--		Q_bCmdOn := TRUE;
+//--	ELSE
+//--		Q_bCmdOff := FALSE;
+//--		Q_bCmdOn := FALSE;	
+//--	END_IF
+	
+//--END_IF
 
 _m_Outputs := TRUE;
 ]]></ST>
@@ -383,6 +431,7 @@ p_bStaValve := s_bStaValveIsOn AND NOT(s_bStaValveIsOff);
       <LineId Id="101" Count="0" />
       <LineId Id="100" Count="0" />
       <LineId Id="75" Count="0" />
+      <LineId Id="104" Count="1" />
       <LineId Id="102" Count="0" />
       <LineId Id="79" Count="6" />
       <LineId Id="77" Count="0" />
@@ -390,10 +439,17 @@ p_bStaValve := s_bStaValveIsOn AND NOT(s_bStaValveIsOff);
       <LineId Id="92" Count="0" />
       <LineId Id="94" Count="0" />
       <LineId Id="90" Count="0" />
+      <LineId Id="116" Count="2" />
       <LineId Id="87" Count="0" />
       <LineId Id="45" Count="3" />
       <LineId Id="54" Count="0" />
       <LineId Id="56" Count="3" />
+      <LineId Id="106" Count="0" />
+      <LineId Id="108" Count="2" />
+      <LineId Id="107" Count="0" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="113" Count="2" />
+      <LineId Id="112" Count="0" />
       <LineId Id="63" Count="0" />
       <LineId Id="95" Count="0" />
       <LineId Id="97" Count="1" />
@@ -460,6 +516,18 @@ p_bStaValve := s_bStaValveIsOn AND NOT(s_bStaValveIsOff);
     <LineIds Name="CM_ValveWithFB._m_Outputs">
       <LineId Id="31" Count="0" />
       <LineId Id="7" Count="2" />
+      <LineId Id="75" Count="2" />
+      <LineId Id="84" Count="8" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="94" Count="2" />
+      <LineId Id="98" Count="0" />
+      <LineId Id="100" Count="1" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="80" Count="2" />
+      <LineId Id="78" Count="0" />
       <LineId Id="61" Count="0" />
       <LineId Id="60" Count="0" />
       <LineId Id="62" Count="0" />

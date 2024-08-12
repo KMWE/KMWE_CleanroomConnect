@@ -4,6 +4,8 @@
     <Declaration><![CDATA[FUNCTION_BLOCK CM_SEW_WithBrake EXTENDS CM_Base //IMPLEMENTS I_Motor_base
 VAR_INPUT
 	i_stSettings : ST_SettingsSEW_WithBrake;
+	i_bIclkForward : BOOL := TRUE; //TRUE = interlocked
+	i_bIclkBackward : BOOL := TRUE; //TRUE = interlocked
 END_VAR
 VAR
 	// Inputs
@@ -41,10 +43,14 @@ VAR
 	s_fbAlarmHandlerDriveError : FB_AlarmHandler;
 	s_fbAlarmHandlerApplyingBrakeNotAllowed : FB_AlarmHandler;
 	s_fbAlarmHandlerStartMotorNotAllowed : FB_AlarmHandler;
+	s_fbAlarmHandlerMotorForwardInterlocked : FB_AlarmHandler;
+	s_fbAlarmHandlerMotorBackwardInterlocked : FB_AlarmHandler;
 	
 	s_errDriveError : BOOL;
 	s_wrnApplyingBrakeNotAllowed : BOOL;
 	s_wrnStartMotorNotAllowed : BOOL;
+	s_wrnMotorForwardInterlocked : BOOL;
+	s_wrnMotorBackwardInterlocked : BOOL;
 	
 	//Hmi
 	s_fbHmiBtnManualReleaseBrake: FB_HmiBtn;
@@ -83,6 +89,9 @@ END_IF
 // Set error bits
 s_errDriveError := i_bReqEnable AND s_bStaDriveError AND NOT(i_bCmdReset);
 
+s_wrnMotorForwardInterlocked := s_bReqStartForward AND i_bIclkForward;
+s_wrnMotorBackwardInterlocked := s_bReqStartBackward AND i_bIclkBackward;
+
 // Alarm Handlers
 s_fbAlarmHandlerDriveError(
 	i_bStaActive := s_errDriveError,
@@ -103,6 +112,16 @@ s_fbAlarmHandlerStartMotorNotAllowed(
 	
 s_wrnStartMotorNotAllowed R= s_bStaBrakeReleased;
 	
+s_fbAlarmHandlerMotorForwardInterlocked(
+	i_bStaActive := s_wrnMotorForwardInterlocked,
+	i_eAlarmLevel := E_AlarmLevel.Warning,
+	i_sAlarmText := CONCAT(i_sCmName, ': Motor - not allowed to move forward (external interlock).'));
+	
+s_fbAlarmHandlerMotorBackwardInterlocked(
+	i_bStaActive := s_wrnMotorBackwardInterlocked,
+	i_eAlarmLevel := E_AlarmLevel.Warning,
+	i_sAlarmText := CONCAT(i_sCmName, ': Motor - not allowed to move backward (external interlock).'));
+
 // Alarm collector	
 s_bStaError := 
 	s_fbAlarmHandlerDriveError.q_bStaActive;
@@ -300,16 +319,16 @@ s_tonBrakeReleasedDelay(
 	Q => s_bStaBrakeReleased); 
 	
 Q_bCmdReleaseBrake := (i_bReqEnable AND s_bReqReleaseBrake)
-						OR (s_bReqStartForward OR s_bReqStartBackward)
+						OR ((s_bReqStartForward AND NOT(i_bIclkForward)) OR (s_bReqStartBackward AND NOT(i_bIclkBackward)))
 						OR NOT(s_bStaMotorStopped); // Make sure the brake can't be applied when drive is not stopped	
 
-bCmdStart := i_bReqEnable AND (s_bReqStartForward OR s_bReqStartBackward);
+bCmdStart := i_bReqEnable AND ((s_bReqStartForward AND NOT(i_bIclkForward)) OR (s_bReqStartBackward AND NOT(i_bIclkBackward)));
 Q_bCmdStart := s_tofResetPulse.Q OR (bCmdStart AND s_bStaBrakeReleased); // Make sure that drive can't start when brake is not released	
 				
 Q_bCmdReverseDirection := i_bReqEnable AND s_bReqStartBackward;
 
 // Write (convert) target speed drive (analog output)
-IF i_bReqEnable AND (s_bReqStartForward OR s_bReqStartBackward) THEN
+IF i_bReqEnable AND ((s_bReqStartForward AND NOT(i_bIclkForward)) OR (s_bReqStartBackward AND NOT(i_bIclkBackward))) THEN
 	Q_nSetTargetSpeed := LREAL_TO_INT(s_rTargetSpeed / i_stSettings.rMaxTargetSpeed * cMAX_INT_VALUE);
 ELSE
 	Q_nSetTargetSpeed := 0;	
@@ -505,6 +524,7 @@ p_bStaMotorStopped := s_bStaMotorStopped;
       <LineId Id="103" Count="0" />
       <LineId Id="79" Count="0" />
       <LineId Id="86" Count="0" />
+      <LineId Id="151" Count="2" />
       <LineId Id="90" Count="0" />
       <LineId Id="45" Count="0" />
       <LineId Id="33" Count="0" />
@@ -518,6 +538,12 @@ p_bStaMotorStopped := s_bStaMotorStopped;
       <LineId Id="121" Count="0" />
       <LineId Id="136" Count="0" />
       <LineId Id="135" Count="0" />
+      <LineId Id="143" Count="2" />
+      <LineId Id="140" Count="0" />
+      <LineId Id="146" Count="0" />
+      <LineId Id="148" Count="2" />
+      <LineId Id="147" Count="0" />
+      <LineId Id="138" Count="0" />
       <LineId Id="60" Count="0" />
       <LineId Id="32" Count="0" />
       <LineId Id="110" Count="0" />

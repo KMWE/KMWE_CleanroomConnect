@@ -5,16 +5,15 @@
 {attribute 'strict'}
 TYPE E_SeqTransport :
 (
-	UNKNOWN := 0,
-
+	IDLE := 0, //Do Nothing
+	START := 1, //First step executed after reset sequence
+	BUSY := 1000, //Module busy
 	TB_TO_INFEED,
-	TB_AT_INFEED,
-
 	TB_TO_CENTRING,
-	TB_AT_CENTRING,
-
 	TB_TO_DOCKING,
-	TB_AT_DOCKING
+	STOP,
+	READY := 10000, //Module is ready, only executed once
+	ERROR := 20000 // Module has an error
 );
 END_TYPE
 ]]></Declaration>

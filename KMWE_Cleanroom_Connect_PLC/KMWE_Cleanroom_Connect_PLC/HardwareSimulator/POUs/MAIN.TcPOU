@@ -3,24 +3,40 @@
   <POU Name="MAIN" Id="{81b5c3b0-b471-4cd8-addb-1925034be3d2}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM MAIN
 VAR
+	//EM Pallet Transport
+	simCentring : SIM_ValveWithDoubleFB;	
+
+	//EM Docking Interface
+	simDockingClampUpper : SIM_ValveWithDoubleFB;
+	simDockingClampLower : SIM_ValveWithDoubleFB;
 	simUnlockPinUpper : SIM_ValveWithFB;
 	simUnlockPinLower : SIM_ValveWithFB;
-	simClampUpper : SIM_ValveWithDoubleFB;
-	simClampLower : SIM_ValveWithDoubleFB;
+	simDoorOpener : SIM_ValveWithFB;
+	simDoorShutter : SIM_ValveWithFB;
+	
 END_VAR
 ]]></Declaration>
     <Implementation>
       <ST><![CDATA[
+//EM Pallet Conveyor
+simCentring();
+
+//EM Docking Interface
+simDockingClampUpper();
+simDockingClampLower();
 simUnlockPinUpper();
 simUnlockPinLower();
-simClampUpper();
-simClampLower();
+simDoorOpener();
+simDoorShutter();
 ]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
-      <LineId Id="13" Count="3" />
-      <LineId Id="2" Count="0" />
+      <LineId Id="38" Count="2" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="59" Count="4" />
       <LineId Id="27" Count="0" />
+      <LineId Id="64" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>

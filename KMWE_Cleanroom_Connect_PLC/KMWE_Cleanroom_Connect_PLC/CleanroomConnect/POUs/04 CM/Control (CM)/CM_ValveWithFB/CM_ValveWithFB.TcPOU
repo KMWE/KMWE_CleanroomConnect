@@ -95,8 +95,8 @@ s_tonFeedbackOnTimeout(
 s_errFeedbackOffTimeout := (s_tonFeedBackOffTimeout.Q OR s_errFeedbackOffTimeout) AND NOT(i_bCmdReset);
 s_errFeedbackOnTimeout := (s_tonFeedbackOnTimeout.Q OR s_errFeedbackOnTimeout) AND NOT(i_bCmdReset);
 
-s_wrnOnInterlocked := s_bReqOn AND NOT(i_bIclkOn);
-s_wrnOffInterlocked := s_bReqOff AND NOT(i_bIclkOff);
+s_wrnOnInterlocked := s_bReqOn AND i_bIclkOn;
+s_wrnOffInterlocked := s_bReqOff AND i_bIclkOff;
 	
 s_fbAlarmHandlerFeedbackOffTimeout(
 	i_bStaActive := i_bReqEnable AND s_errFeedbackOffTimeout, 
@@ -169,6 +169,24 @@ s_fbHmiLedErrorOff(i_bStaLed := s_errFeedbackOffTimeout);
 s_fbHmiLedErrorOn(i_bStaLed := s_errFeedbackOnTimeout);
 
 {warning '#TODO: Add manual control from hmi'}
+
+CASE i_eCtrlMode OF
+
+	E_CtrlMode.IDLE:
+		s_fbHmiBtnManualOff.p_bStaVisible := FALSE;
+		s_fbHmiBtnManualOff.p_bStaEnabled := FALSE;
+	
+		s_fbHmiBtnManualOn.p_bStaVisible := FALSE;
+		s_fbHmiBtnManualOn.p_bStaEnabled := FALSE;
+
+	E_CtrlMode.AUTOMATIC:
+		s_fbHmiBtnManualOff.p_bStaVisible := FALSE;
+		s_fbHmiBtnManualOff.p_bStaEnabled := FALSE;
+	
+		s_fbHmiBtnManualOn.p_bStaVisible := FALSE;
+		s_fbHmiBtnManualOn.p_bStaEnabled := FALSE;
+
+	E_CtrlMode.MANUAL:
 		//Is het de bedoeling om op deze plekken de hmi knoppen aan te sturen, OF moet dat gedaan worden in METHOD hmi?		
 		s_fbHmiBtnManualOff.p_bStaVisible := TRUE;
 		s_fbHmiBtnManualOff.p_bStaEnabled := TRUE;
@@ -183,7 +201,8 @@ s_fbHmiLedErrorOn(i_bStaLed := s_errFeedbackOnTimeout);
 		IF s_fbHmiBtnManualOn.p_osrBtnPress THEN
 			m_On();
 		END_IF
-
+END_CASE
+		
 _m_Hmi := TRUE;
 ]]></ST>
       </Implementation>
@@ -259,12 +278,12 @@ CASE BOOL_TO_USINT(s_bCfgBiStableValve) OF
 			Q_bCmdOn := FALSE;	
 		END_IF
 		
-		//Force interlock
-		IF NOT(i_bIclkOff) THEN
+		//Force output FALSE if interlocked
+		IF i_bIclkOff THEN
 			Q_bCmdOff := FALSE;
 		END_IF
 		
-		IF NOT(i_bIclkOn) THEN
+		IF i_bIclkOn THEN
 			Q_bCmdOn := FALSE;
 		END_IF
 	
@@ -480,7 +499,19 @@ p_bStaValve := s_bStaValveIsOn AND NOT(s_bStaValveIsOff);
       <LineId Id="102" Count="1" />
       <LineId Id="148" Count="0" />
       <LineId Id="104" Count="0" />
-      <LineId Id="106" Count="5" />
+      <LineId Id="106" Count="0" />
+      <LineId Id="152" Count="0" />
+      <LineId Id="151" Count="0" />
+      <LineId Id="154" Count="0" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="160" Count="3" />
+      <LineId Id="155" Count="0" />
+      <LineId Id="157" Count="1" />
+      <LineId Id="165" Count="3" />
+      <LineId Id="164" Count="0" />
+      <LineId Id="159" Count="0" />
+      <LineId Id="150" Count="0" />
+      <LineId Id="107" Count="4" />
       <LineId Id="141" Count="0" />
       <LineId Id="113" Count="0" />
       <LineId Id="146" Count="0" />
@@ -488,6 +519,7 @@ p_bStaValve := s_bStaValveIsOn AND NOT(s_bStaValveIsOff);
       <LineId Id="142" Count="0" />
       <LineId Id="144" Count="1" />
       <LineId Id="143" Count="0" />
+      <LineId Id="169" Count="0" />
       <LineId Id="84" Count="0" />
       <LineId Id="15" Count="0" />
       <LineId Id="87" Count="0" />

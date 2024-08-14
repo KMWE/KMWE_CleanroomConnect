@@ -18,18 +18,46 @@ END_VAR
 ]]></Declaration>
     <Implementation>
       <ST><![CDATA[
-s_tonOn(IN := I_bCmdValveOn, PT := T#2S);
-Q_bStaFeedbackOn := s_tonOn.Q;
+s_tonOn(IN := I_bCmdValveOn AND NOT(I_bCmdValveOff), PT := T#2S);
 
-s_tonOff(IN := I_bCmdValveOff, PT := T#2S);
-Q_bStaFeedbackOff := s_tonOff.Q;
+IF s_tonOn.Q THEN
+	Q_bStaFeedbackOn := TRUE;
+ELSIF I_bCmdValveOff THEN
+	Q_bStaFeedbackOn := FALSE;
+END_IF	
+	
+s_tonOff(IN := I_bCmdValveOff AND NOT(I_bCmdValveOn), PT := T#2S);
+
+IF s_tonOff.Q THEN
+	Q_bStaFeedbackOff := TRUE;
+ELSIF I_bCmdValveOn THEN
+	Q_bStaFeedbackOff := FALSE;
+END_IF
+
+//old
+//s_tonOn(IN := I_bCmdValveOn, PT := T#2S);
+//Q_bStaFeedbackOn := s_tonOn.Q;
+
+//s_tonOff(IN := I_bCmdValveOff, PT := T#2S);
+//Q_bStaFeedbackOff := s_tonOff.Q;
 ]]></ST>
     </Implementation>
     <LineIds Name="SIM_ValveWithFB">
-      <LineId Id="22" Count="1" />
-      <LineId Id="28" Count="0" />
-      <LineId Id="27" Count="0" />
-      <LineId Id="25" Count="1" />
+      <LineId Id="53" Count="1" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="57" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="63" Count="3" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="45" Count="4" />
+      <LineId Id="44" Count="0" />
       <LineId Id="29" Count="0" />
     </LineIds>
   </POU>

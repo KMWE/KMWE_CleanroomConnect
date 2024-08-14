@@ -31,6 +31,8 @@ VAR
 //------------------------------------------//
 //Variables
 	s_stSqldbSettings			: ST_SqLdbConfiguration;
+	s_bStaWarning : BOOL;
+	s_bStaRunning : BOOL;
 //------------------------------------------//
 
 //------------------------------------------//
@@ -394,23 +396,35 @@ _m_Init := TRUE;
     </Method>
     <Method Name="_m_Modules" Id="{2372c80a-8810-4c92-8500-979916e08046}">
       <Declaration><![CDATA[METHOD PROTECTED _m_Modules : BOOL
-]]></Declaration>
+VAR
+	bReqEnable : BOOL;
+END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[
+GVL_Modules.g_emUtilities.m_GetGeneralState(
+	i_bError := s_bStaError,
+	i_bWarning := s_bStaWarning,
+	i_bRunning := s_bStaRunning);
+
 GVL_Modules.g_emUtilities(
 	i_bReqEnable := TRUE,
 	i_eCtrlMode := s_eCtrlMode,
 	i_bCmdReset := p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn, //Add temp reset button
 	i_sEmName := 'EM Utilities');
 	
+bReqEnable :=
+	GVL_Modules.g_emUtilities.p_bStaSafetyOK
+	AND GVL_Modules.g_emUtilities.p_bSts24VdcOk
+	AND GVL_Modules.g_emUtilities.p_bStaAirPressureOk;
+	
 GVL_Modules.g_emPalletConveyor(
-	i_bReqEnable := TRUE,
+	i_bReqEnable := bReqEnable,
 	i_eCtrlMode := s_eCtrlMode,
 	i_bCmdReset := p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn, //Add temp reset button
 	i_sEmName := 'EM Pallet Conveyor');
 
 GVL_Modules.g_emDockingInterface(
-	i_bReqEnable := TRUE,
+	i_bReqEnable := bReqEnable,
 	i_eCtrlMode := s_eCtrlMode,
 	i_bCmdReset := p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn, //Add temp reset button
 	i_sEmName := 'EM Docking Interface');	
@@ -424,7 +438,8 @@ GVL_Modules.g_emDockingInterface(
 
 s_bStaError :=
 	GVL_Modules.g_emUtilities.q_bStaError 
-	OR GVL_Modules.g_emPalletConveyor.q_bStaError;
+	OR GVL_Modules.g_emPalletConveyor.q_bStaError
+	OR GVL_Modules.g_emDockingInterface.q_bStaError;
 	
 _m_Modules := TRUE;
 ]]></ST>
@@ -688,9 +703,17 @@ m_Main := TRUE;
       <LineId Id="78" Count="0" />
     </LineIds>
     <LineIds Name="UN_CleanroomConnect._m_Modules">
+      <LineId Id="149" Count="0" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="155" Count="0" />
+      <LineId Id="157" Count="1" />
       <LineId Id="107" Count="0" />
       <LineId Id="109" Count="4" />
       <LineId Id="116" Count="0" />
+      <LineId Id="137" Count="0" />
+      <LineId Id="141" Count="0" />
+      <LineId Id="143" Count="1" />
+      <LineId Id="138" Count="0" />
       <LineId Id="118" Count="3" />
       <LineId Id="117" Count="0" />
       <LineId Id="130" Count="4" />
@@ -706,6 +729,7 @@ m_Main := TRUE;
       <LineId Id="101" Count="0" />
       <LineId Id="115" Count="0" />
       <LineId Id="114" Count="0" />
+      <LineId Id="136" Count="0" />
       <LineId Id="103" Count="0" />
       <LineId Id="87" Count="0" />
       <LineId Id="20" Count="0" />

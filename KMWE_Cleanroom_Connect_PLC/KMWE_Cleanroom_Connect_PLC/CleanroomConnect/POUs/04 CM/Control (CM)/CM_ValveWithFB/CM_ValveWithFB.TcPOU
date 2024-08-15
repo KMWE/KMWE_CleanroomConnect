@@ -169,20 +169,16 @@ s_fbHmiLedErrorOff(i_bStaLed := s_errFeedbackOffTimeout);
 s_fbHmiLedErrorOn(i_bStaLed := s_errFeedbackOnTimeout);
 
 {warning '#TODO: Add manual control from hmi'}
-
 CASE i_eCtrlMode OF
 
-	E_CtrlMode.IDLE:
+	E_CtrlMode.IDLE..
+	E_CtrlMode.AUTOMATIC:
 		s_fbHmiBtnManualOff.p_bStaVisible := FALSE;
 		s_fbHmiBtnManualOff.p_bStaEnabled := FALSE;
 	
 		s_fbHmiBtnManualOn.p_bStaVisible := FALSE;
 		s_fbHmiBtnManualOn.p_bStaEnabled := FALSE;
 
-	E_CtrlMode.AUTOMATIC:
-		s_fbHmiBtnManualOff.p_bStaVisible := FALSE;
-		s_fbHmiBtnManualOff.p_bStaEnabled := FALSE;
-	
 		s_fbHmiBtnManualOn.p_bStaVisible := FALSE;
 		s_fbHmiBtnManualOn.p_bStaEnabled := FALSE;
 
@@ -327,7 +323,8 @@ END_IF
 s_bReqOff := TRUE XOR s_bCfgReverseValve;
 s_bReqOn := FALSE XOR s_bCfgReverseValve;
 
-m_Off := TRUE;
+//--m_Off := TRUE;
+m_off := s_bStaValveIsOff;
 ]]></ST>
       </Implementation>
     </Method>
@@ -343,7 +340,8 @@ END_IF
 s_bReqOff := FALSE XOR s_bCfgReverseValve;
 s_bReqOn := TRUE XOR s_bCfgReverseValve;
 
-m_On := TRUE;
+//--m_On := TRUE;
+m_On := s_bStaValveIsOn;
 ]]></ST>
       </Implementation>
     </Method>
@@ -500,14 +498,14 @@ p_bStaValve := s_bStaValveIsOn AND NOT(s_bStaValveIsOff);
       <LineId Id="148" Count="0" />
       <LineId Id="104" Count="0" />
       <LineId Id="106" Count="0" />
-      <LineId Id="152" Count="0" />
       <LineId Id="151" Count="0" />
       <LineId Id="154" Count="0" />
       <LineId Id="153" Count="0" />
+      <LineId Id="171" Count="0" />
       <LineId Id="160" Count="3" />
       <LineId Id="155" Count="0" />
-      <LineId Id="157" Count="1" />
-      <LineId Id="165" Count="3" />
+      <LineId Id="157" Count="0" />
+      <LineId Id="168" Count="0" />
       <LineId Id="164" Count="0" />
       <LineId Id="159" Count="0" />
       <LineId Id="150" Count="0" />
@@ -587,6 +585,7 @@ p_bStaValve := s_bStaValveIsOn AND NOT(s_bStaValveIsOff);
       <LineId Id="23" Count="1" />
       <LineId Id="11" Count="0" />
       <LineId Id="5" Count="0" />
+      <LineId Id="29" Count="0" />
       <LineId Id="26" Count="0" />
     </LineIds>
     <LineIds Name="CM_ValveWithFB.m_On">
@@ -596,6 +595,7 @@ p_bStaValve := s_bStaValveIsOn AND NOT(s_bStaValveIsOff);
       <LineId Id="7" Count="0" />
       <LineId Id="11" Count="0" />
       <LineId Id="10" Count="0" />
+      <LineId Id="25" Count="0" />
       <LineId Id="23" Count="0" />
     </LineIds>
     <LineIds Name="CM_ValveWithFB.m_Stop">

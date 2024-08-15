@@ -166,12 +166,12 @@ END_IF
 s_fbAlarmHandlerTravelTimeOut(
 	i_bStaActive := s_bErrTravelTimeOut, 
 	i_eAlarmLevel := E_AlarmLevel.Alarm, 
-	i_sAlarmText := CONCAT('Travel error: ', s_sReason));
+	i_sAlarmText := CONCAT(i_sEmName, CONCAT( ': Travel error: ', s_sReason)));
 	
 s_fbAlarmHandlerOuterDoorNotOpened(
 	i_bStaActive := s_bWrnOuterDoorNotOpened, 
 	i_eAlarmLevel := E_AlarmLevel.Warning, 
-	i_sAlarmText := 'Outer-door open not detected');
+	i_sAlarmText := CONCAT(i_sEmName, ': Outer-door open not detected'));
 
 // Reset warnings
 IF i_bCmdReset THEN
@@ -591,7 +591,15 @@ CASE s_eSeqTransport OF
 		s_eSeqTransport := E_SeqTransport.START;
 		
 	E_SeqTransport.START:
-		IF s_fbSeqTransportControl.q_tmStepTime > T#1S THEN
+		//--IF s_fbSeqTransportControl.q_tmStepTime > T#1S THEN
+		//--	s_eSeqTransport := E_SeqTransport.READY;
+		//--END_IF
+		
+		IF s_fbSeqTransportControl.q_bStaEntry THEN
+			s_cmPalletConveyor.m_Stop();
+		END_IF		
+	
+		IF s_cmPalletConveyor.p_bStaMotorStopped AND NOT (s_cmPalletConveyor.p_bStaBrakeReleased) AND s_fbSeqTransportControl.q_tmStepTime > T#1S THEN
 			s_eSeqTransport := E_SeqTransport.READY;
 		END_IF
 		
@@ -915,7 +923,8 @@ CASE i_eCtrlMode OF
 *)	
 		
 	E_CtrlMode.MANUAL:
-		;
+		s_eSeqTransport := E_SeqTransport.IDLE;
+		s_eSeqCentring := E_SeqCentring.IDLE;
 	
 		// Manual control placed inside the lower layer control modles
 	
@@ -1193,6 +1202,12 @@ m_Main := TRUE;
     <LineIds Name="EM_PalletConveyor._m_SeqTransport">
       <LineId Id="473" Count="22" />
       <LineId Id="518" Count="2" />
+      <LineId Id="642" Count="0" />
+      <LineId Id="644" Count="0" />
+      <LineId Id="643" Count="0" />
+      <LineId Id="645" Count="0" />
+      <LineId Id="649" Count="0" />
+      <LineId Id="646" Count="2" />
       <LineId Id="617" Count="0" />
       <LineId Id="619" Count="20" />
       <LineId Id="618" Count="0" />
@@ -1214,7 +1229,9 @@ m_Main := TRUE;
       <LineId Id="2891" Count="0" />
       <LineId Id="2539" Count="1" />
       <LineId Id="2623" Count="1" />
-      <LineId Id="2690" Count="156" />
+      <LineId Id="2690" Count="155" />
+      <LineId Id="2897" Count="0" />
+      <LineId Id="2846" Count="0" />
       <LineId Id="2895" Count="0" />
       <LineId Id="2894" Count="0" />
       <LineId Id="2850" Count="39" />

@@ -25,6 +25,14 @@ VAR
 	s_bReqApplyBrake : BOOL;
 	s_bReqReset : BOOL;
 	
+	// Commands
+	//--s_bCmdStop : BOOL;
+	s_bCmdForward : BOOL;
+	s_bCmdBackward : BOOL;
+	s_bCmdReleaseBrake : BOOL;
+	//--s_bCmdApplyBrake : BOOL;
+	s_bCmdReset : BOOL;
+	
 	// States
 	s_bStaReadyForOperation: BOOL;
 	s_bStaDriveError: BOOL;
@@ -32,7 +40,7 @@ VAR
 	s_bStaMotorStopped : BOOL;
 	
 	// Setpoints
-	s_rTargetSpeed : LREAL; // Target speed [mm/s]
+	s_fTargetSpeed : LREAL; // Target speed [mm/s]
 	
 	// Timers
 	s_tofResetPulse : TOF;
@@ -67,7 +75,8 @@ VAR
 	//Sequence
 	eSeqSEW_WithBrake : E_SeqSEW_WithBrake;
 	seqTimer : TON;
-	seqPreStep : USINT;
+	seqPreStep : E_SeqSEW_WithBrake;
+	s_sActStep : STRING;
 	
 END_VAR
 
@@ -144,69 +153,129 @@ IF NOT SUPER^._m_Devices() THEN
 	RETURN;
 END_IF
 
- //: E_SeqSEW_WithBrake;//
-//	seqTimer : TON;
-//	seqPreStep : USINT;
-(*
+//Exception error
+IF (s_bStaError OR NOT(i_bReqEnable))
+	AND (eSeqSEW_WithBrake < E_SeqSEW_WithBrake.STOPPING) THEN
+		eSeqSEW_WithBrake := E_SeqSEW_WithBrake.STOPPING;
+END_IF 
+
+seqTimer(
+	IN := (eSeqSEW_WithBrake = seqPreStep),
+	PT := T#3600S);
+	
+seqPreStep := eSeqSEW_WithBrake;
+
+s_sActStep := TO_STRING(eSeqSEW_WithBrake);
+	
 CASE eSeqSEW_WithBrake OF
 	
 	E_SeqSEW_WithBrake.INIT:
-		Q_bCmdReleaseBrake := FALSE;
-		Q_bCmdStart := FALSE;
-		Q_bCmdReverseDirection := FALSE;
-		Q_nSetTargetSpeed := 0;
+		_m_ResetAllRequests();
+	
+		//Reset commands
+		s_bCmdForward := FALSE;
+		s_bCmdBackward := FALSE;	
+		s_bCmdReleaseBrake := FALSE;
+		s_bCmdReset := FALSE;
+		s_fTargetSpeed := 0;
+		
+		//Reset states
+		s_bStaBrakeReleased := FALSE;
+		s_bStaDriveError := FALSE;
+		s_bStaMotorStopped := FALSE;
+		s_bStaReadyForOperation := FALSE;
 	
 		eSeqSEW_WithBrake := E_SeqSEW_WithBrake.STOPPED; 
 		
 	E_SeqSEW_WithBrake.STOPPED:
-		; //wait
-	
+		s_bStaBrakeReleased := FALSE;
+		//--s_bStaDriveError := FALSE;
+		s_bStaMotorStopped := TRUE;
+		s_bReqStop := FALSE;
+		s_bStaReadyForOperation := TRUE;
+		
+		IF (s_bReqReleaseBrake OR s_bReqStartForward OR s_bReqStartBackward) (*AND NOT(s_bReqStop)*) THEN
+			eSeqSEW_WithBrake := E_SeqSEW_WithBrake.RELEASE_BRAKE;
+		END_IF
+
+		IF s_bReqApplyBrake THEN
+			eSeqSEW_WithBrake := E_SeqSEW_WithBrake.APPLY_BRAKE;
+		END_IF	
+		
 	E_SeqSEW_WithBrake.RELEASE_BRAKE:
-		Q_bCmdReleaseBrake := TRUE;
-		Q_bCmdStart := FALSE;
-		Q_bCmdReverseDirection := FALSE;
-		Q_nSetTargetSpeed := 0;
+		s_bCmdReleaseBrake := TRUE;
+		s_bReqReleaseBrake := FALSE;
+		
+		IF seqTimer.ET > i_stSettings.tBrakeReleasedDelay THEN
+			s_bStaBrakeReleased := TRUE;
+		END_IF
+		
+		IF s_bReqStop THEN
+			eSeqSEW_WithBrake := E_SeqSEW_WithBrake.STOPPING;
+		ELSIF s_bStaBrakeReleased AND s_bReqStartForward THEN
+			eSeqSEW_WithBrake := E_SeqSEW_WithBrake.MOVING_FORWARD;
+		ELSIF s_bStaBrakeReleased AND s_bReqStartBackward THEN
+			eSeqSEW_WithBrake := E_SeqSEW_WithBrake.MOVING_BACKWARD;
+		ELSIF s_bReqApplyBrake THEN
+			eSeqSEW_WithBrake := E_SeqSEW_WithBrake.APPLY_BRAKE;
+		END_IF
 	
-	E_SeqSEW_WithBrake.FORWARD:
-		Q_bCmdReleaseBrake := FALSE;
-		Q_bCmdStart := TRUE;
-		Q_bCmdReverseDirection := TRUE;
-		Q_nSetTargetSpeed := 0;
+	E_SeqSEW_WithBrake.MOVING_FORWARD:
+		s_bCmdForward := TRUE;
+		s_bReqStartForward := FALSE;
+		
+		s_bStaMotorStopped := FALSE;
+		//s_fTargetSpeed is written by method 
 	
-	E_SeqSEW_WithBrake.BACKWARD:
-		Q_bCmdReleaseBrake := TRUE;
-		Q_bCmdStart := TRUE;
-		Q_bCmdReverseDirection := TRUE;
-		Q_nSetTargetSpeed := 0;
+		IF s_bReqStop THEN
+			eSeqSEW_WithBrake := E_SeqSEW_WithBrake.STOPPING;
+		END_IF
+		
+	E_SeqSEW_WithBrake.MOVING_BACKWARD:
+		s_bCmdBackward := TRUE;
+		s_bReqStartBackward := FALSE;
+		
+		s_bStaMotorStopped := FALSE;
+		//s_fTargetSpeed is written by method 
 	
-	E_SeqSEW_WithBrake.STOP:
-		Q_bCmdReleaseBrake := TRUE;
-		Q_bCmdStart := FALSE;
-		Q_bCmdReverseDirection := FALSE;
-		Q_nSetTargetSpeed := 0;
+		IF s_bReqStop THEN
+			eSeqSEW_WithBrake := E_SeqSEW_WithBrake.STOPPING;
+		END_IF
+	
+	E_SeqSEW_WithBrake.STOPPING:
+		s_bCmdForward := FALSE;
+		s_bCmdBackward := FALSE;
+		s_bReqStop := FALSE;
+		
+		IF seqTimer.ET > i_stSettings.tMotorStoppedDelay THEN
+			s_bStaMotorStopped := TRUE;
+			eSeqSEW_WithBrake := E_SeqSEW_WithBrake.APPLY_BRAKE;
+		END_IF	
 	
 	E_SeqSEW_WithBrake.APPLY_BRAKE:
-		Q_bCmdReleaseBrake := FALSE;
-		Q_bCmdStart := FALSE;
-		Q_bCmdReverseDirection := FALSE;
-		Q_nSetTargetSpeed := 0;
-	
-END_CASE		
-	
-	
-	
-
+		s_bCmdReleaseBrake := FALSE;
+		s_bReqApplyBrake := FALSE;
+		
+		IF seqTimer.ET > i_stSettings.tBrakeReleasedDelay THEN
+			s_bStaBrakeReleased := FALSE;
+			
+			IF (s_bStaError OR NOT(i_bReqEnable)) THEN
+				eSeqSEW_WithBrake := E_SeqSEW_WithBrake.ERROR;
+			ELSE
+				_m_ResetAllRequests();
+				eSeqSEW_WithBrake := E_SeqSEW_WithBrake.STOPPED;
+			END_IF	
+		END_IF
+		
+	E_SeqSEW_WithBrake.ERROR:
+		s_bCmdReset := i_bCmdReset OR s_bReqReset;
+		s_bReqReset := FALSE;
+		
+		IF (NOT(s_bStaError) AND i_bReqEnable) THEN
+			eSeqSEW_WithBrake := E_SeqSEW_WithBrake.INIT;
+		END_IF
+		
 END_CASE
-*)
-//--// Reset request
-//--IF s_bStaDoorIsOpened THEN
-//--	s_bReqOpen := FALSE;
-//--ELSIF s_bStaDoorIsClosed THEN
-//--	s_bReqClose := FALSE;	
-//--ELSIF s_bStaError THEN
-//--	s_bReqOpen := FALSE;
-//--	s_bReqClose := FALSE;
-//--END_IF
 
 _m_Devices := TRUE;
 ]]></ST>
@@ -234,44 +303,71 @@ s_fbHmiLedBrakeReleased(i_bStaLed := s_bStaBrakeReleased);
 s_fbHmiLedMotorStopped(i_bStaLed := s_bStaMotorStopped);
 s_fbHmiLedDriveError(i_bStaLed := s_bStaDriveError);
 
-
 {warning '#TODO: Add manual control from hmi'}
-		//Is het de bedoeling om op deze plekken de hmi knoppen aan te sturen, OF moet dat gedaan worden in METHOD hmi?		
-		s_fbHmiBtnManualApplyBrake.p_bStaVisible := TRUE;
-		s_fbHmiBtnManualApplyBrake.p_bStaEnabled := s_bStaMotorStopped;
+CASE i_eCtrlMode OF
+
+	E_CtrlMode.IDLE..
+	E_CtrlMode.AUTOMATIC:
+		s_fbHmiBtnManualReleaseBrake.p_bStaVisible := FALSE;
+		s_fbHmiBtnManualReleaseBrake.p_bStaEnabled := FALSE;
+		
+		s_fbHmiBtnManualApplyBrake.p_bStaVisible := FALSE;
+		s_fbHmiBtnManualApplyBrake.p_bStaEnabled := FALSE;
+		
+		s_fbHmiBtnManualForward.p_bStaVisible := FALSE;
+		s_fbHmiBtnManualForward.p_bStaEnabled := FALSE;
+		
+		s_fbHmiBtnManualBackward.p_bStaVisible := FALSE;
+		s_fbHmiBtnManualBackward.p_bStaEnabled := FALSE;
+		
+		s_fbHmiBtnManualStop.p_bStaVisible := FALSE;
+		s_fbHmiBtnManualStop.p_bStaEnabled := FALSE;
+		
+		s_fbHmiBtnManualReset.p_bStaVisible := FALSE;
+		s_fbHmiBtnManualReset.p_bStaEnabled := FALSE;
 	
+	E_CtrlMode.MANUAL:
+		//Is het de bedoeling om op deze plekken de hmi knoppen aan te sturen, OF moet dat gedaan worden in METHOD hmi?
 		s_fbHmiBtnManualReleaseBrake.p_bStaVisible := TRUE;
-		s_fbHmiBtnManualReleaseBrake.p_bStaEnabled := s_bStaMotorStopped;
+		s_fbHmiBtnManualReleaseBrake.p_bStaEnabled := i_bReqEnable;
+		
+		s_fbHmiBtnManualApplyBrake.p_bStaVisible := TRUE;
+		s_fbHmiBtnManualApplyBrake.p_bStaEnabled := i_bReqEnable AND s_bStaMotorStopped;
+		
+		s_fbHmiBtnManualForward.p_bStaVisible := TRUE;
+		s_fbHmiBtnManualForward.p_bStaEnabled := i_bReqEnable AND s_bStaMotorStopped AND s_bStaBrakeReleased;
+		
+		s_fbHmiBtnManualBackward.p_bStaVisible := TRUE;
+		s_fbHmiBtnManualBackward.p_bStaEnabled := i_bReqEnable AND s_bStaMotorStopped AND s_bStaBrakeReleased;
 		
 		s_fbHmiBtnManualStop.p_bStaVisible := TRUE;
 		s_fbHmiBtnManualStop.p_bStaEnabled := TRUE;
-	
-		s_fbHmiBtnManualForward.p_bStaVisible := TRUE;
-		s_fbHmiBtnManualForward.p_bStaEnabled := s_bStaMotorStopped;
-	
-		s_fbHmiBtnManualBackward.p_bStaVisible := TRUE;
-		s_fbHmiBtnManualBackward.p_bStaEnabled := s_bStaMotorStopped;
 		
-		IF s_fbHmiBtnManualApplyBrake.p_osrBtnPress THEN
-			m_ReleaseBrake(i_bValue := FALSE);
-		END_IF
+		s_fbHmiBtnManualReset.p_bStaVisible := TRUE;
+		s_fbHmiBtnManualReset.p_bStaEnabled := TRUE;
 		
 		IF s_fbHmiBtnManualReleaseBrake.p_osrBtnPress THEN
-			m_ReleaseBrake(i_bValue := TRUE);
+			m_ReleaseBrake();
 		END_IF
 	
-		IF s_fbHmiBtnManualReset.p_osrBtnPress THEN
-			m_Reset();
+		IF s_fbHmiBtnManualApplyBrake.p_osrBtnPress THEN
+			m_ApplyBrake();
 		END_IF
 			
 		IF s_fbHmiBtnManualStop.p_osrBtnPress THEN
 			m_Stop();	
 		ELSIF s_fbHmiBtnManualForward.p_osrBtnPress THEN
-			m_StartForward(i_rTargetSpeed := s_rTargetSpeed);
+			m_StartForward(i_rTargetSpeed := s_fTargetSpeed);
 		ELSIF s_fbHmiBtnManualBackward.p_osrBtnPress THEN
-			m_StartBackward(i_rTargetSpeed := s_rTargetSpeed);
+			m_StartBackward(i_rTargetSpeed := s_fTargetSpeed);
 		END_IF
 
+		IF s_fbHmiBtnManualReset.p_osrBtnPress THEN
+			m_Reset();
+		END_IF	
+	
+END_CASE
+	
 _m_Hmi := TRUE;
 ]]></ST>
       </Implementation>
@@ -360,6 +456,14 @@ IF NOT SUPER^._m_Outputs() THEN
 	RETURN;
 END_IF
 
+//Write outputs to drive
+
+Q_bCmdReleaseBrake := s_bCmdReleaseBrake;
+Q_bCmdReverseDirection := s_bCmdBackward;
+Q_bCmdStart := s_bCmdReset OR s_bCmdForward OR s_bCmdBackward; 
+Q_nSetTargetSpeed := LREAL_TO_INT(s_fTargetSpeed / i_stSettings.rMaxTargetSpeed * cMAX_INT_VALUE);
+
+(*
 // Generate reset pulse for resetting SEW-drive (via IO, one-shot on start)
 s_tofResetPulse(
 	IN := (i_bCmdReset OR s_bReqReset) AND s_bStaDriveError AND NOT(s_tofResetPulse.Q),
@@ -388,12 +492,26 @@ Q_bCmdReverseDirection := i_bReqEnable AND (s_bReqStartBackward AND NOT(i_bIclkB
 
 // Write (convert) target speed drive (analog output)
 IF i_bReqEnable AND ((s_bReqStartForward AND NOT(i_bIclkForward)) OR (s_bReqStartBackward AND NOT(i_bIclkBackward))) THEN
-	Q_nSetTargetSpeed := LREAL_TO_INT(s_rTargetSpeed / i_stSettings.rMaxTargetSpeed * cMAX_INT_VALUE);
+	Q_nSetTargetSpeed := LREAL_TO_INT(s_fTargetSpeed / i_stSettings.rMaxTargetSpeed * cMAX_INT_VALUE);
 ELSE
 	Q_nSetTargetSpeed := 0;	
 END_IF	
-	
+*)	
 _m_Outputs := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_ResetAllRequests" Id="{57997c19-826a-4646-b9a9-ad521099ef68}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PRIVATE _m_ResetAllRequests
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+s_bReqStop :=
+s_bReqStartForward :=
+s_bReqStartBackward :=
+s_bReqReleaseBrake :=
+s_bReqApplyBrake :=
+s_bReqReset := FALSE;
 ]]></ST>
       </Implementation>
     </Method>
@@ -406,7 +524,12 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
+//--s_bReqStop := FALSE;
+//--s_bReqStartForward := FALSE;
+//--s_bReqStartBackward := FALSE;
+//--s_bReqReleaseBrake := FALSE;
 s_bReqApplyBrake := TRUE;
+//--s_bReqReset := FALSE;
 
 m_ApplyBrake := TRUE;
 ]]></ST>
@@ -415,24 +538,31 @@ m_ApplyBrake := TRUE;
     <Method Name="m_ReleaseBrake" Id="{710cca1b-1464-4a44-9af2-adc97e3f5673}" FolderPath="Methods\">
       <Declaration><![CDATA[/// Release brake
 METHOD PUBLIC m_ReleaseBrake : BOOL
-VAR_INPUT
-	i_bValue : BOOL; /// FALSE = apply, TRUE = release
-END_VAR]]></Declaration>
+//-VAR_INPUT
+//--	i_bValue : BOOL; /// FALSE = apply, TRUE = release
+//--END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[
 IF NOT i_bReqEnable THEN 
 	RETURN;
 END_IF
 
-IF i_bValue THEN
-	s_bReqReleaseBrake := TRUE;
-ELSIF NOT(i_bValue) THEN
-	IF s_bStaMotorStopped THEN
-		s_bReqReleaseBrake := FALSE;
-	ELSE
-		{warning: #TODO: Generate warning that }
-	END_IF	
-END_IF
+//--s_bReqStop := FALSE;
+//--s_bReqStartForward := FALSE;
+//--s_bReqStartBackward := FALSE;
+s_bReqReleaseBrake := TRUE;
+//--s_bReqApplyBrake := FALSE;
+//--s_bReqReset := FALSE;
+
+//--IF i_bValue THEN
+//--	s_bReqReleaseBrake := TRUE;
+//--ELSIF NOT(i_bValue) THEN
+//--	IF s_bStaMotorStopped THEN
+//--		s_bReqReleaseBrake := FALSE;
+//--	ELSE
+//--		{warning: #TODO: Generate warning that }
+//--	END_IF	
+//--END_IF
 
 m_ReleaseBrake := TRUE;
 ]]></ST>
@@ -447,9 +577,9 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-s_bReqStop := FALSE;
-s_bReqStartForward := FALSE;
-s_bReqStartBackward := FALSE;
+//--s_bReqStop := FALSE;
+//--s_bReqStartForward := FALSE;
+//--s_bReqStartBackward := FALSE;
 //--s_bReqReleaseBrake := FALSE;
 s_bReqReset := TRUE;
 
@@ -469,18 +599,19 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-s_bReqStop := FALSE;
-s_bReqStartForward := FALSE;
+//--s_bReqStop := FALSE;
+//--s_bReqStartForward := FALSE;
 s_bReqStartBackward := TRUE;
-s_bReqReleaseBrake := FALSE;
-s_bReqReset := FALSE;
+//--s_bReqReleaseBrake := FALSE;
+//--s_bReqApplyBrake := FALSE;
+//--s_bReqReset := FALSE;
 
 IF i_rTargetSpeed < 0 THEN
-	s_rTargetSpeed := 0;
+	s_fTargetSpeed := 0;
 ELSIF i_rTargetSpeed > cMAX_INT_VALUE THEN	
 	i_rTargetSpeed := cMAX_INT_VALUE;
 ELSE 
-	s_rTargetSpeed := i_rTargetSpeed;
+	s_fTargetSpeed := i_rTargetSpeed;
 END_IF
 	
 m_StartBackward := TRUE;
@@ -499,18 +630,19 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-s_bReqStop := FALSE;
+//--s_bReqStop := FALSE;
 s_bReqStartForward := TRUE;
-s_bReqStartBackward := FALSE;
-s_bReqReleaseBrake := FALSE;
-s_bReqReset := FALSE;
+//--s_bReqStartBackward := FALSE;
+//--s_bReqReleaseBrake := FALSE;
+//--s_bReqApplyBrake := FALSE;
+//--s_bReqReset := FALSE;
 
 IF i_rTargetSpeed < 0 THEN
-	s_rTargetSpeed := 0;
+	s_fTargetSpeed := 0;
 ELSIF i_rTargetSpeed > cMAX_INT_VALUE THEN	
 	i_rTargetSpeed := cMAX_INT_VALUE;
 ELSE 
-	s_rTargetSpeed := i_rTargetSpeed;
+	s_fTargetSpeed := i_rTargetSpeed;
 END_IF
 
 m_StartForward := TRUE;
@@ -527,10 +659,11 @@ IF NOT i_bReqEnable THEN
 END_IF
 
 s_bReqStop := TRUE;
-s_bReqStartForward := FALSE;
-s_bReqStartBackward := FALSE;
-s_bReqReleaseBrake := FALSE;
-s_bReqReset := FALSE;
+//--s_bReqStartForward := FALSE;
+//--s_bReqStartBackward := FALSE;
+//--s_bReqReleaseBrake := FALSE;
+//--s_bReqApplyBrake := FALSE;
+//--s_bReqReset := FALSE;
 
 m_Stop := TRUE;
 ]]></ST>
@@ -612,42 +745,87 @@ p_bStaMotorStopped := s_bStaMotorStopped;
     </LineIds>
     <LineIds Name="CM_SEW_WithBrake._m_Devices">
       <LineId Id="6" Count="3" />
-      <LineId Id="76" Count="2" />
-      <LineId Id="75" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="265" Count="3" />
+      <LineId Id="155" Count="0" />
+      <LineId Id="150" Count="1" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="152" Count="0" />
+      <LineId Id="214" Count="0" />
+      <LineId Id="213" Count="0" />
+      <LineId Id="242" Count="1" />
       <LineId Id="73" Count="1" />
       <LineId Id="79" Count="0" />
-      <LineId Id="82" Count="1" />
-      <LineId Id="102" Count="0" />
-      <LineId Id="105" Count="0" />
-      <LineId Id="104" Count="0" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="270" Count="1" />
+      <LineId Id="246" Count="0" />
+      <LineId Id="134" Count="2" />
+      <LineId Id="132" Count="0" />
+      <LineId Id="138" Count="1" />
+      <LineId Id="145" Count="0" />
+      <LineId Id="140" Count="3" />
       <LineId Id="101" Count="0" />
       <LineId Id="112" Count="1" />
-      <LineId Id="84" Count="1" />
-      <LineId Id="114" Count="0" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="220" Count="2" />
+      <LineId Id="273" Count="0" />
+      <LineId Id="218" Count="0" />
+      <LineId Id="192" Count="0" />
+      <LineId Id="194" Count="0" />
+      <LineId Id="193" Count="0" />
+      <LineId Id="195" Count="0" />
+      <LineId Id="275" Count="2" />
+      <LineId Id="274" Count="0" />
+      <LineId Id="269" Count="0" />
       <LineId Id="86" Count="0" />
-      <LineId Id="107" Count="2" />
-      <LineId Id="106" Count="0" />
+      <LineId Id="148" Count="0" />
+      <LineId Id="262" Count="0" />
+      <LineId Id="156" Count="3" />
+      <LineId Id="177" Count="0" />
+      <LineId Id="180" Count="1" />
+      <LineId Id="186" Count="0" />
+      <LineId Id="183" Count="2" />
+      <LineId Id="196" Count="1" />
+      <LineId Id="178" Count="0" />
       <LineId Id="89" Count="1" />
-      <LineId Id="116" Count="2" />
-      <LineId Id="91" Count="0" />
+      <LineId Id="161" Count="0" />
+      <LineId Id="258" Count="0" />
+      <LineId Id="256" Count="0" />
+      <LineId Id="216" Count="0" />
+      <LineId Id="172" Count="0" />
       <LineId Id="115" Count="0" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="175" Count="1" />
+      <LineId Id="174" Count="0" />
       <LineId Id="92" Count="0" />
-      <LineId Id="120" Count="2" />
+      <LineId Id="187" Count="0" />
+      <LineId Id="259" Count="2" />
+      <LineId Id="188" Count="3" />
       <LineId Id="119" Count="0" />
       <LineId Id="93" Count="1" />
-      <LineId Id="124" Count="2" />
+      <LineId Id="211" Count="1" />
+      <LineId Id="257" Count="0" />
+      <LineId Id="200" Count="2" />
+      <LineId Id="215" Count="0" />
       <LineId Id="123" Count="0" />
-      <LineId Id="97" Count="1" />
-      <LineId Id="128" Count="2" />
+      <LineId Id="198" Count="0" />
+      <LineId Id="98" Count="0" />
       <LineId Id="127" Count="0" />
-      <LineId Id="99" Count="1" />
-      <LineId Id="96" Count="0" />
-      <LineId Id="87" Count="1" />
-      <LineId Id="81" Count="0" />
-      <LineId Id="80" Count="0" />
-      <LineId Id="14" Count="1" />
-      <LineId Id="65" Count="6" />
-      <LineId Id="20" Count="0" />
+      <LineId Id="263" Count="0" />
+      <LineId Id="206" Count="0" />
+      <LineId Id="208" Count="1" />
+      <LineId Id="236" Count="3" />
+      <LineId Id="272" Count="0" />
+      <LineId Id="210" Count="0" />
+      <LineId Id="240" Count="0" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="229" Count="2" />
+      <LineId Id="264" Count="0" />
+      <LineId Id="207" Count="0" />
+      <LineId Id="232" Count="0" />
+      <LineId Id="234" Count="1" />
+      <LineId Id="233" Count="0" />
+      <LineId Id="100" Count="0" />
       <LineId Id="53" Count="0" />
       <LineId Id="5" Count="0" />
       <LineId Id="13" Count="0" />
@@ -661,10 +839,37 @@ p_bStaMotorStopped := s_bStaMotorStopped;
       <LineId Id="89" Count="0" />
       <LineId Id="137" Count="4" />
       <LineId Id="136" Count="0" />
+      <LineId Id="146" Count="2" />
       <LineId Id="90" Count="0" />
-      <LineId Id="92" Count="34" />
-      <LineId Id="91" Count="0" />
-      <LineId Id="84" Count="0" />
+      <LineId Id="170" Count="0" />
+      <LineId Id="152" Count="0" />
+      <LineId Id="157" Count="1" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="159" Count="1" />
+      <LineId Id="154" Count="0" />
+      <LineId Id="161" Count="1" />
+      <LineId Id="155" Count="0" />
+      <LineId Id="163" Count="1" />
+      <LineId Id="156" Count="0" />
+      <LineId Id="165" Count="1" />
+      <LineId Id="149" Count="0" />
+      <LineId Id="167" Count="0" />
+      <LineId Id="150" Count="1" />
+      <LineId Id="189" Count="0" />
+      <LineId Id="172" Count="15" />
+      <LineId Id="168" Count="0" />
+      <LineId Id="190" Count="0" />
+      <LineId Id="198" Count="0" />
+      <LineId Id="200" Count="2" />
+      <LineId Id="215" Count="1" />
+      <LineId Id="213" Count="0" />
+      <LineId Id="206" Count="6" />
+      <LineId Id="191" Count="0" />
+      <LineId Id="218" Count="2" />
+      <LineId Id="217" Count="0" />
+      <LineId Id="192" Count="0" />
+      <LineId Id="169" Count="0" />
+      <LineId Id="171" Count="0" />
       <LineId Id="15" Count="0" />
       <LineId Id="87" Count="0" />
     </LineIds>
@@ -702,6 +907,10 @@ p_bStaMotorStopped := s_bStaMotorStopped;
     <LineIds Name="CM_SEW_WithBrake._m_Outputs">
       <LineId Id="29" Count="0" />
       <LineId Id="7" Count="2" />
+      <LineId Id="123" Count="1" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="125" Count="3" />
+      <LineId Id="122" Count="0" />
       <LineId Id="57" Count="0" />
       <LineId Id="5" Count="0" />
       <LineId Id="46" Count="0" />
@@ -731,11 +940,19 @@ p_bStaMotorStopped := s_bStaMotorStopped;
       <LineId Id="10" Count="0" />
       <LineId Id="39" Count="0" />
     </LineIds>
+    <LineIds Name="CM_SEW_WithBrake._m_ResetAllRequests">
+      <LineId Id="6" Count="1" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="9" Count="2" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="13" Count="0" />
+    </LineIds>
     <LineIds Name="CM_SEW_WithBrake.m_ApplyBrake">
       <LineId Id="34" Count="0" />
       <LineId Id="26" Count="2" />
       <LineId Id="38" Count="0" />
-      <LineId Id="43" Count="0" />
+      <LineId Id="49" Count="4" />
+      <LineId Id="48" Count="0" />
       <LineId Id="29" Count="0" />
       <LineId Id="33" Count="0" />
       <LineId Id="23" Count="0" />
@@ -743,6 +960,9 @@ p_bStaMotorStopped := s_bStaMotorStopped;
     <LineIds Name="CM_SEW_WithBrake.m_ReleaseBrake">
       <LineId Id="34" Count="0" />
       <LineId Id="26" Count="2" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="68" Count="4" />
+      <LineId Id="62" Count="0" />
       <LineId Id="49" Count="0" />
       <LineId Id="48" Count="0" />
       <LineId Id="43" Count="0" />
@@ -772,6 +992,7 @@ p_bStaMotorStopped := s_bStaMotorStopped;
       <LineId Id="26" Count="2" />
       <LineId Id="38" Count="0" />
       <LineId Id="40" Count="3" />
+      <LineId Id="60" Count="0" />
       <LineId Id="39" Count="0" />
       <LineId Id="50" Count="1" />
       <LineId Id="47" Count="0" />
@@ -787,6 +1008,7 @@ p_bStaMotorStopped := s_bStaMotorStopped;
       <LineId Id="26" Count="2" />
       <LineId Id="38" Count="0" />
       <LineId Id="40" Count="3" />
+      <LineId Id="60" Count="0" />
       <LineId Id="39" Count="0" />
       <LineId Id="48" Count="0" />
       <LineId Id="50" Count="5" />
@@ -800,6 +1022,7 @@ p_bStaMotorStopped := s_bStaMotorStopped;
       <LineId Id="26" Count="2" />
       <LineId Id="38" Count="0" />
       <LineId Id="40" Count="3" />
+      <LineId Id="45" Count="0" />
       <LineId Id="39" Count="0" />
       <LineId Id="29" Count="0" />
       <LineId Id="33" Count="0" />

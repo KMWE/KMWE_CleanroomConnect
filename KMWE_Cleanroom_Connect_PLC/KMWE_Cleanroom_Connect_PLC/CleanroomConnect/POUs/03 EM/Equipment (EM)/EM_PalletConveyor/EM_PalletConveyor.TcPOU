@@ -525,13 +525,17 @@ CASE s_eSeqCentring OF
 		END_IF
 		
 	E_SeqCentring.MOVE_TO_REST:
-		IF s_fbSeqCentringControl.q_bStaEntry THEN
-			s_cmCentringUnit.m_Off();
-		END_IF
-		
-		IF s_cmCentringUnit.p_bStaIsOff THEN
+		IF s_cmCentringUnit.m_Off() THEN //Off = move to rest
 			s_eSeqCentring := E_SeqCentring.AT_REST;
 		END_IF
+		
+		//--IF s_fbSeqCentringControl.q_bStaEntry THEN
+		//--	s_cmCentringUnit.m_Off(); //Off = move to rest
+		//--END_IF
+		
+		//--IF s_cmCentringUnit.p_bStaIsOff THEN
+		//--	s_eSeqCentring := E_SeqCentring.AT_REST;
+		//--END_IF
 	
 	E_SeqCentring.AT_REST:
 		IF s_fbSeqCentringControl.q_tmStepTime > T#1S THEN
@@ -544,13 +548,17 @@ CASE s_eSeqCentring OF
 		END_IF	
 		
 	E_SeqCentring.MOVE_TO_CENTER:
-		IF s_fbSeqCentringControl.q_bStaEntry THEN
-			s_cmCentringUnit.m_On();
-		END_IF
-		
-		IF s_cmCentringUnit.p_bStaIsOn THEN
+		IF s_cmCentringUnit.m_On() THEN //On = move to center
 			s_eSeqCentring := E_SeqCentring.AT_CENTER;
 		END_IF
+		
+		//--IF s_fbSeqCentringControl.q_bStaEntry THEN
+		//--	s_cmCentringUnit.m_On(); //On = move to center
+		//--END_IF
+		
+		//--IF s_cmCentringUnit.p_bStaIsOn THEN
+		//--	s_eSeqCentring := E_SeqCentring.AT_CENTER;
+		//--END_IF
 	
 	E_SeqCentring.AT_CENTER:
 		IF s_fbSeqCentringControl.q_tmStepTime > i_stSettings.tCentringDuration THEN
@@ -1182,7 +1190,9 @@ m_Main := TRUE;
       <LineId Id="103" Count="0" />
       <LineId Id="116" Count="0" />
       <LineId Id="100" Count="0" />
-      <LineId Id="75" Count="6" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="123" Count="3" />
+      <LineId Id="76" Count="5" />
       <LineId Id="74" Count="0" />
       <LineId Id="73" Count="0" />
       <LineId Id="35" Count="0" />
@@ -1191,7 +1201,11 @@ m_Main := TRUE;
       <LineId Id="39" Count="0" />
       <LineId Id="119" Count="2" />
       <LineId Id="117" Count="1" />
-      <LineId Id="40" Count="12" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="127" Count="1" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="41" Count="11" />
       <LineId Id="97" Count="0" />
       <LineId Id="96" Count="0" />
       <LineId Id="93" Count="0" />

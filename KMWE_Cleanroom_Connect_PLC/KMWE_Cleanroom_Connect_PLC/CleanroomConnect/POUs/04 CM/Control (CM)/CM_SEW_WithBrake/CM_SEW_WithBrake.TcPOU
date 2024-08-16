@@ -524,47 +524,27 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-//--s_bReqStop := FALSE;
-//--s_bReqStartForward := FALSE;
-//--s_bReqStartBackward := FALSE;
-//--s_bReqReleaseBrake := FALSE;
 s_bReqApplyBrake := TRUE;
-//--s_bReqReset := FALSE;
 
-m_ApplyBrake := TRUE;
+m_ApplyBrake := NOT(s_bStaBrakeReleased);
+//--m_ApplyBrake := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
     <Method Name="m_ReleaseBrake" Id="{710cca1b-1464-4a44-9af2-adc97e3f5673}" FolderPath="Methods\">
       <Declaration><![CDATA[/// Release brake
 METHOD PUBLIC m_ReleaseBrake : BOOL
-//-VAR_INPUT
-//--	i_bValue : BOOL; /// FALSE = apply, TRUE = release
-//--END_VAR]]></Declaration>
+]]></Declaration>
       <Implementation>
         <ST><![CDATA[
 IF NOT i_bReqEnable THEN 
 	RETURN;
 END_IF
 
-//--s_bReqStop := FALSE;
-//--s_bReqStartForward := FALSE;
-//--s_bReqStartBackward := FALSE;
 s_bReqReleaseBrake := TRUE;
-//--s_bReqApplyBrake := FALSE;
-//--s_bReqReset := FALSE;
 
-//--IF i_bValue THEN
-//--	s_bReqReleaseBrake := TRUE;
-//--ELSIF NOT(i_bValue) THEN
-//--	IF s_bStaMotorStopped THEN
-//--		s_bReqReleaseBrake := FALSE;
-//--	ELSE
-//--		{warning: #TODO: Generate warning that }
-//--	END_IF	
-//--END_IF
-
-m_ReleaseBrake := TRUE;
+m_ReleaseBrake := s_bStaBrakeReleased;
+//--m_ReleaseBrake := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
@@ -577,13 +557,10 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-//--s_bReqStop := FALSE;
-//--s_bReqStartForward := FALSE;
-//--s_bReqStartBackward := FALSE;
-//--s_bReqReleaseBrake := FALSE;
 s_bReqReset := TRUE;
 
-m_Reset := TRUE;
+m_Reset := s_bCmdReset;
+//--m_Reset := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
@@ -599,12 +576,7 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-//--s_bReqStop := FALSE;
-//--s_bReqStartForward := FALSE;
 s_bReqStartBackward := TRUE;
-//--s_bReqReleaseBrake := FALSE;
-//--s_bReqApplyBrake := FALSE;
-//--s_bReqReset := FALSE;
 
 IF i_rTargetSpeed < 0 THEN
 	s_fTargetSpeed := 0;
@@ -613,8 +585,9 @@ ELSIF i_rTargetSpeed > cMAX_INT_VALUE THEN
 ELSE 
 	s_fTargetSpeed := i_rTargetSpeed;
 END_IF
-	
-m_StartBackward := TRUE;
+
+m_StartBackward := s_bCmdBackward;	
+//--m_StartBackward := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
@@ -630,12 +603,7 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-//--s_bReqStop := FALSE;
 s_bReqStartForward := TRUE;
-//--s_bReqStartBackward := FALSE;
-//--s_bReqReleaseBrake := FALSE;
-//--s_bReqApplyBrake := FALSE;
-//--s_bReqReset := FALSE;
 
 IF i_rTargetSpeed < 0 THEN
 	s_fTargetSpeed := 0;
@@ -645,7 +613,8 @@ ELSE
 	s_fTargetSpeed := i_rTargetSpeed;
 END_IF
 
-m_StartForward := TRUE;
+m_StartForward := s_bCmdForward;
+//--m_StartForward := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
@@ -659,13 +628,9 @@ IF NOT i_bReqEnable THEN
 END_IF
 
 s_bReqStop := TRUE;
-//--s_bReqStartForward := FALSE;
-//--s_bReqStartBackward := FALSE;
-//--s_bReqReleaseBrake := FALSE;
-//--s_bReqApplyBrake := FALSE;
-//--s_bReqReset := FALSE;
 
-m_Stop := TRUE;
+m_Stop := s_bStaMotorStopped;
+//--m_Stop := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
@@ -951,8 +916,8 @@ p_bStaMotorStopped := s_bStaMotorStopped;
       <LineId Id="34" Count="0" />
       <LineId Id="26" Count="2" />
       <LineId Id="38" Count="0" />
-      <LineId Id="49" Count="4" />
-      <LineId Id="48" Count="0" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="55" Count="0" />
       <LineId Id="29" Count="0" />
       <LineId Id="33" Count="0" />
       <LineId Id="23" Count="0" />
@@ -961,18 +926,8 @@ p_bStaMotorStopped := s_bStaMotorStopped;
       <LineId Id="34" Count="0" />
       <LineId Id="26" Count="2" />
       <LineId Id="61" Count="0" />
-      <LineId Id="68" Count="4" />
-      <LineId Id="62" Count="0" />
-      <LineId Id="49" Count="0" />
-      <LineId Id="48" Count="0" />
-      <LineId Id="43" Count="0" />
-      <LineId Id="50" Count="0" />
-      <LineId Id="53" Count="0" />
-      <LineId Id="51" Count="0" />
-      <LineId Id="54" Count="0" />
-      <LineId Id="56" Count="0" />
-      <LineId Id="55" Count="0" />
-      <LineId Id="52" Count="0" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="76" Count="0" />
       <LineId Id="29" Count="0" />
       <LineId Id="33" Count="0" />
       <LineId Id="23" Count="0" />
@@ -980,9 +935,8 @@ p_bStaMotorStopped := s_bStaMotorStopped;
     <LineIds Name="CM_SEW_WithBrake.m_Reset">
       <LineId Id="34" Count="0" />
       <LineId Id="26" Count="2" />
-      <LineId Id="38" Count="0" />
-      <LineId Id="40" Count="3" />
-      <LineId Id="39" Count="0" />
+      <LineId Id="38" Count="1" />
+      <LineId Id="45" Count="0" />
       <LineId Id="29" Count="0" />
       <LineId Id="33" Count="0" />
       <LineId Id="23" Count="0" />
@@ -991,14 +945,13 @@ p_bStaMotorStopped := s_bStaMotorStopped;
       <LineId Id="34" Count="0" />
       <LineId Id="26" Count="2" />
       <LineId Id="38" Count="0" />
-      <LineId Id="40" Count="3" />
-      <LineId Id="60" Count="0" />
-      <LineId Id="39" Count="0" />
+      <LineId Id="42" Count="0" />
       <LineId Id="50" Count="1" />
       <LineId Id="47" Count="0" />
       <LineId Id="52" Count="2" />
       <LineId Id="48" Count="0" />
       <LineId Id="55" Count="0" />
+      <LineId Id="65" Count="0" />
       <LineId Id="29" Count="0" />
       <LineId Id="33" Count="0" />
       <LineId Id="23" Count="0" />
@@ -1007,12 +960,11 @@ p_bStaMotorStopped := s_bStaMotorStopped;
       <LineId Id="34" Count="0" />
       <LineId Id="26" Count="2" />
       <LineId Id="38" Count="0" />
-      <LineId Id="40" Count="3" />
-      <LineId Id="60" Count="0" />
-      <LineId Id="39" Count="0" />
+      <LineId Id="41" Count="0" />
       <LineId Id="48" Count="0" />
       <LineId Id="50" Count="5" />
       <LineId Id="49" Count="0" />
+      <LineId Id="65" Count="0" />
       <LineId Id="29" Count="0" />
       <LineId Id="33" Count="0" />
       <LineId Id="23" Count="0" />
@@ -1021,9 +973,8 @@ p_bStaMotorStopped := s_bStaMotorStopped;
       <LineId Id="34" Count="0" />
       <LineId Id="26" Count="2" />
       <LineId Id="38" Count="0" />
-      <LineId Id="40" Count="3" />
-      <LineId Id="45" Count="0" />
-      <LineId Id="39" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="47" Count="0" />
       <LineId Id="29" Count="0" />
       <LineId Id="33" Count="0" />
       <LineId Id="23" Count="0" />

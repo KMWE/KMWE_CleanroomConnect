@@ -101,10 +101,23 @@ IF NOT SUPER^._m_Alarms() THEN
 END_IF
 
 // Set error bits
-s_errDriveError := i_bReqEnable AND s_bStaDriveError AND NOT(i_bCmdReset);
+s_errDriveError := i_bReqEnable AND s_bStaDriveError;// AND NOT(i_bCmdReset);
 
-s_wrnMotorForwardInterlocked := s_bReqStartForward AND i_bIclkForward;
-s_wrnMotorBackwardInterlocked := s_bReqStartBackward AND i_bIclkBackward;
+
+// Interlock warnings
+IF i_bIclkForward AND NOT(s_bStaMotorStopped) THEN	
+	s_wrnMotorForwardInterlocked := TRUE;
+	m_Stop();
+ELSIF NOT(i_bIclkForward) OR i_bCmdReset THEN
+	s_wrnMotorForwardInterlocked := FALSE;
+END_IF
+
+IF i_bIclkBackward AND NOT(s_bStaMotorStopped) THEN
+	s_wrnMotorBackwardInterlocked := TRUE;
+	m_Stop();
+ELSIF NOT(i_bIclkBackward) OR i_bCmdReset THEN
+	s_wrnMotorBackwardInterlocked := FALSE;
+END_IF
 
 // Alarm Handlers
 s_fbAlarmHandlerDriveError(
@@ -576,19 +589,23 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-s_bReqStartBackward := TRUE;
-
-IF i_rTargetSpeed < 0 THEN
-	s_fTargetSpeed := 0;
-ELSIF i_rTargetSpeed > cMAX_INT_VALUE THEN	
-	i_rTargetSpeed := cMAX_INT_VALUE;
-ELSE 
-	s_fTargetSpeed := i_rTargetSpeed;
+IF NOT(i_bIclkBackward) THEN
+	s_bReqStartBackward := TRUE;
+	
+	IF i_rTargetSpeed < 0 THEN
+		s_fTargetSpeed := 0;
+	ELSIF i_rTargetSpeed > cMAX_INT_VALUE THEN	
+		i_rTargetSpeed := cMAX_INT_VALUE;
+	ELSE 
+		s_fTargetSpeed := i_rTargetSpeed;
+	END_IF
+	
+ELSE
+	s_wrnMotorBackwardInterlocked := TRUE;
 END_IF
 
-m_StartBackward := s_bCmdBackward;	
-//--m_StartBackward := TRUE;
-]]></ST>
+m_StartBackward := s_bCmdBackward;
+	]]></ST>
       </Implementation>
     </Method>
     <Method Name="m_StartForward" Id="{551b77ef-9474-4bb1-9b3d-8c47176aa994}" FolderPath="Methods\">
@@ -603,18 +620,22 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-s_bReqStartForward := TRUE;
-
-IF i_rTargetSpeed < 0 THEN
-	s_fTargetSpeed := 0;
-ELSIF i_rTargetSpeed > cMAX_INT_VALUE THEN	
-	i_rTargetSpeed := cMAX_INT_VALUE;
-ELSE 
-	s_fTargetSpeed := i_rTargetSpeed;
+IF NOT(i_bIclkForward) THEN
+	s_bReqStartForward := TRUE;
+	
+	IF i_rTargetSpeed < 0 THEN
+		s_fTargetSpeed := 0;
+	ELSIF i_rTargetSpeed > cMAX_INT_VALUE THEN	
+		i_rTargetSpeed := cMAX_INT_VALUE;
+	ELSE 
+		s_fTargetSpeed := i_rTargetSpeed;
+	END_IF
+	
+ELSE	
+	s_wrnMotorForwardInterlocked := TRUE;
 END_IF
 
 m_StartForward := s_bCmdForward;
-//--m_StartForward := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
@@ -681,7 +702,15 @@ p_bStaMotorStopped := s_bStaMotorStopped;
       <LineId Id="103" Count="0" />
       <LineId Id="79" Count="0" />
       <LineId Id="86" Count="0" />
-      <LineId Id="151" Count="2" />
+      <LineId Id="151" Count="0" />
+      <LineId Id="169" Count="0" />
+      <LineId Id="155" Count="0" />
+      <LineId Id="170" Count="0" />
+      <LineId Id="157" Count="0" />
+      <LineId Id="159" Count="2" />
+      <LineId Id="158" Count="0" />
+      <LineId Id="163" Count="5" />
+      <LineId Id="162" Count="0" />
       <LineId Id="90" Count="0" />
       <LineId Id="45" Count="0" />
       <LineId Id="33" Count="0" />
@@ -944,6 +973,7 @@ p_bStaMotorStopped := s_bStaMotorStopped;
     <LineIds Name="CM_SEW_WithBrake.m_StartBackward">
       <LineId Id="34" Count="0" />
       <LineId Id="26" Count="2" />
+      <LineId Id="71" Count="0" />
       <LineId Id="38" Count="0" />
       <LineId Id="42" Count="0" />
       <LineId Id="50" Count="1" />
@@ -951,22 +981,27 @@ p_bStaMotorStopped := s_bStaMotorStopped;
       <LineId Id="52" Count="2" />
       <LineId Id="48" Count="0" />
       <LineId Id="55" Count="0" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="74" Count="0" />
       <LineId Id="65" Count="0" />
       <LineId Id="29" Count="0" />
-      <LineId Id="33" Count="0" />
-      <LineId Id="23" Count="0" />
+      <LineId Id="77" Count="0" />
     </LineIds>
     <LineIds Name="CM_SEW_WithBrake.m_StartForward">
       <LineId Id="34" Count="0" />
       <LineId Id="26" Count="2" />
+      <LineId Id="73" Count="0" />
       <LineId Id="38" Count="0" />
       <LineId Id="41" Count="0" />
       <LineId Id="48" Count="0" />
       <LineId Id="50" Count="5" />
       <LineId Id="49" Count="0" />
+      <LineId Id="74" Count="2" />
+      <LineId Id="78" Count="0" />
       <LineId Id="65" Count="0" />
       <LineId Id="29" Count="0" />
-      <LineId Id="33" Count="0" />
       <LineId Id="23" Count="0" />
     </LineIds>
     <LineIds Name="CM_SEW_WithBrake.m_Stop">

@@ -204,7 +204,7 @@ s_cmPalletConveyor(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
 	i_bCmdReset := i_bCmdReset,
-	i_bIclkForward := FALSE,//++NOT(s_bStaCentringIdle), // TRUE = Interlocked - if centring not at idle/rest position
+	i_bIclkForward := NOT(s_bStaCentringIdle), // TRUE = Interlocked - if centring not at idle/rest position
 	i_bIclkBackward := FALSE); // TRUE = Interlocked - if TB is docked (external interface)
 
 s_bStaBrakeReleased := s_cmPalletConveyor.p_bStaBrakeReleased;
@@ -214,7 +214,7 @@ s_cmCentringUnit(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
 	i_bCmdReset := i_bCmdReset,
-	i_bIclkOn := FALSE,
+	i_bIclkOn := NOT(s_cmPalletConveyor.p_bStaMotorStopped),
 	i_bIclkOff := FALSE);
 	
 s_bStaCentringCenter := s_cmCentringUnit.p_bStaIsOn; 
@@ -285,12 +285,16 @@ s_cmPalletConveyor.i_stSettings.rMaxTargetSpeed := 200.0; // mm/s
 
 s_cmCentringUnit.i_bReqEnable := FALSE;
 s_cmCentringUnit.i_eCtrlMode := E_CtrlMode.IDLE;
-s_cmCentringUnit.i_sCmName := 'Centering Unit';
+s_cmCentringUnit.i_sCmName := 'Centring Unit';
 s_cmCentringUnit.i_stSettings.tValveOnTimeout := T#5S;
 s_cmCentringUnit.i_stSettings.tValveOffTimeout := T#5S;
 {warning '#TODO: Dot we need to added configuration parameters? Seperate struct or via settings or dedicateed variables'}
 s_cmCentringUnit.p_bCfgBiStableValve := FALSE;
 s_cmCentringUnit.p_bCfgReverseValve := FALSE;
+s_cmCentringUnit.p_sCfgOffName := 'Idle';
+s_cmCentringUnit.p_sCfgOnName := 'Center';
+s_cmCentringUnit.p_sCfgFB1Name := 'Rear';
+s_cmCentringUnit.p_sCfgFB2Name := 'Front';
 
 s_diStaAtInfeedPositionRear.i_stSettings.tmInputDelay := T#100MS;
 s_diStaAtInfeedPositionFront.i_stSettings.tmInputDelay := T#100MS;
@@ -511,6 +515,8 @@ s_fbSeqCentringControl(
 	i_sStepName := TO_STRING(s_eSeqCentring), 
 	i_bCmdReset := i_bCmdReset
 					AND (s_eSeqCentring = E_SeqCentring.ERROR) // Only reset/resume sequencer from ERROR state
+					AND NOT(s_cmCentringUnit.p_bStaError)
+					AND NOT(s_cmPalletConveyor.p_bStaError)
 					AND i_bReqEnable, 
 	i_bStaError := s_bStaError OR NOT(i_bReqEnable));
 
@@ -590,6 +596,8 @@ s_fbSeqTransportControl(
 	i_sStepName := TO_STRING(s_eSeqTransport), 
 	i_bCmdReset := i_bCmdReset
 					AND (s_eSeqTransport = E_SeqTransport.ERROR) // Only reset/resume sequencer from ERROR state
+					AND NOT(s_cmCentringUnit.p_bStaError)
+					AND NOT(s_cmPalletConveyor.p_bStaError)
 					AND i_bReqEnable, 
 	i_bStaError := s_bStaError OR NOT(i_bReqEnable));
 
@@ -607,7 +615,7 @@ CASE s_eSeqTransport OF
 			s_cmPalletConveyor.m_Stop();
 		END_IF		
 	
-		IF s_cmPalletConveyor.p_bStaMotorStopped AND NOT (s_cmPalletConveyor.p_bStaBrakeReleased) AND s_fbSeqTransportControl.q_tmStepTime > T#1S THEN
+		IF s_cmPalletConveyor.p_bStaMotorStopped AND_THEN NOT(s_cmPalletConveyor.p_bStaBrakeReleased) AND s_fbSeqTransportControl.q_tmStepTime > T#1S THEN
 			s_eSeqTransport := E_SeqTransport.READY;
 		END_IF
 		
@@ -1055,6 +1063,7 @@ m_Main := TRUE;
       <LineId Id="341" Count="0" />
       <LineId Id="339" Count="1" />
       <LineId Id="353" Count="1" />
+      <LineId Id="447" Count="3" />
       <LineId Id="344" Count="0" />
       <LineId Id="348" Count="3" />
       <LineId Id="346" Count="0" />
@@ -1179,6 +1188,8 @@ m_Main := TRUE;
       <LineId Id="107" Count="0" />
       <LineId Id="8" Count="6" />
       <LineId Id="109" Count="0" />
+      <LineId Id="132" Count="0" />
+      <LineId Id="134" Count="0" />
       <LineId Id="108" Count="0" />
       <LineId Id="15" Count="0" />
       <LineId Id="92" Count="0" />
@@ -1214,7 +1225,9 @@ m_Main := TRUE;
       <LineId Id="72" Count="0" />
     </LineIds>
     <LineIds Name="EM_PalletConveyor._m_SeqTransport">
-      <LineId Id="473" Count="22" />
+      <LineId Id="473" Count="13" />
+      <LineId Id="651" Count="1" />
+      <LineId Id="487" Count="8" />
       <LineId Id="518" Count="2" />
       <LineId Id="642" Count="0" />
       <LineId Id="644" Count="0" />

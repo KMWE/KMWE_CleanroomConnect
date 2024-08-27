@@ -449,12 +449,20 @@ s_cmDockingClampsUpper.i_eCtrlMode := E_CtrlMode.IDLE;
 s_cmDockingClampsUpper.i_sCmName := 'Docking Clamps Upper';
 s_cmDockingClampsUpper.i_stSettings.tValveOnTimeout := T#10S;
 s_cmDockingClampsUpper.i_stSettings.tValveOnTimeout := T#10S;
+s_cmDockingClampsUpper.p_sCfgOffName := 'Open';
+s_cmDockingClampsUpper.p_sCfgOnName := 'Close';
+s_cmDockingClampsUpper.p_sCfgFB1Name := 'Left';
+s_cmDockingClampsUpper.p_sCfgFB2Name := 'Right';
 
 s_cmDockingClampsLower.i_bReqEnable := FALSE;
 s_cmDockingClampsLower.i_eCtrlMode := E_CtrlMode.IDLE;
 s_cmDockingClampsLower.i_sCmName := 'Docking Clamps Lower';
 s_cmDockingClampsLower.i_stSettings.tValveOnTimeout := T#10S;
 s_cmDockingClampsLower.i_stSettings.tValveOnTimeout := T#10S;
+s_cmDockingClampsLower.p_sCfgOffName := 'Open';
+s_cmDockingClampsLower.p_sCfgOnName := 'Close';
+s_cmDockingClampsLower.p_sCfgFB1Name := 'Left';
+s_cmDockingClampsLower.p_sCfgFB2Name := 'Right';
 	
 //--s_cmUnlockingPins.i_bReqEnable := FALSE;
 //--s_cmUnlockingPins.i_eCtrlMode := E_CtrlMode.IDLE;
@@ -465,27 +473,35 @@ s_cmDockingClampsLower.i_stSettings.tValveOnTimeout := T#10S;
 
 s_cmUnlockingPinsUpper.i_bReqEnable := FALSE;
 s_cmUnlockingPinsUpper.i_eCtrlMode := E_CtrlMode.IDLE;
-s_cmUnlockingPinsUpper.i_sCmName := 'Unlocking Pins Upper';
+s_cmUnlockingPinsUpper.i_sCmName := 'Unlocking Pin Upper';
 s_cmUnlockingPinsUpper.i_stSettings.tValveOnTimeout := T#10S;
 s_cmUnlockingPinsUpper.i_stSettings.tValveOffTimeout := T#10S;
+s_cmUnlockingPinsUpper.p_sCfgOffName := 'Lock';
+s_cmUnlockingPinsUpper.p_sCfgOnName := 'Release';
 
 s_cmUnlockingPinsLower.i_bReqEnable := FALSE;
 s_cmUnlockingPinsLower.i_eCtrlMode := E_CtrlMode.IDLE;
-s_cmUnlockingPinsLower.i_sCmName := 'Unlocking Pins Lower';
+s_cmUnlockingPinsLower.i_sCmName := 'Unlocking Pin Lower';
 s_cmUnlockingPinsLower.i_stSettings.tValveOnTimeout := T#10S;
 s_cmUnlockingPinsLower.i_stSettings.tValveOffTimeout := T#10S;
+s_cmUnlockingPinsLower.p_sCfgOffName := 'Lock';
+s_cmUnlockingPinsLower.p_sCfgOnName := 'Release';
 
 s_cmDoorOpener.i_bReqEnable := FALSE;
 s_cmDoorOpener.i_eCtrlMode := E_CtrlMode.IDLE;
 s_cmDoorOpener.i_sCmName := 'Door Opener';
 s_cmDoorOpener.i_stSettings.tValveOnTimeout := T#10S;
 s_cmDoorOpener.i_stSettings.tValveOffTimeout := T#10S;
+s_cmDoorOpener.p_sCfgOffName := 'Close';
+s_cmDoorOpener.p_sCfgOnName := 'Open';
 
 s_cmDoorShutter.i_bReqEnable := FALSE;
 s_cmDoorShutter.i_eCtrlMode := E_CtrlMode.IDLE;
 s_cmDoorShutter.i_sCmName := 'Door Shutter';
 s_cmDoorShutter.i_stSettings.tValveOnTimeout := T#10S;
 s_cmDoorShutter.i_stSettings.tValveOffTimeout := T#10S;
+s_cmDoorShutter.p_sCfgOffName := 'Open';
+s_cmDoorShutter.p_sCfgOnName := 'Close';
 	
 //---------------------------------//	
 	
@@ -854,13 +870,31 @@ CASE s_eSeqDockingInterface OF
 	
 	E_SeqDockingInterface.TB_DOCKED:
 		IF s_fbHmiBtnOpenInnerDoor.p_osrBtnPress THEN
-			s_eSeqDockingInterface := E_SeqDockingInterface.RELEASE_UNLOCKING_PINS;
+			//--s_eSeqDockingInterface := E_SeqDockingInterface.RELEASE_UNLOCKING_PINS;
+			s_eSeqDockingInterface := E_SeqDockingInterface.CLOSE_DOOR_OPENER_RELEASING_PINS;
 		END_IF
 		
 		IF s_fbHmiBtnUndockTB.p_osrBtnPress THEN
 			s_eSeqDockingInterface := E_SeqDockingInterface.OPEN_DOCKING_CLAMPS;
 		END_IF
+////////////////////////////////	
+	E_SeqDockingInterface.CLOSE_DOOR_OPENER_RELEASING_PINS:
+		s_tonTimer.IN := s_cmDoorOpener.m_Off(); //Off = close
 	
+		IF s_tonTimer.ET > i_stSettings.tDelayCloseDoorShutterReleasingPins THEN
+			s_tonTimer.IN := FALSE;
+			s_eSeqDockingInterface := E_SeqDockingInterface.CLOSE_DOOR_SHUTTER_RELEASING_PINS;
+		END_IF
+		
+	E_SeqDockingInterface.CLOSE_DOOR_SHUTTER_RELEASING_PINS:
+		s_tonTimer.IN := s_cmDoorShutter.m_On(); //On = close
+	
+		IF s_tonTimer.ET > i_stSettings.tDelayReleaseUnlockingPins THEN
+			s_tonTimer.IN := FALSE;
+			s_eSeqDockingInterface := E_SeqDockingInterface.RELEASE_UNLOCKING_PINS;
+		END_IF	
+		
+////////////////////////////////		
 	E_SeqDockingInterface.RELEASE_UNLOCKING_PINS:
 		s_tonTimer.IN := (s_cmUnlockingPinsUpper.m_On() AND s_cmUnlockingPinsLower.m_On()); //On = release
 	
@@ -1449,21 +1483,32 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="325" Count="0" />
       <LineId Id="327" Count="3" />
       <LineId Id="326" Count="0" />
+      <LineId Id="485" Count="2" />
+      <LineId Id="484" Count="0" />
       <LineId Id="332" Count="4" />
       <LineId Id="331" Count="0" />
+      <LineId Id="489" Count="2" />
+      <LineId Id="488" Count="0" />
       <LineId Id="236" Count="1" />
       <LineId Id="239" Count="0" />
       <LineId Id="230" Count="0" />
       <LineId Id="244" Count="2" />
       <LineId Id="337" Count="4" />
       <LineId Id="222" Count="0" />
+      <LineId Id="493" Count="1" />
       <LineId Id="343" Count="0" />
       <LineId Id="348" Count="3" />
       <LineId Id="342" Count="0" />
+      <LineId Id="496" Count="0" />
+      <LineId Id="495" Count="0" />
       <LineId Id="355" Count="4" />
       <LineId Id="354" Count="0" />
+      <LineId Id="498" Count="0" />
+      <LineId Id="497" Count="0" />
       <LineId Id="361" Count="4" />
       <LineId Id="360" Count="0" />
+      <LineId Id="500" Count="0" />
+      <LineId Id="499" Count="0" />
       <LineId Id="352" Count="0" />
       <LineId Id="35" Count="3" />
       <LineId Id="271" Count="2" />
@@ -1682,11 +1727,21 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="202" Count="0" />
       <LineId Id="172" Count="0" />
       <LineId Id="211" Count="0" />
-      <LineId Id="214" Count="1" />
+      <LineId Id="214" Count="0" />
+      <LineId Id="433" Count="0" />
+      <LineId Id="215" Count="0" />
       <LineId Id="314" Count="0" />
       <LineId Id="316" Count="1" />
       <LineId Id="315" Count="0" />
-      <LineId Id="173" Count="1" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="406" Count="0" />
+      <LineId Id="413" Count="1" />
+      <LineId Id="421" Count="4" />
+      <LineId Id="405" Count="0" />
+      <LineId Id="428" Count="4" />
+      <LineId Id="426" Count="0" />
+      <LineId Id="403" Count="1" />
+      <LineId Id="174" Count="0" />
       <LineId Id="385" Count="1" />
       <LineId Id="216" Count="1" />
       <LineId Id="219" Count="0" />

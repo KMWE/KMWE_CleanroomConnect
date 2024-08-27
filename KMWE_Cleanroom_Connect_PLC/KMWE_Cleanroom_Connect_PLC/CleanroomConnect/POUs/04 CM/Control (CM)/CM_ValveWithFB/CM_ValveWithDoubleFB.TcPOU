@@ -12,6 +12,10 @@ VAR
 	s_bStaValveIsOff2 : BOOL;
 	s_bStaValveIsOn1 : BOOL;
 	s_bStaValveIsOn2 : BOOL;
+	
+	//Configuration
+	s_sCfgFB1Name : STRING(c_MAX_FB_NAME_LENGTH) := '1';
+	s_sCfgFB2Name : STRING(c_MAX_FB_NAME_LENGTH) := '2';
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -22,8 +26,8 @@ SUPER^();
     <Method Name="_m_Alarms" Id="{325d43c3-5745-4ae0-9bdb-3517c36b11b7}">
       <Declaration><![CDATA[METHOD PROTECTED _m_Alarms : BOOL
 VAR_INST
-	s_sTempStringOff : STRING(3);
-	s_sTempStringOn : STRING(3);
+	s_sTempStringOff : STRING(16);
+	s_sTempStringOn : STRING(16);
 END_VAR
 ]]></Declaration>
       <Implementation>
@@ -48,13 +52,28 @@ s_tonFeedbackOnTimeout(
 s_errFeedbackOffTimeout := (s_tonFeedBackOffTimeout.Q OR s_errFeedbackOffTimeout) AND NOT(i_bCmdReset);
 s_errFeedbackOnTimeout := (s_tonFeedbackOnTimeout.Q OR s_errFeedbackOnTimeout) AND NOT(i_bCmdReset);
 
+// Interlock warnings
+IF s_bReqOn AND i_bIclkOn THEN
+	s_wrnOnInterlocked := TRUE;
+	s_bReqOn := FALSE;
+ELSIF NOT(i_bIclkOn) THEN
+	s_wrnOnInterlocked := FALSE;	
+END_IF
+
+IF s_bReqOff AND i_bIclkOff THEN
+	s_wrnOffInterlocked := TRUE;
+	s_bReqOff := FALSE;
+ELSIF NOT(i_bIclkOff) THEN
+	s_wrnOffInterlocked := FALSE;	
+END_IF
+
 IF s_errFeedbackOffTimeout THEN 
 	IF NOT(s_bStaValveIsOff1) AND NOT(s_bStaValveIsOff2) THEN
-		s_sTempStringOff := '1&2';
+		s_sTempStringOff := CONCAT(s_sCfgFB1Name, CONCAT(' & ', s_sCfgFB2Name));
 	ELSIF NOT(s_bStaValveIsOff1) THEN
-		s_sTempStringOff := '1';
+		s_sTempStringOff := s_sCfgFB1Name;
 	ELSIF NOT(s_bStaValveIsOff2) THEN
-		s_sTempStringOff := '2';
+		s_sTempStringOff := s_sCfgFB2Name;
 	END_IF
 ELSE
 	s_sTempStringOff := '-';		
@@ -62,11 +81,11 @@ END_IF
 
 IF s_errFeedbackOnTimeout THEN 
 	IF NOT(s_bStaValveIsOn1) AND NOT(s_bStaValveIsOn2) THEN
-		s_sTempStringOn := '1&2';
+		s_sTempStringOn := CONCAT(s_sCfgFB1Name, CONCAT(' & ', s_sCfgFB2Name));
 	ELSIF NOT(s_bStaValveIsOn1) THEN
-		s_sTempStringOn := '1';
+		s_sTempStringOn := s_sCfgFB1Name;
 	ELSIF NOT(s_bStaValveIsOn2) THEN
-		s_sTempStringOn := '2';
+		s_sTempStringOn := s_sCfgFB2Name;
 	END_IF
 ELSE
 	s_sTempStringOn := '-';		
@@ -75,12 +94,12 @@ END_IF
 s_fbAlarmHandlerFeedbackOffTimeout(
 	i_bStaActive := i_bReqEnable AND s_errFeedbackOffTimeout, 
 	i_eAlarmLevel := E_AlarmLevel.Alarm,
-	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Feedback off timeout - Feedback: ', s_sTempStringOff)));
+	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Feedback ', CONCAT(s_sCfgOffName, CONCAT( ' timeout - ', s_sTempStringOff)))) );
 	
 s_fbAlarmHandlerFeedbackOnTimeout(
 	i_bStaActive := i_bReqEnable AND s_errFeedbackOnTimeout, 
 	i_eAlarmLevel := E_AlarmLevel.Alarm,
-	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Feedback on timeout - Feedback: ', s_sTempStringOn)));
+	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Feedback ', CONCAT(s_sCfgOnName, CONCAT( ' timeout - ', s_sTempStringOn)))) );
 
 s_bStaError := 
 	s_fbAlarmHandlerFeedbackOffTimeout.q_bStaActive
@@ -111,6 +130,46 @@ _m_Inputs := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
+    <Property Name="p_sCfgFB1Name" Id="{ef9ec438-7337-4535-96c6-4a5d5a90860e}">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_sCfgFB1Name : STRING(c_MAX_FB_NAME_LENGTH)]]></Declaration>
+      <Get Name="Get" Id="{84f07fa6-3b7f-429b-a553-9e5daf4ca0e3}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_sCfgFB1Name := s_sCfgFB1Name;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{67e0d7ae-c6cd-4687-88ee-4a3b28c9c42c}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+s_sCfgFB1Name := p_sCfgFB1Name;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="p_sCfgFB2Name" Id="{dc671ad3-f485-459e-9feb-dab6b29661dd}">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_sCfgFB2Name : STRING(c_MAX_FB_NAME_LENGTH)]]></Declaration>
+      <Get Name="Get" Id="{29782361-538a-4bee-aa47-829b2cca7267}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_sCfgFB2Name := s_sCfgFB2Name;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{60e89ace-b122-4bae-b577-c88ef1e0ae14}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+s_sCfgFB2Name := p_sCfgFB2Name;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
     <LineIds Name="CM_ValveWithDoubleFB">
       <LineId Id="13" Count="0" />
       <LineId Id="9" Count="0" />
@@ -129,6 +188,12 @@ _m_Inputs := TRUE;
       <LineId Id="92" Count="0" />
       <LineId Id="94" Count="0" />
       <LineId Id="90" Count="0" />
+      <LineId Id="180" Count="0" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="158" Count="6" />
+      <LineId Id="172" Count="3" />
+      <LineId Id="179" Count="0" />
+      <LineId Id="170" Count="0" />
       <LineId Id="103" Count="1" />
       <LineId Id="111" Count="0" />
       <LineId Id="133" Count="0" />
@@ -147,10 +212,11 @@ _m_Inputs := TRUE;
       <LineId Id="128" Count="2" />
       <LineId Id="119" Count="0" />
       <LineId Id="107" Count="0" />
-      <LineId Id="45" Count="3" />
+      <LineId Id="45" Count="2" />
+      <LineId Id="150" Count="0" />
       <LineId Id="54" Count="0" />
       <LineId Id="56" Count="2" />
-      <LineId Id="131" Count="0" />
+      <LineId Id="152" Count="0" />
       <LineId Id="63" Count="0" />
       <LineId Id="95" Count="0" />
       <LineId Id="97" Count="1" />
@@ -170,6 +236,24 @@ _m_Inputs := TRUE;
       <LineId Id="9" Count="0" />
       <LineId Id="8" Count="0" />
       <LineId Id="17" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_ValveWithDoubleFB.p_sCfgFB1Name.Get">
+      <LineId Id="3" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="4" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_ValveWithDoubleFB.p_sCfgFB1Name.Set">
+      <LineId Id="7" Count="0" />
+      <LineId Id="5" Count="1" />
+    </LineIds>
+    <LineIds Name="CM_ValveWithDoubleFB.p_sCfgFB2Name.Get">
+      <LineId Id="3" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="4" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_ValveWithDoubleFB.p_sCfgFB2Name.Set">
+      <LineId Id="7" Count="0" />
+      <LineId Id="5" Count="1" />
     </LineIds>
   </POU>
 </TcPlcObject>

@@ -5,7 +5,7 @@
 VAR
 	//Control modules
 	s_diSafetyOk : FB_DigInput;
-	s_di24VdcOk : FB_DigInput;
+	s_diPowerOk : FB_DigInput;
 	s_diAirPressureOk : FB_DigInput;
 
 	s_doBeaconLedGreen : FB_DigOutput;
@@ -18,7 +18,7 @@ VAR
 	
 	//States
 	s_bStaSafetyOk : BOOL := FALSE;
-	s_bSts24VdcOk : BOOL := FALSE;
+	s_bStsPowerOk : BOOL := FALSE;
 	s_bStaAirPressureOk : BOOL := FALSE;
 	
 	//s_bStaError
@@ -30,16 +30,16 @@ VAR
 	
 	//Alarms
 	s_fbAlarmHandlerSafetyNotOk : FB_AlarmHandler;
-	s_fbAlarmHandler24VdcNotOk : FB_AlarmHandler;
+	s_fbAlarmHandlerPowerNotOk : FB_AlarmHandler;
 	s_fbAlarmHandlerAirPressureNotOk : FB_AlarmHandler;
 	
 	s_bErrSafetyNotOk : BOOL;
-	s_bErr24VdcNotOk : BOOL;
+	s_bErrPowerOk : BOOL;
 	s_bErrAirPressureNotOk : BOOL;
 	
 	//Hmi
 	s_fbHmiLedSafetyOk : FB_HmiLed;
-	s_fbHmiLed24VdcOk : FB_HmiLed;
+	s_fbHmiLedPowerOk : FB_HmiLed;
 	s_fbHmiLedAirPressureOk : FB_HmiLed;
 	s_fbHmiLedBeaconGreen : FB_HmiLed;
 	s_fbHmiLedBeaconYellow : FB_HmiLed;
@@ -62,7 +62,7 @@ END_IF
 
 //Set error bits
 s_bErrSafetyNotOk := NOT(s_bStaSafetyOk);
-s_bErr24VdcNotOk := NOT(s_bSts24VdcOk);
+s_bErrPowerOk := NOT(s_bStsPowerOk);
 s_bErrAirPressureNotOk := NOT(s_bStaAirPressureOk);
 
 // Alarm Handlers
@@ -71,10 +71,10 @@ s_fbAlarmHandlerSafetyNotOk(
 	i_eAlarmLevel := E_AlarmLevel.Alarm, 
 	i_sAlarmText := CONCAT(i_sEmName, ' - Safety not OK'));
 	
-s_fbAlarmHandler24VdcNotOk(
-	i_bStaActive := s_bErr24VdcNotOk, 
+s_fbAlarmHandlerPowerNotOk(
+	i_bStaActive := s_bErrPowerOk, 
 	i_eAlarmLevel := E_AlarmLevel.Alarm, 
-	i_sAlarmText := CONCAT(i_sEmName, ' - 24VDC power supply not OK'));
+	i_sAlarmText := CONCAT(i_sEmName, ' - Power supply not OK'));
 	
 s_fbAlarmHandlerAirPressureNotOk(
 	i_bStaActive := s_bErrAirPressureNotOk, 
@@ -84,13 +84,13 @@ s_fbAlarmHandlerAirPressureNotOk(
 // Reset warnings
 IF i_bCmdReset THEN
 	s_bErrSafetyNotOk := FALSE;
-	s_bErr24VdcNotOk := FALSE;
+	s_bErrPowerOk := FALSE;
 	s_bErrAirPressureNotOk := FALSE;
 END_IF
 
 s_bStaError := 
 	s_fbAlarmHandlerSafetyNotOk.q_bStaActive
-	OR s_fbAlarmHandler24VdcNotOk.q_bStaActive
+	OR s_fbAlarmHandlerPowerNotOk.q_bStaActive
 	OR s_fbAlarmHandlerAirPressureNotOk.q_bStaActive;	
 	
 s_bStaWarning := FALSE;	
@@ -110,7 +110,7 @@ END_IF
 
 //Control module
 s_diSafetyOk();
-s_di24VdcOk();
+s_diPowerOk();
 s_diAirPressureOk();
 
 s_doBeaconLedGreen.i_bStaOutput := s_bExtRunning;
@@ -136,7 +136,7 @@ END_IF
 
 //Hmi Leds
 s_fbHmiLedSafetyOk(i_bStaLed := s_bStaSafetyOk);
-s_fbHmiLed24VdcOk(i_bStaLed := s_bSts24VdcOk);
+s_fbHmiLedPowerOk(i_bStaLed := s_bStsPowerOk);
 s_fbHmiLedAirPressureOk(i_bStaLed := s_bStaAirPressureOk);
 s_fbHmiLedBeaconGreen(i_bStaLed := s_bExtRunning);
 s_fbHmiLedBeaconYellow(i_bStaLed := s_bExtWarning);
@@ -156,7 +156,7 @@ END_IF
 
 //Control Modules
 s_diSafetyOk.i_stSettings.tmInputDelay := T#3S;
-s_di24VdcOk.i_stSettings.tmInputDelay := T#3S;
+s_diPowerOk.i_stSettings.tmInputDelay := T#3S;
 s_diAirPressureOk.i_stSettings.tmInputDelay := T#3S;
 
 s_doBeaconLedGreen.i_stSettings.bCfgDelay := FALSE;
@@ -173,8 +173,8 @@ s_doBeaconLedRed.i_stSettings.tmOutputDelay := T#0S;
 s_fbHmiLedSafetyOk.p_bStaVisible := FALSE;
 s_fbHmiLedSafetyOk.p_sToHmiDescriptionLed := 'Safety Ok';
 
-s_fbHmiLed24VdcOk.p_bStaVisible := FALSE;
-s_fbHmiLed24VdcOk.p_sToHmiDescriptionLed := '24Vdc Ok';
+s_fbHmiLedPowerOk.p_bStaVisible := FALSE;
+s_fbHmiLedPowerOk.p_sToHmiDescriptionLed := 'Power Ok';
 
 s_fbHmiLedAirPressureOk.p_bStaVisible := FALSE;
 s_fbHmiLedAirPressureOk.p_sToHmiDescriptionLed := 'Air pressure Ok';
@@ -202,7 +202,7 @@ IF NOT SUPER^._m_Inputs() THEN
 END_IF
 
 s_bStaSafetyOk := s_diSafetyOk.p_bStaInputDelayed AND s_diSafetyOk.p_bStaInput; //on-delay only
-s_bSts24VdcOk := s_di24VdcOk.p_bStaInputDelayed AND s_di24VdcOk.p_bStaInput; //on-delay only
+s_bStsPowerOk := s_diPowerOk.p_bStaInputDelayed AND s_diPowerOk.p_bStaInput; //on-delay only
 s_bStaAirPressureOk := s_diAirPressureOk.p_bStaInputDelayed AND s_diAirPressureOk.p_bStaInput; //on-delay only
 
 _m_Inputs := TRUE;
@@ -257,24 +257,24 @@ p_bStaAirPressureOk := s_bStaAirPressureOk;
         </Implementation>
       </Get>
     </Property>
-    <Property Name="p_bStaSafetyOK" Id="{7ea03187-b7ec-46c2-a694-807e2d1d70bb}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaSafetyOK : BOOL]]></Declaration>
+    <Property Name="p_bStaSafetyOk" Id="{7ea03187-b7ec-46c2-a694-807e2d1d70bb}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaSafetyOk : BOOL]]></Declaration>
       <Get Name="Get" Id="{7f5e3440-eaae-47cd-8f92-6961cd1007ef}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaSafetyOK := s_bStaSafetyOk;
+p_bStaSafetyOk := s_bStaSafetyOk;
 ]]></ST>
         </Implementation>
       </Get>
     </Property>
-    <Property Name="p_bSts24VdcOk" Id="{4313e908-4780-46b5-aee4-16ddce14fbff}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bSts24VdcOk : BOOL]]></Declaration>
+    <Property Name="p_bStsPowerOk" Id="{4313e908-4780-46b5-aee4-16ddce14fbff}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStsPowerOk : BOOL]]></Declaration>
       <Get Name="Get" Id="{b2a078c1-b0bd-4ba8-8232-d29d32a14d28}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bSts24VdcOk := s_bSts24VdcOk;
+p_bStsPowerOk := s_bStsPowerOk;
 ]]></ST>
         </Implementation>
       </Get>
@@ -387,11 +387,11 @@ p_bSts24VdcOk := s_bSts24VdcOk;
       <LineId Id="2" Count="0" />
       <LineId Id="6" Count="0" />
     </LineIds>
-    <LineIds Name="EM_Utilities.p_bStaSafetyOK.Get">
+    <LineIds Name="EM_Utilities.p_bStaSafetyOk.Get">
       <LineId Id="5" Count="1" />
       <LineId Id="2" Count="0" />
     </LineIds>
-    <LineIds Name="EM_Utilities.p_bSts24VdcOk.Get">
+    <LineIds Name="EM_Utilities.p_bStsPowerOk.Get">
       <LineId Id="5" Count="1" />
       <LineId Id="2" Count="0" />
     </LineIds>

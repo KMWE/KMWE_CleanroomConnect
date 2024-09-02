@@ -15,8 +15,8 @@ END_VAR
 VAR
 //------------------------------------------//
 //Control Modules (Devices)
-	s_cmPalletConveyor : CM_SEW_WithBrake;
-	s_cmCentringUnit : CM_ValveWithDoubleFB; 
+	s_cmPalletConveyor : CM_MOVITRAC_B;
+	s_cmCentringUnit : CM_ValveWithDoubleFB; // Off = Idle, On = Centre
 	
 //------------------------------------------//
 
@@ -527,23 +527,15 @@ CASE s_eSeqCentring OF
 	
 	E_SeqCentring.START:
 		IF s_fbSeqCentringControl.q_tmStepTime > T#1S THEN
-			s_eSeqCentring := E_SeqCentring.MOVE_TO_REST;
+			s_eSeqCentring := E_SeqCentring.MOVE_TO_IDLE;
 		END_IF
 		
-	E_SeqCentring.MOVE_TO_REST:
-		IF s_cmCentringUnit.m_Off() THEN //Off = move to rest
-			s_eSeqCentring := E_SeqCentring.AT_REST;
+	E_SeqCentring.MOVE_TO_IDLE:
+		IF s_cmCentringUnit.m_Off() THEN
+			s_eSeqCentring := E_SeqCentring.AT_IDLE;
 		END_IF
-		
-		//--IF s_fbSeqCentringControl.q_bStaEntry THEN
-		//--	s_cmCentringUnit.m_Off(); //Off = move to rest
-		//--END_IF
-		
-		//--IF s_cmCentringUnit.p_bStaIsOff THEN
-		//--	s_eSeqCentring := E_SeqCentring.AT_REST;
-		//--END_IF
 	
-	E_SeqCentring.AT_REST:
+	E_SeqCentring.AT_IDLE:
 		IF s_fbSeqCentringControl.q_tmStepTime > T#1S THEN
 			s_eSeqCentring := E_SeqCentring.READY;
 		END_IF
@@ -554,21 +546,13 @@ CASE s_eSeqCentring OF
 		END_IF	
 		
 	E_SeqCentring.MOVE_TO_CENTER:
-		IF s_cmCentringUnit.m_On() THEN //On = move to center
+		IF s_cmCentringUnit.m_On() THEN
 			s_eSeqCentring := E_SeqCentring.AT_CENTER;
 		END_IF
 		
-		//--IF s_fbSeqCentringControl.q_bStaEntry THEN
-		//--	s_cmCentringUnit.m_On(); //On = move to center
-		//--END_IF
-		
-		//--IF s_cmCentringUnit.p_bStaIsOn THEN
-		//--	s_eSeqCentring := E_SeqCentring.AT_CENTER;
-		//--END_IF
-	
 	E_SeqCentring.AT_CENTER:
 		IF s_fbSeqCentringControl.q_tmStepTime > i_stSettings.tCentringDuration THEN
-			s_eSeqCentring := E_SeqCentring.MOVE_TO_REST;
+			s_eSeqCentring := E_SeqCentring.MOVE_TO_IDLE;
 		END_IF
 		
 	E_SeqCentring.ERROR:
@@ -1185,43 +1169,9 @@ m_Main := TRUE;
       <LineId Id="292" Count="0" />
     </LineIds>
     <LineIds Name="EM_PalletConveyor._m_SeqCentring">
-      <LineId Id="107" Count="0" />
-      <LineId Id="8" Count="6" />
-      <LineId Id="109" Count="0" />
-      <LineId Id="132" Count="0" />
-      <LineId Id="134" Count="0" />
-      <LineId Id="108" Count="0" />
-      <LineId Id="15" Count="0" />
-      <LineId Id="92" Count="0" />
-      <LineId Id="23" Count="2" />
-      <LineId Id="84" Count="0" />
-      <LineId Id="34" Count="0" />
-      <LineId Id="99" Count="0" />
-      <LineId Id="115" Count="0" />
-      <LineId Id="103" Count="0" />
-      <LineId Id="116" Count="0" />
-      <LineId Id="100" Count="0" />
-      <LineId Id="75" Count="0" />
-      <LineId Id="123" Count="3" />
-      <LineId Id="76" Count="5" />
-      <LineId Id="74" Count="0" />
-      <LineId Id="73" Count="0" />
-      <LineId Id="35" Count="0" />
-      <LineId Id="113" Count="1" />
-      <LineId Id="112" Count="0" />
-      <LineId Id="39" Count="0" />
-      <LineId Id="119" Count="2" />
-      <LineId Id="117" Count="1" />
-      <LineId Id="40" Count="0" />
-      <LineId Id="127" Count="1" />
-      <LineId Id="130" Count="0" />
-      <LineId Id="129" Count="0" />
-      <LineId Id="41" Count="11" />
-      <LineId Id="97" Count="0" />
-      <LineId Id="96" Count="0" />
-      <LineId Id="93" Count="0" />
-      <LineId Id="98" Count="0" />
-      <LineId Id="5" Count="0" />
+      <LineId Id="376" Count="0" />
+      <LineId Id="316" Count="42" />
+      <LineId Id="367" Count="8" />
       <LineId Id="72" Count="0" />
     </LineIds>
     <LineIds Name="EM_PalletConveyor._m_SeqTransport">

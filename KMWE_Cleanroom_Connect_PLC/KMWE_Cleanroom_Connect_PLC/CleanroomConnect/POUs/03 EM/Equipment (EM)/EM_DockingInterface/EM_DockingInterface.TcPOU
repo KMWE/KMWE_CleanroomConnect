@@ -15,26 +15,27 @@ END_VAR
 VAR
 //------------------------------------------//
 //Control Modules (Devices)
-	s_cmDockingClampsUpper : CM_ValveWithDoubleFB;
-	s_cmDockingClampsLower : CM_ValveWithDoubleFB;
+	s_cmDockingClampsUpper : CM_ValveWithDoubleFB; // Off = Open, On = Close
+	s_cmDockingClampsLower : CM_ValveWithDoubleFB; // Off = Open, On = Close
 	
-	s_cmUnlockingPinsUpper : CM_ValveWithFB;
-	s_cmUnlockingPinsLower : CM_ValveWithFB;
+	s_cmUnlockingPinUpper : CM_ValveWithFB; // Off = Lock, On = Release
+	s_cmUnlockingPinLower : CM_ValveWithFB; // Off = Lock, On = Release
 	
-	s_cmDoorOpener : CM_ValveWithFB;
-	s_cmDoorShutter : CM_ValveWithFB; 
+	s_cmDoorOpener : CM_ValveWithFB; // Off = Close, On = Open
+	s_cmDoorShutter : CM_ValveWithFB; // Off = Close, On = Open
 	
 //------------------------------------------//
 
 //------------------------------------------//
 //Inputs
-//--	s_diStaBoxAtPreDockingPosition : FB_DigInput;
-//--	s_diStaBoxAtDockedPosition : FB_DigInput;
+	s_diStaDoorAlmostOpened : FB_DigInput;
 		
 //------------------------------------------//
 	
 //------------------------------------------//
 //Outputs
+	s_doCmdDockingClampsUpperHighPressure : FB_DigOutput;
+	s_doCmdDockingClampsLowerHighPressure : FB_DigOutput;
 
 //------------------------------------------//
 
@@ -42,7 +43,9 @@ VAR
 	s_bReqDockBox : BOOL := FALSE;
 	s_bReqUndockBox : BOOL := FALSE;
 	s_bReqOpenDockingClamps : BOOL := FALSE;
-	s_bReqClosDockingClamps : BOOL := FALSE;
+	s_bReqCloseDockingClamps : BOOL := FALSE;
+	s_bReqDockingClampsUpperHighPressure : BOOL := FALSE; // True = high pressure
+	s_bReqDockingClampsLowerHighPressure : BOOL := FALSE; // True = high pressure
 	
 //Properties
 	s_bStaDockingDone : BOOL := FALSE;
@@ -62,6 +65,7 @@ VAR
 		
 	s_bStaDoorOpenerOpened : BOOL := FALSE;
 	s_bStaDoorOpenerClosed : BOOL := FALSE;
+	s_bStaDoorOpenerAlmostOpened : BOOL := FALSE;
 	
 	s_bStaDoorShutterOpened : BOOL := FALSE;
 	s_bStaDoorShutterClosed : BOOL := FALSE;
@@ -86,7 +90,10 @@ VAR
 	s_tonTimer : TON;
 	
 //Alarms
+	s_fbAlarmHandlerClosingDoorFailed : FB_AlarmHandler;
 
+	s_bErrClosingDoorFailed : BOOL;
+	
 //Warnings
 	s_fbAlarmHandlerNoBoxPresentAtPreDockingPosition : FB_AlarmHandler;
 	s_fbAlarmHandlerNoBoxPresentAtDockedPosition : FB_AlarmHandler;
@@ -246,6 +253,11 @@ END_IF
 // Set error bits
 
 // Alarm Handlers
+s_fbAlarmHandlerClosingDoorFailed(
+	i_bStaActive := s_bErrClosingDoorFailed, 
+	i_eAlarmLevel := E_AlarmLevel.Alarm, 
+	i_sAlarmText := 'Closing inner door failed');
+
 s_fbAlarmHandlerNoBoxPresentAtPreDockingPosition(
 	i_bStaActive := s_bWrnNoBoxPresentAtPreDockingPosition, 
 	i_eAlarmLevel := E_AlarmLevel.Warning, 
@@ -260,15 +272,17 @@ s_fbAlarmHandlerNoBoxPresentAtDockedPosition(
 IF i_bCmdReset THEN
 	s_bWrnNoBoxPresentAtPreDockingPosition := FALSE;
 	s_bWrnNoBoxPresentAtDockedPosition := FALSE;
+	s_bErrClosingDoorFailed := FALSE;
 END_IF	
 	
 s_bStaError := 
 	s_cmDockingClampsUpper.p_bStaError
 	OR s_cmDockingClampsLower.p_bStaError
-	OR s_cmUnlockingPinsUpper.p_bStaError
-	OR s_cmUnlockingPinsLower.p_bStaError
+	OR s_cmUnlockingPinUpper.p_bStaError
+	OR s_cmUnlockingPinLower.p_bStaError
 	OR s_cmDoorOpener.p_bStaError
-	OR s_cmDoorShutter.p_bStaError;
+	OR s_cmDoorShutter.p_bStaError
+	OR s_fbAlarmHandlerClosingDoorFailed.q_bStaActive;
 
 s_bStaWarning := 
 	s_fbAlarmHandlerNoBoxPresentAtPreDockingPosition.q_bStaActive
@@ -323,24 +337,24 @@ s_bStaDockingClampsLowerOpened := s_cmDockingClampsLower.p_bStaIsOff;
 //--	i_bCmdReset := i_bCmdReset);
 //--	//--i_sCmName := 'Unloading Pins');
 	
-s_cmUnlockingPinsUpper(
+s_cmUnlockingPinUpper(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
 	i_bCmdReset := i_bCmdReset,
 	i_bIclkOn := FALSE,
 	i_bIclkOff := FALSE);
 	
-s_cmUnlockingPinsLower(
+s_cmUnlockingPinLower(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
 	i_bCmdReset := i_bCmdReset,
 	i_bIclkOn := FALSE,
 	i_bIclkOff := FALSE);
 	
-s_bStaLockingPinsUpperReleased := s_cmUnlockingPinsUpper.p_bStaIsOn;
-s_bStaLockingPinsUpperLocked := s_cmUnlockingPinsUpper.p_bStaIsOff;
-s_bStaLockingPinsLowerReleased := s_cmUnlockingPinsLower.p_bStaIsOn;
-s_bStaLockingPinsLowerLocked := s_cmUnlockingPinsLower.p_bStaIsOff;	
+s_bStaLockingPinsUpperReleased := s_cmUnlockingPinUpper.p_bStaIsOn;
+s_bStaLockingPinsUpperLocked := s_cmUnlockingPinUpper.p_bStaIsOff;
+s_bStaLockingPinsLowerReleased := s_cmUnlockingPinLower.p_bStaIsOn;
+s_bStaLockingPinsLowerLocked := s_cmUnlockingPinLower.p_bStaIsOff;	
 	
 s_cmDoorOpener(
 	i_bReqEnable := i_bReqEnable,
@@ -454,6 +468,9 @@ s_cmDockingClampsUpper.p_sCfgOnName := 'Close';
 s_cmDockingClampsUpper.p_sCfgFB1Name := 'Left';
 s_cmDockingClampsUpper.p_sCfgFB2Name := 'Right';
 
+s_doCmdDockingClampsUpperHighPressure.i_stSettings.bCfgDelay := FALSE;
+s_doCmdDockingClampsUpperHighPressure.i_stSettings.tmOutputDelay := T#0S;
+
 s_cmDockingClampsLower.i_bReqEnable := FALSE;
 s_cmDockingClampsLower.i_eCtrlMode := E_CtrlMode.IDLE;
 s_cmDockingClampsLower.i_sCmName := 'Docking Clamps Lower';
@@ -463,6 +480,9 @@ s_cmDockingClampsLower.p_sCfgOffName := 'Open';
 s_cmDockingClampsLower.p_sCfgOnName := 'Close';
 s_cmDockingClampsLower.p_sCfgFB1Name := 'Left';
 s_cmDockingClampsLower.p_sCfgFB2Name := 'Right';
+
+s_doCmdDockingClampsLowerHighPressure.i_stSettings.bCfgDelay := FALSE;
+s_doCmdDockingClampsLowerHighPressure.i_stSettings.tmOutputDelay := T#0S;
 	
 //--s_cmUnlockingPins.i_bReqEnable := FALSE;
 //--s_cmUnlockingPins.i_eCtrlMode := E_CtrlMode.IDLE;
@@ -471,21 +491,21 @@ s_cmDockingClampsLower.p_sCfgFB2Name := 'Right';
 //--s_cmUnlockingPins.i_stSettings.tPinsUnlockTimeout := T#10S;
 {warning '#TODO: Dot we need to added configuration parameters? Seperate struct or via settings or dedicateed variables'}
 
-s_cmUnlockingPinsUpper.i_bReqEnable := FALSE;
-s_cmUnlockingPinsUpper.i_eCtrlMode := E_CtrlMode.IDLE;
-s_cmUnlockingPinsUpper.i_sCmName := 'Unlocking Pin Upper';
-s_cmUnlockingPinsUpper.i_stSettings.tValveOnTimeout := T#10S;
-s_cmUnlockingPinsUpper.i_stSettings.tValveOffTimeout := T#10S;
-s_cmUnlockingPinsUpper.p_sCfgOffName := 'Lock';
-s_cmUnlockingPinsUpper.p_sCfgOnName := 'Release';
+s_cmUnlockingPinUpper.i_bReqEnable := FALSE;
+s_cmUnlockingPinUpper.i_eCtrlMode := E_CtrlMode.IDLE;
+s_cmUnlockingPinUpper.i_sCmName := 'Unlocking Pin Upper';
+s_cmUnlockingPinUpper.i_stSettings.tValveOnTimeout := T#10S;
+s_cmUnlockingPinUpper.i_stSettings.tValveOffTimeout := T#10S;
+s_cmUnlockingPinUpper.p_sCfgOffName := 'Lock';
+s_cmUnlockingPinUpper.p_sCfgOnName := 'Release';
 
-s_cmUnlockingPinsLower.i_bReqEnable := FALSE;
-s_cmUnlockingPinsLower.i_eCtrlMode := E_CtrlMode.IDLE;
-s_cmUnlockingPinsLower.i_sCmName := 'Unlocking Pin Lower';
-s_cmUnlockingPinsLower.i_stSettings.tValveOnTimeout := T#10S;
-s_cmUnlockingPinsLower.i_stSettings.tValveOffTimeout := T#10S;
-s_cmUnlockingPinsLower.p_sCfgOffName := 'Lock';
-s_cmUnlockingPinsLower.p_sCfgOnName := 'Release';
+s_cmUnlockingPinLower.i_bReqEnable := FALSE;
+s_cmUnlockingPinLower.i_eCtrlMode := E_CtrlMode.IDLE;
+s_cmUnlockingPinLower.i_sCmName := 'Unlocking Pin Lower';
+s_cmUnlockingPinLower.i_stSettings.tValveOnTimeout := T#10S;
+s_cmUnlockingPinLower.i_stSettings.tValveOffTimeout := T#10S;
+s_cmUnlockingPinLower.p_sCfgOffName := 'Lock';
+s_cmUnlockingPinLower.p_sCfgOnName := 'Release';
 
 s_cmDoorOpener.i_bReqEnable := FALSE;
 s_cmDoorOpener.i_eCtrlMode := E_CtrlMode.IDLE;
@@ -494,6 +514,8 @@ s_cmDoorOpener.i_stSettings.tValveOnTimeout := T#10S;
 s_cmDoorOpener.i_stSettings.tValveOffTimeout := T#10S;
 s_cmDoorOpener.p_sCfgOffName := 'Close';
 s_cmDoorOpener.p_sCfgOnName := 'Open';
+
+s_diStaDoorAlmostOpened.i_stSettings.tmInputDelay := T#0s;
 
 s_cmDoorShutter.i_bReqEnable := FALSE;
 s_cmDoorShutter.i_eCtrlMode := E_CtrlMode.IDLE;
@@ -675,6 +697,9 @@ s_bIlckUnlockingPinsToRelease := i_bIlckUnlockingPinsToRelease;
 //--s_bStaDockingPositionFree := NOT(s_bStaBoxAtPreDockingPosition) AND NOT(s_bStaBoxAtDockedPosition);
 
 
+s_diStaDoorAlmostOpened();
+
+s_bStaDoorOpenerAlmostOpened := s_diStaDoorAlmostOpened.p_bStaInputDelayed;
 
 _m_Inputs := TRUE;]]></ST>
       </Implementation>
@@ -687,6 +712,12 @@ _m_Inputs := TRUE;]]></ST>
 IF NOT SUPER^._m_Outputs() THEN
 	RETURN;
 END_IF
+
+s_doCmdDockingClampsUpperHighPressure(
+	i_bStaOutput:= );
+	
+s_doCmdDockingClampsLowerHighPressure(
+	i_bStaOutput:= );
 
 _m_Outputs := TRUE;]]></ST>
       </Implementation>
@@ -829,95 +860,85 @@ CASE s_eSeqDockingInterface OF
 		
 	E_SeqDockingInterface.START:
 		s_tonTimer.IN := FALSE;
-		//--s_eSeqDockingInterface := s_eResumeStep; 
 		
 		IF _m_SeqStartup() AND s_fbSeqDockingInterfaceControl.q_tmStepTime > T#1S THEN
 			s_eSeqDockingInterface := s_eResumeStep;
 		END_IF
 		
 	E_SeqDockingInterface.OPEN_DOCKING_CLAMPS:
-		IF s_cmDockingClampsUpper.m_Off() AND s_cmDockingClampsLower.m_Off() THEN //Off = open
+		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN	
+			s_doCmdDockingClampsUpperHighPressure.i_bStaOutput := FALSE;
+			s_doCmdDockingClampsLowerHighPressure.i_bStaOutput := FALSE;
+		END_IF
+			
+		IF s_cmDockingClampsUpper.m_Off() AND s_cmDockingClampsLower.m_Off() THEN
 			s_eSeqDockingInterface := E_SeqDockingInterface.READY;
 		END_IF
 		
-	(*	IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN
-			s_cmDockingClampsUpper.m_Off(); //Off = open
-			s_cmDockingClampsLower.m_Off(); //Off = open
-		END_IF
-		
-		IF s_cmDockingClampsUpper.p_bStaIsOff AND s_cmDockingClampsLower.p_bStaIsOff THEN	
-			s_eSeqDockingInterface := E_SeqDockingInterface.READY;
-		END_IF *)	
-
 	E_SeqDockingInterface.READY:
 		IF s_fbHmiBtnDockTB.p_osrBtnPress THEN
 			s_eSeqDockingInterface := E_SeqDockingInterface.CLOSE_DOCKING_CLAMPS;
 		END_IF
 		
 	E_SeqDockingInterface.CLOSE_DOCKING_CLAMPS:
-		IF s_cmDockingClampsUpper.m_On() AND s_cmDockingClampsLower.m_On() THEN //On = close
-			s_eSeqDockingInterface := E_SeqDockingInterface.TB_DOCKED;
+		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN	
+			s_doCmdDockingClampsUpperHighPressure.i_bStaOutput := FALSE;
+			s_doCmdDockingClampsLowerHighPressure.i_bStaOutput := FALSE;
 		END_IF
 	
-	(*	IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN
-			s_cmDockingClampsUpper.m_On(); //On = close
-			s_cmDockingClampsLower.m_On(); //On = close
+		IF s_cmDockingClampsUpper.m_On() AND s_cmDockingClampsLower.m_On() THEN
+			s_eSeqDockingInterface := E_SeqDockingInterface.COMPRESS_SEAL;
+		END_IF
+	
+	E_SeqDockingInterface.COMPRESS_SEAL:
+		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN	
+			s_doCmdDockingClampsUpperHighPressure.i_bStaOutput := TRUE;
+			s_doCmdDockingClampsLowerHighPressure.i_bStaOutput := TRUE;
 		END_IF
 		
-		IF s_cmDockingClampsUpper.p_bStaIsOn AND s_cmDockingClampsLower.p_bStaIsOn THEN	
+		IF s_fbSeqDockingInterfaceControl.q_tmStepTime >= i_stSettings.tCompressSealDuration THEN	
 			s_eSeqDockingInterface := E_SeqDockingInterface.TB_DOCKED;
-		END_IF *)
-	
+		END_IF
+		
 	E_SeqDockingInterface.TB_DOCKED:
 		IF s_fbHmiBtnOpenInnerDoor.p_osrBtnPress THEN
-			//--s_eSeqDockingInterface := E_SeqDockingInterface.RELEASE_UNLOCKING_PINS;
 			s_eSeqDockingInterface := E_SeqDockingInterface.CLOSE_DOOR_OPENER_RELEASING_PINS;
 		END_IF
 		
 		IF s_fbHmiBtnUndockTB.p_osrBtnPress THEN
 			s_eSeqDockingInterface := E_SeqDockingInterface.OPEN_DOCKING_CLAMPS;
 		END_IF
-////////////////////////////////	
+		
 	E_SeqDockingInterface.CLOSE_DOOR_OPENER_RELEASING_PINS:
-		s_tonTimer.IN := s_cmDoorOpener.m_Off(); //Off = close
+		s_tonTimer.IN := s_cmDoorOpener.m_Off();
 	
-		IF s_tonTimer.ET > i_stSettings.tDelayCloseDoorShutterReleasingPins THEN
+		IF s_tonTimer.ET > i_stSettings.tDelayCloseDoorShutterReleasingPins 
+			AND s_bStaDoorOpenerAlmostOpened THEN
 			s_tonTimer.IN := FALSE;
 			s_eSeqDockingInterface := E_SeqDockingInterface.CLOSE_DOOR_SHUTTER_RELEASING_PINS;
+		ELSIF s_fbSeqDockingInterfaceControl.q_tmStepTime >= T#15S THEN
+			s_bErrClosingDoorFailed := TRUE;
+			s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
 		END_IF
 		
 	E_SeqDockingInterface.CLOSE_DOOR_SHUTTER_RELEASING_PINS:
-		s_tonTimer.IN := s_cmDoorShutter.m_On(); //On = close
+		s_tonTimer.IN := s_cmDoorShutter.m_Off();
 	
 		IF s_tonTimer.ET > i_stSettings.tDelayReleaseUnlockingPins THEN
 			s_tonTimer.IN := FALSE;
 			s_eSeqDockingInterface := E_SeqDockingInterface.RELEASE_UNLOCKING_PINS;
 		END_IF	
 		
-////////////////////////////////		
 	E_SeqDockingInterface.RELEASE_UNLOCKING_PINS:
-		s_tonTimer.IN := (s_cmUnlockingPinsUpper.m_On() AND s_cmUnlockingPinsLower.m_On()); //On = release
+		s_tonTimer.IN := (s_cmUnlockingPinUpper.m_On() AND s_cmUnlockingPinLower.m_On());
 	
-		//--IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN
-		//--	s_cmUnlockingPinsUpper.m_On(); //On = release
-		//--	s_cmUnlockingPinsLower.m_On(); //On = release
-		//--END_IF
-	
-		//--s_tonTimer.IN := s_cmUnlockingPinsUpper.p_bStaIsOn AND s_cmUnlockingPinsLower.p_bStaIsOn;
-		
 		IF s_tonTimer.ET > i_stSettings.tDelayOpenDoorShutter THEN
 			s_tonTimer.IN := FALSE;
 			s_eSeqDockingInterface := E_SeqDockingInterface.OPEN_DOOR_SHUTTER;
 		END_IF
 		
 	E_SeqDockingInterface.OPEN_DOOR_SHUTTER:
-		s_tonTimer.IN := s_cmDoorShutter.m_Off(); //Off = open
-	
-		//--IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN
-		//--	s_cmDoorShutter.m_Off(); //Off = open
-		//--END_IF
-	
-		//--s_tonTimer.IN := s_cmDoorShutter.p_bStaIsOff; 
+		s_tonTimer.IN := s_cmDoorShutter.m_On();
 		
 		IF s_tonTimer.ET > i_stSettings.tDelayOpenDoorOpener THEN
 			s_tonTimer.IN := FALSE;
@@ -925,17 +946,9 @@ CASE s_eSeqDockingInterface OF
 		END_IF
 	
 	E_SeqDockingInterface.OPEN_DOOR_OPENER:
-		IF s_cmDoorOpener.m_On() THEN //On = open
+		IF s_cmDoorOpener.m_On() THEN
 			s_eSeqDockingInterface := E_SeqDockingInterface.INNER_DOOR_OPENED;
 		END_IF
-	
-		//--IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN
-		//--	s_cmDoorOpener.m_On(); //On = open
-		//--END_IF
-	
-		//--IF s_cmDoorOpener.p_bStaIsOn THEN
-		//--	s_eSeqDockingInterface := E_SeqDockingInterface.INNER_DOOR_OPENED;
-		//--END_IF
 	
 	E_SeqDockingInterface.INNER_DOOR_OPENED:
 		IF s_fbHmiBtnCloseInnerDoor.p_osrBtnPress THEN
@@ -943,27 +956,20 @@ CASE s_eSeqDockingInterface OF
 		END_IF
 	
 	E_SeqDockingInterface.CLOSE_DOOR_OPENER:
-		s_tonTimer.IN := s_cmDoorOpener.m_Off(); //Off = close
-	
-		//--IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN
-		//--	s_cmDoorOpener.m_Off(); //Off = close
-		//--END_IF
-	
-		//--s_tonTimer.IN := s_cmDoorOpener.p_bStaIsOff; 
+		s_tonTimer.IN := s_cmDoorOpener.m_Off();
 		
-		IF s_tonTimer.ET > i_stSettings.tDelayCloseDoorShutter THEN
+		IF s_tonTimer.ET > i_stSettings.tDelayCloseDoorShutter
+			AND s_bStaDoorOpenerAlmostOpened
+			THEN
 			s_tonTimer.IN := FALSE;
 			s_eSeqDockingInterface := E_SeqDockingInterface.CLOSE_DOOR_SHUTTER;
+		ELSIF s_fbSeqDockingInterfaceControl.q_tmStepTime >= T#15S THEN
+			s_bErrClosingDoorFailed := TRUE;
+			s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
 		END_IF
 		
 	E_SeqDockingInterface.CLOSE_DOOR_SHUTTER:
-		s_tonTimer.IN := s_cmDoorShutter.m_On(); //On = close
-	
-		//--IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN
-		//--	s_cmDoorShutter.m_On(); //On = close
-		//--END_IF
-	
-		//--s_tonTimer.IN := s_cmDoorShutter.p_bStaIsOn; 
+		s_tonTimer.IN := s_cmDoorShutter.m_Off();
 		
 		IF s_tonTimer.ET > i_stSettings.tDelayLockUnlockingPins THEN
 			s_tonTimer.IN := FALSE;
@@ -971,18 +977,9 @@ CASE s_eSeqDockingInterface OF
 		END_IF
 	
 	E_SeqDockingInterface.LOCK_UNLOCKING_PINS:
-		IF (s_cmUnlockingPinsUpper.m_Off() AND s_cmUnlockingPinsLower.m_Off()) THEN //Off = Lock
+		IF (s_cmUnlockingPinUpper.m_Off() AND s_cmUnlockingPinLower.m_Off()) THEN
 			s_eSeqDockingInterface := E_SeqDockingInterface.TB_DOCKED;
 		END_IF
-		
-		//--IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN
-		//--	s_cmUnlockingPinsUpper.m_Off(); //Off = Lock
-		//--	s_cmUnlockingPinsLower.m_Off(); //Off = Lock
-		//--END_IF
-	
-		//--IF s_cmUnlockingPinsUpper.p_bStaIsOff AND s_cmUnlockingPinsLower.p_bStaIsOff THEN	
-		//--	s_eSeqDockingInterface := E_SeqDockingInterface.TB_DOCKED;
-		//--END_IF
 		
 	E_SeqDockingInterface.ERROR:
 		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN
@@ -993,10 +990,12 @@ CASE s_eSeqDockingInterface OF
 			END_IF
 			
 			//Stop controlling all valves
+			s_doCmdDockingClampsUpperHighPressure.i_bStaOutput := FALSE;
+			s_doCmdDockingClampsLowerHighPressure.i_bStaOutput := FALSE;
 			s_cmDockingClampsUpper.m_Stop();
 			s_cmDockingClampsLower.m_Stop();
-			s_cmUnlockingPinsUpper.m_Stop();
-			s_cmUnlockingPinsLower.m_Stop();
+			s_cmUnlockingPinUpper.m_Stop();
+			s_cmUnlockingPinLower.m_Stop();
 			s_cmDoorOpener.m_Stop();
 			s_cmDoorShutter.m_Stop(); 
 		END_IF
@@ -1010,10 +1009,13 @@ END_CASE
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF s_cmDoorOpener.m_Off() THEN
-	IF s_cmDoorShutter.m_On()THEN
-		IF s_cmUnlockingPinsUpper.m_Off() AND s_cmUnlockingPinsLower.m_Off() THEN
-			IF s_cmDockingClampsUpper.m_Off() AND s_cmDockingClampsLower.m_Off() THEN
+s_bReqDockingClampsUpperHighPressure := FALSE; // 
+s_bReqDockingClampsLowerHighPressure := FALSE;
+
+IF s_cmDoorOpener.m_Off() OR s_bStaDoorOpenerAlmostOpened THEN // Close
+	IF s_cmDoorShutter.m_Off()THEN // Close 
+		IF s_cmUnlockingPinUpper.m_Off() AND s_cmUnlockingPinLower.m_Off() THEN // Lock
+			IF s_cmDockingClampsUpper.m_Off() AND s_cmDockingClampsLower.m_Off() THEN // Open 
 				_m_SeqStartup := TRUE;
 			END_IF
 		END_IF						
@@ -1034,7 +1036,7 @@ END_IF
 s_bReqDockBox := FALSE;
 s_bReqUndockBox := FALSE;
 s_bReqOpenDockingClamps := FALSE;
-s_bReqClosDockingClamps := TRUE;
+s_bReqCloseDockingClamps := TRUE;
 
 m_CloseDockingClamps := TRUE;
 ]]></ST>
@@ -1052,7 +1054,7 @@ END_IF
 s_bReqDockBox := TRUE;
 s_bReqUndockBox := FALSE;
 s_bReqOpenDockingClamps := FALSE;
-s_bReqClosDockingClamps := FALSE;
+s_bReqCloseDockingClamps := FALSE;
 
 m_DockBox := TRUE;
 ]]></ST>
@@ -1260,7 +1262,7 @@ END_IF
 s_bReqDockBox := FALSE;
 s_bReqUndockBox := FALSE;
 s_bReqOpenDockingClamps := TRUE;
-s_bReqClosDockingClamps := FALSE;
+s_bReqCloseDockingClamps := FALSE;
 
 m_OpenDockingClamps := TRUE;
 ]]></ST>
@@ -1278,7 +1280,7 @@ END_IF
 s_bReqDockBox := FALSE;
 s_bReqUndockBox := TRUE;
 s_bReqOpenDockingClamps := FALSE;
-s_bReqClosDockingClamps := FALSE;
+s_bReqCloseDockingClamps := FALSE;
 
 m_UndockBox := TRUE;
 ]]></ST>
@@ -1373,6 +1375,9 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="16" Count="1" />
       <LineId Id="21" Count="0" />
       <LineId Id="20" Count="0" />
+      <LineId Id="59" Count="2" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="57" Count="0" />
       <LineId Id="23" Count="2" />
       <LineId Id="22" Count="0" />
       <LineId Id="26" Count="0" />
@@ -1382,10 +1387,12 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="11" Count="0" />
       <LineId Id="33" Count="0" />
       <LineId Id="35" Count="1" />
+      <LineId Id="64" Count="0" />
       <LineId Id="34" Count="0" />
       <LineId Id="32" Count="0" />
       <LineId Id="40" Count="5" />
       <LineId Id="39" Count="0" />
+      <LineId Id="62" Count="0" />
       <LineId Id="46" Count="0" />
       <LineId Id="38" Count="0" />
       <LineId Id="48" Count="1" />
@@ -1485,10 +1492,13 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="326" Count="0" />
       <LineId Id="485" Count="2" />
       <LineId Id="484" Count="0" />
+      <LineId Id="504" Count="2" />
       <LineId Id="332" Count="4" />
       <LineId Id="331" Count="0" />
       <LineId Id="489" Count="2" />
       <LineId Id="488" Count="0" />
+      <LineId Id="508" Count="1" />
+      <LineId Id="507" Count="0" />
       <LineId Id="236" Count="1" />
       <LineId Id="239" Count="0" />
       <LineId Id="230" Count="0" />
@@ -1505,6 +1515,8 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="354" Count="0" />
       <LineId Id="498" Count="0" />
       <LineId Id="497" Count="0" />
+      <LineId Id="503" Count="0" />
+      <LineId Id="502" Count="0" />
       <LineId Id="361" Count="4" />
       <LineId Id="360" Count="0" />
       <LineId Id="500" Count="0" />
@@ -1608,13 +1620,17 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="54" Count="0" />
       <LineId Id="67" Count="0" />
       <LineId Id="70" Count="2" />
-      <LineId Id="74" Count="1" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="80" Count="1" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="78" Count="0" />
       <LineId Id="50" Count="0" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="EM_DockingInterface._m_Outputs">
       <LineId Id="20" Count="0" />
       <LineId Id="6" Count="2" />
+      <LineId Id="22" Count="5" />
       <LineId Id="16" Count="0" />
       <LineId Id="5" Count="0" />
     </LineIds>
@@ -1701,62 +1717,61 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="118" Count="0" />
       <LineId Id="120" Count="0" />
       <LineId Id="161" Count="0" />
-      <LineId Id="324" Count="0" />
       <LineId Id="362" Count="3" />
       <LineId Id="323" Count="0" />
       <LineId Id="162" Count="0" />
+      <LineId Id="446" Count="0" />
+      <LineId Id="448" Count="0" />
+      <LineId Id="450" Count="0" />
+      <LineId Id="447" Count="0" />
+      <LineId Id="449" Count="0" />
       <LineId Id="371" Count="1" />
       <LineId Id="370" Count="0" />
       <LineId Id="373" Count="0" />
-      <LineId Id="190" Count="0" />
-      <LineId Id="196" Count="1" />
-      <LineId Id="192" Count="1" />
-      <LineId Id="199" Count="0" />
-      <LineId Id="169" Count="0" />
-      <LineId Id="201" Count="0" />
-      <LineId Id="355" Count="0" />
       <LineId Id="358" Count="2" />
       <LineId Id="357" Count="0" />
       <LineId Id="200" Count="0" />
       <LineId Id="170" Count="0" />
+      <LineId Id="453" Count="2" />
+      <LineId Id="451" Count="1" />
       <LineId Id="376" Count="1" />
-      <LineId Id="374" Count="1" />
-      <LineId Id="203" Count="0" />
-      <LineId Id="205" Count="5" />
-      <LineId Id="171" Count="0" />
+      <LineId Id="374" Count="0" />
       <LineId Id="202" Count="0" />
+      <LineId Id="459" Count="3" />
+      <LineId Id="456" Count="0" />
+      <LineId Id="463" Count="0" />
+      <LineId Id="465" Count="1" />
+      <LineId Id="464" Count="0" />
+      <LineId Id="457" Count="0" />
       <LineId Id="172" Count="0" />
       <LineId Id="211" Count="0" />
-      <LineId Id="214" Count="0" />
       <LineId Id="433" Count="0" />
       <LineId Id="215" Count="0" />
       <LineId Id="314" Count="0" />
       <LineId Id="316" Count="1" />
       <LineId Id="315" Count="0" />
-      <LineId Id="173" Count="0" />
+      <LineId Id="471" Count="0" />
       <LineId Id="406" Count="0" />
       <LineId Id="413" Count="1" />
-      <LineId Id="421" Count="4" />
+      <LineId Id="421" Count="0" />
+      <LineId Id="437" Count="0" />
+      <LineId Id="422" Count="1" />
+      <LineId Id="438" Count="0" />
+      <LineId Id="440" Count="1" />
+      <LineId Id="424" Count="1" />
       <LineId Id="405" Count="0" />
       <LineId Id="428" Count="4" />
       <LineId Id="426" Count="0" />
-      <LineId Id="403" Count="1" />
+      <LineId Id="403" Count="0" />
       <LineId Id="174" Count="0" />
       <LineId Id="385" Count="1" />
-      <LineId Id="216" Count="1" />
-      <LineId Id="219" Count="0" />
-      <LineId Id="218" Count="0" />
-      <LineId Id="175" Count="0" />
-      <LineId Id="224" Count="0" />
-      <LineId Id="221" Count="0" />
       <LineId Id="225" Count="0" />
       <LineId Id="239" Count="0" />
       <LineId Id="227" Count="1" />
       <LineId Id="226" Count="0" />
       <LineId Id="176" Count="0" />
-      <LineId Id="387" Count="1" />
-      <LineId Id="230" Count="1" />
-      <LineId Id="233" Count="4" />
+      <LineId Id="387" Count="0" />
+      <LineId Id="236" Count="1" />
       <LineId Id="240" Count="0" />
       <LineId Id="238" Count="0" />
       <LineId Id="177" Count="0" />
@@ -1764,35 +1779,25 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="178" Count="0" />
       <LineId Id="389" Count="0" />
       <LineId Id="391" Count="1" />
-      <LineId Id="390" Count="0" />
-      <LineId Id="242" Count="3" />
-      <LineId Id="248" Count="0" />
-      <LineId Id="250" Count="0" />
-      <LineId Id="241" Count="0" />
       <LineId Id="179" Count="2" />
       <LineId Id="254" Count="1" />
       <LineId Id="253" Count="0" />
       <LineId Id="182" Count="0" />
-      <LineId Id="393" Count="1" />
-      <LineId Id="183" Count="0" />
-      <LineId Id="258" Count="1" />
-      <LineId Id="256" Count="0" />
-      <LineId Id="267" Count="4" />
-      <LineId Id="265" Count="1" />
+      <LineId Id="393" Count="0" />
+      <LineId Id="268" Count="1" />
+      <LineId Id="436" Count="0" />
+      <LineId Id="435" Count="0" />
+      <LineId Id="270" Count="1" />
+      <LineId Id="443" Count="2" />
+      <LineId Id="442" Count="0" />
+      <LineId Id="266" Count="0" />
       <LineId Id="184" Count="0" />
-      <LineId Id="395" Count="1" />
-      <LineId Id="273" Count="8" />
+      <LineId Id="395" Count="0" />
+      <LineId Id="278" Count="3" />
       <LineId Id="272" Count="0" />
       <LineId Id="185" Count="1" />
       <LineId Id="397" Count="1" />
       <LineId Id="400" Count="0" />
-      <LineId Id="399" Count="0" />
-      <LineId Id="283" Count="1" />
-      <LineId Id="292" Count="0" />
-      <LineId Id="285" Count="1" />
-      <LineId Id="341" Count="0" />
-      <LineId Id="339" Count="0" />
-      <LineId Id="296" Count="0" />
       <LineId Id="311" Count="0" />
       <LineId Id="166" Count="0" />
       <LineId Id="326" Count="0" />
@@ -1800,6 +1805,7 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="328" Count="3" />
       <LineId Id="344" Count="0" />
       <LineId Id="354" Count="0" />
+      <LineId Id="469" Count="1" />
       <LineId Id="347" Count="2" />
       <LineId Id="351" Count="1" />
       <LineId Id="345" Count="0" />
@@ -1809,6 +1815,9 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="293" Count="0" />
     </LineIds>
     <LineIds Name="EM_DockingInterface._m_SeqStartup">
+      <LineId Id="395" Count="0" />
+      <LineId Id="392" Count="0" />
+      <LineId Id="394" Count="0" />
       <LineId Id="367" Count="0" />
       <LineId Id="369" Count="1" />
       <LineId Id="375" Count="0" />

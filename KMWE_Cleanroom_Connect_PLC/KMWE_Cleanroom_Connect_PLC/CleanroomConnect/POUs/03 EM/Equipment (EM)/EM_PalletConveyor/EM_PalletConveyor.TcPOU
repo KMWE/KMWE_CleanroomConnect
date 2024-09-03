@@ -9,7 +9,10 @@ VAR_INPUT
 	
 	i_refTB : REFERENCE TO OBJ_Carrier;
 	
-	
+END_VAR
+
+VAR_OUTPUT
+	q_bStaWarning : BOOL;
 END_VAR
 
 VAR
@@ -55,7 +58,7 @@ s_bStaCentringIdle : BOOL := FALSE;
 	s_bIlckConveyorForward : BOOL := TRUE;
 	s_bIlckConveyorBackward : BOOL := TRUE;
 	s_bIlckCentringToCenter : BOOL := TRUE;
-	s_bIlckCentringToRest : BOOL := TRUE;
+	s_bIlckCentringToIdle : BOOL := TRUE;
 	
 //Alarms
 	s_sReason : STRING;
@@ -185,10 +188,24 @@ s_bStaError :=
 	OR s_fbAlarmHandlerTravelTimeOut.q_bStaActive;	
 
 s_bStaWarning :=
-	s_fbAlarmHandlerOuterDoorNotOpened.q_bStaActive; 
+	s_fbAlarmHandlerOuterDoorNotOpened.q_bStaActive
+	OR s_cmPalletConveyor.p_bStaWarning
+	OR s_cmCentringUnit.p_bStaWarning;
 	
 _m_Alarms := TRUE;
 ]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_AutomaticControl" Id="{bf60d7a3-961e-4fdb-af02-f325c49fcd52}">
+      <Declaration><![CDATA[METHOD PRIVATE _m_AutomaticControl : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+//Pallet Conveyor
+_m_SeqTransport();
+		
+//Pallet Centring
+_m_SeqCentring();]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_Devices" Id="{a5afe549-ba9e-46b9-b9ab-569cdd3f8cbd}">
@@ -200,12 +217,18 @@ IF NOT SUPER^._m_Devices() THEN
 	RETURN;
 END_IF
 
+//Interlocks
+s_bIlckConveyorForward := NOT(s_bStaCentringIdle);
+s_bIlckConveyorBackward := NOT(s_bStaCentringIdle);
+s_bIlckCentringToCenter := NOT(s_cmPalletConveyor.p_bStaMotorStopped);
+s_bIlckCentringToIdle := FALSE;
+
 s_cmPalletConveyor(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
 	i_bCmdReset := i_bCmdReset,
-	i_bIclkForward := NOT(s_bStaCentringIdle), // TRUE = Interlocked - if centring not at idle/rest position
-	i_bIclkBackward := FALSE); // TRUE = Interlocked - if TB is docked (external interface)
+	i_bIclkForward := s_bIlckConveyorForward,
+	i_bIclkBackward := s_bIlckConveyorBackward);
 
 s_bStaBrakeReleased := s_cmPalletConveyor.p_bStaBrakeReleased;
 s_bStaDriveError := s_cmPalletConveyor.p_bStaError; 
@@ -214,7 +237,7 @@ s_cmCentringUnit(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
 	i_bCmdReset := i_bCmdReset,
-	i_bIclkOn := NOT(s_cmPalletConveyor.p_bStaMotorStopped),
+	i_bIclkOn := s_bIlckCentringToCenter,
 	i_bIclkOff := FALSE);
 	
 s_bStaCentringCenter := s_cmCentringUnit.p_bStaIsOn; 
@@ -246,6 +269,12 @@ IF NOT SUPER^._m_Hmi() THEN
 END_IF
 
 //Buttons
+
+s_fbHmiBtnTB_ToInfeed.p_bStaEnabled := s_bIlckConveyorBackward;
+s_fbHmiBtnTB_ToCentring.p_bStaEnabled := s_bIlckConveyorForward;
+s_fbHmiBtnTB_ToDocking.p_bStaEnabled := s_bIlckConveyorForward;
+s_fbHmiBtnTB_Centring.p_bStaEnabled := s_bIlckCentringToCenter;
+
 s_fbHmiBtnTB_ToInfeed();
 s_fbHmiBtnTB_ToCentring();
 s_fbHmiBtnTB_ToDocking();
@@ -316,10 +345,10 @@ s_diStaDoorOpened.i_stSettings.tmInputDelay := T#100MS;
 	s_fbHmiBtnTB_ToCentring.p_bStaEnabled := FALSE;		
 	s_fbHmiBtnTB_ToCentring.p_sBtnText := 'TB To Centring Position';
 	
-	s_fbHmiBtnTB_ToInfeed.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnTB_ToInfeed.p_bStaVisible := FALSE;
-	s_fbHmiBtnTB_ToInfeed.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnTB_ToInfeed.p_sBtnText := 'TB To Docking Position';
+	s_fbHmiBtnTB_ToDocking.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnTB_ToDocking.p_bStaVisible := FALSE;
+	s_fbHmiBtnTB_ToDocking.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnTB_ToDocking.p_sBtnText := 'TB To Docking Position';
 	
 	s_fbHmiBtnTB_Centring.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnTB_Centring.p_bStaVisible := FALSE;
@@ -391,6 +420,15 @@ END_IF
 _m_Inputs := TRUE;]]></ST>
       </Implementation>
     </Method>
+    <Method Name="_m_ManualControl" Id="{8fade5c9-d4eb-4ece-a738-f03d90da4e95}">
+      <Declaration><![CDATA[METHOD PRIVATE _m_ManualControl : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+// Manual control has been implemented into lower layer control modules
+]]></ST>
+      </Implementation>
+    </Method>
     <Method Name="_m_Outputs" Id="{dde91033-d57b-467b-929e-41cce55dae6e}">
       <Declaration><![CDATA[METHOD PROTECTED _m_Outputs : BOOL
 ]]></Declaration>
@@ -399,6 +437,8 @@ _m_Inputs := TRUE;]]></ST>
 IF NOT SUPER^._m_Outputs() THEN
 	RETURN;
 END_IF
+
+q_bStaWarning := s_bStaWarning;
 
 _m_Outputs := TRUE;]]></ST>
       </Implementation>
@@ -567,13 +607,13 @@ END_CASE
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[s_fbHmiBtnTB_ToInfeed.p_bStaVisible := TRUE;
-s_fbHmiBtnTB_ToInfeed.p_bStaEnabled := TRUE;
+//--s_fbHmiBtnTB_ToInfeed.p_bStaEnabled := TRUE;
 
 s_fbHmiBtnTB_ToCentring.p_bStaVisible := TRUE;
-s_fbHmiBtnTB_ToCentring.p_bStaEnabled := TRUE;
+//--s_fbHmiBtnTB_ToCentring.p_bStaEnabled := TRUE;
 
 s_fbHmiBtnTB_ToDocking.p_bStaVisible := TRUE;
-s_fbHmiBtnTB_ToDocking.p_bStaEnabled := TRUE;
+//--s_fbHmiBtnTB_ToDocking.p_bStaEnabled := TRUE;
 
 s_fbSeqTransportControl(
 	i_nSeqStep := s_eSeqTransport, 
@@ -759,17 +799,9 @@ CASE i_eCtrlMode OF
 		
 	E_CtrlMode.AUTOMATIC:
 	
-		//Pallet Conveyor
-		_m_SeqTransport();
+		//Excecute automatic control
+		_m_AutomaticControl();
 		
-		//Pallet Centring
-		_m_SeqCentring();
-		
-	
-				
-	
-
-	
 (*		s_fbSeqDockingInterface(
 			i_nSeqStep := s_eSeqDockingInterface, 
 			i_sStepName := TO_STRING(s_fbSeqDockingInterface.q_eActState), 
@@ -926,7 +958,9 @@ CASE i_eCtrlMode OF
 		s_eSeqTransport := E_SeqTransport.IDLE;
 		s_eSeqCentring := E_SeqCentring.IDLE;
 	
-		// Manual control placed inside the lower layer control modles
+		_m_ManualControl();
+		
+//--		// Manual control placed inside the lower layer control modles
 	
 		{warning '#TODO: Add manual control from hmi'}
 		//Is het de bedoeling om op deze plekken de hmi knoppen aan te sturen, OF moet dat gedaan worden in METHOD hmi?		
@@ -1001,13 +1035,22 @@ m_Main := TRUE;
       <LineId Id="69" Count="0" />
       <LineId Id="71" Count="0" />
       <LineId Id="73" Count="0" />
+      <LineId Id="75" Count="1" />
       <LineId Id="32" Count="0" />
       <LineId Id="10" Count="0" />
       <LineId Id="14" Count="0" />
     </LineIds>
+    <LineIds Name="EM_PalletConveyor._m_AutomaticControl">
+      <LineId Id="473" Count="4" />
+      <LineId Id="293" Count="0" />
+    </LineIds>
     <LineIds Name="EM_PalletConveyor._m_Devices">
       <LineId Id="41" Count="0" />
-      <LineId Id="6" Count="7" />
+      <LineId Id="6" Count="2" />
+      <LineId Id="51" Count="1" />
+      <LineId Id="55" Count="2" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="9" Count="4" />
       <LineId Id="44" Count="0" />
       <LineId Id="46" Count="0" />
       <LineId Id="14" Count="7" />
@@ -1022,6 +1065,10 @@ m_Main := TRUE;
       <LineId Id="7" Count="2" />
       <LineId Id="246" Count="0" />
       <LineId Id="224" Count="0" />
+      <LineId Id="296" Count="0" />
+      <LineId Id="298" Count="2" />
+      <LineId Id="297" Count="0" />
+      <LineId Id="295" Count="0" />
       <LineId Id="260" Count="0" />
       <LineId Id="264" Count="0" />
       <LineId Id="266" Count="1" />
@@ -1109,9 +1156,14 @@ m_Main := TRUE;
       <LineId Id="50" Count="0" />
       <LineId Id="5" Count="0" />
     </LineIds>
+    <LineIds Name="EM_PalletConveyor._m_ManualControl">
+      <LineId Id="397" Count="1" />
+      <LineId Id="403" Count="0" />
+    </LineIds>
     <LineIds Name="EM_PalletConveyor._m_Outputs">
       <LineId Id="20" Count="0" />
       <LineId Id="6" Count="2" />
+      <LineId Id="22" Count="1" />
       <LineId Id="16" Count="0" />
       <LineId Id="5" Count="0" />
     </LineIds>
@@ -1199,16 +1251,11 @@ m_Main := TRUE;
     </LineIds>
     <LineIds Name="EM_PalletConveyor.m_Main">
       <LineId Id="2483" Count="54" />
-      <LineId Id="2892" Count="0" />
-      <LineId Id="2538" Count="0" />
-      <LineId Id="2890" Count="0" />
-      <LineId Id="2893" Count="0" />
-      <LineId Id="2891" Count="0" />
-      <LineId Id="2539" Count="1" />
-      <LineId Id="2623" Count="1" />
-      <LineId Id="2690" Count="155" />
+      <LineId Id="2899" Count="2" />
+      <LineId Id="2692" Count="153" />
       <LineId Id="2897" Count="0" />
       <LineId Id="2846" Count="0" />
+      <LineId Id="2902" Count="1" />
       <LineId Id="2895" Count="0" />
       <LineId Id="2894" Count="0" />
       <LineId Id="2850" Count="39" />

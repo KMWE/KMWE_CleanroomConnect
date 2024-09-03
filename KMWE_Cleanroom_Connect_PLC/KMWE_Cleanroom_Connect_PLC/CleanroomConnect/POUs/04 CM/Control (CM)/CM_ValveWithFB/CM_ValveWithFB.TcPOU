@@ -29,6 +29,7 @@ VAR
 	// Status
 	s_bStaValveIsOff : BOOL;
 	s_bStaValveIsOn : BOOL; 
+	s_bStaWarning : BOOL;
 	
 	s_bSimFeedBackIsOff : BOOL;
 	s_bSimFeedBackIsOn : BOOL;
@@ -138,6 +139,10 @@ s_fbAlarmHandlerOnInterlocked(
 s_bStaError := 
 	s_fbAlarmHandlerFeedbackOffTimeout.q_bStaActive
 	OR s_fbAlarmHandlerFeedbackOnTimeout.q_bStaActive;
+	
+s_bStaWarning := 
+	s_fbAlarmHandlerOffInterlocked.q_bStaActive
+	OR s_fbAlarmHandlerOnInterlocked.q_bStaActive;
 
 _m_Alarms := TRUE;
 ]]></ST>
@@ -341,7 +346,7 @@ IF NOT(i_bIclkOff) THEN
 	s_bReqOff := TRUE XOR s_bCfgReverseValve;
 	s_bReqOn := FALSE XOR s_bCfgReverseValve;
 ELSE
-	s_errFeedbackOffTimeout := TRUE;
+	s_wrnOffInterlocked := TRUE;
 END_IF	
 	
 m_off := s_bStaValveIsOff;
@@ -361,7 +366,7 @@ IF NOT(i_bIclkOn) THEN
 	s_bReqOff := FALSE XOR s_bCfgReverseValve;
 	s_bReqOn := TRUE XOR s_bCfgReverseValve;
 ELSE
-	s_errFeedbackOnTimeout := TRUE;
+	s_wrnOnInterlocked := TRUE;
 END_IF
 	
 m_On := s_bStaValveIsOn;
@@ -460,6 +465,18 @@ p_bStaValve := s_bStaValveIsOn AND NOT(s_bStaValveIsOff);
         </Implementation>
       </Get>
     </Property>
+    <Property Name="p_bStaWarning" Id="{85c27428-f8c6-4e68-a9c0-6bfc13dbf116}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bStaWarning : BOOL]]></Declaration>
+      <Get Name="Get" Id="{7677a158-e5f8-48b8-9b0e-c58507654691}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaWarning := s_bStaWarning;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
     <Property Name="p_sCfgOffName" Id="{f418ae27-f959-4304-85c4-104b64a50df4}" FolderPath="Properties\">
       <Declaration><![CDATA[{attribute 'monitoring':='call'}
 PROPERTY PUBLIC p_sCfgOffName : STRING(c_MAX_FB_NAME_LENGTH)]]></Declaration>
@@ -536,6 +553,9 @@ s_sCfgOnName := p_sCfgOnName;
       <LineId Id="63" Count="0" />
       <LineId Id="95" Count="0" />
       <LineId Id="97" Count="1" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="175" Count="1" />
+      <LineId Id="174" Count="0" />
       <LineId Id="62" Count="0" />
       <LineId Id="10" Count="0" />
       <LineId Id="29" Count="0" />
@@ -711,6 +731,11 @@ s_sCfgOnName := p_sCfgOnName;
     <LineIds Name="CM_ValveWithFB.p_bStaValve.Get">
       <LineId Id="5" Count="0" />
       <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_ValveWithFB.p_bStaWarning.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="7" Count="0" />
       <LineId Id="6" Count="0" />
     </LineIds>
     <LineIds Name="CM_ValveWithFB.p_sCfgOffName.Get">

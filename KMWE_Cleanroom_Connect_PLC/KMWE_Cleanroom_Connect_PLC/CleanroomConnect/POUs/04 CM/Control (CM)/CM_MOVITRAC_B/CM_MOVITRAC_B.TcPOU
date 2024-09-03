@@ -30,16 +30,18 @@ VAR
 	s_bReqReset : BOOL;
 	
 	// Commands
+	s_bCmdEnable : BOOL;
+	s_bCmdReset : BOOL;
 	s_bCmdForward : BOOL;
 	s_bCmdBackward : BOOL;
 	s_bCmdReleaseBrake : BOOL;
-	s_bCmdReset : BOOL;
-	
+		
 	// States
 	s_bStaReadyForOperation: BOOL;
 	s_bStaDriveError: BOOL;
 	s_bStaBrakeReleased : BOOL;
 	s_bStaMotorStopped : BOOL;
+	s_bStaWarning : BOOL;
 	
 	// Setpoints
 	s_fTargetSpeed : LREAL; // Target speed [mm/s]
@@ -154,6 +156,13 @@ s_fbAlarmHandlerMotorBackwardInterlocked(
 s_bStaError := 
 	s_fbAlarmHandlerDriveError.q_bStaActive;
 
+// Warning collector
+s_bStaWarning := 
+	s_fbAlarmHandlerApplyingBrakeNotAllowed.q_bStaActive
+	OR s_fbAlarmHandlerStartMotorNotAllowed.q_bStaActive
+	OR s_fbAlarmHandlerMotorForwardInterlocked.q_bStaActive
+	OR s_fbAlarmHandlerMotorBackwardInterlocked.q_bStaActive;	
+	
 _m_Alarms := TRUE;
 ]]></ST>
       </Implementation>
@@ -191,19 +200,20 @@ CASE eSeqMOVITRAC_B_WithBrake OF
 		s_bCmdBackward := FALSE;	
 		s_bCmdReleaseBrake := FALSE;
 		s_bCmdReset := FALSE;
+		s_bCmdEnable := FALSE;
 		s_fTargetSpeed := 0;
 		
 		//Reset states
 		s_bStaBrakeReleased := FALSE;
 		s_bStaDriveError := FALSE;
-		s_bStaMotorStopped := FALSE;
-		s_bStaReadyForOperation := FALSE;
+		//s_bStaMotorStopped := FALSE;			written by inputs()
+		//s_bStaReadyForOperation := FALSE;		written by inputs()
 	
 		eSeqMOVITRAC_B_WithBrake := E_SeqMOVITRAC_B_WithBrake.STOPPED; 
 		
 	E_SeqMOVITRAC_B_WithBrake.STOPPED:
 		s_bStaBrakeReleased := FALSE;
-		s_bStaMotorStopped := TRUE;
+		//--s_bStaMotorStopped := TRUE;			written by inputs()
 		s_bReqStop := FALSE;
 		s_bStaReadyForOperation := TRUE;
 		
@@ -213,8 +223,12 @@ CASE eSeqMOVITRAC_B_WithBrake OF
 
 		IF s_bReqApplyBrake THEN
 			eSeqMOVITRAC_B_WithBrake := E_SeqMOVITRAC_B_WithBrake.APPLY_BRAKE;
-		END_IF	
+		END_IF
 		
+		IF seqTimer.PT >= T#10S THEN
+			s_bCmdEnable := FALSE;
+		END_IF
+			
 	E_SeqMOVITRAC_B_WithBrake.RELEASE_BRAKE:
 		s_bCmdReleaseBrake := TRUE;
 		s_bReqReleaseBrake := FALSE;
@@ -226,8 +240,10 @@ CASE eSeqMOVITRAC_B_WithBrake OF
 		IF s_bReqStop THEN
 			eSeqMOVITRAC_B_WithBrake := E_SeqMOVITRAC_B_WithBrake.STOPPING;
 		ELSIF s_bStaBrakeReleased AND s_bReqStartForward THEN
+			s_bCmdEnable := TRUE;
 			eSeqMOVITRAC_B_WithBrake := E_SeqMOVITRAC_B_WithBrake.MOVING_FORWARD;
 		ELSIF s_bStaBrakeReleased AND s_bReqStartBackward THEN
+			s_bCmdEnable := TRUE;
 			eSeqMOVITRAC_B_WithBrake := E_SeqMOVITRAC_B_WithBrake.MOVING_BACKWARD;
 		ELSIF s_bReqApplyBrake THEN
 			eSeqMOVITRAC_B_WithBrake := E_SeqMOVITRAC_B_WithBrake.APPLY_BRAKE;
@@ -237,7 +253,7 @@ CASE eSeqMOVITRAC_B_WithBrake OF
 		s_bCmdForward := TRUE;
 		s_bReqStartForward := FALSE;
 		
-		s_bStaMotorStopped := FALSE;
+		//--s_bStaMotorStopped := FALSE;		written by inputs()
 		//s_fTargetSpeed is written by method 
 	
 		IF s_bReqStop THEN
@@ -248,7 +264,7 @@ CASE eSeqMOVITRAC_B_WithBrake OF
 		s_bCmdBackward := TRUE;
 		s_bReqStartBackward := FALSE;
 		
-		s_bStaMotorStopped := FALSE;
+		//--s_bStaMotorStopped := FALSE;		//written by inputs()
 		//s_fTargetSpeed is written by method 
 	
 		IF s_bReqStop THEN
@@ -260,10 +276,14 @@ CASE eSeqMOVITRAC_B_WithBrake OF
 		s_bCmdBackward := FALSE;
 		s_bReqStop := FALSE;
 		
-		IF seqTimer.ET > i_stSettings.tMotorStoppedDelay THEN
-			s_bStaMotorStopped := TRUE;
+		IF s_bStaMotorStopped THEN
 			eSeqMOVITRAC_B_WithBrake := E_SeqMOVITRAC_B_WithBrake.APPLY_BRAKE;
-		END_IF	
+		END_IF
+		
+		//--IF seqTimer.ET > i_stSettings.tMotorStoppedDelay THEN
+			//--s_bStaMotorStopped := TRUE;		//Written by inputs()
+			//--eSeqMOVITRAC_B_WithBrake := E_SeqMOVITRAC_B_WithBrake.APPLY_BRAKE;
+		//--END_IF	
 	
 	E_SeqMOVITRAC_B_WithBrake.APPLY_BRAKE:
 		s_bCmdReleaseBrake := FALSE;
@@ -453,6 +473,7 @@ END_IF
 
 s_bStaReadyForOperation := I_bStaReadyForOperation;
 s_bStaDriveError := NOT(I_bStaReadyForOperation);
+s_bStaMotorStopped := NOT(I_bStaMotorIsRunning);
 
 _m_Inputs := TRUE;
 ]]></ST>
@@ -470,7 +491,7 @@ IF NOT SUPER^._m_Outputs() THEN
 END_IF
 
 //Write outputs to drive
-Q_bCmdEnable := i_bReqEnable;
+Q_bCmdEnable := s_bCmdEnable;
 Q_bCmdReset := s_bCmdReset;
 Q_bCmdStartCW := s_bCmdForward;
 Q_bCmdStartCCW := s_bCmdBackward;
@@ -509,7 +530,6 @@ END_IF
 s_bReqApplyBrake := TRUE;
 
 m_ApplyBrake := NOT(s_bStaBrakeReleased);
-//--m_ApplyBrake := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
@@ -526,7 +546,6 @@ END_IF
 s_bReqReleaseBrake := TRUE;
 
 m_ReleaseBrake := s_bStaBrakeReleased;
-//--m_ReleaseBrake := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
@@ -542,7 +561,6 @@ END_IF
 s_bReqReset := TRUE;
 
 m_Reset := s_bCmdReset;
-//--m_Reset := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
@@ -620,7 +638,6 @@ END_IF
 s_bReqStop := TRUE;
 
 m_Stop := s_bStaMotorStopped;
-//--m_Stop := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
@@ -656,6 +673,18 @@ PROPERTY PUBLIC p_bStaMotorStopped : BOOL]]></Declaration>
         <Implementation>
           <ST><![CDATA[
 p_bStaMotorStopped := s_bStaMotorStopped;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaWarning" Id="{5b5f03fd-2411-44c8-aae7-3196706a8139}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bStaWarning : BOOL]]></Declaration>
+      <Get Name="Get" Id="{cd7f0767-6cc8-4566-ac13-1325d1723ac3}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaWarning := s_bStaWarning;
 ]]></ST>
         </Implementation>
       </Get>
@@ -701,7 +730,10 @@ p_bStaMotorStopped := s_bStaMotorStopped;
       <LineId Id="60" Count="0" />
       <LineId Id="32" Count="0" />
       <LineId Id="110" Count="0" />
+      <LineId Id="172" Count="0" />
+      <LineId Id="174" Count="4" />
       <LineId Id="5" Count="0" />
+      <LineId Id="173" Count="0" />
       <LineId Id="10" Count="0" />
       <LineId Id="29" Count="0" />
     </LineIds>
@@ -723,6 +755,7 @@ p_bStaMotorStopped := s_bStaMotorStopped;
       <LineId Id="246" Count="0" />
       <LineId Id="134" Count="2" />
       <LineId Id="132" Count="0" />
+      <LineId Id="279" Count="0" />
       <LineId Id="138" Count="1" />
       <LineId Id="145" Count="0" />
       <LineId Id="140" Count="3" />
@@ -739,7 +772,9 @@ p_bStaMotorStopped := s_bStaMotorStopped;
       <LineId Id="195" Count="0" />
       <LineId Id="275" Count="2" />
       <LineId Id="274" Count="0" />
+      <LineId Id="280" Count="2" />
       <LineId Id="269" Count="0" />
+      <LineId Id="283" Count="0" />
       <LineId Id="86" Count="0" />
       <LineId Id="148" Count="0" />
       <LineId Id="262" Count="0" />
@@ -747,7 +782,10 @@ p_bStaMotorStopped := s_bStaMotorStopped;
       <LineId Id="177" Count="0" />
       <LineId Id="180" Count="1" />
       <LineId Id="186" Count="0" />
-      <LineId Id="183" Count="2" />
+      <LineId Id="284" Count="0" />
+      <LineId Id="183" Count="1" />
+      <LineId Id="285" Count="0" />
+      <LineId Id="185" Count="0" />
       <LineId Id="196" Count="1" />
       <LineId Id="178" Count="0" />
       <LineId Id="89" Count="1" />
@@ -768,7 +806,11 @@ p_bStaMotorStopped := s_bStaMotorStopped;
       <LineId Id="93" Count="1" />
       <LineId Id="211" Count="1" />
       <LineId Id="257" Count="0" />
-      <LineId Id="200" Count="2" />
+      <LineId Id="200" Count="0" />
+      <LineId Id="288" Count="0" />
+      <LineId Id="290" Count="0" />
+      <LineId Id="286" Count="1" />
+      <LineId Id="201" Count="1" />
       <LineId Id="215" Count="0" />
       <LineId Id="123" Count="0" />
       <LineId Id="198" Count="0" />
@@ -863,6 +905,7 @@ p_bStaMotorStopped := s_bStaMotorStopped;
       <LineId Id="10" Count="0" />
       <LineId Id="21" Count="0" />
       <LineId Id="20" Count="0" />
+      <LineId Id="23" Count="0" />
       <LineId Id="9" Count="0" />
       <LineId Id="8" Count="0" />
       <LineId Id="17" Count="0" />
@@ -896,7 +939,6 @@ p_bStaMotorStopped := s_bStaMotorStopped;
       <LineId Id="53" Count="0" />
       <LineId Id="55" Count="0" />
       <LineId Id="29" Count="0" />
-      <LineId Id="33" Count="0" />
       <LineId Id="23" Count="0" />
     </LineIds>
     <LineIds Name="CM_MOVITRAC_B.m_ReleaseBrake">
@@ -906,7 +948,6 @@ p_bStaMotorStopped := s_bStaMotorStopped;
       <LineId Id="71" Count="0" />
       <LineId Id="76" Count="0" />
       <LineId Id="29" Count="0" />
-      <LineId Id="33" Count="0" />
       <LineId Id="23" Count="0" />
     </LineIds>
     <LineIds Name="CM_MOVITRAC_B.m_Reset">
@@ -915,7 +956,6 @@ p_bStaMotorStopped := s_bStaMotorStopped;
       <LineId Id="38" Count="1" />
       <LineId Id="45" Count="0" />
       <LineId Id="29" Count="0" />
-      <LineId Id="33" Count="0" />
       <LineId Id="23" Count="0" />
     </LineIds>
     <LineIds Name="CM_MOVITRAC_B.m_StartBackward">
@@ -959,7 +999,6 @@ p_bStaMotorStopped := s_bStaMotorStopped;
       <LineId Id="40" Count="0" />
       <LineId Id="47" Count="0" />
       <LineId Id="29" Count="0" />
-      <LineId Id="33" Count="0" />
       <LineId Id="23" Count="0" />
     </LineIds>
     <LineIds Name="CM_MOVITRAC_B.p_bStaBrakeReleased.Get">
@@ -973,6 +1012,11 @@ p_bStaMotorStopped := s_bStaMotorStopped;
       <LineId Id="6" Count="0" />
     </LineIds>
     <LineIds Name="CM_MOVITRAC_B.p_bStaMotorStopped.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_MOVITRAC_B.p_bStaWarning.Get">
       <LineId Id="5" Count="0" />
       <LineId Id="7" Count="0" />
       <LineId Id="6" Count="0" />

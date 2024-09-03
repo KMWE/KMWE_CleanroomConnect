@@ -4,6 +4,7 @@
     <Declaration><![CDATA[PROGRAM MAIN
 VAR
 	//EM Pallet Transport
+	sim_MOVITRAC_B : SIM_MOVITRAC_B;
 	simCentring : SIM_ValveWithDoubleFB;	
 
 	//EM Docking Interface
@@ -13,12 +14,14 @@ VAR
 	simUnlockPinLower : SIM_ValveWithFB;
 	simDoorOpener : SIM_ValveWithFB;
 	simDoorShutter : SIM_ValveWithFB;
-	
+	simDoorOpenerAlmostClosed AT %Q* : BOOL;
+	tonDoorOpenerAlmosClosed : TON;
 END_VAR
 ]]></Declaration>
     <Implementation>
       <ST><![CDATA[
 //EM Pallet Conveyor
+sim_MOVITRAC_B();
 simCentring();
 
 //EM Docking Interface
@@ -28,14 +31,20 @@ simUnlockPinUpper();
 simUnlockPinLower();
 simDoorOpener();
 simDoorShutter();
-]]></ST>
+
+tonDoorOpenerAlmosClosed(IN := simDoorOpener.q_bStaValveOff, PT := T#1S);
+simDoorOpenerAlmostClosed := tonDoorOpenerAlmosClosed.Q; ]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
-      <LineId Id="38" Count="2" />
+      <LineId Id="38" Count="1" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="40" Count="0" />
       <LineId Id="58" Count="0" />
       <LineId Id="13" Count="0" />
       <LineId Id="59" Count="4" />
       <LineId Id="27" Count="0" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="82" Count="0" />
       <LineId Id="64" Count="0" />
     </LineIds>
   </POU>

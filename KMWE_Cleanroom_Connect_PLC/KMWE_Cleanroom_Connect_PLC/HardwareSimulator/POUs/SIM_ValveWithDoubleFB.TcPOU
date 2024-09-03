@@ -17,6 +17,11 @@ VAR
 	s_tonOff : TON;
 	
 END_VAR
+
+VAR_OUTPUT
+	q_bStaValveOn : BOOL;
+	q_bStaValveOff : BOOL;
+END_VAR
 ]]></Declaration>
     <Implementation>
       <ST><![CDATA[
@@ -40,14 +45,8 @@ ELSIF I_bCmdValveOn THEN
 	Q_bStaFeedbackOff2 := FALSE;
 END_IF
 
-//old
-//s_tonOn(IN := I_bCmdValveOn, PT := T#2S);
-//Q_bStaFeedbackOn := s_tonOn.Q;
-//Q_bStaFeedbackOn2 := s_tonOn.Q;
-
-//s_tonOff(IN := I_bCmdValveOff, PT := T#2S);
-//Q_bStaFeedbackOff := s_tonOff.Q;
-//Q_bStaFeedbackOff2 := s_tonOff.Q;
+q_bStaValveOn := I_bCmdValveOn;
+q_bStaValveOff := I_bCmdValveOff;
 ]]></ST>
     </Implementation>
     <LineIds Name="SIM_ValveWithDoubleFB">
@@ -61,14 +60,9 @@ END_IF
       <LineId Id="79" Count="1" />
       <LineId Id="84" Count="0" />
       <LineId Id="66" Count="0" />
-      <LineId Id="64" Count="0" />
-      <LineId Id="22" Count="1" />
-      <LineId Id="28" Count="0" />
-      <LineId Id="46" Count="0" />
-      <LineId Id="27" Count="0" />
-      <LineId Id="25" Count="1" />
-      <LineId Id="47" Count="0" />
+      <LineId Id="106" Count="1" />
       <LineId Id="29" Count="0" />
+      <LineId Id="108" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>

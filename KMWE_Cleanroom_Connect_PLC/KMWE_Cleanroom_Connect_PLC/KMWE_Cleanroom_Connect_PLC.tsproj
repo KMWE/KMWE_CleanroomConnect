@@ -136,7 +136,7 @@
 		</System>
 		<Plc>
 			<Project GUID="{13F6CD22-9663-4738-8378-3A901949CB98}" Name="CleanroomConnect" PrjFilePath="CleanroomConnect\CleanroomConnect.plcproj" TmcFilePath="CleanroomConnect\CleanroomConnect.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="CleanroomConnect\CleanroomConnect.tmc" TmcHash="{3C60EF65-F46E-64D2-098A-1587AA909811}">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="CleanroomConnect\CleanroomConnect.tmc" TmcHash="{717C7137-CDA4-C574-8C99-F94F10A4177C}">
 					<Name>CleanroomConnect Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1">
@@ -173,6 +173,11 @@
 						<Var>
 							<Name>GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.I_bStaReadyForOperation</Name>
 							<Comment><![CDATA[ Drive is ready operation (no error)]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.I_bStaMotorIsRunning</Name>
+							<Comment><![CDATA[ Drive/motor is running]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
@@ -301,7 +306,7 @@
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>GVL_Modules.g_emDockingInterface.s_diStaDoorAlmostOpened.I_bStaInput</Name>
+							<Name>GVL_Modules.g_emDockingInterface.s_diStaDoorAlmostClosed.I_bStaInput</Name>
 							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
@@ -352,13 +357,23 @@
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdStart</Name>
-							<Comment><![CDATA[ Command to start (+ reset one shot)]]></Comment>
+							<Name>GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdReset</Name>
+							<Comment><![CDATA[ Command to reset drive.]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdReverseDirection</Name>
-							<Comment><![CDATA[ Command to reverse direction]]></Comment>
+							<Name>GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdEnable</Name>
+							<Comment><![CDATA[ Command to enable drive.]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdStartCW</Name>
+							<Comment><![CDATA[ Command start in clock-wise direction.]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdStartCCW</Name>
+							<Comment><![CDATA[ Command start in counter-clock-wise direction.]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
@@ -442,12 +457,12 @@
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>GVL_Modules.g_emDockingInterface.s_doCmdDockingClampsUpperHighPressure.Q_bStaOutput</Name>
+							<Name>GVL_Modules.g_emDockingInterface.s_doCmdClampsUpperHighPressure.Q_bStaOutput</Name>
 							<Comment><![CDATA[----------------------Outputs---------------------------//]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>GVL_Modules.g_emDockingInterface.s_doCmdDockingClampsLowerHighPressure.Q_bStaOutput</Name>
+							<Name>GVL_Modules.g_emDockingInterface.s_doCmdClampsLowerHighPressure.Q_bStaOutput</Name>
 							<Comment><![CDATA[----------------------Outputs---------------------------//]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
@@ -491,6 +506,13 @@
 							</OwnerB>
 						</OwnerA>
 					</UnrestoredVarLinks>
+					<UnrestoredVarLinks ImportTime="2024-09-03T12:55:47">
+						<OwnerA Name="InputDst" Prefix="TIPC^CleanroomConnect^CleanroomConnect Instance" Type="1">
+							<OwnerB Name="TIPC^HardwareSimulator^HardwareSimulator Instance">
+								<Link VarA="GVL_Modules.g_emDockingInterface.s_diStaDoorAlmostOpened.I_bStaInput" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="PlcTask Outputs^MAIN.simDoorOpenerAlmostClosed" RestoreInfo="ANotFound"/>
+							</OwnerB>
+						</OwnerA>
+					</UnrestoredVarLinks>
 					<Contexts>
 						<Context>
 							<Id NeedCalleeCall="true">0</Id>
@@ -518,11 +540,28 @@
 				</Instance>
 			</Project>
 			<Project GUID="{E422F207-C83D-4C9F-9DAA-6F15793ED578}" Name="HardwareSimulator" PrjFilePath="HardwareSimulator\HardwareSimulator.plcproj" TmcFilePath="HardwareSimulator\HardwareSimulator.tmc" ReloadTmc="true" AmsPort="852" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502040" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="HardwareSimulator\HardwareSimulator.tmc" TmcHash="{0183ED00-14D8-427C-5369-5488D7279ECC}">
+				<Instance Id="#x08502040" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="HardwareSimulator\HardwareSimulator.tmc" TmcHash="{3F772312-2664-55E4-EEE7-A0B9BCF0FF1B}">
 					<Name>HardwareSimulator Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1">
 						<Name>PlcTask Inputs</Name>
+						<Var>
+							<Name>MAIN.sim_MOVITRAC_B.I_bCmdReset</Name>
+							<Comment><![CDATA[ Outputs from PLC --> HW]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.sim_MOVITRAC_B.I_bCmdEnable</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.sim_MOVITRAC_B.I_bCmdStartCW</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.sim_MOVITRAC_B.I_bCmdStartCCW</Name>
+							<Type>BOOL</Type>
+						</Var>
 						<Var>
 							<Name>MAIN.simCentring.I_bCmdValveOn</Name>
 							<Comment><![CDATA[ Outputs from PLC --> HW]]></Comment>
@@ -589,6 +628,19 @@
 					</Vars>
 					<Vars VarGrpType="2" AreaNo="1">
 						<Name>PlcTask Outputs</Name>
+						<Var>
+							<Name>MAIN.simDoorOpenerAlmostClosed</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.sim_MOVITRAC_B.Q_bStaReadyForOperation</Name>
+							<Comment><![CDATA[ Inputs from HW --> PLC]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.sim_MOVITRAC_B.Q_bStaMotorIsRunning</Name>
+							<Type>BOOL</Type>
+						</Var>
 						<Var>
 							<Name>MAIN.simCentring.Q_bStaFeedbackOn</Name>
 							<Comment><![CDATA[ Inputs from HW --> PLC]]></Comment>
@@ -1512,6 +1564,8 @@
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmCentringUnit.I_bStaValveIsOff2" VarB="PlcTask Outputs^MAIN.simCentring.Q_bStaFeedbackOff2"/>
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmCentringUnit.I_bStaValveIsOn" VarB="PlcTask Outputs^MAIN.simCentring.Q_bStaFeedbackOn"/>
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmCentringUnit.I_bStaValveIsOn2" VarB="PlcTask Outputs^MAIN.simCentring.Q_bStaFeedbackOn2"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.I_bStaMotorIsRunning" VarB="PlcTask Outputs^MAIN.sim_MOVITRAC_B.Q_bStaMotorIsRunning"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.I_bStaReadyForOperation" VarB="PlcTask Outputs^MAIN.sim_MOVITRAC_B.Q_bStaReadyForOperation"/>
 				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsLower.Q_bCmdOff" VarB="PlcTask Inputs^MAIN.simDockingClampLower.I_bCmdValveOff"/>
 				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsLower.Q_bCmdOn" VarB="PlcTask Inputs^MAIN.simDockingClampLower.I_bCmdValveOn"/>
 				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsUpper.Q_bCmdOff" VarB="PlcTask Inputs^MAIN.simDockingClampUpper.I_bCmdValveOff"/>
@@ -1526,6 +1580,10 @@
 				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinUpper.Q_bCmdOn" VarB="PlcTask Inputs^MAIN.simUnlockPinUpper.I_bCmdValveOn"/>
 				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmCentringUnit.Q_bCmdOff" VarB="PlcTask Inputs^MAIN.simCentring.I_bCmdValveOff"/>
 				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmCentringUnit.Q_bCmdOn" VarB="PlcTask Inputs^MAIN.simCentring.I_bCmdValveOn"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdEnable" VarB="PlcTask Inputs^MAIN.sim_MOVITRAC_B.I_bCmdEnable"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdReset" VarB="PlcTask Inputs^MAIN.sim_MOVITRAC_B.I_bCmdReset"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdStartCCW" VarB="PlcTask Inputs^MAIN.sim_MOVITRAC_B.I_bCmdStartCCW"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdStartCW" VarB="PlcTask Inputs^MAIN.sim_MOVITRAC_B.I_bCmdStartCW"/>
 			</OwnerB>
 		</OwnerA>
 	</Mappings>

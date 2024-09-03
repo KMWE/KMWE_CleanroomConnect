@@ -38,6 +38,7 @@ VAR
 	s_bStaDriveError: BOOL;
 	s_bStaBrakeReleased : BOOL;
 	s_bStaMotorStopped : BOOL;
+	s_bStaWarning : BOOL;
 	
 	// Setpoints
 	s_fTargetSpeed : LREAL; // Target speed [mm/s]
@@ -103,7 +104,6 @@ END_IF
 // Set error bits
 s_errDriveError := i_bReqEnable AND s_bStaDriveError;// AND NOT(i_bCmdReset);
 
-
 // Interlock warnings
 IF i_bIclkForward AND NOT(s_bStaMotorStopped) THEN	
 	s_wrnMotorForwardInterlocked := TRUE;
@@ -153,6 +153,13 @@ s_fbAlarmHandlerMotorBackwardInterlocked(
 s_bStaError := 
 	s_fbAlarmHandlerDriveError.q_bStaActive;
 
+// Warning collector
+s_bStaWarning := 
+	s_fbAlarmHandlerApplyingBrakeNotAllowed.q_bStaActive
+	OR s_fbAlarmHandlerStartMotorNotAllowed.q_bStaActive
+	OR s_fbAlarmHandlerMotorForwardInterlocked.q_bStaActive
+	OR s_fbAlarmHandlerMotorBackwardInterlocked.q_bStaActive;
+	
 _m_Alarms := TRUE;
 ]]></ST>
       </Implementation>
@@ -691,6 +698,18 @@ p_bStaMotorStopped := s_bStaMotorStopped;
         </Implementation>
       </Get>
     </Property>
+    <Property Name="p_bStaWarning" Id="{3e920515-596a-4c3d-84da-0ea6f37727ef}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bStaWarning : BOOL]]></Declaration>
+      <Get Name="Get" Id="{2fe82b32-7c2f-47ad-ae79-3e6ae11c117a}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaWarning := s_bStaWarning;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
     <LineIds Name="CM_SEW_WithBrake">
       <LineId Id="410" Count="0" />
       <LineId Id="47" Count="0" />
@@ -702,7 +721,6 @@ p_bStaMotorStopped := s_bStaMotorStopped;
       <LineId Id="103" Count="0" />
       <LineId Id="79" Count="0" />
       <LineId Id="86" Count="0" />
-      <LineId Id="151" Count="0" />
       <LineId Id="169" Count="0" />
       <LineId Id="155" Count="0" />
       <LineId Id="170" Count="0" />
@@ -733,6 +751,12 @@ p_bStaMotorStopped := s_bStaMotorStopped;
       <LineId Id="60" Count="0" />
       <LineId Id="32" Count="0" />
       <LineId Id="110" Count="0" />
+      <LineId Id="180" Count="0" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="172" Count="0" />
+      <LineId Id="174" Count="0" />
+      <LineId Id="176" Count="1" />
+      <LineId Id="179" Count="0" />
       <LineId Id="5" Count="0" />
       <LineId Id="10" Count="0" />
       <LineId Id="29" Count="0" />
@@ -1025,6 +1049,11 @@ p_bStaMotorStopped := s_bStaMotorStopped;
       <LineId Id="6" Count="0" />
     </LineIds>
     <LineIds Name="CM_SEW_WithBrake.p_bStaMotorStopped.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SEW_WithBrake.p_bStaWarning.Get">
       <LineId Id="5" Count="0" />
       <LineId Id="7" Count="0" />
       <LineId Id="6" Count="0" />

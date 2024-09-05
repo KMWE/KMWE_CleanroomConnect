@@ -10,8 +10,7 @@ VAR_INPUT
 	i_bIlckConveyorForward : BOOL := TRUE;
 	i_bIlckConveyorBackward : BOOL := TRUE;
 	
-	i_refTB : REFERENCE TO OBJ_Carrier;
-	
+	//??i_refTB : REFERENCE TO OBJ_Carrier;	//Mogelijk voor uiteindelijke machine, voor de FUMO's is dit nog niet echt relevant
 END_VAR
 
 VAR_OUTPUT
@@ -118,6 +117,8 @@ s_bStaCentringIdle : BOOL := FALSE;
 //------------------------------------------//
 
 //------------------------------------------//
+
+	s_sMessage : STRING;
 
 //Sequencers
 	s_eSeqTransport : E_SeqTransport;
@@ -654,25 +655,45 @@ CASE s_eSeqTransport OF
 		END_IF
 		
 	E_SeqTransport.READY:
-		IF s_fbHmiBtnTB_ToInfeed.p_osrBtnPress 
-			AND NOT(s_bStaAtInfeedRearPosition)
-			THEN
-			s_eSeqTransport := E_SeqTransport.MOVE_TO_INFEED;
+		IF s_fbHmiBtnTB_ToInfeed.p_osrBtnPress THEN
+			IF m_TB_ToInfeed(o_sReason => s_sMessage) THEN
+				s_eSeqTransport := E_SeqTransport.MOVE_TO_INFEED;
+			ELSE	
+				//Write message
+				//--s_sMessage := m_TB_ToCenter.o_sReason;
+			END_IF
+ 
+			//--AND NOT(s_bStaAtInfeedRearPosition)
+			//--THEN
 			
-		ELSIF s_fbHmiBtnTB_ToCentring.p_osrBtnPress
-			AND NOT(s_bStaAtCentringPosition)
-			THEN
-			
-			IF s_bStaDoorOpened THEN
-				s_eSeqTransport := E_SeqTransport.MOVE_TO_CENTRING;
-			ELSE
-				s_bWrnOuterDoorNotOpened := TRUE;
+		ELSIF s_fbHmiBtnTB_ToCentring.p_osrBtnPress THEN
+			IF m_TB_ToCenter(o_sReason => s_sMessage) THEN
+				s_eSeqTransport := E_SeqTransport.MOVE_TO_INFEED;
+			ELSE	
+				//Write message
+				//--s_sMessage := m_TB_ToCenter.o_sReason;
 			END_IF	
+		
+			//--AND NOT(s_bStaAtCentringPosition)
+			//--THEN
 			
-		ELSIF s_fbHmiBtnTB_ToDocking.p_osrBtnPress
-			AND NOT(s_bStaAtDockingPosition)
-			THEN
-			s_eSeqTransport := E_SeqTransport.MOVE_TO_DOCKING;
+			//--IF s_bStaDoorOpened THEN
+			//--	s_eSeqTransport := E_SeqTransport.MOVE_TO_CENTRING;
+			//--ELSE
+			//--	s_bWrnOuterDoorNotOpened := TRUE;
+			//--END_IF
+			
+		ELSIF s_fbHmiBtnTB_ToDocking.p_osrBtnPress THEN
+			IF m_TB_ToDocking(o_sReason => s_sMessage) THEN
+				s_eSeqTransport := E_SeqTransport.MOVE_TO_DOCKING;
+			ELSE	
+				//Write message
+				//--s_sMessage := m_TB_ToDocking.o_sReason;
+			END_IF	
+		
+		//--	AND NOT(s_bStaAtDockingPosition)
+		//--	THEN
+		//--	s_eSeqTransport := E_SeqTransport.MOVE_TO_DOCKING;
 		END_IF	
 	
 	E_SeqTransport.MOVE_TO_INFEED:
@@ -1034,6 +1055,9 @@ m_Main := TRUE;
     </Method>
     <Method Name="m_TB_ToCenter" Id="{9a04d893-3f3d-441b-875a-c54a1fc8d77d}">
       <Declaration><![CDATA[METHOD PUBLIC m_TB_ToCenter : BOOL
+VAR_OUTPUT
+	o_sReason : STRING;
+END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
@@ -1041,17 +1065,38 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-IF NOT(s_bIlckConveyorForward) THEN
-	s_bReqTB_ToCenter := TRUE;
-	m_TB_ToCenter := TRUE;
+//--IF NOT(s_bIlckConveyorForward) 
+//--	AND NOT(s_bStaAtCentringPosition)
+//--	THEN
+//--	s_bReqTB_ToCenter := TRUE;
+//--	m_TB_ToCenter := TRUE;
+//--ELSE
+//--	m_TB_ToCenter := FALSE;	
+//--END_IF
+
+////////
+
+IF s_bIlckConveyorForward THEN
+	o_sReason := 'Interlocked';
+	m_TB_ToCenter := FALSE;
+ELSIF s_bStaAtCentringPosition THEN
+ 	o_sReason := 'Already at centre position';
+	m_TB_ToCenter := FALSE;
+ELSIF NOT(s_bStaDoorOpened) THEN
+	o_sReason := 'Door not opened';
+	s_bWrnOuterDoorNotOpened := TRUE; // kan mogelijk vervallen wanneer er toch gewerkt gaat worden met reasons.
+	m_TB_ToCenter := FALSE;
 ELSE
-	m_TB_ToCenter := FALSE;	
+	m_TB_ToCenter := TRUE;	
 END_IF
 ]]></ST>
       </Implementation>
     </Method>
     <Method Name="m_TB_ToDocking" Id="{2bfcdc46-8a0a-4837-b71a-35dd909a0ae6}">
       <Declaration><![CDATA[METHOD PUBLIC m_TB_ToDocking : BOOL
+VAR_OUTPUT
+	o_sReason : STRING;
+END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
@@ -1059,17 +1104,27 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-IF NOT(s_bIlckConveyorForward) THEN
-	s_bReqTB_ToDocking := TRUE;
-	m_TB_ToDocking := TRUE;
+//--IF NOT(s_bIlckConveyorForward) THEN
+//--	s_bReqTB_ToDocking := TRUE;
+//--	m_TB_ToDocking := TRUE;
+//--ELSE
+//--	m_TB_ToDocking := FALSE;	
+//--END_IF
+
+IF s_bStaAtDockingPosition THEN
+	o_sReason := 'Interlocked';
+	m_TB_ToDocking := FALSE;
 ELSE
-	m_TB_ToDocking := FALSE;	
+	m_TB_ToDocking := TRUE;	
 END_IF
 ]]></ST>
       </Implementation>
     </Method>
     <Method Name="m_TB_ToInfeed" Id="{cf16f0e7-53a6-4bd4-b559-f1ce284b5a59}">
       <Declaration><![CDATA[METHOD PUBLIC m_TB_ToInfeed : BOOL
+VAR_OUTPUT
+	o_sReason : STRING;
+END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
@@ -1077,13 +1132,21 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-IF NOT(s_bIlckConveyorBackward) THEN
-	s_bReqTB_ToInfeed := TRUE;
-	m_TB_ToInfeed := TRUE;
+//--IF NOT(s_bIlckConveyorBackward) 
+//--	AND NOT(s_bStaAtInfeedRearPosition)
+//--	THEN
+//--	s_bReqTB_ToInfeed := TRUE;
+//--	m_TB_ToInfeed := TRUE;
+//--ELSE
+//--	m_TB_ToInfeed := FALSE;	
+//--END_IF
+
+IF s_bIlckConveyorBackward THEN
+	o_sReason := 'Interlocked';
+	m_TB_ToInfeed := FALSE;
 ELSE
-	m_TB_ToInfeed := FALSE;	
-END_IF
-]]></ST>
+	m_TB_ToInfeed := TRUE;	
+END_IF]]></ST>
       </Implementation>
     </Method>
     <LineIds Name="EM_PalletConveyor">
@@ -1326,8 +1389,20 @@ END_IF
       <LineId Id="649" Count="0" />
       <LineId Id="646" Count="2" />
       <LineId Id="617" Count="0" />
-      <LineId Id="619" Count="8" />
-      <LineId Id="629" Count="10" />
+      <LineId Id="619" Count="1" />
+      <LineId Id="683" Count="4" />
+      <LineId Id="682" Count="0" />
+      <LineId Id="681" Count="0" />
+      <LineId Id="621" Count="0" />
+      <LineId Id="657" Count="0" />
+      <LineId Id="624" Count="1" />
+      <LineId Id="676" Count="4" />
+      <LineId Id="674" Count="1" />
+      <LineId Id="626" Count="1" />
+      <LineId Id="629" Count="7" />
+      <LineId Id="691" Count="4" />
+      <LineId Id="688" Count="1" />
+      <LineId Id="637" Count="2" />
       <LineId Id="618" Count="0" />
       <LineId Id="521" Count="35" />
       <LineId Id="616" Count="0" />
@@ -1366,10 +1441,24 @@ END_IF
       <LineId Id="26" Count="2" />
       <LineId Id="71" Count="0" />
       <LineId Id="38" Count="0" />
+      <LineId Id="83" Count="1" />
       <LineId Id="42" Count="0" />
       <LineId Id="81" Count="0" />
       <LineId Id="79" Count="1" />
       <LineId Id="74" Count="0" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="100" Count="1" />
+      <LineId Id="103" Count="0" />
+      <LineId Id="110" Count="0" />
+      <LineId Id="105" Count="1" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="107" Count="1" />
+      <LineId Id="114" Count="0" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="109" Count="0" />
+      <LineId Id="113" Count="0" />
+      <LineId Id="104" Count="0" />
       <LineId Id="77" Count="0" />
     </LineIds>
     <LineIds Name="EM_PalletConveyor.m_TB_ToDocking">
@@ -1381,17 +1470,24 @@ END_IF
       <LineId Id="81" Count="0" />
       <LineId Id="79" Count="1" />
       <LineId Id="74" Count="0" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="84" Count="2" />
+      <LineId Id="94" Count="1" />
       <LineId Id="77" Count="0" />
+      <LineId Id="100" Count="0" />
     </LineIds>
     <LineIds Name="EM_PalletConveyor.m_TB_ToInfeed">
       <LineId Id="34" Count="0" />
       <LineId Id="26" Count="2" />
       <LineId Id="71" Count="0" />
       <LineId Id="38" Count="0" />
+      <LineId Id="83" Count="1" />
       <LineId Id="42" Count="0" />
       <LineId Id="81" Count="0" />
       <LineId Id="79" Count="1" />
       <LineId Id="74" Count="0" />
+      <LineId Id="85" Count="3" />
+      <LineId Id="96" Count="1" />
       <LineId Id="77" Count="0" />
     </LineIds>
   </POU>

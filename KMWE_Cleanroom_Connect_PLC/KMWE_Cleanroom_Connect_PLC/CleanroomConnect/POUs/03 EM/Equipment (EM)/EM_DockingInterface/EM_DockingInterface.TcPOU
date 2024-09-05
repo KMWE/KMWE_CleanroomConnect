@@ -51,6 +51,8 @@ VAR
 	s_bReqDockingClampsUpperHighPressure : BOOL := FALSE; // True = high pressure
 	s_bReqDockingClampsLowerHighPressure : BOOL := FALSE; // True = high pressure
 	
+	s_bOverruleInterlocks : BOOL := FALSE;
+	
 //Properties
 	s_bStaDockingDone : BOOL := FALSE;
 	s_bStaUndockingDone : BOOL := FALSE;
@@ -271,17 +273,17 @@ END_IF
 s_fbAlarmHandlerClosingDoorFailed(
 	i_bStaActive := s_bErrClosingDoorFailed, 
 	i_eAlarmLevel := E_AlarmLevel.Alarm, 
-	i_sAlarmText := 'Closing inner door failed');
+	i_sAlarmText := CONCAT(i_sEmName, ': Closing inner door failed'));
 
 s_fbAlarmHandlerNoBoxPresentAtPreDockingPosition(
 	i_bStaActive := s_bWrnNoBoxPresentAtPreDockingPosition, 
 	i_eAlarmLevel := E_AlarmLevel.Warning, 
-	i_sAlarmText := 'No box present at per-docking position');
+	i_sAlarmText := CONCAT(i_sEmName, ':No box present AT per-docking position'));
 	
 s_fbAlarmHandlerNoBoxPresentAtDockedPosition(
 	i_bStaActive := s_bWrnNoBoxPresentAtDockedPosition, 
 	i_eAlarmLevel := E_AlarmLevel.Warning, 
-	i_sAlarmText := 'No box present at docked position');
+	i_sAlarmText := CONCAT(i_sEmName, ':No box present at docked position'));
 
 // Reset warnings
 IF i_bCmdReset THEN
@@ -334,6 +336,11 @@ s_fbHmiBtnCloseInnerDoor.p_bStaEnabled := TRUE;
 //--	s_ePreviousStep := s_eSeqDockingInterface;
 //--END_IF
 
+IF s_eSeqDockingInterface <> s_ePreviousStep 
+	AND s_eSeqDockingInterface <> E_SeqDockingInterface.ERROR THEN
+	s_ePreviousStep := s_eSeqDockingInterface;
+END_IF
+
 s_fbSeqDockingInterfaceControl(
 	i_nSeqStep := s_eSeqDockingInterface, 
 	i_sStepName := TO_STRING(s_eSeqDockingInterface), 
@@ -378,11 +385,10 @@ CASE s_eSeqDockingInterface OF
 			s_doCmdClampsLowerHighPressure.i_bStaOutput := FALSE;
 		END_IF
 	
-		{warning 'TODO: Wanneer dit niet lukt dan moeten de clamps weer worden opengestuurd' }
-		// Nog uitzoek op welke postie dit dan zou moeten wordnew gedaan. iest met previous-step en dan uitvoern in Error stap (als uitzondering)
-		
 		IF s_cmDockingClampsUpper.m_On() AND s_cmDockingClampsLower.m_On() THEN
 			s_eSeqDockingInterface := E_SeqDockingInterface.COMPRESS_SEAL;
+		//ELSE
+		//  In case of error all docking clamps will be openeed (this is implemented in error-step)		
 		END_IF
 	
 	E_SeqDockingInterface.COMPRESS_SEAL:
@@ -485,19 +491,18 @@ CASE s_eSeqDockingInterface OF
 			IF s_ePreviousStep > E_SeqDockingInterface.START
 				AND s_ePreviousStep < E_SeqDockingInterface.ERROR THEN
 				s_eResumeStep := s_ePreviousStep;
-			//--ELSE 
-			//--	s_eResumeStep := E_SeqDockingInterface.OPEN_DOCKING_CLAMPS;
+			ELSE 
+				s_eResumeStep := E_SeqDockingInterface.OPEN_DOCKING_CLAMPS;
 			END_IF
 			
 			//Stop controlling all valves
-			s_doCmdClampsUpperHighPressure.i_bStaOutput := FALSE;
-			s_doCmdClampsLowerHighPressure.i_bStaOutput := FALSE;
-			
 			IF i_stSettings.bOpenClampsAfterClosingTimeout AND_THEN
 				s_ePreviousStep = E_SeqDockingInterface.CLOSE_DOCKING_CLAMPS
 				AND (s_cmDockingClampsUpper.p_bStaError OR s_cmDockingClampsLower.p_bStaError) 
 				THEN
-				//Open all docking clamps if closing on low pressure has fails
+				//Open all docking clamps if closing on low pressure has failed
+				s_doCmdClampsUpperHighPressure.i_bStaOutput := FALSE;
+				s_doCmdClampsLowerHighPressure.i_bStaOutput := FALSE;
 				s_cmDockingClampsUpper.m_Off();
 				s_cmDockingClampsLower.m_Off();
 			ELSE
@@ -513,10 +518,10 @@ CASE s_eSeqDockingInterface OF
 
 END_CASE	
 
-IF s_eSeqDockingInterface <> s_ePreviousStep 
-	AND s_eSeqDockingInterface <> E_SeqDockingInterface.ERROR THEN
-	s_ePreviousStep := s_eSeqDockingInterface;
-END_IF]]></ST>
+//--IF s_eSeqDockingInterface <> s_ePreviousStep 
+//--	AND s_eSeqDockingInterface <> E_SeqDockingInterface.ERROR THEN
+//--	s_ePreviousStep := s_eSeqDockingInterface;
+//--END_IF]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_Devices" Id="{b43c077f-3abc-4642-868d-7667cd19393f}">
@@ -541,15 +546,15 @@ s_cmDockingClampsUpper(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
 	i_bCmdReset := i_bCmdReset,
-	i_bIclkOn := s_bIlckDockingClampsToClose, 
-	i_bIclkOff := s_bIlckDockingClampsToOpen);
+	i_bIclkOn := s_bIlckDockingClampsToClose AND NOT(s_bOverruleInterlocks), 
+	i_bIclkOff := s_bIlckDockingClampsToOpen AND NOT(s_bOverruleInterlocks));
 	
 s_cmDockingClampsLower(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
 	i_bCmdReset := i_bCmdReset,
-	i_bIclkOn := s_bIlckDockingClampsToClose, 
-	i_bIclkOff := s_bIlckDockingClampsToOpen);	
+	i_bIclkOn := s_bIlckDockingClampsToClose AND NOT(s_bOverruleInterlocks), 
+	i_bIclkOff := s_bIlckDockingClampsToOpen AND NOT(s_bOverruleInterlocks));	
 	
 //--s_bStaDockingClampsClosed := s_cmDockingClamps.p_bStaIsClosed;
 //--s_bStaDockingClampsOpened := s_cmDockingClamps.p_bStaIsOpened;
@@ -569,15 +574,15 @@ s_cmUnlockingPinUpper(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
 	i_bCmdReset := i_bCmdReset,
-	i_bIclkOn := s_bIlckUnlockingPinsToRelease, 
-	i_bIclkOff := s_bIlckUnlockingPinsToRelease);
+	i_bIclkOn := s_bIlckUnlockingPinsToRelease AND NOT(s_bOverruleInterlocks), 
+	i_bIclkOff := s_bIlckUnlockingPinsToRelease AND NOT(s_bOverruleInterlocks));
 	
 s_cmUnlockingPinLower(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
 	i_bCmdReset := i_bCmdReset,
-	i_bIclkOn := s_bIlckUnlockingPinsToRelease, 
-	i_bIclkOff := s_bIlckUnlockingPinsToRelease);
+	i_bIclkOn := s_bIlckUnlockingPinsToRelease AND NOT(s_bOverruleInterlocks), 
+	i_bIclkOff := s_bIlckUnlockingPinsToRelease AND NOT(s_bOverruleInterlocks));
 	
 s_bStaLockingPinUpperReleased := s_cmUnlockingPinUpper.p_bStaIsOn;
 s_bStaLockingPinUpperLocked := s_cmUnlockingPinUpper.p_bStaIsOff;
@@ -588,8 +593,8 @@ s_cmDoorOpener(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
 	i_bCmdReset := i_bCmdReset,
-	i_bIclkOn := s_bIlckDoorOpenerToOpen, 
-	i_bIclkOff := s_bIlckDoorOpenerToClose);
+	i_bIclkOn := s_bIlckDoorOpenerToOpen AND NOT(s_bOverruleInterlocks), 
+	i_bIclkOff := s_bIlckDoorOpenerToClose AND NOT(s_bOverruleInterlocks));
 
 s_bStaDoorOpenerOpened := s_cmDoorOpener.p_bStaIsOn;
 s_bStaDoorOpenerClosed := s_cmDoorOpener.p_bStaIsOff;
@@ -598,11 +603,11 @@ s_cmDoorShutter(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
 	i_bCmdReset := i_bCmdReset,
-	i_bIclkOn := s_bIlckDoorShutterToOpen, 
-	i_bIclkOff := s_bIlckDoorShutterToClose);
+	i_bIclkOn := s_bIlckDoorShutterToOpen AND NOT(s_bOverruleInterlocks), 
+	i_bIclkOff := s_bIlckDoorShutterToClose AND NOT(s_bOverruleInterlocks));
 	
-s_bStaDoorShutterClosed := s_cmDoorShutter.p_bStaIsOff;
 s_bStaDoorShutterOpened := s_cmDoorShutter.p_bStaIsOn;
+s_bStaDoorShutterClosed := s_cmDoorShutter.p_bStaIsOff;
 
 _m_Devices := TRUE;
 ]]></ST>
@@ -944,7 +949,7 @@ s_bIlckUnlockingPinsToLock := FALSE;
 s_bIlckUnlockingPinsToRelease := FALSE;
 s_bIlckDoorOpenerToClose := NOT(s_bStaDoorShutterOpened);
 s_bIlckDoorOpenerToOpen := NOT(s_bStaDoorShutterOpened);
-s_bIlckDoorShutterToClose := FALSE; //NOT(s_bStaDoorOpenerClosed);//++ OR NOT(s_bStaDoorOpenerAlmostClosed);
+s_bIlckDoorShutterToClose := NOT(s_bStaDoorOpenerClosed) AND NOT(s_bStaDoorOpenerAlmostClosed);
 s_bIlckDoorShutterToOpen := FALSE;
 
 s_cmDockingClampsUpper.p_sInterlockedReason := 'n/a';
@@ -1114,13 +1119,13 @@ _m_Params := TRUE;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-s_bReqDockingClampsUpperHighPressure := FALSE; // 
-s_bReqDockingClampsLowerHighPressure := FALSE;
+s_bReqDockingClampsUpperHighPressure := FALSE; //Low pressure 
+s_bReqDockingClampsLowerHighPressure := FALSE; //Low pressure
 
-IF s_cmDoorOpener.m_Off() OR s_bStaDoorOpenerAlmostClosed THEN // Close
-	IF s_cmDoorShutter.m_Off()THEN // Close 
-		IF s_cmUnlockingPinUpper.m_Off() AND s_cmUnlockingPinLower.m_Off() THEN // Lock
-			IF s_cmDockingClampsUpper.m_Off() AND s_cmDockingClampsLower.m_Off() THEN // Open 
+IF s_cmDoorOpener.m_Off() OR s_bStaDoorOpenerAlmostClosed THEN //Close Door Opener
+	IF s_cmDoorShutter.m_Off()THEN //Close Door Shutter
+		IF s_cmUnlockingPinUpper.m_Off() AND s_cmUnlockingPinLower.m_Off() THEN //Lock Unlocking Pins
+			IF s_cmDockingClampsUpper.m_Off() AND s_cmDockingClampsLower.m_Off() THEN // Open Docking Clamps
 				_m_SeqStartup := TRUE;
 			END_IF
 		END_IF						
@@ -1542,6 +1547,8 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="335" Count="0" />
       <LineId Id="334" Count="0" />
       <LineId Id="337" Count="0" />
+      <LineId Id="500" Count="3" />
+      <LineId Id="499" Count="0" />
       <LineId Id="319" Count="0" />
       <LineId Id="7" Count="3" />
       <LineId Id="342" Count="1" />
@@ -1572,10 +1579,8 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="170" Count="0" />
       <LineId Id="453" Count="2" />
       <LineId Id="451" Count="1" />
-      <LineId Id="485" Count="0" />
-      <LineId Id="484" Count="0" />
-      <LineId Id="486" Count="0" />
       <LineId Id="376" Count="1" />
+      <LineId Id="504" Count="1" />
       <LineId Id="374" Count="0" />
       <LineId Id="202" Count="0" />
       <LineId Id="459" Count="3" />
@@ -1650,12 +1655,11 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="328" Count="3" />
       <LineId Id="344" Count="0" />
       <LineId Id="354" Count="0" />
-      <LineId Id="469" Count="1" />
-      <LineId Id="487" Count="0" />
       <LineId Id="489" Count="0" />
       <LineId Id="497" Count="0" />
       <LineId Id="495" Count="1" />
       <LineId Id="494" Count="0" />
+      <LineId Id="508" Count="1" />
       <LineId Id="490" Count="0" />
       <LineId Id="493" Count="0" />
       <LineId Id="491" Count="0" />
@@ -1717,7 +1721,8 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="220" Count="0" />
       <LineId Id="282" Count="0" />
       <LineId Id="235" Count="0" />
-      <LineId Id="221" Count="1" />
+      <LineId Id="222" Count="0" />
+      <LineId Id="286" Count="0" />
       <LineId Id="219" Count="0" />
       <LineId Id="199" Count="0" />
       <LineId Id="50" Count="0" />

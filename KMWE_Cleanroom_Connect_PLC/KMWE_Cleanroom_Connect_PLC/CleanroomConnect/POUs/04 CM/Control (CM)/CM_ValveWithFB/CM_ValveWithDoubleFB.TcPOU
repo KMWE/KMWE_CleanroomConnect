@@ -101,6 +101,16 @@ s_fbAlarmHandlerFeedbackOnTimeout(
 	i_eAlarmLevel := E_AlarmLevel.Alarm,
 	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Feedback ', CONCAT(s_sCfgOnName, CONCAT( ' timeout - ', s_sTempStringOn)))) );
 
+s_fbAlarmHandlerOffInterlocked(
+	i_bStaActive := s_wrnOffInterlocked, 
+	i_eAlarmLevel := E_AlarmLevel.Warning,
+	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': ', CONCAT(s_sCfgOffName, CONCAT(' interlocked, Reason: ', CONCAT(s_sInterlockedReason, '.'))))));
+	
+s_fbAlarmHandlerOnInterlocked(
+	i_bStaActive := s_wrnOnInterlocked, 
+	i_eAlarmLevel := E_AlarmLevel.Warning,
+	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': ', CONCAT(s_sCfgOnName, CONCAT(' interlocked, Reason: ', CONCAT(s_sInterlockedReason, '.'))))));	
+	
 s_bStaError := 
 	s_fbAlarmHandlerFeedbackOffTimeout.q_bStaActive
 	OR s_fbAlarmHandlerFeedbackOnTimeout.q_bStaActive;
@@ -221,7 +231,10 @@ s_sCfgFB2Name := p_sCfgFB2Name;
       <LineId Id="54" Count="0" />
       <LineId Id="56" Count="2" />
       <LineId Id="152" Count="0" />
+      <LineId Id="197" Count="0" />
+      <LineId Id="199" Count="7" />
       <LineId Id="63" Count="0" />
+      <LineId Id="198" Count="0" />
       <LineId Id="95" Count="0" />
       <LineId Id="97" Count="1" />
       <LineId Id="188" Count="0" />

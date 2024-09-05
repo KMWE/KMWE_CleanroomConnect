@@ -43,6 +43,8 @@ VAR
 	s_bStaMotorStopped : BOOL;
 	s_bStaWarning : BOOL;
 	
+	s_sInterlockedReason : STRING; //External interlocked reason for clarifying reason
+	
 	// Setpoints
 	s_fTargetSpeed : LREAL; // Target speed [mm/s]
 	
@@ -145,13 +147,13 @@ s_wrnStartMotorNotAllowed R= s_bStaBrakeReleased;
 s_fbAlarmHandlerMotorForwardInterlocked(
 	i_bStaActive := s_wrnMotorForwardInterlocked,
 	i_eAlarmLevel := E_AlarmLevel.Warning,
-	i_sAlarmText := CONCAT(i_sCmName, ': Motor - not allowed to move forward (external interlock).'));
+	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move forward, Reason: ',CONCAT(s_sInterlockedReason, '.'))));
 	
 s_fbAlarmHandlerMotorBackwardInterlocked(
 	i_bStaActive := s_wrnMotorBackwardInterlocked,
 	i_eAlarmLevel := E_AlarmLevel.Warning,
-	i_sAlarmText := CONCAT(i_sCmName, ': Motor - not allowed to move backward (external interlock).'));
-
+	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move backward, Reason: ',CONCAT(s_sInterlockedReason, '.'))));
+	
 // Alarm collector	
 s_bStaError := 
 	s_fbAlarmHandlerDriveError.q_bStaActive;
@@ -689,6 +691,26 @@ p_bStaWarning := s_bStaWarning;
         </Implementation>
       </Get>
     </Property>
+    <Property Name="p_sInterlockedReason" Id="{ee05b23b-0c2f-4ed6-802a-db01c009192a}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_sInterlockedReason : STRING]]></Declaration>
+      <Get Name="Get" Id="{d1567d66-dae7-4c45-a522-cf9b9ae0c9db}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_sInterlockedReason := s_sInterlockedReason;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{232bb7c9-7ead-42b4-a88b-2101a33b73a3}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+s_sInterlockedReason := p_sInterlockedReason;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
     <LineIds Name="CM_MOVITRAC_B">
       <LineId Id="410" Count="0" />
       <LineId Id="47" Count="0" />
@@ -725,8 +747,8 @@ p_bStaWarning := s_bStaWarning;
       <LineId Id="140" Count="0" />
       <LineId Id="146" Count="0" />
       <LineId Id="148" Count="2" />
+      <LineId Id="180" Count="0" />
       <LineId Id="147" Count="0" />
-      <LineId Id="138" Count="0" />
       <LineId Id="60" Count="0" />
       <LineId Id="32" Count="0" />
       <LineId Id="110" Count="0" />
@@ -1020,6 +1042,16 @@ p_bStaWarning := s_bStaWarning;
       <LineId Id="5" Count="0" />
       <LineId Id="7" Count="0" />
       <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_MOVITRAC_B.p_sInterlockedReason.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_MOVITRAC_B.p_sInterlockedReason.Set">
+      <LineId Id="6" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="7" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>

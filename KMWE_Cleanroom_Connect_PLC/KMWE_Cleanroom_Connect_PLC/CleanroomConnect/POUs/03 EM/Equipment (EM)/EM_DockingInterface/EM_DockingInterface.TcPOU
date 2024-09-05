@@ -54,6 +54,7 @@ VAR
 //Properties
 	s_bStaDockingDone : BOOL := FALSE;
 	s_bStaUndockingDone : BOOL := FALSE;
+	s_bStaUndocked : BOOL := FALSE;
 	
 	s_bStaDockingClampsClosed : BOOL := FALSE;
 	s_bStaDockingClampsOpened : BOOL := FALSE;
@@ -377,6 +378,9 @@ CASE s_eSeqDockingInterface OF
 			s_doCmdClampsLowerHighPressure.i_bStaOutput := FALSE;
 		END_IF
 	
+		{warning 'TODO: Wanneer dit niet lukt dan moeten de clamps weer worden opengestuurd' }
+		// Nog uitzoek op welke postie dit dan zou moeten wordnew gedaan. iest met previous-step en dan uitvoern in Error stap (als uitzondering)
+		
 		IF s_cmDockingClampsUpper.m_On() AND s_cmDockingClampsLower.m_On() THEN
 			s_eSeqDockingInterface := E_SeqDockingInterface.COMPRESS_SEAL;
 		END_IF
@@ -488,8 +492,19 @@ CASE s_eSeqDockingInterface OF
 			//Stop controlling all valves
 			s_doCmdClampsUpperHighPressure.i_bStaOutput := FALSE;
 			s_doCmdClampsLowerHighPressure.i_bStaOutput := FALSE;
-			s_cmDockingClampsUpper.m_Stop();
-			s_cmDockingClampsLower.m_Stop();
+			
+			IF i_stSettings.bOpenClampsAfterClosingTimeout AND_THEN
+				s_ePreviousStep = E_SeqDockingInterface.CLOSE_DOCKING_CLAMPS
+				AND (s_cmDockingClampsUpper.p_bStaError OR s_cmDockingClampsLower.p_bStaError) 
+				THEN
+				//Open all docking clamps if closing on low pressure has fails
+				s_cmDockingClampsUpper.m_Off();
+				s_cmDockingClampsLower.m_Off();
+			ELSE
+				s_cmDockingClampsUpper.m_Stop();
+				s_cmDockingClampsLower.m_Stop();
+			END_IF
+			
 			s_cmUnlockingPinUpper.m_Stop();
 			s_cmUnlockingPinLower.m_Stop();
 			s_cmDoorOpener.m_Stop();
@@ -508,7 +523,8 @@ END_IF]]></ST>
       <Declaration><![CDATA[METHOD PROTECTED _m_Devices : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF NOT SUPER^._m_Devices() THEN
+        <ST><![CDATA[
+IF NOT SUPER^._m_Devices() THEN
 	RETURN;
 END_IF
 
@@ -926,10 +942,20 @@ s_bIlckDockingClampsToClose := FALSE;
 s_bIlckDockingClampsToOpen := FALSE;
 s_bIlckUnlockingPinsToLock := FALSE;
 s_bIlckUnlockingPinsToRelease := FALSE;
-s_bIlckDoorOpenerToClose := FALSE; //NOT(s_bStaDoorShutterOpened);
-s_bIlckDoorOpenerToOpen := FALSE; //NOT(s_bStaDoorShutterOpened);
+s_bIlckDoorOpenerToClose := NOT(s_bStaDoorShutterOpened);
+s_bIlckDoorOpenerToOpen := NOT(s_bStaDoorShutterOpened);
 s_bIlckDoorShutterToClose := FALSE; //NOT(s_bStaDoorOpenerClosed);//++ OR NOT(s_bStaDoorOpenerAlmostClosed);
 s_bIlckDoorShutterToOpen := FALSE;
+
+s_cmDockingClampsUpper.p_sInterlockedReason := 'n/a';
+s_cmDockingClampsLower.p_sInterlockedReason := 'n/a';
+s_cmUnlockingPinUpper.p_sInterlockedReason := 'n/a';
+s_cmUnlockingPinLower.p_sInterlockedReason := 'n/a';
+s_cmDoorOpener.p_sInterlockedReason := 'Door shutter not opened';
+s_cmDoorShutter.p_sInterlockedReason := 'Door opener not closed';
+
+
+
 
 //--s_diStaBoxAtPreDockingPosition();
 //--s_diStaBoxAtDockedPosition();
@@ -976,6 +1002,8 @@ END_IF
 
 s_doCmdClampsUpperHighPressure();
 s_doCmdClampsLowerHighPressure();
+
+s_bStaUndocked := s_cmDockingClampsUpper.p_bStaIsOff AND s_cmDockingClampsLower.p_bStaIsOff;
 
 q_bStaWarning := s_bStaWarning;
 
@@ -1437,6 +1465,17 @@ p_bStaDockingPositionFree := s_bStaDockingPositionFree;
         </Implementation>
       </Get>
     </Property>
+    <Property Name="p_bStaUndocked" Id="{2a632f80-434e-4ff6-ad02-3973770d7bbf}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaUndocked : BOOL]]></Declaration>
+      <Get Name="Get" Id="{56b7d6e8-1510-46ea-84c2-20aa46607960}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaUndocked := s_bStaUndocked;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
     <Property Name="p_bStaUndockingDone" Id="{bb261a88-cc34-4fd6-bf54-1089f44f9408}">
       <Declaration><![CDATA[PROPERTY PUBLIC p_bStaUndockingDone : BOOL]]></Declaration>
       <Get Name="Get" Id="{44b7df0c-94a7-4b6d-a3a8-e5b8bd6f931a}">
@@ -1533,6 +1572,9 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="170" Count="0" />
       <LineId Id="453" Count="2" />
       <LineId Id="451" Count="1" />
+      <LineId Id="485" Count="0" />
+      <LineId Id="484" Count="0" />
+      <LineId Id="486" Count="0" />
       <LineId Id="376" Count="1" />
       <LineId Id="374" Count="0" />
       <LineId Id="202" Count="0" />
@@ -1609,7 +1651,18 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="344" Count="0" />
       <LineId Id="354" Count="0" />
       <LineId Id="469" Count="1" />
-      <LineId Id="347" Count="2" />
+      <LineId Id="487" Count="0" />
+      <LineId Id="489" Count="0" />
+      <LineId Id="497" Count="0" />
+      <LineId Id="495" Count="1" />
+      <LineId Id="494" Count="0" />
+      <LineId Id="490" Count="0" />
+      <LineId Id="493" Count="0" />
+      <LineId Id="491" Count="0" />
+      <LineId Id="347" Count="1" />
+      <LineId Id="488" Count="0" />
+      <LineId Id="492" Count="0" />
+      <LineId Id="349" Count="0" />
       <LineId Id="351" Count="1" />
       <LineId Id="345" Count="0" />
       <LineId Id="327" Count="0" />
@@ -1621,6 +1674,7 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="293" Count="0" />
     </LineIds>
     <LineIds Name="EM_DockingInterface._m_Devices">
+      <LineId Id="284" Count="0" />
       <LineId Id="156" Count="10" />
       <LineId Id="265" Count="0" />
       <LineId Id="248" Count="0" />
@@ -1850,6 +1904,12 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="58" Count="0" />
       <LineId Id="84" Count="7" />
       <LineId Id="83" Count="0" />
+      <LineId Id="93" Count="1" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="104" Count="1" />
+      <LineId Id="97" Count="1" />
+      <LineId Id="101" Count="1" />
+      <LineId Id="95" Count="0" />
       <LineId Id="48" Count="0" />
       <LineId Id="51" Count="0" />
       <LineId Id="54" Count="0" />
@@ -1878,6 +1938,7 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="6" Count="2" />
       <LineId Id="22" Count="1" />
       <LineId Id="26" Count="0" />
+      <LineId Id="31" Count="1" />
       <LineId Id="29" Count="0" />
       <LineId Id="28" Count="0" />
       <LineId Id="16" Count="0" />
@@ -2143,6 +2204,11 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="2" Count="0" />
     </LineIds>
     <LineIds Name="EM_DockingInterface.p_bStaDockingPositionFree.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_DockingInterface.p_bStaUndocked.Get">
       <LineId Id="5" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="6" Count="0" />

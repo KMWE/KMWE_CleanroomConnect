@@ -48,6 +48,10 @@ VAR
 	
 	s_fbHmiBtnReset				: FB_HmiBtn;
 //------------------------------------------//
+
+s_fbInterlockPalletConvFwd : FB_Interlock;
+s_fbInterlockPalletConvBck : FB_Interlock;
+
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[
@@ -409,7 +413,8 @@ VAR
 	bReqEnable : BOOL;
 END_VAR]]></Declaration>
       <Implementation>
-        <ST><![CDATA[GVL_Modules.g_emUtilities.m_GetGeneralState(
+        <ST><![CDATA[
+GVL_Modules.g_emUtilities.m_GetGeneralState(
 	i_bError := s_bStaError,
 	i_bWarning := s_bStaWarning,
 	i_bRunning := s_bStaRunning);
@@ -428,6 +433,8 @@ bReqEnable :=
 GVL_Modules.g_emPalletConveyor(
 	i_bReqEnable := bReqEnable,
 	i_eCtrlMode := s_eCtrlMode,
+	i_bIlckConveyorForward := NOT(GVL_Modules.g_emDockingInterface.p_bStaUndocked),
+	i_bIlckConveyorBackward := NOT(GVL_Modules.g_emDockingInterface.p_bStaUndocked),
 	i_bCmdReset := p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn, //Add temp reset button
 	i_sEmName := 'EM Pallet Conveyor');
 
@@ -723,7 +730,13 @@ m_Main := TRUE;
       <LineId Id="78" Count="0" />
     </LineIds>
     <LineIds Name="UN_CleanroomConnect._m_Modules">
-      <LineId Id="490" Count="38" />
+      <LineId Id="549" Count="0" />
+      <LineId Id="490" Count="14" />
+      <LineId Id="548" Count="0" />
+      <LineId Id="506" Count="2" />
+      <LineId Id="542" Count="0" />
+      <LineId Id="544" Count="0" />
+      <LineId Id="509" Count="19" />
       <LineId Id="536" Count="0" />
       <LineId Id="534" Count="0" />
       <LineId Id="537" Count="1" />

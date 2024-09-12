@@ -411,6 +411,8 @@ VAR
 END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[
+GVL_Modules.g_objCarrier();
+
 GVL_Modules.g_emUtilities.m_GetGeneralState(
 	i_bError := s_bStaError,
 	i_bWarning := s_bStaWarning,
@@ -433,13 +435,15 @@ GVL_Modules.g_emPalletConveyor(
 	i_bIlckConveyorForward := NOT(GVL_Modules.g_emDockingInterface.p_bStaUndocked),
 	i_bIlckConveyorBackward := NOT(GVL_Modules.g_emDockingInterface.p_bStaUndocked),
 	i_bCmdReset := p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn, //Add temp reset button
-	i_sEmName := 'EM Pallet Conveyor');
+	i_sEmName := 'EM Pallet Conveyor',
+	i_refTB := GVL_Modules.g_objCarrier);
 
 GVL_Modules.g_emDockingInterface(
 	i_bReqEnable := bReqEnable,
 	i_eCtrlMode := s_eCtrlMode,
 	i_bCmdReset := p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn, //Add temp reset button
-	i_sEmName := 'EM Docking Interface');	
+	i_sEmName := 'EM Docking Interface',
+	i_refTB := GVL_Modules.g_objCarrier);	
 
 //??GVL_Modules.g_emDockingCabin(
 //??	i_bReqEnable := TRUE,
@@ -580,6 +584,37 @@ s_nIndexDutPrev	:= s_nIndexDut;
 ]]></ST>
       </Implementation>
     </Method>
+    <Method Name="m_FullCycle" Id="{85945a60-1e58-4d91-af47-0c270dd5f580}">
+      <Declaration><![CDATA[METHOD PUBLIC m_FullCycle : BOOL
+VAR
+	sReason : STRING;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+//FullCycle
+	m_Inbound();
+//	Wait(T#5S)
+	m_Outbound();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_Inbound" Id="{90534ebe-9d21-4aeb-b2cc-cf785c67a06d}">
+      <Declaration><![CDATA[METHOD PUBLIC m_Inbound : BOOL
+VAR
+	sReason : STRING;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+// Onderstaande sequencer zal nog verder moeten worden opgebouwd
+
+GVL_Modules.g_emPalletConveyor.m_CmdTB_ToCenter();
+GVL_Modules.g_emPalletConveyor.m_CmdCenteringTB(i_refReason := sReason);
+GVL_Modules.g_emPalletConveyor.m_CmdTB_ToDocking();
+GVL_Modules.g_emDockingInterface.m_DockBox();
+//GVL_Modules.g_emDockingInterface.m_OpenDoors();
+]]></ST>
+      </Implementation>
+    </Method>
     <Method Name="m_Main" Id="{bf5d9d9d-3881-4722-ad23-ed0781ff35d5}">
       <Declaration><![CDATA[METHOD PUBLIC m_Main : BOOL
 ]]></Declaration>
@@ -636,6 +671,21 @@ m_Main := TRUE;
 		OR TRUE (*Air treathment unit must be running and ok*)
 		OR TRUE (*Add more..*);
 *)	]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_Outbound" Id="{6261bd7c-d400-4b5a-911e-fc663ac04169}">
+      <Declaration><![CDATA[METHOD PUBLIC m_Outbound : BOOL
+VAR
+	sReason : STRING;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+// Onderstaande sequencer zal nog verder moeten worden opgebouwd
+
+//GVL_Modules.g_emDockingInterface.m_CloseDoors();
+GVL_Modules.g_emDockingInterface.m_UndockBox();
+GVL_Modules.g_emPalletConveyor.m_CmdTB_ToInfeed();
+]]></ST>
       </Implementation>
     </Method>
     <LineIds Name="UN_CleanroomConnect">
@@ -727,13 +777,19 @@ m_Main := TRUE;
       <LineId Id="78" Count="0" />
     </LineIds>
     <LineIds Name="UN_CleanroomConnect._m_Modules">
+      <LineId Id="556" Count="0" />
+      <LineId Id="555" Count="0" />
       <LineId Id="549" Count="0" />
       <LineId Id="490" Count="14" />
       <LineId Id="548" Count="0" />
       <LineId Id="506" Count="2" />
       <LineId Id="542" Count="0" />
       <LineId Id="544" Count="0" />
-      <LineId Id="509" Count="19" />
+      <LineId Id="509" Count="1" />
+      <LineId Id="553" Count="0" />
+      <LineId Id="511" Count="5" />
+      <LineId Id="554" Count="0" />
+      <LineId Id="517" Count="11" />
       <LineId Id="536" Count="0" />
       <LineId Id="534" Count="0" />
       <LineId Id="537" Count="1" />
@@ -755,6 +811,20 @@ m_Main := TRUE;
       <LineId Id="105" Count="6" />
       <LineId Id="203" Count="0" />
     </LineIds>
+    <LineIds Name="UN_CleanroomConnect.m_FullCycle">
+      <LineId Id="102" Count="0" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="92" Count="3" />
+    </LineIds>
+    <LineIds Name="UN_CleanroomConnect.m_Inbound">
+      <LineId Id="86" Count="2" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="95" Count="0" />
+    </LineIds>
     <LineIds Name="UN_CleanroomConnect.m_Main">
       <LineId Id="30" Count="0" />
       <LineId Id="6" Count="2" />
@@ -773,6 +843,14 @@ m_Main := TRUE;
       <LineId Id="63" Count="0" />
       <LineId Id="33" Count="24" />
       <LineId Id="31" Count="0" />
+    </LineIds>
+    <LineIds Name="UN_CleanroomConnect.m_Outbound">
+      <LineId Id="86" Count="1" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="91" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>

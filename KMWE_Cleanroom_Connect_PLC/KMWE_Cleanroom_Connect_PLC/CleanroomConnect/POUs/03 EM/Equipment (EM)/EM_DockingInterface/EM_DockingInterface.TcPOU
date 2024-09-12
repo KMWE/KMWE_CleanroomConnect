@@ -10,6 +10,8 @@ VAR_INPUT
 	i_bIlckDockingClampsToOpen : BOOL := TRUE; //TRUE = Interlocked
 	i_bIlckUnlockingPinsToLock : BOOL := TRUE; //TRUE = Interlocked
 	i_bIlckUnlockingPinsToRelease : BOOL := TRUE; //TRUE = Interlocked	
+	
+	i_refTB : REFERENCE TO OBJ_Carrier;	//Mogelijk voor uiteindelijke machine, voor de FUMO's is dit nog niet echt relevant
 END_VAR
 
 VAR_OUTPUT
@@ -402,6 +404,11 @@ CASE s_eSeqDockingInterface OF
 		END_IF
 		
 	E_SeqDockingInterface.TB_DOCKED:
+		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN
+			i_refTB.p_bDockingDone := TRUE;
+			i_refTB.p_bUndockingDone := FALSE;
+		END_IF
+	
 		IF s_fbHmiBtnOpenInnerDoor.p_osrBtnPress THEN
 			IF s_bStaDoorOpenerClosed AND s_bStaDoorShutterClosed THEN
 				s_eSeqDockingInterface := E_SeqDockingInterface.RELEASE_UNLOCKING_PINS;
@@ -456,6 +463,11 @@ CASE s_eSeqDockingInterface OF
 		END_IF
 	
 	E_SeqDockingInterface.INNER_DOOR_OPENED:
+		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN
+			i_refTB.p_bOpenInnerDoorDone := TRUE;
+			i_refTB.p_bCloseInnerDoorDone := FALSE;
+		END_IF
+	
 		IF s_fbHmiBtnCloseInnerDoor.p_osrBtnPress THEN
 			s_eSeqDockingInterface := E_SeqDockingInterface.CLOSE_DOOR_OPENER;	
 		END_IF
@@ -483,6 +495,9 @@ CASE s_eSeqDockingInterface OF
 	
 	E_SeqDockingInterface.LOCK_UNLOCKING_PINS:
 		IF (s_cmUnlockingPinUpper.m_Off() AND s_cmUnlockingPinLower.m_Off()) THEN
+			
+			i_refTB.p_bOpenInnerDoorDone := FALSE;
+			i_refTB.p_bCloseInnerDoorDone := TRUE;
 			s_eSeqDockingInterface := E_SeqDockingInterface.TB_DOCKED;
 		END_IF
 		
@@ -1590,6 +1605,11 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="464" Count="0" />
       <LineId Id="457" Count="0" />
       <LineId Id="172" Count="0" />
+      <LineId Id="511" Count="0" />
+      <LineId Id="514" Count="0" />
+      <LineId Id="516" Count="0" />
+      <LineId Id="515" Count="0" />
+      <LineId Id="513" Count="0" />
       <LineId Id="211" Count="0" />
       <LineId Id="478" Count="1" />
       <LineId Id="482" Count="0" />
@@ -1628,7 +1648,10 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="178" Count="0" />
       <LineId Id="389" Count="0" />
       <LineId Id="391" Count="1" />
-      <LineId Id="179" Count="2" />
+      <LineId Id="179" Count="1" />
+      <LineId Id="519" Count="2" />
+      <LineId Id="517" Count="1" />
+      <LineId Id="181" Count="0" />
       <LineId Id="254" Count="1" />
       <LineId Id="253" Count="0" />
       <LineId Id="182" Count="0" />
@@ -1645,7 +1668,9 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="278" Count="3" />
       <LineId Id="272" Count="0" />
       <LineId Id="185" Count="1" />
-      <LineId Id="397" Count="1" />
+      <LineId Id="397" Count="0" />
+      <LineId Id="523" Count="2" />
+      <LineId Id="398" Count="0" />
       <LineId Id="400" Count="0" />
       <LineId Id="311" Count="0" />
       <LineId Id="166" Count="0" />

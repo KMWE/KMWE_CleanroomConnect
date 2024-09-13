@@ -12,6 +12,7 @@ VAR_INPUT
 	i_bIlckUnlockingPinsToRelease : BOOL := TRUE; //TRUE = Interlocked	
 	
 	i_refTB : REFERENCE TO OBJ_Carrier;	//Mogelijk voor uiteindelijke machine, voor de FUMO's is dit nog niet echt relevant
+	//??i_refITF_TB : REFERENCE TO I_Carrier;
 END_VAR
 
 VAR_OUTPUT
@@ -48,16 +49,15 @@ VAR
 //Requests
 	s_bReqDockBox : BOOL := FALSE;
 	s_bReqUndockBox : BOOL := FALSE;
-	s_bReqOpenDockingClamps : BOOL := FALSE;
-	s_bReqCloseDockingClamps : BOOL := FALSE;
+	s_bReqOpenInnerDoor : BOOL := FALSE;
+	s_bReqCloseInnerDoor : BOOL := FALSE;
 	s_bReqDockingClampsUpperHighPressure : BOOL := FALSE; // True = high pressure
 	s_bReqDockingClampsLowerHighPressure : BOOL := FALSE; // True = high pressure
 	
 	s_bOverruleInterlocks : BOOL := FALSE;
 	
 //Properties
-	s_bStaDockingDone : BOOL := FALSE;
-	s_bStaUndockingDone : BOOL := FALSE;
+	s_bStaDocked : BOOL := FALSE;
 	s_bStaUndocked : BOOL := FALSE;
 	
 	s_bStaDockingClampsClosed : BOOL := FALSE;
@@ -101,6 +101,11 @@ VAR
 	s_eResumeStep : E_SeqDockingInterface;
 	
 	s_tonTimer : TON;
+	
+	s_bTmpDockingDone : BOOL;
+	s_bTmpUndockingDone : BOOL;
+	s_bTmpOpenInnerDoorDone : BOOL;
+	s_bTmpCloseInnerDoorDone : BOOL;
 	
 //Alarms
 	s_fbAlarmHandlerClosingDoorFailed : FB_AlarmHandler;
@@ -377,7 +382,13 @@ CASE s_eSeqDockingInterface OF
 		END_IF
 		
 	E_SeqDockingInterface.READY:
-		IF s_fbHmiBtnDockTB.p_osrBtnPress THEN
+		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN
+			//--i_refTB.p_bDockingDone := FALSE;
+			i_refTB.p_bUndockingDone S= s_bTmpUndockingDone;
+			s_bTmpUndockingDone := FALSE;
+		END_IF
+	
+		IF s_fbHmiBtnDockTB.p_osrBtnPress OR s_bReqDockBox THEN
 			s_eSeqDockingInterface := E_SeqDockingInterface.CLOSE_DOCKING_CLAMPS;
 		END_IF
 		
@@ -399,25 +410,28 @@ CASE s_eSeqDockingInterface OF
 			s_doCmdClampsLowerHighPressure.i_bStaOutput := TRUE;
 		END_IF
 		
-		IF s_fbSeqDockingInterfaceControl.q_tmStepTime >= i_stSettings.tCompressSealDuration THEN	
+		IF s_fbSeqDockingInterfaceControl.q_tmStepTime >= i_stSettings.tCompressSealDuration THEN
+			i_refTB.p_bDockingDone := TRUE;	
 			s_eSeqDockingInterface := E_SeqDockingInterface.TB_DOCKED;
 		END_IF
 		
 	E_SeqDockingInterface.TB_DOCKED:
-		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN
-			i_refTB.p_bDockingDone := TRUE;
-			i_refTB.p_bUndockingDone := FALSE;
-		END_IF
+		//--IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN
+			//--i_refTB.p_bDockingDone := TRUE;
+			//--i_refTB.p_bUndockingDone := FALSE;
+		//--END_IF
 	
-		IF s_fbHmiBtnOpenInnerDoor.p_osrBtnPress THEN
+		IF s_fbHmiBtnOpenInnerDoor.p_osrBtnPress OR s_bReqOpenInnerDoor THEN
 			IF s_bStaDoorOpenerClosed AND s_bStaDoorShutterClosed THEN
 				s_eSeqDockingInterface := E_SeqDockingInterface.RELEASE_UNLOCKING_PINS;
 			ELSE
 				s_eSeqDockingInterface := E_SeqDockingInterface.CLOSE_DOOR_OPENER_RELEASING_PINS;
 			END_IF
+			
 		END_IF
 		
-		IF s_fbHmiBtnUndockTB.p_osrBtnPress THEN
+		IF s_fbHmiBtnUndockTB.p_osrBtnPress OR s_bReqUndockBox THEN
+			s_bTmpUndockingDone := TRUE;
 			s_eSeqDockingInterface := E_SeqDockingInterface.OPEN_DOCKING_CLAMPS;
 		END_IF
 		
@@ -459,16 +473,17 @@ CASE s_eSeqDockingInterface OF
 	
 	E_SeqDockingInterface.OPEN_DOOR_OPENER:
 		IF s_cmDoorOpener.m_On() THEN
+			i_refTB.p_bOpenInnerDoorDone := TRUE;
 			s_eSeqDockingInterface := E_SeqDockingInterface.INNER_DOOR_OPENED;
 		END_IF
 	
 	E_SeqDockingInterface.INNER_DOOR_OPENED:
-		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN
-			i_refTB.p_bOpenInnerDoorDone := TRUE;
-			i_refTB.p_bCloseInnerDoorDone := FALSE;
-		END_IF
+		//--IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN
+			//--i_refTB.p_bOpenInnerDoorDone := TRUE;
+			//--i_refTB.p_bCloseInnerDoorDone := FALSE;
+		//--END_IF
 	
-		IF s_fbHmiBtnCloseInnerDoor.p_osrBtnPress THEN
+		IF s_fbHmiBtnCloseInnerDoor.p_osrBtnPress OR s_bReqCloseInnerDoor THEN
 			s_eSeqDockingInterface := E_SeqDockingInterface.CLOSE_DOOR_OPENER;	
 		END_IF
 	
@@ -496,7 +511,7 @@ CASE s_eSeqDockingInterface OF
 	E_SeqDockingInterface.LOCK_UNLOCKING_PINS:
 		IF (s_cmUnlockingPinUpper.m_Off() AND s_cmUnlockingPinLower.m_Off()) THEN
 			
-			i_refTB.p_bOpenInnerDoorDone := FALSE;
+			//--i_refTB.p_bOpenInnerDoorDone := FALSE;
 			i_refTB.p_bCloseInnerDoorDone := TRUE;
 			s_eSeqDockingInterface := E_SeqDockingInterface.TB_DOCKED;
 		END_IF
@@ -532,6 +547,11 @@ CASE s_eSeqDockingInterface OF
 		END_IF
 
 END_CASE	
+
+s_bReqDockBox := 
+s_bReqUndockBox := 
+s_bReqOpenInnerDoor := 
+s_bReqCloseInnerDoor := FALSE;
 
 //--IF s_eSeqDockingInterface <> s_ePreviousStep 
 //--	AND s_eSeqDockingInterface <> E_SeqDockingInterface.ERROR THEN
@@ -1023,7 +1043,12 @@ END_IF
 s_doCmdClampsUpperHighPressure();
 s_doCmdClampsLowerHighPressure();
 
-s_bStaUndocked := s_cmDockingClampsUpper.p_bStaIsOff AND s_cmDockingClampsLower.p_bStaIsOff;
+s_bStaDocked	:=	s_cmDockingClampsUpper.p_bStaIsOn AND s_doCmdClampsUpperHighPressure.p_bStaOutput
+				AND s_cmDockingClampsLower.p_bStaIsOn AND s_doCmdClampsLowerHighPressure.p_bStaOutput;  
+s_bStaUndocked 	:= s_cmDockingClampsUpper.p_bStaIsOff AND s_cmDockingClampsLower.p_bStaIsOff;
+
+
+
 
 q_bStaWarning := s_bStaWarning;
 
@@ -1149,8 +1174,8 @@ END_IF
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="m_CloseDockingClamps" Id="{410bcb72-5351-4d55-ac55-5d0e27ce8155}">
-      <Declaration><![CDATA[METHOD PUBLIC m_CloseDockingClamps : BOOL
+    <Method Name="m_CloseInnerDoor" Id="{410bcb72-5351-4d55-ac55-5d0e27ce8155}">
+      <Declaration><![CDATA[METHOD PUBLIC m_CloseInnerDoor : BOOL
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
@@ -1160,10 +1185,10 @@ END_IF
 
 s_bReqDockBox := FALSE;
 s_bReqUndockBox := FALSE;
-s_bReqOpenDockingClamps := FALSE;
-s_bReqCloseDockingClamps := TRUE;
+s_bReqOpenInnerDoor := FALSE;
+s_bReqCloseInnerDoor := TRUE;
 
-m_CloseDockingClamps := TRUE;
+m_CloseInnerDoor := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
@@ -1178,8 +1203,8 @@ END_IF
 
 s_bReqDockBox := TRUE;
 s_bReqUndockBox := FALSE;
-s_bReqOpenDockingClamps := FALSE;
-s_bReqCloseDockingClamps := FALSE;
+s_bReqOpenInnerDoor := FALSE;
+s_bReqCloseInnerDoor := FALSE;
 
 m_DockBox := TRUE;
 ]]></ST>
@@ -1383,8 +1408,8 @@ END_CASE
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="m_OpenDockingClamps" Id="{8be47e79-6c29-4713-b252-eb11a6bb46fb}">
-      <Declaration><![CDATA[METHOD PUBLIC m_OpenDockingClamps : BOOL
+    <Method Name="m_OpenInnerDoor" Id="{8be47e79-6c29-4713-b252-eb11a6bb46fb}">
+      <Declaration><![CDATA[METHOD PUBLIC m_OpenInnerDoor : BOOL
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
@@ -1394,10 +1419,10 @@ END_IF
 
 s_bReqDockBox := FALSE;
 s_bReqUndockBox := FALSE;
-s_bReqOpenDockingClamps := TRUE;
-s_bReqCloseDockingClamps := FALSE;
+s_bReqOpenInnerDoor := TRUE;
+s_bReqCloseInnerDoor := FALSE;
 
-m_OpenDockingClamps := TRUE;
+m_OpenInnerDoor := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
@@ -1412,8 +1437,8 @@ END_IF
 
 s_bReqDockBox := FALSE;
 s_bReqUndockBox := TRUE;
-s_bReqOpenDockingClamps := FALSE;
-s_bReqCloseDockingClamps := FALSE;
+s_bReqOpenInnerDoor := FALSE;
+s_bReqCloseInnerDoor := FALSE;
 
 m_UndockBox := TRUE;
 ]]></ST>
@@ -1441,6 +1466,17 @@ p_bStaBoxAtPreDockingPosition := s_bStaBoxAtPreDockingPosition;
         </Implementation>
       </Get>
     </Property>
+    <Property Name="p_bStaDocked" Id="{a61394df-c5f0-450a-8cdf-e47379cb8b81}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaDocked : BOOL]]></Declaration>
+      <Get Name="Get" Id="{e6843217-13bc-4765-b8f6-a237563e9d39}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaDocked := s_bStaDocked;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
     <Property Name="p_bStaDockingClampsClosed" Id="{de32a338-e965-450c-a404-78adcd65d0d0}">
       <Declaration><![CDATA[PROPERTY PUBLIC p_bStaDockingClampsClosed : BOOL]]></Declaration>
       <Get Name="Get" Id="{7682c14a-e4ab-4156-bdf2-ba42269377d9}">
@@ -1463,17 +1499,6 @@ p_bStaDockingClampsOpened := s_bStaDockingClampsOpened;
         </Implementation>
       </Get>
     </Property>
-    <Property Name="p_bStaDockingDone" Id="{a61394df-c5f0-450a-8cdf-e47379cb8b81}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaDockingDone : BOOL]]></Declaration>
-      <Get Name="Get" Id="{e6843217-13bc-4765-b8f6-a237563e9d39}">
-        <Declaration><![CDATA[]]></Declaration>
-        <Implementation>
-          <ST><![CDATA[
-p_bStaDockingDone := s_bStaDockingDone;
-]]></ST>
-        </Implementation>
-      </Get>
-    </Property>
     <Property Name="p_bStaDockingPositionFree" Id="{1c1bcc1f-d42b-48d2-9743-d0c845e1b595}">
       <Declaration><![CDATA[PROPERTY PUBLIC p_bStaDockingPositionFree : BOOL]]></Declaration>
       <Get Name="Get" Id="{8f44ecfc-2d8a-4e22-a3b9-d3876337bbab}">
@@ -1485,6 +1510,36 @@ p_bStaDockingPositionFree := s_bStaDockingPositionFree;
         </Implementation>
       </Get>
     </Property>
+    <Property Name="p_bStaInnerDoorClosedAndLocked" Id="{dd31784c-49d6-4d32-a02f-66ee1e524851}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaInnerDoorClosedAndLocked : BOOL]]></Declaration>
+      <Get Name="Get" Id="{ec81e0aa-07a2-4a59-858a-8a8d7988d797}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaInnerDoorClosedAndLocked := 
+	s_bStaLockingPinLowerLocked
+AND s_bStaLockingPinUpperLocked
+AND s_bStaDoorOpenerClosed
+AND s_bStaDoorShutterClosed; 
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaInnerDoorOpenedAndReleased" Id="{38547cf9-5983-403c-914e-3b92e4e4e9d8}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaInnerDoorOpenedAndReleased : BOOL]]></Declaration>
+      <Get Name="Get" Id="{c2f8547d-c997-4c85-95f1-ef32b94df578}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaInnerDoorOpenedAndReleased := 
+	s_bStaLockingPinLowerReleased
+AND s_bStaLockingPinUpperReleased
+AND s_bStaDoorOpenerOpened
+AND s_bStaDoorShutterOpened;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
     <Property Name="p_bStaUndocked" Id="{2a632f80-434e-4ff6-ad02-3973770d7bbf}">
       <Declaration><![CDATA[PROPERTY PUBLIC p_bStaUndocked : BOOL]]></Declaration>
       <Get Name="Get" Id="{56b7d6e8-1510-46ea-84c2-20aa46607960}">
@@ -1492,17 +1547,6 @@ p_bStaDockingPositionFree := s_bStaDockingPositionFree;
         <Implementation>
           <ST><![CDATA[
 p_bStaUndocked := s_bStaUndocked;
-]]></ST>
-        </Implementation>
-      </Get>
-    </Property>
-    <Property Name="p_bStaUndockingDone" Id="{bb261a88-cc34-4fd6-bf54-1089f44f9408}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaUndockingDone : BOOL]]></Declaration>
-      <Get Name="Get" Id="{44b7df0c-94a7-4b6d-a3a8-e5b8bd6f931a}">
-        <Declaration><![CDATA[]]></Declaration>
-        <Implementation>
-          <ST><![CDATA[
-p_bStaUndockingDone := s_bStaUndockingDone;
 ]]></ST>
         </Implementation>
       </Get>
@@ -1588,7 +1632,11 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="371" Count="1" />
       <LineId Id="370" Count="0" />
       <LineId Id="373" Count="0" />
-      <LineId Id="358" Count="2" />
+      <LineId Id="358" Count="0" />
+      <LineId Id="529" Count="2" />
+      <LineId Id="536" Count="0" />
+      <LineId Id="527" Count="1" />
+      <LineId Id="359" Count="1" />
       <LineId Id="357" Count="0" />
       <LineId Id="200" Count="0" />
       <LineId Id="170" Count="0" />
@@ -1601,23 +1649,28 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="459" Count="3" />
       <LineId Id="456" Count="0" />
       <LineId Id="463" Count="0" />
-      <LineId Id="465" Count="1" />
+      <LineId Id="465" Count="0" />
+      <LineId Id="533" Count="0" />
+      <LineId Id="466" Count="0" />
       <LineId Id="464" Count="0" />
       <LineId Id="457" Count="0" />
       <LineId Id="172" Count="0" />
       <LineId Id="511" Count="0" />
       <LineId Id="514" Count="0" />
       <LineId Id="516" Count="0" />
-      <LineId Id="515" Count="0" />
+      <LineId Id="532" Count="0" />
       <LineId Id="513" Count="0" />
       <LineId Id="211" Count="0" />
       <LineId Id="478" Count="1" />
       <LineId Id="482" Count="0" />
       <LineId Id="481" Count="0" />
       <LineId Id="480" Count="0" />
+      <LineId Id="540" Count="0" />
       <LineId Id="215" Count="0" />
       <LineId Id="314" Count="0" />
-      <LineId Id="316" Count="1" />
+      <LineId Id="316" Count="0" />
+      <LineId Id="538" Count="0" />
+      <LineId Id="317" Count="0" />
       <LineId Id="315" Count="0" />
       <LineId Id="471" Count="0" />
       <LineId Id="406" Count="0" />
@@ -1647,6 +1700,7 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="229" Count="0" />
       <LineId Id="178" Count="0" />
       <LineId Id="389" Count="0" />
+      <LineId Id="534" Count="0" />
       <LineId Id="391" Count="1" />
       <LineId Id="179" Count="1" />
       <LineId Id="519" Count="2" />
@@ -1697,6 +1751,9 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="327" Count="0" />
       <LineId Id="189" Count="0" />
       <LineId Id="155" Count="0" />
+      <LineId Id="542" Count="0" />
+      <LineId Id="541" Count="0" />
+      <LineId Id="543" Count="2" />
       <LineId Id="474" Count="1" />
       <LineId Id="477" Count="0" />
       <LineId Id="476" Count="0" />
@@ -1968,7 +2025,11 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="6" Count="2" />
       <LineId Id="22" Count="1" />
       <LineId Id="26" Count="0" />
-      <LineId Id="31" Count="1" />
+      <LineId Id="34" Count="1" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="38" Count="1" />
       <LineId Id="29" Count="0" />
       <LineId Id="28" Count="0" />
       <LineId Id="16" Count="0" />
@@ -2042,7 +2103,7 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="383" Count="0" />
       <LineId Id="293" Count="0" />
     </LineIds>
-    <LineIds Name="EM_DockingInterface.m_CloseDockingClamps">
+    <LineIds Name="EM_DockingInterface.m_CloseInnerDoor">
       <LineId Id="4" Count="9" />
       <LineId Id="3" Count="0" />
       <LineId Id="14" Count="0" />
@@ -2194,7 +2255,7 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="187" Count="0" />
       <LineId Id="179" Count="0" />
     </LineIds>
-    <LineIds Name="EM_DockingInterface.m_OpenDockingClamps">
+    <LineIds Name="EM_DockingInterface.m_OpenInnerDoor">
       <LineId Id="4" Count="10" />
       <LineId Id="3" Count="0" />
     </LineIds>
@@ -2218,6 +2279,11 @@ p_bStaUndockingDone := s_bStaUndockingDone;
     <LineIds Name="EM_DockingInterface.p_bStaBoxAtPreDockingPosition.Get">
       <LineId Id="5" Count="2" />
     </LineIds>
+    <LineIds Name="EM_DockingInterface.p_bStaDocked.Get">
+      <LineId Id="4" Count="0" />
+      <LineId Id="3" Count="0" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
     <LineIds Name="EM_DockingInterface.p_bStaDockingClampsClosed.Get">
       <LineId Id="5" Count="0" />
       <LineId Id="2" Count="0" />
@@ -2228,22 +2294,24 @@ p_bStaUndockingDone := s_bStaUndockingDone;
       <LineId Id="2" Count="0" />
       <LineId Id="4" Count="0" />
     </LineIds>
-    <LineIds Name="EM_DockingInterface.p_bStaDockingDone.Get">
-      <LineId Id="4" Count="0" />
-      <LineId Id="3" Count="0" />
-      <LineId Id="2" Count="0" />
-    </LineIds>
     <LineIds Name="EM_DockingInterface.p_bStaDockingPositionFree.Get">
       <LineId Id="5" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="6" Count="0" />
     </LineIds>
-    <LineIds Name="EM_DockingInterface.p_bStaUndocked.Get">
+    <LineIds Name="EM_DockingInterface.p_bStaInnerDoorClosedAndLocked.Get">
       <LineId Id="5" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="7" Count="3" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_DockingInterface.p_bStaInnerDoorOpenedAndReleased.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="7" Count="3" />
       <LineId Id="2" Count="0" />
       <LineId Id="6" Count="0" />
     </LineIds>
-    <LineIds Name="EM_DockingInterface.p_bStaUndockingDone.Get">
+    <LineIds Name="EM_DockingInterface.p_bStaUndocked.Get">
       <LineId Id="5" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="6" Count="0" />

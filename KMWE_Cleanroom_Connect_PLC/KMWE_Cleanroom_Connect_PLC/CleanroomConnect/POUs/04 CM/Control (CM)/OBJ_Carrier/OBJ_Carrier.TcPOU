@@ -10,8 +10,9 @@ VAR
 	s_eDestination : E_Location;
 	s_eLocation : E_Location;
 	s_eLocationPrev : E_Location;
-	s_nId : UINT := 1;
+	s_nId : UINT;
 	
+	s_bOuterDoorOpened : BOOL;
 	s_bCheckedAtInfeed : BOOL;
 	
 	s_bCenteringDone : BOOL;
@@ -26,6 +27,7 @@ VAR
 	
 	
 	s_eLocationTmp : E_Location;
+	s_nIdCnt : UINT := 0;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -38,17 +40,20 @@ END_IF]]></ST>
     <Method Name="m_Create" Id="{c6c953b1-fcb7-4b86-b625-1792b3127902}">
       <Declaration><![CDATA[METHOD PUBLIC m_Create : BOOL
 VAR_INPUT
-	i_stCarrier : ST_Carrier;
+//	i_stCarrier : ST_Carrier;
+	i_eDestination : E_Location;
 END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-s_nId := s_nId + 1;
+s_nIdCnt := s_nIdCnt + 1;
+s_nId := s_nIdCnt;
 
-s_eDestination := E_Location.UNKNOWN;
+s_eDestination := i_eDestination;
 s_eLocation := E_Location.INFEED;
 s_eLocationPrev := E_Location.UNKNOWN;
 
+s_bOuterDoorOpened := FALSE;
 s_bCheckedAtInfeed := FALSE;
 s_bCenteringDone := FALSE;
 s_bDockingDone := FALSE;
@@ -56,6 +61,8 @@ s_bUndockingDone := FALSE;
 s_bCloseInnerDoorDone := FALSE;
 s_bOpenInnerDoorDone := FALSE;
 s_bFlushedCleaned := FALSE;
+
+m_Create := TRUE;
 	]]></ST>
       </Implementation>
     </Method>
@@ -69,7 +76,9 @@ s_nId := 0;
 s_eDestination := E_Location.UNKNOWN;
 s_eLocation := E_Location.UNKNOWN;
 s_eLocationPrev := E_Location.UNKNOWN;
+s_eLocationTmp := E_Location.UNKNOWN;
 
+s_bOuterDoorOpened := FALSE;
 s_bCheckedAtInfeed := FALSE;
 s_bCenteringDone := FALSE;
 s_bDockingDone := FALSE;
@@ -77,6 +86,8 @@ s_bUndockingDone := FALSE;
 s_bCloseInnerDoorDone := FALSE;
 s_bOpenInnerDoorDone := FALSE;
 s_bFlushedCleaned := FALSE;
+
+m_Destroy := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
@@ -124,7 +135,8 @@ m_UpdateLocation := TRUE;
       </Implementation>
     </Method>
     <Property Name="p_bCenteringDone" Id="{d69c5412-5c2c-45b4-8be3-5444487f9c4a}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bCenteringDone : BOOL]]></Declaration>
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bCenteringDone : BOOL
+]]></Declaration>
       <Get Name="Get" Id="{91ff997c-7b50-43ae-8859-6bc029d4a907}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
@@ -143,7 +155,8 @@ s_bCenteringDone := p_bCenteringDone;
       </Set>
     </Property>
     <Property Name="p_bCloseInnerDoorDone" Id="{8ee7792b-c143-4d89-b37f-80b4d835d688}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bCloseInnerDoorDone : BOOL]]></Declaration>
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bCloseInnerDoorDone : BOOL
+]]></Declaration>
       <Get Name="Get" Id="{515f1fdb-7928-487f-a09d-7f379ad5e8c3}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
@@ -162,7 +175,8 @@ s_bCloseInnerDoorDone := p_bCloseInnerDoorDone;
       </Set>
     </Property>
     <Property Name="p_bDockingDone" Id="{0dd4db6b-9473-474f-9c93-b344ba746cba}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bDockingDone : BOOL]]></Declaration>
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bDockingDone : BOOL
+]]></Declaration>
       <Get Name="Get" Id="{8355eeeb-b58b-4af2-8a27-965487da35a5}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
@@ -181,7 +195,8 @@ s_bDockingDone := p_bDockingDone;
       </Set>
     </Property>
     <Property Name="p_bFlushedCleaned" Id="{f3ffe3a1-4925-48a7-a230-3a8593a53515}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bFlushedCleaned : BOOL]]></Declaration>
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bFlushedCleaned : BOOL
+]]></Declaration>
       <Get Name="Get" Id="{c309fdb1-b242-4932-9a08-2959c4f7d4a0}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
@@ -200,7 +215,8 @@ s_bFlushedCleaned := p_bFlushedCleaned;
       </Set>
     </Property>
     <Property Name="p_bOpenInnerDoorDone" Id="{82ef863e-5554-44df-9b0a-f0a9602e9f54}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bOpenInnerDoorDone : BOOL]]></Declaration>
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bOpenInnerDoorDone : BOOL
+]]></Declaration>
       <Get Name="Get" Id="{342b4669-01a6-42f5-8ef7-286bfa30c352}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
@@ -218,8 +234,29 @@ s_bOpenInnerDoorDone := p_bOpenInnerDoorDone;
         </Implementation>
       </Set>
     </Property>
+    <Property Name="p_bOuterDoorOpened" Id="{40846888-6754-40fa-a872-9cac5d08a7d3}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bOuterDoorOpened : BOOL
+]]></Declaration>
+      <Get Name="Get" Id="{0a8811f6-6453-4aad-99c2-a1b29d8ae361}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bOuterDoorOpened := s_bOuterDoorOpened;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{9f631bcd-2651-4d2a-8318-d66b679b747f}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+s_bOuterDoorOpened := p_bOuterDoorOpened;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
     <Property Name="p_bUndockingDone" Id="{51f9786b-f356-4aff-954a-cf40a15fe5ff}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bUndockingDone : BOOL]]></Declaration>
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bUndockingDone : BOOL
+]]></Declaration>
       <Get Name="Get" Id="{822bb299-2b8a-4465-bc53-f9835e7cf170}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
@@ -238,26 +275,28 @@ s_bUndockingDone := p_bUndockingDone;
       </Set>
     </Property>
     <Property Name="p_eDestination" Id="{b5c2a005-f24c-47c7-b596-cc92f8422147}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_eDestination : E_Location]]></Declaration>
-      <Get Name="Get" Id="{075c546d-dc3e-46d0-805f-bdc70e2e2a56}">
-        <Declaration><![CDATA[VAR
-END_VAR
+      <Declaration><![CDATA[PROPERTY PUBLIC p_eDestination : E_Location
 ]]></Declaration>
+      <Get Name="Get" Id="{075c546d-dc3e-46d0-805f-bdc70e2e2a56}">
+        <Declaration><![CDATA[]]></Declaration>
         <Implementation>
-          <ST><![CDATA[]]></ST>
+          <ST><![CDATA[
+p_eDestination := s_eDestination;
+]]></ST>
         </Implementation>
       </Get>
       <Set Name="Set" Id="{6cd2da6a-84f6-4ca1-8c2b-5f4f7367fdf3}">
-        <Declaration><![CDATA[VAR
-END_VAR
-]]></Declaration>
+        <Declaration><![CDATA[]]></Declaration>
         <Implementation>
-          <ST><![CDATA[]]></ST>
+          <ST><![CDATA[
+s_eDestination := p_eDestination;
+]]></ST>
         </Implementation>
       </Set>
     </Property>
     <Property Name="p_eLocation" Id="{a5592312-8b05-45c5-a594-5a434b6a0aac}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_eLocation : E_Location]]></Declaration>
+      <Declaration><![CDATA[PROPERTY PUBLIC p_eLocation : E_Location
+]]></Declaration>
       <Get Name="Get" Id="{242ea7ea-80d9-4806-8bd8-b9f5478cdc71}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
@@ -276,32 +315,26 @@ s_eLocation := p_eLocation;
       </Set>
     </Property>
     <Property Name="p_eLocationPrev" Id="{429995c5-dd26-4805-b511-29aa571c98b5}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_eLocationPrev : E_Location]]></Declaration>
-      <Get Name="Get" Id="{13184503-88fb-4097-accb-94e98c6eefde}">
-        <Declaration><![CDATA[VAR
-END_VAR
+      <Declaration><![CDATA[PROPERTY PUBLIC p_eLocationPrev : E_Location
 ]]></Declaration>
+      <Get Name="Get" Id="{13184503-88fb-4097-accb-94e98c6eefde}">
+        <Declaration><![CDATA[]]></Declaration>
         <Implementation>
-          <ST><![CDATA[]]></ST>
+          <ST><![CDATA[
+p_eLocationPrev := s_eLocationPrev;
+]]></ST>
         </Implementation>
       </Get>
-      <Set Name="Set" Id="{9fb3e566-850e-45bf-928c-e9f879f9415f}">
-        <Declaration><![CDATA[VAR
-END_VAR
-]]></Declaration>
-        <Implementation>
-          <ST><![CDATA[]]></ST>
-        </Implementation>
-      </Set>
     </Property>
     <Property Name="p_nId" Id="{64602fd9-52b1-4aba-a5e6-32f1770eaf66}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_nId : E_Location]]></Declaration>
-      <Get Name="Get" Id="{88b523c1-3fb7-49a6-95f7-aa32df3a44ad}">
-        <Declaration><![CDATA[VAR
-END_VAR
+      <Declaration><![CDATA[PROPERTY PUBLIC p_nId : UINT
 ]]></Declaration>
+      <Get Name="Get" Id="{88b523c1-3fb7-49a6-95f7-aa32df3a44ad}">
+        <Declaration><![CDATA[]]></Declaration>
         <Implementation>
-          <ST><![CDATA[]]></ST>
+          <ST><![CDATA[
+p_nId := s_nId;
+]]></ST>
         </Implementation>
       </Get>
     </Property>
@@ -314,18 +347,26 @@ END_VAR
     <LineIds Name="OBJ_Carrier.m_Create">
       <LineId Id="11" Count="0" />
       <LineId Id="6" Count="0" />
+      <LineId Id="35" Count="0" />
       <LineId Id="14" Count="2" />
       <LineId Id="13" Count="0" />
+      <LineId Id="36" Count="0" />
       <LineId Id="17" Count="1" />
       <LineId Id="20" Count="0" />
       <LineId Id="22" Count="1" />
       <LineId Id="25" Count="1" />
       <LineId Id="12" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="33" Count="0" />
       <LineId Id="28" Count="0" />
     </LineIds>
     <LineIds Name="OBJ_Carrier.m_Destroy">
-      <LineId Id="5" Count="12" />
+      <LineId Id="5" Count="5" />
+      <LineId Id="22" Count="1" />
+      <LineId Id="11" Count="6" />
       <LineId Id="3" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="20" Count="0" />
       <LineId Id="18" Count="0" />
     </LineIds>
     <LineIds Name="OBJ_Carrier.m_Force">
@@ -392,6 +433,15 @@ END_VAR
       <LineId Id="2" Count="0" />
       <LineId Id="6" Count="0" />
     </LineIds>
+    <LineIds Name="OBJ_Carrier.p_bOuterDoorOpened.Get">
+      <LineId Id="5" Count="1" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="OBJ_Carrier.p_bOuterDoorOpened.Set">
+      <LineId Id="3" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="4" Count="0" />
+    </LineIds>
     <LineIds Name="OBJ_Carrier.p_bUndockingDone.Get">
       <LineId Id="3" Count="0" />
       <LineId Id="2" Count="0" />
@@ -403,10 +453,14 @@ END_VAR
       <LineId Id="6" Count="0" />
     </LineIds>
     <LineIds Name="OBJ_Carrier.p_eDestination.Get">
+      <LineId Id="3" Count="0" />
       <LineId Id="2" Count="0" />
+      <LineId Id="4" Count="0" />
     </LineIds>
     <LineIds Name="OBJ_Carrier.p_eDestination.Set">
+      <LineId Id="5" Count="0" />
       <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
     </LineIds>
     <LineIds Name="OBJ_Carrier.p_eLocation.Get">
       <LineId Id="3" Count="0" />
@@ -419,13 +473,14 @@ END_VAR
       <LineId Id="6" Count="0" />
     </LineIds>
     <LineIds Name="OBJ_Carrier.p_eLocationPrev.Get">
+      <LineId Id="5" Count="0" />
       <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="OBJ_Carrier.p_eLocationPrev.Set">
-      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
     </LineIds>
     <LineIds Name="OBJ_Carrier.p_nId.Get">
+      <LineId Id="3" Count="0" />
       <LineId Id="2" Count="0" />
+      <LineId Id="4" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>

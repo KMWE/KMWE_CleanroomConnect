@@ -49,6 +49,9 @@ VAR
 	s_fbHmiBtnReset				: FB_HmiBtn;
 //------------------------------------------//
 
+s_bCreate : BOOL;
+s_bDestroy : BOOL;
+
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[
@@ -413,6 +416,9 @@ END_VAR]]></Declaration>
         <ST><![CDATA[
 GVL_Modules.g_objCarrier();
 
+IF s_bCreate THEN GVL_Modules.g_objCarrier.m_Create(i_eDestination := E_Location.CLEAN_ROOM); s_bCreate := FALSE; END_IF; 
+IF s_bDestroy THEN GVL_Modules.g_objCarrier.m_Destroy(); s_bDestroy := FALSE; END_IF;
+
 GVL_Modules.g_emUtilities.m_GetGeneralState(
 	i_bError := s_bStaError,
 	i_bWarning := s_bStaWarning,
@@ -592,10 +598,67 @@ END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[
 //FullCycle
-	m_Inbound();
+//++	m_Inbound();
 //	Wait(T#5S)
-	m_Outbound();
-]]></ST>
+//	m_Outbound();
+
+	//EM_PalletConveyor	
+	IF GVL_Modules.g_objCarrier.p_eDestination <> E_Location.UNKNOWN
+		AND GVL_Modules.g_objCarrier.p_eDestination > GVL_Modules.g_objCarrier.p_eLocation
+		AND GVL_Modules.g_objCarrier.p_eLocation < E_Location.CENTERING  
+		AND GVL_Modules.g_objCarrier.p_bOuterDoorOpened THEN
+			GVL_Modules.g_emPalletConveyor.m_ReqTB_ToCenter();
+		 	
+	ELSIF GVL_Modules.g_objCarrier.p_eDestination <> E_Location.UNKNOWN
+		AND GVL_Modules.g_objCarrier.p_eDestination > GVL_Modules.g_objCarrier.p_eLocation
+		AND GVL_Modules.g_objCarrier.p_eLocation < E_Location.DOCKING 
+		AND GVL_Modules.g_emPalletConveyor.p_bStaTB_CenteringDone
+		AND GVL_Modules.g_emDockingInterface.p_bStaUndocked THEN
+			GVL_Modules.g_emPalletConveyor.m_ReqTB_ToDocking();
+	
+	ELSIF GVL_Modules.g_objCarrier.p_eDestination <> E_Location.UNKNOWN
+		AND GVL_Modules.g_objCarrier.p_eDestination < GVL_Modules.g_objCarrier.p_eLocation
+		AND GVL_Modules.g_objCarrier.p_eLocation > E_Location.INFEED
+		AND GVL_Modules.g_emDockingInterface.p_bStaUndocked THEN 
+			GVL_Modules.g_emPalletConveyor.m_ReqTB_ToInfeed();
+	
+	END_IF
+	
+	IF GVL_Modules.g_objCarrier.p_eDestination <> E_Location.UNKNOWN
+		AND GVL_Modules.g_objCarrier.p_eLocation = E_Location.CENTERING  
+		AND NOT(GVL_Modules.g_emPalletConveyor.p_bStaTB_CenteringDone) THEN
+			GVL_Modules.g_emPalletConveyor.m_ReqCenteringTB();
+			
+	END_IF
+	
+	//EM_DockingInterface
+	IF GVL_Modules.g_objCarrier.p_eDestination <> E_Location.UNKNOWN
+		AND GVL_Modules.g_objCarrier.p_eLocation = E_Location.DOCKING
+		AND GVL_Modules.g_objCarrier.p_eDestination > E_Location.DOCKING 
+		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaDocked) THEN
+			GVL_Modules.g_emDockingInterface.m_DockBox();
+			
+	ELSIF GVL_Modules.g_objCarrier.p_eDestination <> E_Location.UNKNOWN
+		AND GVL_Modules.g_objCarrier.p_eLocation = E_Location.DOCKING
+		AND GVL_Modules.g_objCarrier.p_eDestination < E_Location.DOCKING
+		AND GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosedAndLocked
+		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaUndocked) THEN  
+			GVL_Modules.g_emDockingInterface.m_UndockBox();
+
+	ELSIF GVL_Modules.g_objCarrier.p_eDestination <> E_Location.UNKNOWN
+		AND GVL_Modules.g_objCarrier.p_eLocation = E_Location.DOCKING
+		AND GVL_Modules.g_objCarrier.p_eDestination > E_Location.DOCKING
+		AND GVL_Modules.g_emDockingInterface.p_bStaDocked
+		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpenedAndReleased) THEN  
+			GVL_Modules.g_emDockingInterface.m_OpenInnerDoor();
+			
+	ELSIF GVL_Modules.g_objCarrier.p_eDestination <> E_Location.UNKNOWN
+		AND GVL_Modules.g_objCarrier.p_eLocation = E_Location.DOCKING
+		AND GVL_Modules.g_objCarrier.p_eDestination < E_Location.DOCKING
+		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosedAndLocked) THEN  
+			GVL_Modules.g_emDockingInterface.m_CloseInnerDoor();		
+			
+	END_IF		]]></ST>
       </Implementation>
     </Method>
     <Method Name="m_Inbound" Id="{90534ebe-9d21-4aeb-b2cc-cf785c67a06d}">
@@ -633,6 +696,8 @@ GVL.g_osrNotify();
 //--_m_SelectConfigFile(i_bCmdReset := s_fbHmiBtnAutomatic.p_osfBtnPress);
 
 GVL.g_osrNotify.CLK := FALSE;	
+
+m_FullCycle();
 
 m_Main := TRUE;
 
@@ -779,6 +844,8 @@ GVL_Modules.g_emPalletConveyor.m_CmdTB_ToInfeed();
     <LineIds Name="UN_CleanroomConnect._m_Modules">
       <LineId Id="556" Count="0" />
       <LineId Id="555" Count="0" />
+      <LineId Id="564" Count="1" />
+      <LineId Id="563" Count="0" />
       <LineId Id="549" Count="0" />
       <LineId Id="490" Count="14" />
       <LineId Id="548" Count="0" />
@@ -814,7 +881,62 @@ GVL_Modules.g_emPalletConveyor.m_CmdTB_ToInfeed();
     <LineIds Name="UN_CleanroomConnect.m_FullCycle">
       <LineId Id="102" Count="0" />
       <LineId Id="90" Count="0" />
-      <LineId Id="92" Count="3" />
+      <LineId Id="92" Count="2" />
+      <LineId Id="106" Count="0" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="180" Count="0" />
+      <LineId Id="134" Count="0" />
+      <LineId Id="121" Count="0" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="122" Count="0" />
+      <LineId Id="132" Count="0" />
+      <LineId Id="181" Count="0" />
+      <LineId Id="135" Count="0" />
+      <LineId Id="176" Count="0" />
+      <LineId Id="172" Count="0" />
+      <LineId Id="115" Count="0" />
+      <LineId Id="118" Count="0" />
+      <LineId Id="133" Count="0" />
+      <LineId Id="182" Count="0" />
+      <LineId Id="136" Count="0" />
+      <LineId Id="171" Count="0" />
+      <LineId Id="144" Count="0" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="142" Count="0" />
+      <LineId Id="125" Count="1" />
+      <LineId Id="183" Count="0" />
+      <LineId Id="175" Count="0" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="145" Count="0" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="137" Count="1" />
+      <LineId Id="146" Count="0" />
+      <LineId Id="184" Count="0" />
+      <LineId Id="149" Count="0" />
+      <LineId Id="174" Count="0" />
+      <LineId Id="148" Count="0" />
+      <LineId Id="150" Count="0" />
+      <LineId Id="154" Count="0" />
+      <LineId Id="185" Count="0" />
+      <LineId Id="155" Count="0" />
+      <LineId Id="168" Count="0" />
+      <LineId Id="157" Count="0" />
+      <LineId Id="152" Count="0" />
+      <LineId Id="163" Count="0" />
+      <LineId Id="165" Count="0" />
+      <LineId Id="186" Count="0" />
+      <LineId Id="166" Count="0" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="167" Count="0" />
+      <LineId Id="164" Count="0" />
+      <LineId Id="158" Count="0" />
+      <LineId Id="160" Count="0" />
+      <LineId Id="187" Count="0" />
+      <LineId Id="161" Count="1" />
+      <LineId Id="159" Count="0" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="151" Count="0" />
     </LineIds>
     <LineIds Name="UN_CleanroomConnect.m_Inbound">
       <LineId Id="86" Count="2" />
@@ -835,6 +957,7 @@ GVL_Modules.g_emPalletConveyor.m_CmdTB_ToInfeed();
       <LineId Id="19" Count="0" />
       <LineId Id="26" Count="0" />
       <LineId Id="28" Count="0" />
+      <LineId Id="71" Count="1" />
       <LineId Id="15" Count="0" />
       <LineId Id="5" Count="0" />
       <LineId Id="59" Count="3" />

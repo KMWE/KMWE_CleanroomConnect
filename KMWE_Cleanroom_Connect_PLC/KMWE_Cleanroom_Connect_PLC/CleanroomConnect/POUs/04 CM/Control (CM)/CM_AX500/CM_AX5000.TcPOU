@@ -1,0 +1,533 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="CM_AX5000" Id="{29dfdbae-f16d-497a-b262-2baea4701d77}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK CM_AX5000 EXTENDS CM_Base IMPLEMENTS I_AX5000
+VAR_INPUT
+	i_refAxis : REFERENCE TO Tc2_MC2.AXIS_REF;
+	i_bIclkForward : BOOL := TRUE; //TRUE = interlocked
+	i_bIclkBackward : BOOL := TRUE; //TRUE = interlocked
+END_VAR
+
+VAR
+	fbPower : Tc2_MC2.MC_Power;
+	fbReset : Tc2_MC2.MC_Reset;
+	fbHome : Tc2_MC2.MC_Home;
+	fbJog : Tc2_MC2.MC_Jog;
+	fbMoveAbsolute : Tc2_MC2.MC_MoveAbsolute;
+	fbMoveRelative : Tc2_MC2.MC_MoveRelative;
+	fbStop : Tc2_MC2.MC_Stop;	
+
+	// Inputs
+	I_bDetReferenceSwitch AT %I* : BOOL; //Reference-/home switch
+	I_bDetLimitSwitchPositive AT %I* : BOOL; //Limit switch positive-/CW- direction
+	I_bDetLimitSwitchNegative AT %I* : BOOL; //Limit switch negative-/CCW- direction
+	
+	//Properties
+	s_bStatus : BOOL;
+	s_bDone : BOOL; 
+	s_bBusy : BOOL; 
+	s_bActive : BOOL; 
+	s_bCommandAborted : BOOL; 
+	s_bError : BOOL; 
+	s_nErrorID : UDINT;
+	
+	// Requests
+	{warning '#TODO: Chcek / update during develiping'}
+	s_bReqStop : BOOL;
+	s_bReqStartForward : BOOL;
+	s_bReqStartBackward : BOOL;
+	s_bReqReset : BOOL;
+	
+	// Commands
+	s_bCmdEnable : BOOL;
+	s_bCmdReset : BOOL;
+	s_bCmdForward : BOOL;
+	s_bCmdBackward : BOOL;
+	s_bCmdReleaseBrake : BOOL;
+		
+	// States
+	s_bStaReadyForOperation: BOOL;
+	s_bStaDriveError: BOOL;
+	s_bStaWarning : BOOL;
+	
+	
+	
+	s_sInterlockedReason : STRING; //External interlocked reason for clarifying reason
+	
+	// Setpoints
+	s_fTargetSpeed : LREAL; // Target speed [mm/s]
+	
+	// Timers
+	
+	// Alarms
+	s_fbAlarmHandlerDriveError : FB_AlarmHandler;
+	s_fbAlarmHandlerStartMotorNotAllowed : FB_AlarmHandler;
+	s_fbAlarmHandlerMotorForwardInterlocked : FB_AlarmHandler;
+	s_fbAlarmHandlerMotorBackwardInterlocked : FB_AlarmHandler;
+	
+	s_errDriveError : BOOL;
+	s_wrnStartMotorNotAllowed : BOOL;
+	s_wrnMotorForwardInterlocked : BOOL;
+	s_wrnMotorBackwardInterlocked : BOOL;
+	
+	//Hmi
+	s_fbHmiBtnManualForward		: FB_HmiBtn;
+	s_fbHmiBtnManualBackward	: FB_HmiBtn;
+	s_fbHmiBtnManualStop		: FB_HmiBtn;
+	s_fbHmiBtnManualReset		: FB_HmiBtn;
+	
+	s_fbHmiLedMotorStopped		: FB_HmiLed;
+	s_fbHmiLedDriveError		: FB_HmiLed;
+	
+	//Sequence
+	eSeqMOVITRAC_B_WithBrake : E_SeqMOVITRAC_B_WithBrake;
+	seqTimer : TON;
+	seqPreStep : E_SeqMOVITRAC_B_WithBrake;
+	s_sActStep : STRING;
+	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+SUPER^();
+
+]]></ST>
+    </Implementation>
+    <Folder Name="Methods" Id="{c7dc02dc-f2cb-44e5-89eb-2e4085b6a909}" />
+    <Folder Name="Properties" Id="{c3e008a7-9dfe-49e0-9cc5-18c79327535a}" />
+    <Method Name="m_MC_Home" Id="{953753d2-b56b-4416-8bfe-ffc202c2c66e}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PUBLIC m_MC_Home : BOOL
+VAR_INPUT
+	i_bExecute : BOOL;
+	i_fPosition : REAL;
+	i_eHomingMode : TC2_MC2.MC_HomingMode;
+	i_eBufferMode : TC2_MC2.MC_BufferMode;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+fbHome(
+	Axis := i_refAxis,
+	Execute := i_bExecute,
+	Position := i_fPosition,
+	HomingMode := i_eHomingMode,
+	BufferMode := i_eBufferMode,
+	Options := ,
+	bCalibrationCam := I_bDetReferenceSwitch,
+	Done => s_bDone,
+	Busy => s_bBusy,
+	Active => s_bActive,
+	CommandAborted => s_bCommandAborted,
+	Error => s_bError,
+	ErrorID => s_nErrorID);
+	
+m_MC_Home := s_bDone;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_MC_Jog" Id="{0b34f7cb-ad06-475a-9339-58c1a8e417e5}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PUBLIC m_MC_Jog : BOOL
+VAR_INPUT
+	i_bExecute : BOOL;
+	i_bJogForward : BOOL;
+	i_bJogBackward : BOOL;
+	i_eJogMode : TC2_MC2.E_JogMode;
+	i_fPosition : LREAL; 
+	i_fVelocity : LREAL; 
+	i_fAcceleration : LREAL; 
+	i_fDeceleration : LREAL; 
+	i_fJerk : LREAL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+fbJog(
+	Axis := i_refAxis,
+	JogForward := i_bJogForward,
+	JogBackwards := i_bJogBackward,
+	Mode := i_eJogMode,
+	Position := i_fPosition,
+	Velocity := i_fVelocity,
+	Acceleration := i_fAcceleration,
+	Deceleration := i_fDeceleration,
+	Jerk := i_fJerk,
+	Done => s_bDone,
+	Busy => s_bBusy,
+	Active => s_bActive,
+	CommandAborted => s_bCommandAborted,
+	Error => s_bError,
+	ErrorID => s_nErrorID);
+	
+m_MC_Home := s_bDone;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_MC_MoveAbsolute" Id="{0f6a7ef6-bbb9-453d-8d82-3eac920331b1}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PUBLIC m_MC_MoveAbsolute : BOOL
+VAR_INPUT
+	i_bExecute : BOOL;
+	i_fPosition : LREAL; 
+	i_fVelocity : LREAL; 
+	i_fAcceleration : LREAL; 
+	i_fDeceleration : LREAL; 
+	i_fJerk : LREAL;
+	i_eBufferMode : TC2_MC2.MC_BufferMode;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+fbMoveAbsolute(
+	Axis := i_refAxis,
+	Execute := i_bExecute, 
+	Position := i_fPosition,
+	Velocity := i_fVelocity,
+	Acceleration := i_fAcceleration,
+	Deceleration := i_fDeceleration,
+	Jerk := i_fJerk,
+	BufferMode := i_eBufferMode,
+	Options := ,
+	Done => s_bDone,
+	Busy => s_bBusy,
+	Active => s_bActive,
+	CommandAborted => s_bCommandAborted,
+	Error => s_bError,
+	ErrorID => s_nErrorID);
+	
+m_MC_Home := s_bDone;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_MC_MoveRelative" Id="{e88d3f53-895e-4d90-93a1-00c818a65e17}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PUBLIC m_MC_MoveRelative : BOOL
+VAR_INPUT
+	i_bExecute : BOOL;
+	i_fDistance : LREAL; 
+	i_fVelocity : LREAL; 
+	i_fAcceleration : LREAL; 
+	i_fDeceleration : LREAL; 
+	i_fJerk : LREAL;
+	i_eBufferMode : TC2_MC2.MC_BufferMode;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+fbMoveRelative(
+	Axis := i_refAxis,
+	Execute := i_bExecute,
+	Distance := i_fDistance,
+	Velocity := i_fVelocity,
+	Acceleration := i_fAcceleration,
+	Deceleration := i_fDeceleration,
+	Jerk := i_fJerk,
+	BufferMode := i_eBufferMode,
+	Options := ,
+	Done => s_bDone,
+	Busy => s_bBusy,
+	Active => s_bActive,
+	CommandAborted => s_bCommandAborted,
+	Error => s_bError,
+	ErrorID => s_nErrorID);
+	
+m_MC_Home := s_bDone;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_MC_Power" Id="{fd1fc676-b701-4a26-938f-ef477da725d4}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PUBLIC m_MC_Power : BOOL
+VAR_INPUT
+	i_bEnable : BOOL;
+	i_bEnablePositive : BOOL;
+	i_bEnableNegative : BOOL;
+	i_fOverride : LREAL;
+	i_eBufferMode : TC2_MC2.MC_BufferMode;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+fbPower(
+	Axis := i_refAxis,
+	Enable := i_bEnable,
+	Enable_Positive := i_bEnablePositive,
+	Enable_Negative := i_bEnableNegative,
+	Override := i_fOverride,
+	BufferMode := i_eBufferMode,
+	Options := ,
+	Status => s_bStatus,
+	Busy => s_bBusy,
+	Active => s_bActive,
+	Error => s_bError,
+	ErrorID => s_nErrorID);
+
+m_MC_Home := s_bDone;
+	]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_MC_Reset" Id="{78a60c41-19c8-4eb1-aa13-d3edbd9b9522}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PUBLIC m_MC_Reset : BOOL
+VAR_INPUT
+	i_bExecute : BOOL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+fbReset(
+	Axis := i_refAxis,
+	Execute := i_bExecute,
+	Done => s_bDone,
+	Busy => s_bBusy,
+	Error => s_bError,
+	ErrorID => s_nErrorID);
+
+m_MC_Home := s_bDone;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_MC_Stop" Id="{6c6294b9-0bc1-4c87-8f3e-41d07e1a757c}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PUBLIC m_MC_Stop : BOOL
+VAR_INPUT
+	i_bExecute : BOOL;
+	i_fDeceleration : LREAL;
+	i_fJerk : LREAL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+fbStop(
+	Axis := i_refAxis,
+	Execute := i_bExecute,
+	Deceleration := i_fDeceleration,
+	Jerk := i_fJerk,
+	Options := ,
+	Done => s_bDone,
+	Busy => s_bBusy,
+	Active => s_bActive,
+	CommandAborted => s_bCommandAborted,
+	Error => s_bError,
+	ErrorID => s_nErrorID);
+
+
+m_MC_Home := s_bDone;
+	]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="p_bActive" Id="{fdebd466-4355-4961-86f7-17cb1e74e332}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bActive : BOOL
+]]></Declaration>
+      <Get Name="Get" Id="{12554b68-dea8-473b-b98f-bf82edb9ad16}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bActive := s_bActive;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bBusy" Id="{a6bb4214-9e42-46dd-a8f3-995e364772d0}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bBusy : BOOL]]></Declaration>
+      <Get Name="Get" Id="{7080bc48-c94e-419b-9e7d-df95694c753e}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bBusy := s_bBusy;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bCommandAborted" Id="{32bd9d7d-f5a3-4f89-9a59-0294a826c560}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bCommandAborted : BOOL]]></Declaration>
+      <Get Name="Get" Id="{a39acfdd-fde9-4118-9e65-bd86ad5a94af}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bCommandAborted := s_bCommandAborted
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bDone" Id="{09a3960b-0e70-4e33-a3d6-ff5a57122d42}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bDone : BOOL]]></Declaration>
+      <Get Name="Get" Id="{e656286c-fa2b-43ef-a794-1f2819d97be9}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bDone := s_bDone
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bError" Id="{7759aec3-bd8b-4f0c-9913-656b2c70cf6a}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bError : BOOL
+]]></Declaration>
+      <Get Name="Get" Id="{67b5f8fe-c6e4-4145-9f0e-f9d36c480d63}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bError := s_bError;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bHomed" Id="{29d86fc1-be45-4333-91ce-9bdc79739fba}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bHomed : BOOL
+]]></Declaration>
+      <Get Name="Get" Id="{3bff5f71-c84f-4863-9be2-8ae02d95a4db}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bHomed := i_refAxis.Status.Homed;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStandstill" Id="{06fe4adf-3a6b-49c2-a8e8-c5de29d0c1af}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStandstill : BOOL
+]]></Declaration>
+      <Get Name="Get" Id="{e4db3dbb-9fbf-4ca7-ba91-332924a328ae}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStandstill := i_refAxis.Status.StandStill;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_fPosition" Id="{e5ef2cba-1955-4270-98db-4d1260096b27}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_fPosition : LREAL
+]]></Declaration>
+      <Get Name="Get" Id="{440682b1-07c0-42c1-8793-ae28db2834f6}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_fPosition := i_refAxis.NcToPlc.ActPos;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_fVelocity" Id="{e4d08808-aacd-469e-bccf-b788a2ac516e}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_fVelocity : LREAL
+]]></Declaration>
+      <Get Name="Get" Id="{a4e61425-56d9-43cd-b7a5-921c2a97d144}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_fVelocity := i_refAxis.NcToPlc.ActVelo;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_nErrorID" Id="{063f18f8-6320-4761-b8fc-9920f5ec0c3a}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_nErrorID : UDINT
+]]></Declaration>
+      <Get Name="Get" Id="{fa545b5b-0766-4028-bde3-78e42d22c7e0}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_nErrorID := s_nErrorID;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <LineIds Name="CM_AX5000">
+      <LineId Id="410" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="650" Count="0" />
+      <LineId Id="633" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_AX5000.m_MC_Home">
+      <LineId Id="113" Count="0" />
+      <LineId Id="98" Count="11" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="114" Count="1" />
+      <LineId Id="27" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_AX5000.m_MC_Jog">
+      <LineId Id="269" Count="0" />
+      <LineId Id="253" Count="15" />
+      <LineId Id="270" Count="1" />
+      <LineId Id="32" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_AX5000.m_MC_MoveAbsolute">
+      <LineId Id="226" Count="0" />
+      <LineId Id="210" Count="15" />
+      <LineId Id="227" Count="1" />
+      <LineId Id="12" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_AX5000.m_MC_MoveRelative">
+      <LineId Id="221" Count="0" />
+      <LineId Id="205" Count="15" />
+      <LineId Id="222" Count="1" />
+      <LineId Id="28" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_AX5000.m_MC_Power">
+      <LineId Id="130" Count="0" />
+      <LineId Id="117" Count="10" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="132" Count="0" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="133" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_AX5000.m_MC_Reset">
+      <LineId Id="37" Count="0" />
+      <LineId Id="30" Count="6" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="39" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_AX5000.m_MC_Stop">
+      <LineId Id="11" Count="11" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="44" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_AX5000.p_bActive.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_AX5000.p_bBusy.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_AX5000.p_bCommandAborted.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_AX5000.p_bDone.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_AX5000.p_bError.Get">
+      <LineId Id="3" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="4" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_AX5000.p_bHomed.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_AX5000.p_bStandstill.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_AX5000.p_fPosition.Get">
+      <LineId Id="3" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="4" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_AX5000.p_fVelocity.Get">
+      <LineId Id="3" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="4" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_AX5000.p_nErrorID.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

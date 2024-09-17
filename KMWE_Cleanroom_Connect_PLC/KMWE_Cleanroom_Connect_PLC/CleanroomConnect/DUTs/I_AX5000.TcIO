@@ -8,74 +8,89 @@
     <Method Name="m_MC_Home" Id="{6f714401-3a16-4308-aae2-0cca9ac2e98c}" FolderPath="Methods\">
       <Declaration><![CDATA[METHOD PUBLIC m_MC_Home : BOOL
 VAR_INPUT
-	bExecute : BOOL;
-	fDeceleration : LREAL;
-	fJerk : LREAL;
+	i_bExecute : BOOL;
+	i_fPosition : REAL;
+	i_eHomingMode : TC2_MC2.MC_HomingMode;
+	i_eBufferMode : TC2_MC2.MC_BufferMode;
 END_VAR
 ]]></Declaration>
     </Method>
     <Method Name="m_MC_Jog" Id="{0360c928-dba7-461e-b617-a48229d23fc3}" FolderPath="Methods\">
       <Declaration><![CDATA[METHOD PUBLIC m_MC_Jog : BOOL
 VAR_INPUT
-	bExecute : BOOL;
-	bJogForward : BOOL;
-	bJogBackward : BOOL;
-	eJogMode : TC2_MC2.E_JogMode;
-	fPosition : LREAL; 
-	fVelocity : LREAL; 
-	fAcceleration : LREAL; 
-	fDeceleration : LREAL; 
-	fJerk : LREAL;
-	eBufferMode : TC2_MC2.MC_BufferMode;
+	i_bExecute : BOOL;
+	i_bJogForward : BOOL;
+	i_bJogBackward : BOOL;
+	i_eJogMode : TC2_MC2.E_JogMode;
+	i_fPosition : LREAL; 
+	i_fVelocity : LREAL; 
+	i_fAcceleration : LREAL; 
+	i_fDeceleration : LREAL; 
+	i_fJerk : LREAL;
 END_VAR
 ]]></Declaration>
     </Method>
     <Method Name="m_MC_MoveAbsolute" Id="{c735f9e2-8d60-4ce1-a0b2-f2fbb7e120ae}" FolderPath="Methods\">
       <Declaration><![CDATA[METHOD PUBLIC m_MC_MoveAbsolute : BOOL
 VAR_INPUT
-	bExecute : BOOL;
-	fPosition : LREAL; 
-	fVelocity : LREAL; 
-	fAcceleration : LREAL; 
-	fDeceleration : LREAL; 
-	fJerk : LREAL;
-	eBufferMode : TC2_MC2.MC_BufferMode;
+	i_bExecute : BOOL;
+	i_fPosition : LREAL; 
+	i_fVelocity : LREAL; 
+	i_fAcceleration : LREAL; 
+	i_fDeceleration : LREAL; 
+	i_fJerk : LREAL;
+	i_eBufferMode : TC2_MC2.MC_BufferMode;
 END_VAR
 ]]></Declaration>
     </Method>
     <Method Name="m_MC_MoveRelative" Id="{8c32d525-dae6-404f-8c21-d0ecf69db7d8}" FolderPath="Methods\">
       <Declaration><![CDATA[METHOD PUBLIC m_MC_MoveRelative : BOOL
 VAR_INPUT
-	bExecute : BOOL;
-	fDistance : LREAL; 
-	fVelocity : LREAL; 
-	fAcceleration : LREAL; 
-	fDeceleration : LREAL; 
-	fJerk : LREAL;
-	eBufferMode : TC2_MC2.MC_BufferMode;
+	i_bExecute : BOOL;
+	i_fDistance : LREAL; 
+	i_fVelocity : LREAL; 
+	i_fAcceleration : LREAL; 
+	i_fDeceleration : LREAL; 
+	i_fJerk : LREAL;
+	i_eBufferMode : TC2_MC2.MC_BufferMode;
 END_VAR]]></Declaration>
+    </Method>
+    <Method Name="m_MC_MoveVelocity" Id="{bb77beb0-dd2a-43e9-b90c-0bd0f205e99e}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PUBLIC m_MC_MoveVelocity : BOOL
+VAR_INPUT
+	i_bExecute : BOOL;
+	i_fVelocity : LREAL; 
+	i_fAcceleration : LREAL; 
+	i_fDeceleration : LREAL; 
+	i_fJerk : LREAL;
+	i_eDirection : TC2_MC2.MC_Direction;
+	i_eBufferMode : TC2_MC2.MC_BufferMode;
+END_VAR
+]]></Declaration>
     </Method>
     <Method Name="m_MC_Power" Id="{0fa7fc5a-e9ef-41b8-94ec-d620e831bbe1}" FolderPath="Methods\">
       <Declaration><![CDATA[METHOD PUBLIC m_MC_Power : BOOL
 VAR_INPUT
-	bEnable : BOOL;
-	bEnablePositive : BOOL;
-	bEnableNegative : BOOL;
+	i_bEnable : BOOL;
+	i_bEnablePositive : BOOL;
+	i_bEnableNegative : BOOL;
+	i_fOverride : LREAL;
+	i_eBufferMode : TC2_MC2.MC_BufferMode;
 END_VAR
 ]]></Declaration>
     </Method>
     <Method Name="m_MC_Reset" Id="{f8a0aa16-d029-4682-bf0e-fceb114677a5}" FolderPath="Methods\">
       <Declaration><![CDATA[METHOD PUBLIC m_MC_Reset : BOOL
 VAR_INPUT
-	bExecute : BOOL;
+	i_bExecute : BOOL;
 END_VAR]]></Declaration>
     </Method>
     <Method Name="m_MC_Stop" Id="{2c1561ec-a0ad-409b-b02c-80f4407ac3dd}" FolderPath="Methods\">
       <Declaration><![CDATA[METHOD PUBLIC m_MC_Stop : BOOL
 VAR_INPUT
-	bExecute : BOOL;
-	fPosition : REAL;
-	eBufferMode : TC2_MC2.MC_BufferMode;
+	i_bExecute : BOOL;
+	i_fDeceleration : LREAL;
+	i_fJerk : LREAL;
 END_VAR
 ]]></Declaration>
     </Method>
@@ -115,6 +130,12 @@ END_VAR
       <Declaration><![CDATA[PROPERTY PUBLIC p_bHomed : BOOL
 ]]></Declaration>
       <Get Name="Get" Id="{4baf33d0-2398-4a9b-ae43-ac9ad9060443}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Property Name="p_bInVelocity" Id="{ee3b304f-5d90-4a61-a94b-e44aee0fe5c7}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bInVelocity : BOOL]]></Declaration>
+      <Get Name="Get" Id="{36248de2-abb7-4409-b59f-40f36a999bed}">
         <Declaration><![CDATA[]]></Declaration>
       </Get>
     </Property>

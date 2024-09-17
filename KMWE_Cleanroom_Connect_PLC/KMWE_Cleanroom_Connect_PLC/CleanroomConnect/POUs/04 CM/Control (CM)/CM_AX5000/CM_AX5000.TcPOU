@@ -13,9 +13,11 @@ VAR
 	fbReset : Tc2_MC2.MC_Reset;
 	fbHome : Tc2_MC2.MC_Home;
 	fbJog : Tc2_MC2.MC_Jog;
+	fbMoveVelocity : Tc2_MC2.MC_MoveVelocity;
 	fbMoveAbsolute : Tc2_MC2.MC_MoveAbsolute;
 	fbMoveRelative : Tc2_MC2.MC_MoveRelative;
-	fbStop : Tc2_MC2.MC_Stop;	
+	fbStop : Tc2_MC2.MC_Stop;
+	fbWriteParamter : Tc2_MC2.MC_WriteParameter;
 
 	// Inputs
 	I_bDetReferenceSwitch AT %I* : BOOL; //Reference-/home switch
@@ -27,9 +29,11 @@ VAR
 	s_bDone : BOOL; 
 	s_bBusy : BOOL; 
 	s_bActive : BOOL; 
-	s_bCommandAborted : BOOL; 
+	s_bCommandAborted : BOOL;
+	s_bInVelocity : BOOL; 
 	s_bError : BOOL; 
 	s_nErrorID : UDINT;
+	
 	
 	// Requests
 	{warning '#TODO: Chcek / update during develiping'}
@@ -108,7 +112,7 @@ END_VAR
         <ST><![CDATA[
 fbHome(
 	Axis := i_refAxis,
-	Execute := i_bExecute,
+	Execute := i_bExecute AND NOT(fbHome.Done OR fbHome.Busy OR fbHome.Error),
 	Position := i_fPosition,
 	HomingMode := i_eHomingMode,
 	BufferMode := i_eBufferMode,
@@ -143,8 +147,8 @@ END_VAR
         <ST><![CDATA[
 fbJog(
 	Axis := i_refAxis,
-	JogForward := i_bJogForward,
-	JogBackwards := i_bJogBackward,
+	JogForward := i_bJogForward AND NOT(fbJog.Busy OR fbJog.Error),
+	JogBackwards := i_bJogBackward AND NOT(fbJog.Busy OR fbJog.Error),
 	Mode := i_eJogMode,
 	Position := i_fPosition,
 	Velocity := i_fVelocity,
@@ -158,7 +162,7 @@ fbJog(
 	Error => s_bError,
 	ErrorID => s_nErrorID);
 	
-m_MC_Home := s_bDone;
+m_MC_Jog := s_bDone;
 ]]></ST>
       </Implementation>
     </Method>
@@ -178,7 +182,7 @@ END_VAR
         <ST><![CDATA[
 fbMoveAbsolute(
 	Axis := i_refAxis,
-	Execute := i_bExecute, 
+	Execute := i_bExecute AND NOT(fbMoveAbsolute.Done OR fbMoveAbsolute.Busy OR fbMoveAbsolute.Error), 
 	Position := i_fPosition,
 	Velocity := i_fVelocity,
 	Acceleration := i_fAcceleration,
@@ -193,7 +197,7 @@ fbMoveAbsolute(
 	Error => s_bError,
 	ErrorID => s_nErrorID);
 	
-m_MC_Home := s_bDone;
+m_MC_MoveAbsolute := s_bDone;
 ]]></ST>
       </Implementation>
     </Method>
@@ -212,7 +216,7 @@ END_VAR]]></Declaration>
         <ST><![CDATA[
 fbMoveRelative(
 	Axis := i_refAxis,
-	Execute := i_bExecute,
+	Execute := i_bExecute AND NOT(fbMoveRelative.Done OR fbMoveRelative.Busy OR fbMoveRelative.Error),
 	Distance := i_fDistance,
 	Velocity := i_fVelocity,
 	Acceleration := i_fAcceleration,
@@ -227,8 +231,42 @@ fbMoveRelative(
 	Error => s_bError,
 	ErrorID => s_nErrorID);
 	
-m_MC_Home := s_bDone;
+m_MC_MoveRelative := s_bDone;
 ]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_MC_MoveVelocity" Id="{03a3c1b8-6ef6-4f3e-9a88-25dabb25696f}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PUBLIC m_MC_MoveVelocity : BOOL
+VAR_INPUT
+	i_bExecute : BOOL;
+	i_fVelocity : LREAL; 
+	i_fAcceleration : LREAL; 
+	i_fDeceleration : LREAL; 
+	i_fJerk : LREAL;
+	i_eDirection : TC2_MC2.MC_Direction;
+	i_eBufferMode : TC2_MC2.MC_BufferMode;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+fbMoveVelocity(
+	Axis := i_refAxis,
+	Execute := i_bExecute AND NOT(fbMoveVelocity.InVelocity OR fbMoveVelocity.Busy OR fbMoveVelocity.Error),
+	Velocity := i_fVelocity,
+	Acceleration := i_fAcceleration,
+	Deceleration := i_fDeceleration,
+	Jerk := i_fJerk,
+	Direction := i_eDirection, 
+	BufferMode := i_eBufferMode,
+	Options := ,
+	InVelocity => s_bInVelocity,
+	Busy => s_bBusy,
+	Active => s_bActive,
+	CommandAborted => s_bCommandAborted,
+	Error => s_bError,
+	ErrorID => s_nErrorID);
+	
+m_MC_MoveVelocity := s_bInVelocity;]]></ST>
       </Implementation>
     </Method>
     <Method Name="m_MC_Power" Id="{fd1fc676-b701-4a26-938f-ef477da725d4}" FolderPath="Methods\">
@@ -257,7 +295,7 @@ fbPower(
 	Error => s_bError,
 	ErrorID => s_nErrorID);
 
-m_MC_Home := s_bDone;
+m_MC_Power := s_bDone;
 	]]></ST>
       </Implementation>
     </Method>
@@ -276,7 +314,7 @@ fbReset(
 	Error => s_bError,
 	ErrorID => s_nErrorID);
 
-m_MC_Home := s_bDone;
+m_MC_Reset := s_bDone;
 ]]></ST>
       </Implementation>
     </Method>
@@ -292,7 +330,7 @@ END_VAR
         <ST><![CDATA[
 fbStop(
 	Axis := i_refAxis,
-	Execute := i_bExecute,
+	Execute := i_bExecute AND NOT(fbStop.Busy OR fbStop.Error),
 	Deceleration := i_fDeceleration,
 	Jerk := i_fJerk,
 	Options := ,
@@ -303,8 +341,34 @@ fbStop(
 	Error => s_bError,
 	ErrorID => s_nErrorID);
 
+m_MC_Stop := s_bDone;
+	]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_MC_WriteParameter" Id="{bd735f20-59c2-4742-93e6-7fe0c71a0a69}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PUBLIC m_MC_WriteParameter : BOOL
+VAR_INPUT
+	i_bExecute : BOOL;
+	i_nParameterNumber : INT;
+	i_fValue : LREAL;
+	
+	i_fDeceleration : LREAL;
+	i_fJerk : LREAL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+fbWriteParamter(
+	Axis := i_refAxis,
+	Execute := i_bExecute,
+	ParameterNumber := i_nParameterNumber,
+	Value := i_fValue,
+	Done => s_bDone,
+	Busy => s_bBusy,
+	Error => s_bError,
+	ErrorID => s_nErrorID);
 
-m_MC_Home := s_bDone;
+m_MC_WriteParameter := s_bDone;
 	]]></ST>
       </Implementation>
     </Method>
@@ -337,7 +401,7 @@ p_bBusy := s_bBusy;
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bCommandAborted := s_bCommandAborted
+p_bCommandAborted := s_bCommandAborted;
 ]]></ST>
         </Implementation>
       </Get>
@@ -348,7 +412,7 @@ p_bCommandAborted := s_bCommandAborted
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bDone := s_bDone
+p_bDone := s_bDone;
 ]]></ST>
         </Implementation>
       </Get>
@@ -373,6 +437,17 @@ p_bError := s_bError;
         <Implementation>
           <ST><![CDATA[
 p_bHomed := i_refAxis.Status.Homed;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bInVelocity" Id="{ad6f06b2-9004-44cf-b2f5-69658322b253}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bInVelocity : BOOL]]></Declaration>
+      <Get Name="Get" Id="{74cf3db6-e8a3-4deb-a51f-3d6592feea66}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bInVelocity := s_bInVelocity;
 ]]></ST>
         </Implementation>
       </Get>
@@ -456,6 +531,13 @@ p_nErrorID := s_nErrorID;
       <LineId Id="222" Count="1" />
       <LineId Id="28" Count="0" />
     </LineIds>
+    <LineIds Name="CM_AX5000.m_MC_MoveVelocity">
+      <LineId Id="15" Count="0" />
+      <LineId Id="36" Count="14" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="17" Count="0" />
+    </LineIds>
     <LineIds Name="CM_AX5000.m_MC_Power">
       <LineId Id="130" Count="0" />
       <LineId Id="117" Count="10" />
@@ -475,7 +557,14 @@ p_nErrorID := s_nErrorID;
     <LineIds Name="CM_AX5000.m_MC_Stop">
       <LineId Id="11" Count="11" />
       <LineId Id="8" Count="0" />
-      <LineId Id="43" Count="0" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="44" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_AX5000.m_MC_WriteParameter">
+      <LineId Id="58" Count="0" />
+      <LineId Id="60" Count="7" />
+      <LineId Id="59" Count="0" />
       <LineId Id="45" Count="0" />
       <LineId Id="42" Count="0" />
       <LineId Id="44" Count="0" />
@@ -506,6 +595,11 @@ p_nErrorID := s_nErrorID;
       <LineId Id="4" Count="0" />
     </LineIds>
     <LineIds Name="CM_AX5000.p_bHomed.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_AX5000.p_bInVelocity.Get">
       <LineId Id="5" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="6" Count="0" />

@@ -1,0 +1,357 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="NC_Test" Id="{576cff2f-be9c-4356-b089-a8cf0a77fdc6}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK NC_Test
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+END_VAR
+VAR
+	axis : AXIS_REF;	
+	
+	s_arr_bTest : ARRAY[0..15] OF BOOL;
+	
+	s_fOverride : LREAL := 100.0; 
+	s_fTargetPos : LREAL;
+	
+	s_eDirection : Tc2_MC2.MC_Direction;
+	
+//	PlcToNc AT %I* : PLCTONC_AXIS_REF;
+//	NcToPlc AT %Q* : NCTOPLC_AXIS_REF;
+
+	s_cmLift : CM_AX5000;
+	s_cmTransportUnit : CM_AX5000;
+	s_bReqEnable : BOOL; 
+	s_eCtrlMode : E_CtrlMode; 
+	s_bCmdReset : BOOL;
+	
+	stSettings : ST_SettingsTransportLift;
+	s_nProfile : UINT;
+	s_eProfileLift : UINT;
+	s_bMoveTest : BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[s_cmLift(
+	i_bReqEnable := s_bReqEnable, 
+	i_eCtrlMode := s_eCtrlMode, 
+	i_bCmdReset := s_bCmdReset, 
+	i_sCmName := 'Lift', 
+	i_refAxis := axis, 
+	i_bIclkForward := FALSE, 
+	i_bIclkBackward := FALSE);
+
+	s_cmLift.m_MC_Reset(
+		i_bExecute := s_arr_bTest[0]);
+
+IF s_arr_bTest[15] THEN		
+	s_cmLift.m_MC_Power(
+		i_bEnable := s_arr_bTest[1],
+		i_bEnablePositive := TRUE AND NOT(s_arr_bTest[10]),
+		i_bEnableNegative := TRUE AND NOT(s_arr_bTest[11]),
+		i_fOverride := s_fOverride,
+		i_eBufferMode := Tc2_MC2.MC_BufferMode.MC_Aborting);
+END_IF
+		
+IF s_arr_bTest[2] THEN
+	IF s_cmLift.m_MC_Home(
+		i_bExecute := TRUE,
+		i_fPosition := 0.0,
+		i_eHomingMode := Tc2_MC2.MC_HomingMode.MC_DefaultHoming,
+		i_eBufferMode := Tc2_MC2.MC_BufferMode.MC_Aborting)
+	THEN
+		s_arr_bTest[2] := FALSE;
+	END_IF
+END_IF	
+	
+IF NOT(s_arr_bTest[4]) THEN
+	s_eDirection := Tc2_MC2.MC_Direction.MC_Positive_Direction;
+ELSE
+	s_eDirection := Tc2_MC2.MC_Direction.MC_Negative_Direction;
+END_IF
+
+IF s_arr_bTest[3] THEN
+	IF s_cmLift.m_MC_MoveVelocity(
+		i_bExecute := TRUE,
+		i_fVelocity := 10.0,
+		i_fAcceleration := 100.0,
+		i_fDeceleration := 100.0 ,
+		i_fJerk := 1000.0,
+		i_eDirection := s_eDirection, 
+		i_eBufferMode := Tc2_MC2.MC_BufferMode.MC_Aborting)
+	THEN
+		s_arr_bTest[3] := FALSE;
+	END_IF
+END_IF	
+(*
+s_cmLift.m_MC_Jog(
+	i_bExecute := s_arr_bTest[3],
+	i_bJogForward := s_arr_bTest[3] AND NOT s_arr_bTest[4],
+	i_bJogBackward := s_arr_bTest[3] AND s_arr_bTest[4],
+	i_eJogMode := Tc2_MC2.E_JogMode.MC_JOGMODE_STANDARD_SLOW,
+	i_fPosition := 0.0,
+	i_fVelocity := 100.0,
+	i_fAcceleration := 1000.0,
+	i_fDeceleration := 1000.0,
+	i_fJerk := 10000.0);
+*)		
+IF s_arr_bTest[5] THEN
+	IF s_cmLift.m_MC_MoveAbsolute(
+		i_bExecute := TRUE,
+		i_fPosition := s_fTargetPos,
+		i_fVelocity := 100.0,
+		i_fAcceleration := 1000.0,
+		i_fDeceleration := 1000.0,
+		i_fJerk := 10000.0,
+		i_eBufferMode := Tc2_MC2.MC_BufferMode.MC_Aborting)
+	THEN
+		s_arr_bTest[5] := FALSE;
+	END_IF
+END_IF		
+
+IF s_arr_bTest[6] THEN	
+	IF s_cmLift.m_MC_MoveRelative(
+		i_bExecute := TRUE,
+		i_fDistance := 500.0,
+		i_fVelocity := 100.0,
+		i_fAcceleration := 1000.0,
+		i_fDeceleration := 1000.0,
+		i_fJerk := 10000.0,
+		i_eBufferMode := Tc2_MC2.MC_BufferMode.MC_Aborting)
+	THEN
+		s_arr_bTest[6] := FALSE;
+	END_IF
+END_IF	
+		
+IF s_arr_bTest[7] THEN
+	IF s_cmLift.m_MC_Stop(
+		i_bExecute := TRUE,
+		i_fDeceleration := 10.0,
+		i_fJerk := 10.0)
+	THEN
+		s_arr_bTest[7] := FALSE;
+	END_IF
+END_IF
+
+///////
+
+//Inint
+	//0 fLiftPositionIdle : LREAL := 50.0; //mm
+	//1 fLiftPositionPrePickTrolleyInTB : LREAL := 300.0; //mm 
+	//2 fLiftPositionPickTrolleyInTB : LREAL := 325.0; //mm
+	//3 fLiftPositionRaiseTrolleyInTB : LREAL := 350.0; //mm
+	//4 fLiftPositionPrePlaceTrolleyInCabin : LREAL := 125.0; //mm
+	//5 fLiftPositionPlaceTrolleyInCabin : LREAL := 100.0; //mm
+	//6 fLiftPositionPrePickTrolleyInCabin : LREAL := 100.0; //mm
+	//7 fLiftPositionPickTrolleyInCabin : LREAL := 125.0; //mm
+	//8 fLiftPositionRaiseTrolleyInCabin : LREAL := 350.0; //mm
+	//9 fLiftPositionPrePlaceTrolleyInTB : LREAL := 325.0; //mm
+	//10 fLiftPositionPlaceTrolleyInTB : LREAL := 300.0; //mm
+
+//Manual-Jogging
+stSettings.stLiftSpeedProfileJogging.fVelocity			:= 25.0; //mm/s
+stSettings.stLiftSpeedProfileJogging.fAcceleration		:= 25.0; //mm/s^2
+stSettings.stLiftSpeedProfileJogging.fDeceleration		:= 25.0; //mm/s^2
+stSettings.stLiftSpeedProfileJogging.fJerk				:= 250.0; //mm/s^3
+
+//Manual-Positioning
+stSettings.stLiftSpeedProfilePositioning.fVelocity		:= 25.0; //mm/s
+stSettings.stLiftSpeedProfilePositioning.fAcceleration	:= 25.0; //mm/s^2
+stSettings.stLiftSpeedProfilePositioning.fDeceleration	:= 25.0; //mm/s^2
+stSettings.stLiftSpeedProfilePositioning.fJerk			:= 250.0; //mm/s^3
+
+//Automatic-Positioning Lift
+stSettings.arr_PositioningProfileLift[0].sName				:= 'Idle';
+stSettings.arr_PositioningProfileLift[0].fPosition 			:= 50.0; //[mm]
+stSettings.arr_PositioningProfileLift[0].fVelocity 			:= 100.0; //[mm/s] 
+stSettings.arr_PositioningProfileLift[0].fAcceleration 		:= 10.0;  //[mm/s^2]
+stSettings.arr_PositioningProfileLift[0].fDeceleration 		:= 10.0; //[mm/s^2]
+stSettings.arr_PositioningProfileLift[0].fJerk 				:= 100.0; //[mm/s^3]
+
+stSettings.arr_PositioningProfileLift[1].sName				:= 'PrePickTrolleyInTB';
+stSettings.arr_PositioningProfileLift[1].fPosition 			:= 300.0; //[mm]
+stSettings.arr_PositioningProfileLift[1].fVelocity 			:= 100.0; //[mm/s] 
+stSettings.arr_PositioningProfileLift[1].fAcceleration 		:= 10.0;  //[mm/s^2]
+stSettings.arr_PositioningProfileLift[1].fDeceleration 		:= 10.0; //[mm/s^2]
+stSettings.arr_PositioningProfileLift[1].fJerk 				:= 100.0; //[mm/s^3]
+
+stSettings.arr_PositioningProfileLift[2].sName				:= 'PickTrolleyInTB';
+stSettings.arr_PositioningProfileLift[2].fPosition 			:= 325.0; //[mm]
+stSettings.arr_PositioningProfileLift[2].fVelocity 			:= 10.0; //[mm/s] 
+stSettings.arr_PositioningProfileLift[2].fAcceleration 		:= 10.0;  //[mm/s^2]
+stSettings.arr_PositioningProfileLift[2].fDeceleration 		:= 10.0; //[mm/s^2]
+stSettings.arr_PositioningProfileLift[2].fJerk 				:= 100.0; //[mm/s^3]
+
+stSettings.arr_PositioningProfileLift[3].sName				:= 'RaiseTrolleyInTB';
+stSettings.arr_PositioningProfileLift[3].fPosition 			:= 350.0; //[mm]
+stSettings.arr_PositioningProfileLift[3].fVelocity 			:= 10.0; //[mm/s] 
+stSettings.arr_PositioningProfileLift[3].fAcceleration 		:= 10.0;  //[mm/s^2]
+stSettings.arr_PositioningProfileLift[3].fDeceleration 		:= 10.0; //[mm/s^2]
+stSettings.arr_PositioningProfileLift[3].fJerk 				:= 100.0; //[mm/s^3]
+
+stSettings.arr_PositioningProfileLift[4].sName				:= 'PrePlaceTrolleyInCabin';
+stSettings.arr_PositioningProfileLift[4].fPosition 			:= 125.0; //[mm]
+stSettings.arr_PositioningProfileLift[4].fVelocity 			:= 100.0; //[mm/s] 
+stSettings.arr_PositioningProfileLift[4].fAcceleration 		:= 10.0;  //[mm/s^2]
+stSettings.arr_PositioningProfileLift[4].fDeceleration 		:= 10.0; //[mm/s^2]
+stSettings.arr_PositioningProfileLift[4].fJerk 				:= 100.0; //[mm/s^3]
+
+stSettings.arr_PositioningProfileLift[5].sName				:= 'PlaceTrolleyInCabin';
+stSettings.arr_PositioningProfileLift[5].fPosition 			:= 100.0; //[mm]
+stSettings.arr_PositioningProfileLift[5].fVelocity 			:= 10.0; //[mm/s] 
+stSettings.arr_PositioningProfileLift[5].fAcceleration 		:= 10.0;  //[mm/s^2]
+stSettings.arr_PositioningProfileLift[5].fDeceleration 		:= 10.0; //[mm/s^2]
+stSettings.arr_PositioningProfileLift[5].fJerk 				:= 100.0; //[mm/s^3]
+
+stSettings.arr_PositioningProfileLift[6].sName				:= 'PrePickTrolleyInCabin';
+stSettings.arr_PositioningProfileLift[6].fPosition 			:= 100.0; //[mm]
+stSettings.arr_PositioningProfileLift[6].fVelocity 			:= 10.0; //[mm/s] 
+stSettings.arr_PositioningProfileLift[6].fAcceleration 		:= 10.0;  //[mm/s^2]
+stSettings.arr_PositioningProfileLift[6].fDeceleration 		:= 10.0; //[mm/s^2]
+stSettings.arr_PositioningProfileLift[6].fJerk 				:= 100.0; //[mm/s^3]
+
+stSettings.arr_PositioningProfileLift[7].sName				:= 'PickTrolleyInCabin';
+stSettings.arr_PositioningProfileLift[7].fPosition 			:= 125.0; //[mm]
+stSettings.arr_PositioningProfileLift[7].fVelocity 			:= 10.0; //[mm/s] 
+stSettings.arr_PositioningProfileLift[7].fAcceleration 		:= 10.0;  //[mm/s^2]
+stSettings.arr_PositioningProfileLift[7].fDeceleration 		:= 10.0; //[mm/s^2]
+stSettings.arr_PositioningProfileLift[7].fJerk 				:= 100.0; //[mm/s^3]
+
+stSettings.arr_PositioningProfileLift[8].sName				:= 'RaiseTrolleyInCabin';
+stSettings.arr_PositioningProfileLift[8].fPosition 			:= 350.0; //[mm]
+stSettings.arr_PositioningProfileLift[8].fVelocity 			:= 100.0; //[mm/s] 
+stSettings.arr_PositioningProfileLift[8].fAcceleration 		:= 10.0;  //[mm/s^2]
+stSettings.arr_PositioningProfileLift[8].fDeceleration 		:= 10.0; //[mm/s^2]
+stSettings.arr_PositioningProfileLift[8].fJerk 				:= 100.0; //[mm/s^3]
+
+stSettings.arr_PositioningProfileLift[9].sName				:= 'PrePlaceTrolleyInTB';
+stSettings.arr_PositioningProfileLift[9].fPosition 			:= 325.0; //[mm]
+stSettings.arr_PositioningProfileLift[9].fVelocity 			:= 10.0; //[mm/s] 
+stSettings.arr_PositioningProfileLift[9].fAcceleration 		:= 10.0;  //[mm/s^2]
+stSettings.arr_PositioningProfileLift[9].fDeceleration 		:= 10.0; //[mm/s^2]
+stSettings.arr_PositioningProfileLift[9].fJerk 				:= 100.0; //[mm/s^3]
+
+stSettings.arr_PositioningProfileLift[10].sName				:= 'PlaceTrolleyInTB';
+stSettings.arr_PositioningProfileLift[10].fPosition 		:= 300.0; //[mm]
+stSettings.arr_PositioningProfileLift[10].fVelocity 		:= 10.0; //[mm/s] 
+stSettings.arr_PositioningProfileLift[10].fAcceleration 	:= 10.0;  //[mm/s^2]
+stSettings.arr_PositioningProfileLift[10].fDeceleration 	:= 10.0; //[mm/s^2]
+stSettings.arr_PositioningProfileLift[10].fJerk 			:= 100.0; //[mm/s^3]
+
+//Automatic-Positioning Transport
+stSettings.arr_PositioningProfileTransport[0].sName			:= 'Idle';
+stSettings.arr_PositioningProfileTransport[0].fPosition 	:= 50.0; //[mm]
+stSettings.arr_PositioningProfileTransport[0].fVelocity 	:= 10.0; //[mm/s] 
+stSettings.arr_PositioningProfileTransport[0].fAcceleration	:= 10.0;  //[mm/s^2]
+stSettings.arr_PositioningProfileTransport[0].fDeceleration	:= 10.0; //[mm/s^2]
+stSettings.arr_PositioningProfileTransport[0].fJerk 		:= 100.0; //[mm/s^3]
+
+stSettings.arr_PositioningProfileTransport[1].sName			:= 'PrePickTrolleyInTB';
+stSettings.arr_PositioningProfileTransport[1].fPosition 	:= 400.0; //[mm]
+stSettings.arr_PositioningProfileTransport[1].fVelocity 	:= 100.0; //[mm/s] 
+stSettings.arr_PositioningProfileTransport[1].fAcceleration := 10.0;  //[mm/s^2]
+stSettings.arr_PositioningProfileTransport[1].fDeceleration := 10.0; //[mm/s^2]
+stSettings.arr_PositioningProfileTransport[1].fJerk 		:= 100.0; //[mm/s^3]
+
+stSettings.arr_PositioningProfileTransport[2].sName			:= 'PickTrolleyInTB';
+stSettings.arr_PositioningProfileTransport[2].fPosition 	:= 425.0; //[mm]
+stSettings.arr_PositioningProfileTransport[2].fVelocity 	:= 10.0; //[mm/s] 
+stSettings.arr_PositioningProfileTransport[2].fAcceleration := 10.0;  //[mm/s^2]
+stSettings.arr_PositioningProfileTransport[2].fDeceleration := 10.0; //[mm/s^2]
+stSettings.arr_PositioningProfileTransport[2].fJerk 		:= 100.0; //[mm/s^3]
+
+stSettings.arr_PositioningProfileTransport[3].sName			:= 'PlaceTrolleyInCabin';
+stSettings.arr_PositioningProfileTransport[3].fPosition 	:= 50.0; //[mm]
+stSettings.arr_PositioningProfileTransport[3].fVelocity 	:= 100.0; //[mm/s] 
+stSettings.arr_PositioningProfileTransport[3].fAcceleration := 10.0;  //[mm/s^2]
+stSettings.arr_PositioningProfileTransport[3].fDeceleration := 10.0; //[mm/s^2]
+stSettings.arr_PositioningProfileTransport[3].fJerk 		:= 100.0; //[mm/s^3]
+
+stSettings.arr_PositioningProfileTransport[4].sName			:= 'PrePlaceTrolleyInTB';
+stSettings.arr_PositioningProfileTransport[4].fPosition 	:= 400.0; //[mm]
+stSettings.arr_PositioningProfileTransport[4].fVelocity 	:= 100.0; //[mm/s] 
+stSettings.arr_PositioningProfileTransport[4].fAcceleration := 10.0;  //[mm/s^2]
+stSettings.arr_PositioningProfileTransport[4].fDeceleration := 10.0; //[mm/s^2]
+stSettings.arr_PositioningProfileTransport[4].fJerk 		:= 100.0; //[mm/s^3]
+
+stSettings.arr_PositioningProfileTransport[5].sName			:= 'PlceTrolleyInTB';
+stSettings.arr_PositioningProfileTransport[5].fPosition 	:= 425.0; //[mm]
+stSettings.arr_PositioningProfileTransport[5].fVelocity 	:= 10.0; //[mm/s] 
+stSettings.arr_PositioningProfileTransport[5].fAcceleration := 10.0;  //[mm/s^2]
+stSettings.arr_PositioningProfileTransport[5].fDeceleration := 10.0; //[mm/s^2]
+stSettings.arr_PositioningProfileTransport[5].fJerk 		:= 100.0; //[mm/s^3]
+
+
+//Limit
+IF s_nProfile < 0 THEN s_nProfile := 0; ELSIF s_nProfile > 9 THEN s_nProfile := 0; END_IF
+
+IF s_bMoveTest THEN
+	IF s_cmLift.m_MC_MoveAbsolute(
+		i_bExecute := TRUE,
+		i_fPosition := stSettings.arr_PositioningProfileLift[s_nProfile].fPosition,
+		i_fVelocity := stSettings.arr_PositioningProfileLift[s_nProfile].fVelocity,
+		i_fAcceleration := stSettings.arr_PositioningProfileLift[s_nProfile].fAcceleration,
+		i_fDeceleration := stSettings.arr_PositioningProfileLift[s_nProfile].fDeceleration,
+		i_fJerk := stSettings.arr_PositioningProfileLift[s_nProfile].fJerk,
+		i_eBufferMode := Tc2_MC2.MC_BufferMode.MC_Aborting)
+	THEN	
+		s_bMoveTest := FALSE;
+		s_nProfile := s_nProfile + 1;
+	END_IF
+END_IF	]]></ST>
+    </Implementation>
+    <LineIds Name="NC_Test">
+      <LineId Id="400" Count="103" />
+      <LineId Id="517" Count="9" />
+      <LineId Id="515" Count="0" />
+      <LineId Id="633" Count="0" />
+      <LineId Id="504" Count="0" />
+      <LineId Id="635" Count="3" />
+      <LineId Id="644" Count="0" />
+      <LineId Id="640" Count="3" />
+      <LineId Id="639" Count="0" />
+      <LineId Id="645" Count="0" />
+      <LineId Id="634" Count="0" />
+      <LineId Id="505" Count="5" />
+      <LineId Id="528" Count="5" />
+      <LineId Id="527" Count="0" />
+      <LineId Id="535" Count="5" />
+      <LineId Id="534" Count="0" />
+      <LineId Id="542" Count="5" />
+      <LineId Id="541" Count="0" />
+      <LineId Id="549" Count="5" />
+      <LineId Id="548" Count="0" />
+      <LineId Id="556" Count="5" />
+      <LineId Id="555" Count="0" />
+      <LineId Id="563" Count="5" />
+      <LineId Id="562" Count="0" />
+      <LineId Id="570" Count="5" />
+      <LineId Id="569" Count="0" />
+      <LineId Id="577" Count="5" />
+      <LineId Id="576" Count="0" />
+      <LineId Id="584" Count="5" />
+      <LineId Id="583" Count="0" />
+      <LineId Id="604" Count="5" />
+      <LineId Id="603" Count="0" />
+      <LineId Id="646" Count="0" />
+      <LineId Id="648" Count="20" />
+      <LineId Id="684" Count="5" />
+      <LineId Id="683" Count="0" />
+      <LineId Id="670" Count="12" />
+      <LineId Id="669" Count="0" />
+      <LineId Id="647" Count="0" />
+      <LineId Id="631" Count="0" />
+      <LineId Id="628" Count="1" />
+      <LineId Id="622" Count="0" />
+      <LineId Id="514" Count="0" />
+      <LineId Id="624" Count="0" />
+      <LineId Id="611" Count="5" />
+      <LineId Id="383" Count="0" />
+      <LineId Id="626" Count="0" />
+      <LineId Id="618" Count="0" />
+      <LineId Id="627" Count="0" />
+      <LineId Id="625" Count="0" />
+      <LineId Id="617" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

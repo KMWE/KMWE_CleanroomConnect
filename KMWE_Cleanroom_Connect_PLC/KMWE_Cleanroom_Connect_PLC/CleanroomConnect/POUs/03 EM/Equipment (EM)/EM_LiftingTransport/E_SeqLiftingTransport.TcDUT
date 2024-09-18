@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="E_SeqLiftingTransport" Id="{80b13319-0686-43f0-86f0-b90ddb9ba2c6}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'strict'}
+{attribute 'to_string'}
+TYPE E_SeqLiftingTransport :
+(
+	IDLE := 0, //Do Nothing
+	START := 1, //First step executed after reset sequence
+	BUSY := 1000, //Module busy
+	
+	//Home
+	HOME_TRANSPORT,	//Combineren in 1 stap?
+	HOME_LIFT, //Combineren in 1 stap?
+	
+	//Start
+	MOVE_TO_IDLE,
+	
+	//Pick in TB
+	LIFT_PRE_PICK_TROLLEY_IN_TB,
+	TRANSPORT_PRE_PICK_TROLLEY_IN_TB,
+	TRANSPORT_PICK_TROLLEY_IN_TB,
+	LIFT_PICK_TROLLEY_IN_TB,
+	LIFT_RAISE_TROLLEY_IN_TB,
+	
+	//Place in cabin
+	TRANSPORT_PLACE_TROLLEY_IN_CABIN,
+	LIFT_PRE_PLACE_TROLLEY_IN_CABIN,
+	LIFT_PLACE_TROLLEY_IN_CABIN,
+	
+	//Pick in cabin
+	LIFT_PRE_PICK_TROLLEY_IN_CABIN,
+	LIFT_PICK_TROLLEY_IN_CABIN,
+	LIFT_RAISE_TROLLEY_IN_CABIN,
+	
+	//Place in TB
+	TRANSPORT_PRE_PLACE_TROLLEY_IN_TB,
+	TRANSPORT_PLACE_TROLLEY_IN_TB,
+	LIFT_PRE_PLACE_TROLLEY_IN_TB,
+	LIFT_PLACE_TROLLEY_IN_TB,
+	
+	
+	
+	READY := 10000, //Module is ready, only executed once
+	ERROR := 20000 // Module has an error
+);
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

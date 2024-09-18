@@ -333,6 +333,173 @@ GVL_Modules.g_emPalletConveyor.i_stSettings.fSpeedGoToDocking := 50.0; //mm/s
 GVL_Modules.g_emPalletConveyor.i_stSettings.tTimeoutCenteringToCenter := T#3S;
 GVL_Modules.g_emPalletConveyor.i_stSettings.tTimeoutCenteringToIdle := T#3S;
 
+//EM Docking Interface
+_m_AddModule(i_itfModuleBase := GVL_Modules.g_emDockingInterface);
+GVL_Modules.g_emDockingInterface.i_bReqEnable := FALSE;
+GVL_Modules.g_emDockingInterface.i_eCtrlMode := E_CtrlMode.IDLE;
+GVL_Modules.g_emDockingInterface.i_bCmdReset := FALSE;
+GVL_Modules.g_emDockingInterface.i_sEmName  := 'EM Docking Interface';
+
+GVL_Modules.g_emDockingInterface.i_stSettings.tTimeoutDockingClamps := T#5S;
+GVL_Modules.g_emDockingInterface.i_stSettings.tTimeoutUnlockingPins := T#5S;
+GVL_Modules.g_emDockingInterface.i_stSettings.tTimeoutDoorOpener := T#5S;
+GVL_Modules.g_emDockingInterface.i_stSettings.tTimeoutDoorShutter := T#5S;
+
+GVL_Modules.g_emDockingInterface.i_stSettings.tCompressSealDuration := T#3S;
+GVL_Modules.g_emDockingInterface.i_stSettings.tDelayCloseDoorShutterReleasingPins := T#3S;
+GVL_Modules.g_emDockingInterface.i_stSettings.tDelayReleaseUnlockingPins := T#3S;
+GVL_Modules.g_emDockingInterface.i_stSettings.tDelayOpenDoorShutter := T#3S;
+GVL_Modules.g_emDockingInterface.i_stSettings.tDelayOpenDoorOpener := T#3S;
+GVL_Modules.g_emDockingInterface.i_stSettings.tDelayCloseDoorShutter := T#3S;
+GVL_Modules.g_emDockingInterface.i_stSettings.tDelayLockUnlockingPins := T#3S;
+
+GVL_Modules.g_emDockingInterface.i_stSettings.bOpenClampsAfterClosingTimeout := FALSE; 
+
+//EM Lifting Transport
+_m_AddModule(i_itfModuleBase := GVL_Modules.g_emLiftingTransport);
+
+GVL_Modules.g_emLiftingTransport.i_bReqEnable := FALSE;
+GVL_Modules.g_emLiftingTransport.i_eCtrlMode := E_CtrlMode.IDLE;
+GVL_Modules.g_emLiftingTransport.i_bCmdReset := FALSE;
+GVL_Modules.g_emLiftingTransport.i_sEmName := 'EM Lifting Transport';
+
+//Manual-Jogging
+GVL_Modules.g_emLiftingTransport.i_stSettings.stLiftSpeedProfileJogging.fVelocity				:= 25.0; //mm/s
+GVL_Modules.g_emLiftingTransport.i_stSettings.stLiftSpeedProfileJogging.fAcceleration			:= 25.0; //mm/s^2
+GVL_Modules.g_emLiftingTransport.i_stSettings.stLiftSpeedProfileJogging.fDeceleration			:= 25.0; //mm/s^2
+GVL_Modules.g_emLiftingTransport.i_stSettings.stLiftSpeedProfileJogging.fJerk					:= 250.0; //mm/s^3
+
+//Manual-Positioning
+GVL_Modules.g_emLiftingTransport.i_stSettings.stLiftSpeedProfilePositioning.fVelocity			:= 25.0; //mm/s
+GVL_Modules.g_emLiftingTransport.i_stSettings.stLiftSpeedProfilePositioning.fAcceleration		:= 25.0; //mm/s^2
+GVL_Modules.g_emLiftingTransport.i_stSettings.stLiftSpeedProfilePositioning.fDeceleration		:= 25.0; //mm/s^2
+GVL_Modules.g_emLiftingTransport.i_stSettings.stLiftSpeedProfilePositioning.fJerk				:= 250.0; //mm/s^3
+
+//Automatic-Positioning Lift
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[0].sName				:= 'Idle';
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[0].fPosition 			:= 50.0; //[mm]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[0].fVelocity 			:= 100.0; //[mm/s] 
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[0].fAcceleration 		:= 10.0;  //[mm/s^2]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[0].fDeceleration		:= 10.0; //[mm/s^2]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[0].fJerk 				:= 100.0; //[mm/s^3]
+
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[1].sName				:= 'PrePickTrolleyInTB';
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[1].fPosition 			:= 300.0; //[mm]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[1].fVelocity 			:= 100.0; //[mm/s] 
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[1].fAcceleration 		:= 10.0;  //[mm/s^2]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[1].fDeceleration 		:= 10.0; //[mm/s^2]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[1].fJerk 				:= 100.0; //[mm/s^3]
+
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[2].sName				:= 'PickTrolleyInTB';
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[2].fPosition 			:= 325.0; //[mm]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[2].fVelocity 			:= 10.0; //[mm/s] 
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[2].fAcceleration 		:= 10.0;  //[mm/s^2]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[2].fDeceleration 		:= 10.0; //[mm/s^2]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[2].fJerk 				:= 100.0; //[mm/s^3]
+
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[3].sName				:= 'RaiseTrolleyInTB';
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[3].fPosition 			:= 350.0; //[mm]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[3].fVelocity 			:= 10.0; //[mm/s] 
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[3].fAcceleration 		:= 10.0;  //[mm/s^2]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[3].fDeceleration 		:= 10.0; //[mm/s^2]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[3].fJerk 				:= 100.0; //[mm/s^3]
+
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[4].sName				:= 'PrePlaceTrolleyInCabin';
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[4].fPosition 			:= 125.0; //[mm]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[4].fVelocity 			:= 100.0; //[mm/s] 
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[4].fAcceleration 		:= 10.0;  //[mm/s^2]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[4].fDeceleration 		:= 10.0; //[mm/s^2]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[4].fJerk 				:= 100.0; //[mm/s^3]
+
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[5].sName				:= 'PlaceTrolleyInCabin';
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[5].fPosition 			:= 100.0; //[mm]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[5].fVelocity 			:= 10.0; //[mm/s] 
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[5].fAcceleration 		:= 10.0;  //[mm/s^2]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[5].fDeceleration 		:= 10.0; //[mm/s^2]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[5].fJerk 				:= 100.0; //[mm/s^3]
+
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[6].sName				:= 'PrePickTrolleyInCabin';
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[6].fPosition 			:= 100.0; //[mm]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[6].fVelocity 			:= 10.0; //[mm/s] 
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[6].fAcceleration 		:= 10.0;  //[mm/s^2]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[6].fDeceleration 		:= 10.0; //[mm/s^2]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[6].fJerk 				:= 100.0; //[mm/s^3]
+
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[7].sName				:= 'PickTrolleyInCabin';
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[7].fPosition 			:= 125.0; //[mm]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[7].fVelocity 			:= 10.0; //[mm/s] 
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[7].fAcceleration 		:= 10.0;  //[mm/s^2]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[7].fDeceleration 		:= 10.0; //[mm/s^2]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[7].fJerk 				:= 100.0; //[mm/s^3]
+
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[8].sName				:= 'RaiseTrolleyInCabin';
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[8].fPosition 			:= 350.0; //[mm]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[8].fVelocity 			:= 100.0; //[mm/s] 
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[8].fAcceleration 		:= 10.0;  //[mm/s^2]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[8].fDeceleration 		:= 10.0; //[mm/s^2]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[8].fJerk 				:= 100.0; //[mm/s^3]
+
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[9].sName				:= 'PrePlaceTrolleyInTB';
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[9].fPosition 			:= 325.0; //[mm]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[9].fVelocity 			:= 10.0; //[mm/s] 
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[9].fAcceleration 		:= 10.0;  //[mm/s^2]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[9].fDeceleration 		:= 10.0; //[mm/s^2]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[9].fJerk 				:= 100.0; //[mm/s^3]
+
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[10].sName				:= 'PlaceTrolleyInTB';
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[10].fPosition 			:= 300.0; //[mm]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[10].fVelocity 			:= 10.0; //[mm/s] 
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[10].fAcceleration 		:= 10.0;  //[mm/s^2]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[10].fDeceleration 		:= 10.0; //[mm/s^2]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_LiftPositioningProfile[10].fJerk 				:= 100.0; //[mm/s^3]
+
+//Automatic-Positioning Transport
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[0].sName			:= 'Idle';
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[0].fPosition 		:= 50.0; //[mm]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[0].fVelocity 		:= 10.0; //[mm/s] 
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[0].fAcceleration	:= 10.0;  //[mm/s^2]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[0].fDeceleration	:= 10.0; //[mm/s^2]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[0].fJerk 			:= 100.0; //[mm/s^3]
+
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[1].sName			:= 'PrePickTrolleyInTB';
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[1].fPosition 		:= 400.0; //[mm]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[1].fVelocity 		:= 100.0; //[mm/s] 
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[1].fAcceleration 	:= 10.0;  //[mm/s^2]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[1].fDeceleration 	:= 10.0; //[mm/s^2]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[1].fJerk 			:= 100.0; //[mm/s^3]
+
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[2].sName			:= 'PickTrolleyInTB';
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[2].fPosition 		:= 425.0; //[mm]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[2].fVelocity 		:= 10.0; //[mm/s] 
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[2].fAcceleration 	:= 10.0;  //[mm/s^2]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[2].fDeceleration 	:= 10.0; //[mm/s^2]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[2].fJerk 			:= 100.0; //[mm/s^3]
+
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[3].sName			:= 'PlaceTrolleyInCabin';
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[3].fPosition 		:= 50.0; //[mm]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[3].fVelocity 		:= 100.0; //[mm/s] 
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[3].fAcceleration 	:= 10.0;  //[mm/s^2]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[3].fDeceleration 	:= 10.0; //[mm/s^2]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[3].fJerk 			:= 100.0; //[mm/s^3]
+
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[4].sName			:= 'PrePlaceTrolleyInTB';
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[4].fPosition 		:= 400.0; //[mm]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[4].fVelocity 		:= 100.0; //[mm/s] 
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[4].fAcceleration 	:= 10.0;  //[mm/s^2]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[4].fDeceleration 	:= 10.0; //[mm/s^2]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[4].fJerk 			:= 100.0; //[mm/s^3]
+
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[5].sName			:= 'PlaceTrolleyInTB';
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[5].fPosition 		:= 425.0; //[mm]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[5].fVelocity 		:= 10.0; //[mm/s] 
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[5].fAcceleration	:= 10.0;  //[mm/s^2]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[5].fDeceleration 	:= 10.0; //[mm/s^2]
+GVL_Modules.g_emLiftingTransport.i_stSettings.arr_TransportUnitPositioningProfile[5].fJerk 			:= 100.0; //[mm/s^3]
+
+
+
+
+
 /////
 (*
 _m_AddModule(i_itfModuleBase := GVL_Modules.g_emDockingCabin);
@@ -451,6 +618,18 @@ GVL_Modules.g_emDockingInterface(
 	i_sEmName := 'EM Docking Interface',
 	i_refTB := GVL_Modules.g_objCarrier);	
 
+GVL_Modules.g_emLiftingTransport(
+	i_bReqEnable := bReqEnable,
+	i_eCtrlMode := s_eCtrlMode,
+	i_bIlckLiftUp := FALSE, //TODO
+	i_bIlckLiftDown := FALSE, //TODO
+	i_bIlckTransportExtract := FALSE, //TODO
+	i_bIlckTransportRetract := FALSE, //TODO
+	i_bCmdReset := p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn, //Add temp reset button,
+	i_sEmName := 'EM Lifting Tranport',
+	i_refTB := GVL_Modules.g_objCarrier);
+	
+	
 //??GVL_Modules.g_emDockingCabin(
 //??	i_bReqEnable := TRUE,
 //??	i_eCtrlMode := s_eCtrlMode,
@@ -838,7 +1017,7 @@ GVL_Modules.g_emPalletConveyor.m_CmdTB_ToInfeed();
       <LineId Id="8" Count="0" />
     </LineIds>
     <LineIds Name="UN_CleanroomConnect._m_Init">
-      <LineId Id="812" Count="103" />
+      <LineId Id="1363" Count="270" />
       <LineId Id="78" Count="0" />
     </LineIds>
     <LineIds Name="UN_CleanroomConnect._m_Modules">
@@ -856,7 +1035,15 @@ GVL_Modules.g_emPalletConveyor.m_CmdTB_ToInfeed();
       <LineId Id="553" Count="0" />
       <LineId Id="511" Count="5" />
       <LineId Id="554" Count="0" />
-      <LineId Id="517" Count="11" />
+      <LineId Id="569" Count="0" />
+      <LineId Id="517" Count="0" />
+      <LineId Id="572" Count="2" />
+      <LineId Id="576" Count="2" />
+      <LineId Id="575" Count="0" />
+      <LineId Id="579" Count="1" />
+      <LineId Id="571" Count="0" />
+      <LineId Id="570" Count="0" />
+      <LineId Id="518" Count="10" />
       <LineId Id="536" Count="0" />
       <LineId Id="534" Count="0" />
       <LineId Id="537" Count="1" />

@@ -1796,6 +1796,7 @@ External Setpoint Generation:
 					<Drive Name="Drive" DrvType="5">
 						<DrvPara>
 							<Analog TorqueSetpointScale="10" ScaleFactorActTorque="0.1"/>
+							<TimeComp TaskDelayCycles="1"/>
 						</DrvPara>
 						<Vars VarGrpType="1">
 							<Name>Inputs</Name>
@@ -1888,7 +1889,7 @@ External Setpoint Generation:
 		</Motion>
 		<Plc>
 			<Project GUID="{13F6CD22-9663-4738-8378-3A901949CB98}" Name="CleanroomConnect" PrjFilePath="CleanroomConnect\CleanroomConnect.plcproj" TmcFilePath="CleanroomConnect\CleanroomConnect.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="CleanroomConnect\CleanroomConnect.tmc" TmcHash="{93740B01-D19C-A569-58D6-10675DF4CCCD}">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="CleanroomConnect\CleanroomConnect.tmc" TmcHash="{4B39C43B-859F-7F53-9FA2-2A38795D3D6A}">
 					<Name>CleanroomConnect Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1">
@@ -2063,36 +2064,40 @@ External Setpoint Generation:
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>MAIN.ncTest.axis.NcToPlc</Name>
+							<Name>GVL_Modules.g_emLiftingTransport.axisLift.NcToPlc</Name>
 							<Type GUID="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" Namespace="MC">NCTOPLC_AXIS_REF</Type>
 						</Var>
 						<Var>
-							<Name>MAIN.ncTest.s_cmLift.I_bDetReferenceSwitch</Name>
+							<Name>GVL_Modules.g_emLiftingTransport.axisTransportUnit.NcToPlc</Name>
+							<Type GUID="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" Namespace="MC">NCTOPLC_AXIS_REF</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emLiftingTransport.s_cmLift.I_bDetReferenceSwitch</Name>
 							<Comment><![CDATA[Reference-/home switch]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>MAIN.ncTest.s_cmLift.I_bDetLimitSwitchPositive</Name>
+							<Name>GVL_Modules.g_emLiftingTransport.s_cmLift.I_bDetLimitSwitchPositive</Name>
 							<Comment><![CDATA[Limit switch positive-/CW- direction]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>MAIN.ncTest.s_cmLift.I_bDetLimitSwitchNegative</Name>
+							<Name>GVL_Modules.g_emLiftingTransport.s_cmLift.I_bDetLimitSwitchNegative</Name>
 							<Comment><![CDATA[Limit switch negative-/CCW- direction]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>MAIN.ncTest.s_cmTransportUnit.I_bDetReferenceSwitch</Name>
+							<Name>GVL_Modules.g_emLiftingTransport.s_cmTransportUnit.I_bDetReferenceSwitch</Name>
 							<Comment><![CDATA[Reference-/home switch]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>MAIN.ncTest.s_cmTransportUnit.I_bDetLimitSwitchPositive</Name>
+							<Name>GVL_Modules.g_emLiftingTransport.s_cmTransportUnit.I_bDetLimitSwitchPositive</Name>
 							<Comment><![CDATA[Limit switch positive-/CW- direction]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>MAIN.ncTest.s_cmTransportUnit.I_bDetLimitSwitchNegative</Name>
+							<Name>GVL_Modules.g_emLiftingTransport.s_cmTransportUnit.I_bDetLimitSwitchNegative</Name>
 							<Comment><![CDATA[Limit switch negative-/CCW- direction]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
@@ -2253,7 +2258,11 @@ External Setpoint Generation:
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>MAIN.ncTest.axis.PlcToNc</Name>
+							<Name>GVL_Modules.g_emLiftingTransport.axisLift.PlcToNc</Name>
+							<Type GUID="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" Namespace="MC">PLCTONC_AXIS_REF</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emLiftingTransport.axisTransportUnit.PlcToNc</Name>
 							<Type GUID="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" Namespace="MC">PLCTONC_AXIS_REF</Type>
 						</Var>
 					</Vars>
@@ -3365,19 +3374,23 @@ External Setpoint Generation:
 		<OwnerA Name="TIID^Master (EtherCAT)">
 			<OwnerB Name="TIID^Master (EtherCAT)^Term 1 (EK1200)^Term 2 (EL6900)">
 				<Link VarA="Term 1 (EK1200)^Term 3 (EL1904)^Module 1 (FSOES)^TxPDO^FSOE" VarB="ConnectionOutputs^TwinSafeGroup1.EL1904, 4 digital inputs_1_3 RxPDO"/>
-				<Link VarA="Term 1 (EK1200)^Term 4 (EL2904)^Module 1 (FSOES)^TxPDO^FSOE" VarB="ConnectionOutputs^TwinSafeGroup1.EL2904, 4 digital outputs_1_4 RxPDO"/>
+				<Link VarA="Term 1 (EK1200)^Term 4 (EL2904)^Module 1 (FSOES)^RxPDO^FSOE" VarB="ConnectionInputs^TwinSafeGroup1.EL2904, 4 digital outputs_1_4 TxPDO"/>
 			</OwnerB>
 			<OwnerB Name="TIID^Master (EtherCAT)^Term 1 (EK1200)^Term 3 (EL1904)">
 				<Link VarA="Term 1 (EK1200)^Term 2 (EL6900)^ConnectionInputs^TwinSafeGroup1.EL1904, 4 digital inputs_1_3 TxPDO" VarB="Module 1 (FSOES)^RxPDO^FSOE"/>
 			</OwnerB>
 			<OwnerB Name="TIID^Master (EtherCAT)^Term 1 (EK1200)^Term 4 (EL2904)">
-				<Link VarA="Term 1 (EK1200)^Term 2 (EL6900)^ConnectionInputs^TwinSafeGroup1.EL2904, 4 digital outputs_1_4 TxPDO" VarB="Module 1 (FSOES)^RxPDO^FSOE"/>
+				<Link VarA="Term 1 (EK1200)^Term 2 (EL6900)^ConnectionOutputs^TwinSafeGroup1.EL2904, 4 digital outputs_1_4 RxPDO" VarB="Module 1 (FSOES)^TxPDO^FSOE"/>
 			</OwnerB>
 		</OwnerA>
 		<OwnerA Name="TIPC^CleanroomConnect^CleanroomConnect Instance">
 			<OwnerB Name="TINC^NC-Task 1 SAF^Axes^Lift">
-				<Link VarA="PlcTask Inputs^MAIN.ncTest.axis.NcToPlc" VarB="Outputs^ToPlc"/>
-				<Link VarA="PlcTask Outputs^MAIN.ncTest.axis.PlcToNc" VarB="Inputs^FromPlc"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.axisLift.NcToPlc" VarB="Outputs^ToPlc"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emLiftingTransport.axisLift.PlcToNc" VarB="Inputs^FromPlc"/>
+			</OwnerB>
+			<OwnerB Name="TINC^NC-Task 1 SAF^Axes^TransportUnit">
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.axisTransportUnit.NcToPlc" VarB="Outputs^ToPlc"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emLiftingTransport.axisTransportUnit.PlcToNc" VarB="Inputs^FromPlc"/>
 			</OwnerB>
 			<OwnerB Name="TIPC^HardwareSimulator^HardwareSimulator Instance">
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsLower.I_bStaValveIsOff" VarB="PlcTask Outputs^MAIN.simDockingClampLower.Q_bStaFeedbackOff"/>

@@ -5,7 +5,7 @@
 
 VAR_INPUT
 //Inputs
-	i_stSettings : ST_SettingsPalletConveyor;
+	i_ref_stSettings : REFERENCE TO ST_SettingsPalletConveyor;
 	
 	i_bIlckConveyorForward : BOOL := TRUE;
 	i_bIlckConveyorBackward : BOOL := TRUE;
@@ -621,7 +621,7 @@ CASE s_eSeqCentering OF
 		END_IF
 		
 	E_SeqCentering.AT_CENTER:
-		IF s_fbSeqCenteringControl.q_tmStepTime > i_stSettings.tCenteringDuration THEN
+		IF s_fbSeqCenteringControl.q_tmStepTime > i_ref_stSettings.tCenteringDuration THEN
 			s_eTmpCenteringDone := TRUE;
 			s_eSeqCentering := E_SeqCentering.MOVE_TO_IDLE;
 		END_IF
@@ -733,8 +733,8 @@ CASE s_eSeqTransport OF
 	
 	E_SeqTransport.MOVE_TO_INFEED:
 		IF s_fbSeqTransportControl.q_bStaEntry THEN		
-			s_tMaxTravelTime := LREAL_TO_TIME((i_stSettings.fDistanceToInfeed / i_stSettings.fSpeedGoToInfeed) * i_stSettings.fTravelTollerance * 1000);
-			s_cmPalletConveyor.m_StartBackward(i_rTargetSpeed := i_stSettings.fSpeedGoToInfeed);
+			s_tMaxTravelTime := LREAL_TO_TIME((i_ref_stSettings.fDistanceToInfeed / i_ref_stSettings.fSpeedGoToInfeed) * i_ref_stSettings.fTravelTollerance * 1000);
+			s_cmPalletConveyor.m_StartBackward(i_rTargetSpeed := i_ref_stSettings.fSpeedGoToInfeed);
 		END_IF
 		
 		IF s_bStaAtInfeedRearPosition THEN
@@ -748,9 +748,9 @@ CASE s_eSeqTransport OF
 	
 	E_SeqTransport.MOVE_TO_CENTERING:
 		IF s_fbSeqTransportControl.q_bStaEntry THEN
-			s_tMaxTravelTime := LREAL_TO_TIME((i_stSettings.fDistanceToCentering / i_stSettings.fSpeedGoToCentering) * i_stSettings.fTravelTollerance * 1000);
-			s_tDoorCheckTime := LREAL_TO_TIME((i_stSettings.fDistanceOuteDoorCheck / i_stSettings.fSpeedGoToCentering) * 1000);
-			s_cmPalletConveyor.m_StartForward(i_rTargetSpeed := i_stSettings.fSpeedGoToCentering);
+			s_tMaxTravelTime := LREAL_TO_TIME((i_ref_stSettings.fDistanceToCentering / i_ref_stSettings.fSpeedGoToCentering) * i_ref_stSettings.fTravelTollerance * 1000);
+			s_tDoorCheckTime := LREAL_TO_TIME((i_ref_stSettings.fDistanceOuteDoorCheck / i_ref_stSettings.fSpeedGoToCentering) * 1000);
+			s_cmPalletConveyor.m_StartForward(i_rTargetSpeed := i_ref_stSettings.fSpeedGoToCentering);
 		END_IF
 		
 		IF s_bStaAtCenteringPosition THEN
@@ -779,8 +779,8 @@ CASE s_eSeqTransport OF
 	
 	E_SeqTransport.MOVE_TO_DOCKING:
 		IF s_fbSeqTransportControl.q_bStaEntry THEN
-			s_tMaxTravelTime := LREAL_TO_TIME((i_stSettings.fDistanceToDocking / i_stSettings.fSpeedGoToDocking) * i_stSettings.fTravelTollerance * 1000);
-			s_cmPalletConveyor.m_StartForward(i_rTargetSpeed := i_stSettings.fSpeedGoToDocking);
+			s_tMaxTravelTime := LREAL_TO_TIME((i_ref_stSettings.fDistanceToDocking / i_ref_stSettings.fSpeedGoToDocking) * i_ref_stSettings.fTravelTollerance * 1000);
+			s_cmPalletConveyor.m_StartForward(i_rTargetSpeed := i_ref_stSettings.fSpeedGoToDocking);
 		END_IF
 		
 		IF s_bStaAtDockingPosition THEN

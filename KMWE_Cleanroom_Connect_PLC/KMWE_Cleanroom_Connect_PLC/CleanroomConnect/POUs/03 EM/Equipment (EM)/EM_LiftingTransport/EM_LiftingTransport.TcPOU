@@ -5,7 +5,8 @@
 
 VAR_INPUT
 //Inputs
-	i_stSettings : ST_SettingsTransportLift;
+	i_ref_stSettings : REFERENCE TO ST_SettingsLiftingTransport;
+	i_stSettings : ST_SettingsLiftingTransport;
 	
 	i_bIlckLiftUp : BOOL := TRUE;
 	i_bIlckLiftDown : BOOL := TRUE;
@@ -407,11 +408,47 @@ _m_Inputs := TRUE;]]></ST>
     <Method Name="_m_MoveAbsolute" Id="{7f8f7561-70c1-4897-9a57-d3b7b8c51729}">
       <Declaration><![CDATA[METHOD _m_MoveAbsolute : BOOL
 VAR_INPUT
-	i_Profile : ST_PositioningProfile;
+	i_ref_axis : REFERENCE TO TC2_MC2.AXIS_REF;
+	i_ref_stProfile : ST_PositioningProfile;
 END_VAR
-]]></Declaration>
+
+VAR
+	s_MC_MoveAbsolute : TC2_MC2.MC_MoveAbsolute;
+END_VAR]]></Declaration>
       <Implementation>
-        <ST><![CDATA[]]></ST>
+        <ST><![CDATA[
+IF NOT(__ISVALIDREF(i_ref_axis)) THEN
+	// Message invalid reference
+	RETURN;
+END_IF
+
+//--s_cmLift.m_MC_MoveAbsolute(
+//--	i_bExecute := TRUE,
+//--	i_fPosition := i_ref_stProfile.fPosition,
+//--	i_fVelocity := i_ref_stProfile.fVelocity,
+//--	i_fAcceleration := i_ref_stProfile.fAcceleration,
+//--	i_fDeceleration := i_ref_stProfile.fDeceleration,
+//--	i_fJerk := i_ref_stProfile.fJerk,
+//--	i_eBufferMode := TC2_MC2.MC_BufferMode.MC_Aborting);
+	
+s_MC_MoveAbsolute(
+	Axis := i_ref_axis,
+	Execute := TRUE AND NOT(s_MC_MoveAbsolute.Busy OR s_MC_MoveAbsolute.Done OR s_MC_MoveAbsolute.Error),
+	Position := i_ref_stProfile.fPosition,
+	Velocity := i_ref_stProfile.fVelocity,
+	Acceleration := i_ref_stProfile.fAcceleration,
+	Deceleration := i_ref_stProfile.fDeceleration,
+	Jerk := i_ref_stProfile.fJerk,
+	BufferMode := TC2_MC2.MC_BufferMode.MC_Aborting,
+	Options := ,
+	Done => ,
+	Busy => ,
+	Active => ,
+	CommandAborted => ,
+	Error => ,
+	ErrorID => );
+	
+_m_MoveAbsolute := s_MC_MoveAbsolute.Done; ]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_Outputs" Id="{0027b51b-0e3b-4c47-b79c-c262d8cada1b}">
@@ -610,21 +647,30 @@ CASE s_eSeqLiftingTransport OF
 /// PICK TROLLEY IN TB /////////////////////////////////////////////////////////
 	E_SeqLiftingTransport.LIFT_PRE_PICK_TROLLEY_IN_TB:
 	
-	IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
-			s_cmLift.m_MC_MoveAbsolute(
-				i_bExecute := TRUE,
-				i_fPosition := i_stSettings.arr_TransportUnitPositioningProfile[0].,
-				i_fVelocity,
-				i_fAcceleration,
-				i_fDeceleration,
-				i_fJerk,
-				i_eBufferMode
-				
-				i_bExecute := TRUE,
-				i_fPosition := 0.0,
-				i_eHomingMode := Tc2_MC2.MC_HomingMode.MC_Direct,
-				i_eBufferMode := Tc2_MC2.MC_BufferMode.MC_Aborting);
+		IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
+			_m_MoveAbsolute(
+				i_ref_AXIS := axisLift, 
+				i_ref_stProfile := i_ref_stSettings.arr_TransportUnitPositioningProfile[0]);
+			
+			//--s_cmLift.m_MC_MoveAbsolute(
+			//--	i_bExecute := TRUE,
+			//--	i_fPosition := i_stSettings.arr_TransportUnitPositioningProfile[0].,
+			//--	i_fVelocity,
+			//--	i_fAcceleration,
+			//--	i_fDeceleration,
+			//--	i_fJerk,
+			//--	i_eBufferMode
 		END_IF
+	
+		IF s_cmLift.p_bDone THEN
+			s_eSeqLiftingTransport := E_SeqLiftingTransport.TRANSPORT_PRE_PICK_TROLLEY_IN_TB; 
+		END_IF
+	
+	//OR
+	
+	IF _m_MoveAbsolute(	i_ref_AXIS := axisLift, i_ref_stProfile := i_ref_stSettings.arr_TransportUnitPositioningProfile[0]) THEN
+		s_eSeqLiftingTransport := E_SeqLiftingTransport.TRANSPORT_PRE_PICK_TROLLEY_IN_TB;
+	END_IF
 	
 	E_SeqLiftingTransport.TRANSPORT_PRE_PICK_TROLLEY_IN_TB:
 	E_SeqLiftingTransport.TRANSPORT_PICK_TROLLEY_IN_TB:
@@ -704,7 +750,7 @@ CASE s_eSeqLiftingTransport OF
 	
 	E_SeqTransport.MOVE_TO_INFEED:
 		IF s_fbSeqTransportControl.q_bStaEntry THEN		
-			s_tMaxTravelTime := LREAL_TO_TIME((i_stSettings.fDistanceToInfeed / i_stSettings.fSpeedGoToInfeed) * i_stSettings.fTravelTollerance * 1000);
+			s_tMaxTravelTime := LREAL_TO_TIME((i_ref_stSettings.fDistanceToInfeed / i_ref_stSettings.fSpeedGoToInfeed) * i_ref_stSettings.fTravelTollerance * 1000);
 			s_cmPalletConveyor.m_StartBackward(i_rTargetSpeed := i_stSettings.fSpeedGoToInfeed);
 		END_IF
 		
@@ -719,8 +765,8 @@ CASE s_eSeqLiftingTransport OF
 	
 	E_SeqTransport.MOVE_TO_CENTERING:
 		IF s_fbSeqTransportControl.q_bStaEntry THEN
-			s_tMaxTravelTime := LREAL_TO_TIME((i_stSettings.fDistanceToCentering / i_stSettings.fSpeedGoToCentering) * i_stSettings.fTravelTollerance * 1000);
-			s_tDoorCheckTime := LREAL_TO_TIME((i_stSettings.fDistanceOuteDoorCheck / i_stSettings.fSpeedGoToCentering) * 1000);
+			s_tMaxTravelTime := LREAL_TO_TIME((i_ref_stSettings.fDistanceToCentering / i_ref_stSettings.fSpeedGoToCentering) * i_ref_stSettings.fTravelTollerance * 1000);
+			s_tDoorCheckTime := LREAL_TO_TIME((i_ref_stSettings.fDistanceOuteDoorCheck / i_ref_stSettings.fSpeedGoToCentering) * 1000);
 			s_cmPalletConveyor.m_StartForward(i_rTargetSpeed := i_stSettings.fSpeedGoToCentering);
 		END_IF
 		
@@ -750,7 +796,7 @@ CASE s_eSeqLiftingTransport OF
 	
 	E_SeqTransport.MOVE_TO_DOCKING:
 		IF s_fbSeqTransportControl.q_bStaEntry THEN
-			s_tMaxTravelTime := LREAL_TO_TIME((i_stSettings.fDistanceToDocking / i_stSettings.fSpeedGoToDocking) * i_stSettings.fTravelTollerance * 1000);
+			s_tMaxTravelTime := LREAL_TO_TIME((i_ref_stSettings.fDistanceToDocking / i_ref_stSettings.fSpeedGoToDocking) * i_ref_stSettings.fTravelTollerance * 1000);
 			s_cmPalletConveyor.m_StartForward(i_rTargetSpeed := i_stSettings.fSpeedGoToDocking);
 		END_IF
 		
@@ -1419,7 +1465,17 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="403" Count="0" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport._m_MoveAbsolute">
+      <LineId Id="11" Count="0" />
       <LineId Id="5" Count="0" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="12" Count="1" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="16" Count="6" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="31" Count="14" />
+      <LineId Id="29" Count="1" />
+      <LineId Id="25" Count="0" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport._m_Outputs">
       <LineId Id="20" Count="0" />
@@ -1505,11 +1561,18 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="1694" Count="0" />
       <LineId Id="1680" Count="0" />
       <LineId Id="1701" Count="0" />
-      <LineId Id="1704" Count="1" />
+      <LineId Id="1704" Count="0" />
+      <LineId Id="1721" Count="0" />
+      <LineId Id="1723" Count="0" />
+      <LineId Id="1722" Count="0" />
+      <LineId Id="1720" Count="0" />
+      <LineId Id="1705" Count="0" />
       <LineId Id="1711" Count="6" />
-      <LineId Id="1710" Count="0" />
-      <LineId Id="1706" Count="3" />
       <LineId Id="1702" Count="1" />
+      <LineId Id="1733" Count="1" />
+      <LineId Id="1731" Count="1" />
+      <LineId Id="1726" Count="4" />
+      <LineId Id="1725" Count="0" />
       <LineId Id="1681" Count="2" />
       <LineId Id="1678" Count="0" />
       <LineId Id="1696" Count="0" />

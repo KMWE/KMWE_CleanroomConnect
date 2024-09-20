@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_Interlock" Id="{4b1f4aa1-d5c6-4fba-8255-b2fd1cb501aa}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Interlock
+VAR_INPUT
+	i_bInterlocked : BOOL;
+END_VAR
+VAR
+	s_bInterlocked : BOOL;
+	s_sReason : STRING;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+s_bInterlocked := i_bInterlocked;
+]]></ST>
+    </Implementation>
+    <Property Name="p_bInterlocked" Id="{4cbb4d8a-b269-4207-b907-0e7be8284474}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bInterlocked : BOOL]]></Declaration>
+      <Get Name="Get" Id="{5969b6fb-152b-480d-ba12-b6a924ac9874}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bInterlocked := s_bInterlocked;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_sReason" Id="{b38bc880-c347-4b9a-abef-94cb5823b953}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_sReason : STRING]]></Declaration>
+      <Get Name="Get" Id="{aac7f1de-102d-4008-bd59-863e8437a056}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_sReason := s_sReason;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{d3cd87a1-2189-41fd-98d4-b8a3e8d32560}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+s_sReason := p_sReason;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <LineIds Name="FB_Interlock">
+      <LineId Id="15" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="16" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Interlock.p_bInterlocked.Get">
+      <LineId Id="5" Count="2" />
+    </LineIds>
+    <LineIds Name="FB_Interlock.p_sReason.Get">
+      <LineId Id="5" Count="2" />
+    </LineIds>
+    <LineIds Name="FB_Interlock.p_sReason.Set">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -9,7 +9,15 @@ VAR_INPUT
 	i_bIlckDockingClampsToClose : BOOL := TRUE; //TRUE = Interlocked
 	i_bIlckDockingClampsToOpen : BOOL := TRUE; //TRUE = Interlocked
 	i_bIlckUnlockingPinsToLock : BOOL := TRUE; //TRUE = Interlocked
-	i_bIlckUnlockingPinsToRelease : BOOL := TRUE; //TRUE = Interlocked	
+	i_bIlckUnlockingPinsToRelease : BOOL := TRUE; //TRUE = Interlocked
+	
+	// External interlocks (from outside this EM)
+	i_fbExtIlckDockingClampsToClose : FB_Interlock;
+	i_fbExtIlckDockingClampsToOpen : FB_Interlock;
+	i_fbExtIlckUnlockingPinsToLock : FB_Interlock;
+	i_fbExtIlckUnlockingPinsToRelease : FB_Interlock;
+	
+	
 	
 	i_refTB : REFERENCE TO OBJ_Carrier;	//Mogelijk voor uiteindelijke machine, voor de FUMO's is dit nog niet echt relevant
 	//??i_refITF_TB : REFERENCE TO I_Carrier;
@@ -776,7 +784,7 @@ END_IF
 
 s_cmDockingClampsUpper.i_bReqEnable := FALSE;
 s_cmDockingClampsUpper.i_eCtrlMode := E_CtrlMode.IDLE;
-s_cmDockingClampsUpper.i_sCmName := 'Docking Clamps Upper';
+s_cmDockingClampsUpper.i_sCmName := 'CM Docking Clamps Upper';
 s_cmDockingClampsUpper.i_stSettings.tValveOnTimeout := T#10S;
 s_cmDockingClampsUpper.i_stSettings.tValveOnTimeout := T#10S;
 s_cmDockingClampsUpper.p_sCfgOffName := 'Open';
@@ -789,7 +797,7 @@ s_doCmdClampsUpperHighPressure.i_stSettings.tmOutputDelay := T#0S;
 
 s_cmDockingClampsLower.i_bReqEnable := FALSE;
 s_cmDockingClampsLower.i_eCtrlMode := E_CtrlMode.IDLE;
-s_cmDockingClampsLower.i_sCmName := 'Docking Clamps Lower';
+s_cmDockingClampsLower.i_sCmName := 'CM Docking Clamps Lower';
 s_cmDockingClampsLower.i_stSettings.tValveOnTimeout := T#10S;
 s_cmDockingClampsLower.i_stSettings.tValveOnTimeout := T#10S;
 s_cmDockingClampsLower.p_sCfgOffName := 'Open';
@@ -809,7 +817,7 @@ s_doCmdClampsLowerHighPressure.i_stSettings.tmOutputDelay := T#0S;
 
 s_cmUnlockingPinUpper.i_bReqEnable := FALSE;
 s_cmUnlockingPinUpper.i_eCtrlMode := E_CtrlMode.IDLE;
-s_cmUnlockingPinUpper.i_sCmName := 'Unlocking Pin Upper';
+s_cmUnlockingPinUpper.i_sCmName := 'CM Unlocking Pin Upper';
 s_cmUnlockingPinUpper.i_stSettings.tValveOnTimeout := T#10S;
 s_cmUnlockingPinUpper.i_stSettings.tValveOffTimeout := T#10S;
 s_cmUnlockingPinUpper.p_sCfgOffName := 'Lock';
@@ -817,7 +825,7 @@ s_cmUnlockingPinUpper.p_sCfgOnName := 'Release';
 
 s_cmUnlockingPinLower.i_bReqEnable := FALSE;
 s_cmUnlockingPinLower.i_eCtrlMode := E_CtrlMode.IDLE;
-s_cmUnlockingPinLower.i_sCmName := 'Unlocking Pin Lower';
+s_cmUnlockingPinLower.i_sCmName := 'CM Unlocking Pin Lower';
 s_cmUnlockingPinLower.i_stSettings.tValveOnTimeout := T#10S;
 s_cmUnlockingPinLower.i_stSettings.tValveOffTimeout := T#10S;
 s_cmUnlockingPinLower.p_sCfgOffName := 'Lock';
@@ -825,7 +833,7 @@ s_cmUnlockingPinLower.p_sCfgOnName := 'Release';
 
 s_cmDoorOpener.i_bReqEnable := FALSE;
 s_cmDoorOpener.i_eCtrlMode := E_CtrlMode.IDLE;
-s_cmDoorOpener.i_sCmName := 'Door Opener';
+s_cmDoorOpener.i_sCmName := 'CM Door Opener';
 s_cmDoorOpener.i_stSettings.tValveOnTimeout := T#10S;
 s_cmDoorOpener.i_stSettings.tValveOffTimeout := T#10S;
 s_cmDoorOpener.p_sCfgOffName := 'Close';
@@ -835,7 +843,7 @@ s_diStaDoorAlmostClosed.i_stSettings.tmInputDelay := T#0S;
 
 s_cmDoorShutter.i_bReqEnable := FALSE;
 s_cmDoorShutter.i_eCtrlMode := E_CtrlMode.IDLE;
-s_cmDoorShutter.i_sCmName := 'Door Shutter';
+s_cmDoorShutter.i_sCmName := 'CM Door Shutter';
 s_cmDoorShutter.i_stSettings.tValveOnTimeout := T#10S;
 s_cmDoorShutter.i_stSettings.tValveOffTimeout := T#10S;
 s_cmDoorShutter.p_sCfgOffName := 'Open';
@@ -1034,13 +1042,17 @@ s_bIlckDoorShutterToOpen := FALSE;
 
 s_cmDockingClampsUpper.p_sInterlockedReason := 'n/a';
 s_cmDockingClampsLower.p_sInterlockedReason := 'n/a';
+
 s_cmUnlockingPinUpper.p_sInterlockedReason := 'n/a';
 s_cmUnlockingPinLower.p_sInterlockedReason := 'n/a';
-s_cmDoorOpener.p_sInterlockedReason := 'Door shutter not opened';
-s_cmDoorShutter.p_sInterlockedReason := 'Door opener not closed';
 
-
-
+IF NOT(s_bStaDoorShutterOpened) THEN
+	s_cmDoorOpener.p_sInterlockedReason := 'Door shutter not opened';
+END_IF
+	
+IF NOT(s_bStaDoorOpenerClosed) AND NOT(s_bStaDoorOpenerAlmostClosed) THEN
+	s_cmDoorShutter.p_sInterlockedReason := 'Door opener not (almost) closed';
+END_IF
 
 //--s_diStaBoxAtPreDockingPosition();
 //--s_diStaBoxAtDockedPosition();
@@ -2055,10 +2067,16 @@ p_bStaUndocked := s_bStaUndocked;
       <LineId Id="83" Count="0" />
       <LineId Id="93" Count="1" />
       <LineId Id="96" Count="0" />
+      <LineId Id="108" Count="0" />
       <LineId Id="104" Count="1" />
-      <LineId Id="97" Count="1" />
-      <LineId Id="101" Count="1" />
-      <LineId Id="95" Count="0" />
+      <LineId Id="110" Count="0" />
+      <LineId Id="109" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="107" Count="0" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="98" Count="0" />
+      <LineId Id="115" Count="0" />
       <LineId Id="48" Count="0" />
       <LineId Id="51" Count="0" />
       <LineId Id="54" Count="0" />

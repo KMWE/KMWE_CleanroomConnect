@@ -6,6 +6,8 @@ VAR_INPUT
 	i_stSettings : ST_SettingsMOVITRAC_B_WithBrake;
 	i_bIclkForward : BOOL := TRUE; //TRUE = interlocked
 	i_bIclkBackward : BOOL := TRUE; //TRUE = interlocked
+//--	i_fbInterlockConvFwd : FB_Interlock;
+//--	i_fbInterlockConvBwd : FB_Interlock;
 END_VAR
 VAR
 	// Inputs
@@ -20,7 +22,11 @@ VAR
 	
 	Q_bCmdReleaseBrake AT %Q* : BOOL; // Command to release brake
 	Q_nSetTargetSpeed AT %Q* : INT; // Target speed
-		
+	
+	//Interlocks
+	s_bIclkForward : BOOL;
+	s_bIclkBackward : BOOL;
+	
 	// Requests
 	s_bReqStop : BOOL;
 	s_bReqStartForward : BOOL;
@@ -110,17 +116,17 @@ END_IF
 s_errDriveError := i_bReqEnable AND s_bStaDriveError;// AND NOT(i_bCmdReset);
 
 // Interlock warnings
-IF i_bIclkForward AND NOT(s_bStaMotorStopped) THEN	
+IF s_bIclkForward AND NOT(s_bStaMotorStopped) THEN	
 	s_wrnMotorForwardInterlocked := TRUE;
 	m_Stop();
-ELSIF NOT(i_bIclkForward) OR i_bCmdReset THEN
+ELSIF NOT(s_bIclkForward) OR i_bCmdReset THEN
 	s_wrnMotorForwardInterlocked := FALSE;
 END_IF
 
-IF i_bIclkBackward AND NOT(s_bStaMotorStopped) THEN
+IF s_bIclkBackward AND NOT(s_bStaMotorStopped) THEN
 	s_wrnMotorBackwardInterlocked := TRUE;
 	m_Stop();
-ELSIF NOT(i_bIclkBackward) OR i_bCmdReset THEN
+ELSIF NOT(s_bIclkBackward) OR i_bCmdReset THEN
 	s_wrnMotorBackwardInterlocked := FALSE;
 END_IF
 
@@ -148,11 +154,14 @@ s_fbAlarmHandlerMotorForwardInterlocked(
 	i_bStaActive := s_wrnMotorForwardInterlocked,
 	i_eAlarmLevel := E_AlarmLevel.Warning,
 	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move forward, Reason: ',CONCAT(s_sInterlockedReason, '.'))));
+	//--i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move forward, Reason: ',CONCAT(i_fbInterlockConvFwd.p_sReason, '.'))));
+	
 	
 s_fbAlarmHandlerMotorBackwardInterlocked(
 	i_bStaActive := s_wrnMotorBackwardInterlocked,
 	i_eAlarmLevel := E_AlarmLevel.Warning,
 	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move backward, Reason: ',CONCAT(s_sInterlockedReason, '.'))));
+	//--i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move backward, Reason: ',CONCAT(i_fbInterlockConvBwd.p_sReason, '.'))));
 	
 // Alarm collector	
 s_bStaError := 
@@ -477,6 +486,12 @@ s_bStaReadyForOperation := I_bStaReadyForOperation;
 s_bStaDriveError := NOT(I_bStaReadyForOperation);
 s_bStaMotorStopped := NOT(I_bStaMotorIsRunning);
 
+s_bIclkForward := i_bIclkForward;
+s_bIclkBackward := i_bIclkBackward;
+
+//--s_bIclkForward := i_fbInterlockConvFwd.p_bInterlocked;
+//--s_bIclkBackward := i_fbInterlockConvBwd.p_bInterlocked;
+
 _m_Inputs := TRUE;
 ]]></ST>
       </Implementation>
@@ -578,7 +593,9 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-IF NOT(i_bIclkBackward) THEN
+//--IF NOT(i_bIclkBackward) THEN
+//--IF NOT(i_fbInterlockConvBwd.p_bInterlocked) THEN
+IF NOT(s_bIclkBackward) THEN
 	s_bReqStartBackward := TRUE;
 	
 	IF i_rTargetSpeed < 0 THEN
@@ -609,7 +626,9 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-IF NOT(i_bIclkForward) THEN
+//--IF NOT(i_bIclkForward) THEN
+//--IF NOT(i_fbInterlockConvFwd.p_bInterlocked) THEN
+IF NOT(s_bIclkForward) THEN
 	s_bReqStartForward := TRUE;
 	
 	IF i_rTargetSpeed < 0 THEN
@@ -693,7 +712,7 @@ p_bStaWarning := s_bStaWarning;
     </Property>
     <Property Name="p_sInterlockedReason" Id="{ee05b23b-0c2f-4ed6-802a-db01c009192a}" FolderPath="Properties\">
       <Declaration><![CDATA[{attribute 'monitoring':='call'}
-PROPERTY PUBLIC p_sInterlockedReason : STRING]]></Declaration>
+PROPERTY PUBLIC p_sInterlockedReason : STRING(GVL.g_MAX_LEN_INTERLOCK_REASON)]]></Declaration>
       <Get Name="Get" Id="{d1567d66-dae7-4c45-a522-cf9b9ae0c9db}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
@@ -746,8 +765,11 @@ s_sInterlockedReason := p_sInterlockedReason;
       <LineId Id="143" Count="2" />
       <LineId Id="140" Count="0" />
       <LineId Id="146" Count="0" />
+      <LineId Id="183" Count="0" />
+      <LineId Id="182" Count="0" />
       <LineId Id="148" Count="2" />
       <LineId Id="180" Count="0" />
+      <LineId Id="184" Count="0" />
       <LineId Id="147" Count="0" />
       <LineId Id="60" Count="0" />
       <LineId Id="32" Count="0" />
@@ -761,7 +783,7 @@ s_sInterlockedReason := p_sInterlockedReason;
     </LineIds>
     <LineIds Name="CM_MOVITRAC_B._m_Devices">
       <LineId Id="6" Count="3" />
-      <LineId Id="76" Count="0" />
+      <LineId Id="294" Count="0" />
       <LineId Id="265" Count="3" />
       <LineId Id="155" Count="0" />
       <LineId Id="150" Count="1" />
@@ -928,6 +950,9 @@ s_sInterlockedReason := p_sInterlockedReason;
       <LineId Id="21" Count="0" />
       <LineId Id="20" Count="0" />
       <LineId Id="23" Count="0" />
+      <LineId Id="25" Count="2" />
+      <LineId Id="30" Count="1" />
+      <LineId Id="29" Count="0" />
       <LineId Id="9" Count="0" />
       <LineId Id="8" Count="0" />
       <LineId Id="17" Count="0" />
@@ -985,6 +1010,7 @@ s_sInterlockedReason := p_sInterlockedReason;
       <LineId Id="26" Count="2" />
       <LineId Id="71" Count="0" />
       <LineId Id="38" Count="0" />
+      <LineId Id="82" Count="1" />
       <LineId Id="42" Count="0" />
       <LineId Id="50" Count="1" />
       <LineId Id="47" Count="0" />
@@ -1004,6 +1030,7 @@ s_sInterlockedReason := p_sInterlockedReason;
       <LineId Id="26" Count="2" />
       <LineId Id="73" Count="0" />
       <LineId Id="38" Count="0" />
+      <LineId Id="83" Count="1" />
       <LineId Id="41" Count="0" />
       <LineId Id="48" Count="0" />
       <LineId Id="50" Count="5" />

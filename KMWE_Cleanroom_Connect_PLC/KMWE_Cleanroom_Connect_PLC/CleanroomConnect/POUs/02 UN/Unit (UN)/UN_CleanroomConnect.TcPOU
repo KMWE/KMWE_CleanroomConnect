@@ -66,7 +66,7 @@ END_VAR]]></Declaration>
 SUPER^();
 
 //fbJson(initStatus => hResult);
-
+(*
 IF test THEN
 
 fbJson.StartObject();
@@ -84,7 +84,7 @@ fbJson.ResetDocument();
 test := FALSE;
 
 END_IF
-]]></ST>
+*)]]></ST>
     </Implementation>
     <Method Name="_m_Alarms" Id="{c0f56159-8f50-4d36-acac-c259038873b1}">
       <Declaration><![CDATA[METHOD PROTECTED _m_Alarms : BOOL
@@ -524,6 +524,8 @@ s_stSettings.stSettingsLiftingTransport.arr_TransportUnitPositioningProfile[5].f
 s_stSettings.stSettingsLiftingTransport.arr_TransportUnitPositioningProfile[5].fDeceleration := 10.0; //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_TransportUnitPositioningProfile[5].fJerk := 100.0; //[mm/s^3]
 
+GVL_Modules.g_emPalletConveyor.i_ref_stSettings REF= s_stSettings.stSettingsPalletConveyor;
+GVL_Modules.g_emDockingInterface.i_ref_stSettings REF= s_stSettings.stSettingsDockingInterface;
 GVL_Modules.g_emLiftingTransport.i_ref_stSettings REF= s_stSettings.stSettingsLiftingTransport;
 
 /////
@@ -604,10 +606,18 @@ _m_Init := TRUE;
       <Declaration><![CDATA[METHOD PROTECTED _m_Modules : BOOL
 VAR
 	bReqEnable : BOOL;
+	
+	s_fbExtIlckConvFwd : FB_Interlock;
+	s_fbExtIlckConvBwd : FB_Interlock;
+	
+	s_fbExtIlckDockingClampsToClose : FB_Interlock;
+	s_fbExtIlckDockingClampsToOpen : FB_Interlock;
+	s_fbExtIlckUnlockingPinsToLock : FB_Interlock;
+	s_fbExtIlckUnlockingPinsToRelease : FB_Interlock;
+	
 END_VAR]]></Declaration>
       <Implementation>
-        <ST><![CDATA[
-GVL_Modules.g_objCarrier();
+        <ST><![CDATA[GVL_Modules.g_objCarrier();
 
 IF s_bCreate THEN GVL_Modules.g_objCarrier.m_Create(i_eDestination := E_Location.CLEAN_ROOM); s_bCreate := FALSE; END_IF; 
 IF s_bDestroy THEN GVL_Modules.g_objCarrier.m_Destroy(); s_bDestroy := FALSE; END_IF;
@@ -628,15 +638,34 @@ bReqEnable :=
 	AND GVL_Modules.g_emUtilities.p_bStsPowerOk
 	AND GVL_Modules.g_emUtilities.p_bStaAirPressureOk;
 	
+s_fbExtIlckConvFwd(i_bInterlocked := NOT(GVL_Modules.g_emDockingInterface.p_bStaUndocked));
+s_fbExtIlckConvFwd.p_sReason := 'TB not undocked (clamps not opened)';
+s_fbExtIlckConvBwd(i_bInterlocked := NOT(GVL_Modules.g_emDockingInterface.p_bStaUndocked));
+s_fbExtIlckConvBwd.p_sReason := 'TB not undocked (clamps not opened)'; 	
+	
 GVL_Modules.g_emPalletConveyor(
 	i_bReqEnable := bReqEnable,
 	i_eCtrlMode := s_eCtrlMode,
-	i_bIlckConveyorForward := NOT(GVL_Modules.g_emDockingInterface.p_bStaUndocked),
-	i_bIlckConveyorBackward := NOT(GVL_Modules.g_emDockingInterface.p_bStaUndocked),
+	//--i_bIlckConveyorForward := NOT(GVL_Modules.g_emDockingInterface.p_bStaUndocked),
+	//--i_bIlckConveyorBackward := NOT(GVL_Modules.g_emDockingInterface.p_bStaUndocked),
+	i_fbExtIlckConvFwd := s_fbExtIlckConvFwd,
+	i_fbExtIlckConvBwd :=  s_fbExtIlckConvBwd,
 	i_bCmdReset := p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn, //Add temp reset button
 	i_sEmName := 'EM Pallet Conveyor',
 	i_refTB := GVL_Modules.g_objCarrier);
 
+s_fbExtIlckDockingClampsToClose(i_bInterlocked := NOT(GVL_Modules.g_emDockingInterface.p_bStaUndocked));
+s_fbExtIlckDockingClampsToClose;
+
+s_fbExtIlckDockingClampsToOpen;
+s_fbExtIlckDockingClampsToOpen;
+
+s_fbExtIlckUnlockingPinsToLock;
+s_fbExtIlckUnlockingPinsToLock;
+
+s_fbExtIlckUnlockingPinsToRelease;
+s_fbExtIlckUnlockingPinsToRelease;	
+	
 GVL_Modules.g_emDockingInterface(
 	i_bReqEnable := bReqEnable,
 	i_eCtrlMode := s_eCtrlMode,
@@ -1065,40 +1094,27 @@ GVL_Modules.g_emPalletConveyor.m_CmdTB_ToInfeed();
       <LineId Id="1908" Count="0" />
       <LineId Id="1698" Count="41" />
       <LineId Id="1911" Count="0" />
-      <LineId Id="1741" Count="89" />
+      <LineId Id="1741" Count="88" />
+      <LineId Id="1913" Count="0" />
+      <LineId Id="1830" Count="0" />
+      <LineId Id="1914" Count="0" />
       <LineId Id="1832" Count="0" />
       <LineId Id="1834" Count="71" />
       <LineId Id="78" Count="0" />
     </LineIds>
     <LineIds Name="UN_CleanroomConnect._m_Modules">
-      <LineId Id="556" Count="0" />
-      <LineId Id="555" Count="0" />
-      <LineId Id="564" Count="1" />
-      <LineId Id="563" Count="0" />
-      <LineId Id="549" Count="0" />
-      <LineId Id="490" Count="14" />
-      <LineId Id="548" Count="0" />
-      <LineId Id="506" Count="2" />
-      <LineId Id="542" Count="0" />
-      <LineId Id="544" Count="0" />
-      <LineId Id="509" Count="1" />
-      <LineId Id="553" Count="0" />
-      <LineId Id="511" Count="5" />
-      <LineId Id="554" Count="0" />
-      <LineId Id="569" Count="0" />
-      <LineId Id="517" Count="0" />
-      <LineId Id="572" Count="2" />
-      <LineId Id="576" Count="2" />
-      <LineId Id="575" Count="0" />
-      <LineId Id="579" Count="1" />
-      <LineId Id="571" Count="0" />
-      <LineId Id="570" Count="0" />
-      <LineId Id="518" Count="10" />
-      <LineId Id="536" Count="0" />
-      <LineId Id="534" Count="0" />
-      <LineId Id="537" Count="1" />
-      <LineId Id="535" Count="0" />
-      <LineId Id="529" Count="1" />
+      <LineId Id="848" Count="35" />
+      <LineId Id="922" Count="0" />
+      <LineId Id="924" Count="0" />
+      <LineId Id="927" Count="1" />
+      <LineId Id="925" Count="0" />
+      <LineId Id="929" Count="1" />
+      <LineId Id="926" Count="0" />
+      <LineId Id="931" Count="1" />
+      <LineId Id="884" Count="0" />
+      <LineId Id="933" Count="0" />
+      <LineId Id="923" Count="0" />
+      <LineId Id="885" Count="36" />
       <LineId Id="20" Count="0" />
     </LineIds>
     <LineIds Name="UN_CleanroomConnect._m_SelectConfigFile">

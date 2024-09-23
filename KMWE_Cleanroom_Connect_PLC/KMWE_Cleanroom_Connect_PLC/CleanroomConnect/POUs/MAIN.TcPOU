@@ -3,7 +3,17 @@
   <POU Name="MAIN" Id="{c137dca6-2078-4081-8260-8d6099001278}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM MAIN
 VAR
-	//--ncTest : NC_Test;	
+	s_ParamPathnames	: ARRAY[1..Param_Project.n_MaxParamFolders] OF STRING := ['C:\Cleanroom_Connect\Parameters'];//, 'C:\Cleanroom_Connect\Param\DockingInterface'];
+
+//--	fbHmiParamHandler : FB_HmiParamHandler;
+//--	fbHmiParamHandler_1 : FB_HmiParamHandler;
+//--	fbHmiParamHandler_2 : FB_HmiParamHandler;
+//--	fbHmiParamHandler_3 : FB_HmiParamHandler;
+	
+//--	arr_sValue : ARRAY[1..3] OF STRING;
+//--	arr_fValue : ARRAY[1..3] OF LREAL;
+	
+//--ncTest : NC_Test;	
 
 	//..
 //--	fbMovAvg : FB_MovAvg;
@@ -31,6 +41,10 @@ END_VAR
 
 GVL_KMWEGenericLib.g_fbAlarmManager();
 
+GVL_KMWEGenericLib.g_fbParamManager(
+	i_sPathName := s_ParamPathnames, 
+	i_osrResetImportExport := GVL_KMWEGenericLib.g_fbAlarmManager.p_osrReset);
+	
 GVL.g_unCleanroomConnect.p_bCmdReset := GVL_KMWEGenericLib.g_fbAlarmManager.p_osrReset;
 GVL.g_unCleanroomConnect();
 
@@ -41,14 +55,51 @@ GVL.g_unCleanroomConnect();
 //--	o_rOut=> );
 
 //--fbHAL();
+
+//Test parameter handling
+(*
+fbHmiParamHandler(
+	i_fDefaultValue := ,
+	i_sName := 'Name',
+	i_nArrayFolderIndex := 1,
+	i_bIsNumber := FALSE);
+
+fbHmiParamHandler_1(
+	i_fDefaultValue := ,
+	i_sName := 'Param 1',
+	i_nArrayFolderIndex := 1,
+	i_bIsNumber := TRUE);
+	
+fbHmiParamHandler_2(
+	i_fDefaultValue := ,
+	i_sName := 'Param 2',
+	i_nArrayFolderIndex := 1,
+	i_bIsNumber := TRUE);
+	
+fbHmiParamHandler_3(
+	i_fDefaultValue := ,
+	i_sName := 'Param 3',
+	i_nArrayFolderIndex := 1,
+	i_bIsNumber := TRUE);
+	
+arr_sValue[1] := fbHmiParamHandler.p_sValue;
+arr_fValue[1] := fbHmiParamHandler_1.p_fValue;
+arr_fValue[2] := fbHmiParamHandler_2.p_fValue;
+arr_fValue[3] := fbHmiParamHandler_3.p_fValue;
+	
+*)
 ]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
       <LineId Id="629" Count="0" />
       <LineId Id="628" Count="0" />
-      <LineId Id="378" Count="0" />
-      <LineId Id="456" Count="0" />
-      <LineId Id="582" Count="0" />
+      <LineId Id="698" Count="0" />
+      <LineId Id="700" Count="0" />
+      <LineId Id="702" Count="0" />
+      <LineId Id="701" Count="0" />
+      <LineId Id="707" Count="0" />
+      <LineId Id="699" Count="0" />
+      <LineId Id="723" Count="0" />
       <LineId Id="528" Count="1" />
       <LineId Id="581" Count="0" />
       <LineId Id="561" Count="0" />
@@ -57,7 +108,25 @@ GVL.g_unCleanroomConnect();
       <LineId Id="540" Count="1" />
       <LineId Id="604" Count="0" />
       <LineId Id="550" Count="0" />
+      <LineId Id="721" Count="0" />
       <LineId Id="377" Count="0" />
+      <LineId Id="733" Count="0" />
+      <LineId Id="727" Count="3" />
+      <LineId Id="726" Count="0" />
+      <LineId Id="725" Count="0" />
+      <LineId Id="669" Count="5" />
+      <LineId Id="686" Count="3" />
+      <LineId Id="675" Count="0" />
+      <LineId Id="680" Count="0" />
+      <LineId Id="690" Count="3" />
+      <LineId Id="681" Count="0" />
+      <LineId Id="710" Count="0" />
+      <LineId Id="731" Count="0" />
+      <LineId Id="711" Count="0" />
+      <LineId Id="716" Count="1" />
+      <LineId Id="694" Count="0" />
+      <LineId Id="719" Count="0" />
+      <LineId Id="718" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>

@@ -131,6 +131,22 @@ VAR
 	
 //------------------------------------------//
 //Params
+	s_fbParamTimeoutDockingClamps : FB_HmiParamHandler;
+	s_fbParamTimeoutUnlockingPins : FB_HmiParamHandler;
+	s_fbParamTimeoutDoorOpener : FB_HmiParamHandler;
+	s_fbParamTimeoutDoorShutter : FB_HmiParamHandler;
+	
+	s_fbParamCompressSealDuration : FB_HmiParamHandler;
+	s_fbParamDelayCloseDoorShutterReleasingPins : FB_HmiParamHandler;
+	s_fbParamDelayReleaseUnlockingPins : FB_HmiParamHandler;
+	s_fbParamDelayOpenDoorShutter : FB_HmiParamHandler;
+	s_fbParamDelayOpenDoorOpener : FB_HmiParamHandler;
+	s_fbParamDelayCloseDoorShutter : FB_HmiParamHandler;
+	s_fbParamDelayLockUnlockingPins : FB_HmiParamHandler;
+	
+	s_fbParamOpenClampsAfterClosingTimeout : FB_HmiParamHandler;
+	s_fbParamCloseClampsAfterEachOther : FB_HmiParamHandler;
+
 //--	//Tool settings
 //--	s_fbParamToolHardwareNr				: FB_HmiParamHandler;
 //--    s_fbParamToolSoftwareVersion		: FB_HmiParamHandler;
@@ -1114,12 +1130,6 @@ _m_Outputs := TRUE;]]></ST>
     </Method>
     <Method Name="_m_Params" Id="{78648659-4a86-4875-84af-aa8b2b68e067}">
       <Declaration><![CDATA[METHOD PROTECTED _m_Params : BOOL
-VAR_INST
-	s_fToHmiXAxisMin	: LREAL;
-	s_fToHmiXAxisMax	: LREAL;
-	s_fToHmiYAxisMin	: LREAL;
-	s_fToHmiYAxisMax	: LREAL;
-END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
@@ -1127,86 +1137,103 @@ IF NOT SUPER^._m_Params() THEN
 	RETURN;
 END_IF
 
-s_fbParamToolHardwareNr(i_fDefaultValue				:= 0,
-						i_nArrayFolderIndex			:= 1,
-						i_sName						:= 'Harware ID',
-						i_bIsNumber					:= FALSE);
+//Paramaters
+s_fbParamTimeoutDockingClamps(
+	i_fDefaultValue := ,
+	i_sName := CONCAT(i_sEmName, ': Timeout Docking Clamps'),
+	i_nArrayFolderIndex := 1,
+	i_bIsNumber := TRUE);
+	
+s_fbParamTimeoutUnlockingPins(
+	i_fDefaultValue := ,
+	i_sName := CONCAT(i_sEmName, ': Timeout Unlocking Pins'),
+	i_nArrayFolderIndex := 1,
+	i_bIsNumber := TRUE);
+	
+s_fbParamTimeoutDoorOpener(
+	i_fDefaultValue := ,
+	i_sName := CONCAT(i_sEmName, ': Timeout Door Opener'),
+	i_nArrayFolderIndex := 1,
+	i_bIsNumber := TRUE);
+	
+s_fbParamTimeoutDoorShutter(
+	i_fDefaultValue := ,
+	i_sName := CONCAT(i_sEmName, ': Timeout Door Shutter'),
+	i_nArrayFolderIndex := 1,
+	i_bIsNumber := TRUE);
+	
+s_fbParamCompressSealDuration(
+	i_fDefaultValue := ,
+	i_sName := CONCAT(i_sEmName, ': Compress Seal Duration'),
+	i_nArrayFolderIndex := 1,
+	i_bIsNumber := TRUE);
+	
+s_fbParamDelayCloseDoorShutterReleasingPins(
+	i_fDefaultValue := ,
+	i_sName := CONCAT(i_sEmName, ': Delay Close Door Shutter Releasing Pins'),
+	i_nArrayFolderIndex := 1,
+	i_bIsNumber := TRUE);
+	
+s_fbParamDelayReleaseUnlockingPins(
+	i_fDefaultValue := ,
+	i_sName := CONCAT(i_sEmName, ': Delay Release Unlocking Pins'),
+	i_nArrayFolderIndex := 1,
+	i_bIsNumber := TRUE);
+	
+s_fbParamDelayOpenDoorShutter(
+	i_fDefaultValue := ,
+	i_sName := CONCAT(i_sEmName, ': Delay Open Door Shutter'),
+	i_nArrayFolderIndex := 1,
+	i_bIsNumber := TRUE);
+	
+s_fbParamDelayOpenDoorOpener(
+	i_fDefaultValue := ,
+	i_sName := CONCAT(i_sEmName, ': Delay Open Door Opener'),
+	i_nArrayFolderIndex := 1,
+	i_bIsNumber := TRUE);
+	
+s_fbParamDelayCloseDoorShutter(
+	i_fDefaultValue := ,
+	i_sName := CONCAT(i_sEmName, ': Delay Close Door Shutter'),
+	i_nArrayFolderIndex := 1,
+	i_bIsNumber := TRUE);
+	
+s_fbParamDelayLockUnlockingPins(
+	i_fDefaultValue := ,
+	i_sName := CONCAT(i_sEmName, ': Delay Lock Unlocking Pins'),
+	i_nArrayFolderIndex := 1,
+	i_bIsNumber := TRUE);
+	
+s_fbParamOpenClampsAfterClosingTimeout(
+	i_fDefaultValue := ,
+	i_sName := CONCAT(i_sEmName, ': Open Clamps After Closing Timeout'),
+	i_nArrayFolderIndex := 1,
+	i_bIsNumber := TRUE);
+	
+s_fbParamCloseClampsAfterEachOther(
+	i_fDefaultValue := ,
+	i_sName := CONCAT(i_sEmName, ': Close Clamps After Each Other'),
+	i_nArrayFolderIndex := 1,
+	i_bIsNumber := TRUE);
 
-s_fbParamToolSoftwareVersion(i_fDefaultValue		:= 0,
-							i_nArrayFolderIndex		:= 1,
-							i_sName					:= 'Software Version',
-							i_bIsNumber				:= FALSE);
+//Write to settings	
 
-s_fbParamName(i_fDefaultValue						:= 0,
-				i_nArrayFolderIndex					:= 1,
-				i_sName								:= 'Description',
-				i_bIsNumber							:= FALSE);
-							
-s_fbParamTeslaMeterIp(i_fDefaultValue			:= 0,
-						i_nArrayFolderIndex		:= 1,
-						i_sName					:= 'Tesla meter ip adress',
-						i_bIsNumber				:= FALSE);
-						
-s_fbParamTeslaMeterPort(i_fDefaultValue			:= 0,
-						i_nArrayFolderIndex		:= 1,
-						i_sName					:= 'Tesla meter port number',
-						i_bIsNumber				:= TRUE);
-
-//---------
-
-						
-s_fbParamTotalStroke(i_fDefaultValue			:= 100,
-						i_nArrayFolderIndex		:= 2,
-						i_sName					:= 'Total measurement stroke',
-						i_bIsNumber				:= TRUE);
-						
-s_fbParamStepStroke(i_fDefaultValue				:= 10,
-						i_nArrayFolderIndex		:= 2,
-						i_sName					:= 'Step distance per measurement',
-						i_bIsNumber				:= TRUE);
-
-s_fbParamAveragingNumberTest(i_fDefaultValue		:= 10,
-							i_nArrayFolderIndex		:= 2,
-							i_sName					:= 'Number of measurements per step for averaging the magnetic field',
-							i_bIsNumber				:= TRUE);
-							
-s_fbParamaMaxMagnitudeCriteria(i_fDefaultValue		:= 100,
-							i_nArrayFolderIndex		:= 2,
-							i_sName					:= 'Maximum allowed magnitude magnetic field (Test)',
-							i_bIsNumber				:= TRUE);
-
-s_fbParamRefIduBottom(i_fDefaultValue				:= 0,
-							i_nArrayFolderIndex		:= 2,
-							i_sName					:= 'Distance from home position to lower IDU Bottom',
-							i_bIsNumber				:= TRUE);
-							
-s_fbParamRefItm(i_fDefaultValue						:= 0,
-							i_nArrayFolderIndex		:= 2,
-							i_sName					:= 'Distance from home position Itm lower IDU / upper IDU',
-							i_bIsNumber				:= TRUE);
-							
-s_fbParamRefCenterTpmPipe(i_fDefaultValue			:= 0,
-							i_nArrayFolderIndex		:= 2,
-							i_sName					:= 'Distance from home position to center TPM pipe',
-							i_bIsNumber				:= TRUE);
-							
-s_fbParamRefCpValve(i_fDefaultValue		:= 0,
-							i_nArrayFolderIndex		:= 2,
-							i_sName					:= 'Distance from home position to bottom C/P valve',
-							i_bIsNumber				:= TRUE);				
-
-GVL_DataLogging.g_stReportData.CabinetSerialNumber      := s_fbParamToolHardwareNr.p_sValue;
-GVL_DataLogging.g_stReportData.TesterSoftwareVersion    := s_fbParamToolSoftwareVersion.p_sValue;
-GVL_DataLogging.g_stReportData.Operator                 := GVL.g_sUser;
-GVL_DataLogging.g_stReportData.Note						:= GVL.g_sNotesEntry;
-//GVL_DataLogging.g_stReportData.Message can be filled in test procedure with for example the error if test is stopped
-GVL_DataLogging.g_stReportData.SerialNumber             := GVL.g_sSerialNumber;
-
-s_fToHmiXAxisMin	:= -2*s_fbParamaMaxMagnitudeCriteria.p_fValue;
-s_fToHmiXAxisMax	:= 2*s_fbParamaMaxMagnitudeCriteria.p_fValue;
-s_fToHmiYAxisMin	:= s_CmProbeMotor.p_fHomePosition;
-s_fToHmiYAxisMax	:= s_fbParamRefCpValve.p_fValue*1.2;
-
+i_ref_stSettings.tTimeoutDockingClamps := LREAL_TO_TIME(s_fbParamTimeoutDockingClamps.p_fValue);
+i_ref_stSettings.tTimeoutUnlockingPins := LREAL_TO_TIME(s_fbParamTimeoutUnlockingPins.p_fValue);
+i_ref_stSettings.tTimeoutDoorOpener := LREAL_TO_TIME(s_fbParamTimeoutDoorOpener.p_fValue);
+i_ref_stSettings.tTimeoutDoorShutter := LREAL_TO_TIME(s_fbParamTimeoutDoorShutter.p_fValue);
+	
+i_ref_stSettings.tCompressSealDuration := LREAL_TO_TIME(s_fbParamCompressSealDuration.p_fValue);
+i_ref_stSettings.tDelayCloseDoorShutterReleasingPins := LREAL_TO_TIME(s_fbParamDelayCloseDoorShutterReleasingPins.p_fValue);
+i_ref_stSettings.tDelayReleaseUnlockingPins := LREAL_TO_TIME(s_fbParamDelayReleaseUnlockingPins.p_fValue);
+i_ref_stSettings.tDelayOpenDoorShutter := LREAL_TO_TIME(s_fbParamDelayOpenDoorShutter.p_fValue);
+i_ref_stSettings.tDelayOpenDoorOpener := LREAL_TO_TIME(s_fbParamDelayOpenDoorOpener.p_fValue);
+i_ref_stSettings.tDelayCloseDoorShutter := LREAL_TO_TIME(s_fbParamDelayCloseDoorShutter.p_fValue);
+i_ref_stSettings.tDelayLockUnlockingPins := LREAL_TO_TIME(s_fbParamDelayLockUnlockingPins.p_fValue);
+	
+i_ref_stSettings.bOpenClampsAfterClosingTimeout := LREAL_TO_BOOL(s_fbParamOpenClampsAfterClosingTimeout.p_fValue);
+i_ref_stSettings.bCloseClampsAfterEachOther := LREAL_TO_BOOL(s_fbParamCloseClampsAfterEachOther.p_fValue);
+	
 _m_Params := TRUE;
 ]]></ST>
       </Implementation>
@@ -2119,52 +2146,43 @@ p_bStaUndocked := s_bStaUndocked;
       <LineId Id="291" Count="0" />
       <LineId Id="164" Count="0" />
       <LineId Id="166" Count="1" />
-      <LineId Id="165" Count="0" />
-      <LineId Id="6" Count="8" />
-      <LineId Id="159" Count="3" />
-      <LineId Id="35" Count="0" />
-      <LineId Id="163" Count="0" />
-      <LineId Id="235" Count="7" />
-      <LineId Id="40" Count="0" />
-      <LineId Id="199" Count="0" />
-      <LineId Id="180" Count="0" />
-      <LineId Id="185" Count="0" />
-      <LineId Id="189" Count="0" />
-      <LineId Id="191" Count="2" />
-      <LineId Id="190" Count="0" />
-      <LineId Id="194" Count="0" />
-      <LineId Id="196" Count="2" />
-      <LineId Id="195" Count="0" />
-      <LineId Id="203" Count="0" />
-      <LineId Id="222" Count="2" />
-      <LineId Id="207" Count="0" />
-      <LineId Id="250" Count="0" />
-      <LineId Id="234" Count="0" />
-      <LineId Id="232" Count="1" />
-      <LineId Id="230" Count="0" />
-      <LineId Id="251" Count="0" />
-      <LineId Id="256" Count="2" />
-      <LineId Id="253" Count="0" />
-      <LineId Id="259" Count="0" />
-      <LineId Id="261" Count="2" />
-      <LineId Id="260" Count="0" />
-      <LineId Id="264" Count="0" />
-      <LineId Id="266" Count="2" />
-      <LineId Id="265" Count="0" />
-      <LineId Id="269" Count="0" />
-      <LineId Id="271" Count="2" />
-      <LineId Id="270" Count="0" />
-      <LineId Id="220" Count="0" />
-      <LineId Id="210" Count="1" />
-      <LineId Id="174" Count="0" />
-      <LineId Id="214" Count="0" />
-      <LineId Id="213" Count="0" />
-      <LineId Id="158" Count="0" />
-      <LineId Id="274" Count="1" />
-      <LineId Id="246" Count="0" />
-      <LineId Id="45" Count="0" />
-      <LineId Id="281" Count="0" />
-      <LineId Id="283" Count="0" />
+      <LineId Id="300" Count="0" />
+      <LineId Id="303" Count="0" />
+      <LineId Id="339" Count="3" />
+      <LineId Id="338" Count="0" />
+      <LineId Id="327" Count="0" />
+      <LineId Id="353" Count="3" />
+      <LineId Id="315" Count="0" />
+      <LineId Id="357" Count="4" />
+      <LineId Id="352" Count="0" />
+      <LineId Id="362" Count="4" />
+      <LineId Id="317" Count="0" />
+      <LineId Id="367" Count="4" />
+      <LineId Id="319" Count="0" />
+      <LineId Id="372" Count="4" />
+      <LineId Id="320" Count="0" />
+      <LineId Id="377" Count="4" />
+      <LineId Id="321" Count="0" />
+      <LineId Id="382" Count="4" />
+      <LineId Id="322" Count="0" />
+      <LineId Id="387" Count="0" />
+      <LineId Id="389" Count="3" />
+      <LineId Id="388" Count="0" />
+      <LineId Id="323" Count="0" />
+      <LineId Id="393" Count="3" />
+      <LineId Id="324" Count="0" />
+      <LineId Id="397" Count="4" />
+      <LineId Id="325" Count="0" />
+      <LineId Id="402" Count="4" />
+      <LineId Id="312" Count="0" />
+      <LineId Id="407" Count="4" />
+      <LineId Id="311" Count="0" />
+      <LineId Id="301" Count="0" />
+      <LineId Id="413" Count="0" />
+      <LineId Id="438" Count="0" />
+      <LineId Id="440" Count="13" />
+      <LineId Id="439" Count="0" />
+      <LineId Id="308" Count="0" />
       <LineId Id="282" Count="0" />
       <LineId Id="292" Count="0" />
     </LineIds>

@@ -1,0 +1,326 @@
+<div id="Content1_8" data-tchmi-type="TcHmi.Controls.System.TcHmiContent" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width="100" data-tchmi-height="100" data-tchmi-width-unit="%" data-tchmi-height-unit="%">
+
+<div id="NumberInput" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextbox" data-tchmi-height="10" data-tchmi-height-unit="%" data-tchmi-left="5" data-tchmi-left-unit="%" data-tchmi-text="" data-tchmi-top="35" data-tchmi-top-unit="%" data-tchmi-width="90" data-tchmi-width-unit="%" data-tchmi-text-font-size="25" data-tchmi-text-horizontal-alignment="Center" data-tchmi-auto-focus-out="True" data-tchmi-text-font-family="">
+<script data-tchmi-target-attribute="data-tchmi-content-padding" type="application/json">
+{
+  "top": 3,
+  "right": 3,
+  "bottom": 3,
+  "left": 3
+}
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">[
+  {
+    "event": "NumberInput.onTextChanged",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "",
+        "valueType": "tchmi:general#/definitions/String",
+        "value": {
+          "objectType": "Symbol",
+          "symbolExpression": "%ctrl%NumberInput::Text%/ctrl%"
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]</script>
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(190, 14, 14, 1)"
+}
+</script>
+</div>
+
+<div id="TcHmiTextblock_6" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="10" data-tchmi-height-unit="%" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-text="Serialnumber" data-tchmi-top="25" data-tchmi-top-unit="%" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-word-wrap="True" data-tchmi-text-font-size="25" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-vertical-alignment="Center">
+
+
+
+
+
+</div>
+
+<div id="TcHmiTextblock_7" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="10" data-tchmi-height-unit="%" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-text="Notes" data-tchmi-top="55" data-tchmi-top-unit="%" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-word-wrap="True" data-tchmi-text-font-size="25" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-vertical-alignment="Center">
+
+
+
+
+
+</div>
+
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">[
+  {
+    "event": "%i%bSerialCorrect%/i%",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "asyncWait": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "symbolExpression": "%i%bSerialCorrect%/i%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/BIT",
+                  "value": true
+                },
+                "compareOperator": "==",
+                "logic": null
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "symbolExpression": "%i%bNCCorrect%/i%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/BIT",
+                  "value": true
+                },
+                "compareOperator": "==",
+                "logic": "AND"
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%NextButton::IsEnabled%/ctrl%",
+                "valueType": "tchmi:general#/definitions/Boolean",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/Boolean",
+                  "value": true
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%NextButton::IsEnabled%/ctrl%",
+                "valueType": "tchmi:general#/definitions/Boolean",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/Boolean",
+                  "value": false
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "event": "%i%bNCCorrect%/i%",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "asyncWait": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "symbolExpression": "%i%bSerialCorrect%/i%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/BIT",
+                  "value": true
+                },
+                "compareOperator": "==",
+                "logic": null
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "symbolExpression": "%i%bNCCorrect%/i%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/BIT",
+                  "value": true
+                },
+                "compareOperator": "==",
+                "logic": "AND"
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%NextButton::IsEnabled%/ctrl%",
+                "valueType": "tchmi:general#/definitions/Boolean",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/Boolean",
+                  "value": true
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%NextButton::IsEnabled%/ctrl%",
+                "valueType": "tchmi:general#/definitions/Boolean",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/Boolean",
+                  "value": false
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "event": "Content1_8.onInitialized",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%s%PLC1.VisualizationDataManager.eScreenVisible%/s%",
+        "valueType": "tchmi:server#/definitions/PLC1.ScreenEnum",
+        "value": {
+          "objectType": "StaticValue",
+          "valueType": "tchmi:server#/definitions/PLC1.ScreenEnum",
+          "value": 2
+        },
+        "asyncWait": true
+      },
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%bSerialCorrect%/i%",
+        "valueType": "tchmi:general#/definitions/BIT",
+        "value": {
+          "objectType": "StaticValue",
+          "valueType": "tchmi:general#/definitions/BIT",
+          "value": false
+        },
+        "asyncWait": true
+      },
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%bNCCorrect%/i%",
+        "valueType": "tchmi:general#/definitions/BIT",
+        "value": {
+          "objectType": "StaticValue",
+          "valueType": "tchmi:general#/definitions/BIT",
+          "value": false
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]</script>
+<div id="NotesInput" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextbox" data-tchmi-height="10" data-tchmi-height-unit="%" data-tchmi-left="5.0" data-tchmi-left-unit="%" data-tchmi-top="65" data-tchmi-top-unit="%" data-tchmi-width="90" data-tchmi-width-unit="%" data-tchmi-text-font-size="25" data-tchmi-text-horizontal-alignment="Center" data-tchmi-auto-focus-out="True">
+<script data-tchmi-target-attribute="data-tchmi-content-padding" type="application/json">
+{
+  "top": 3,
+  "right": 3,
+  "bottom": 3,
+  "left": 3
+}
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">[
+  {
+    "event": "NotesInput.onTextChanged",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "",
+        "valueType": "tchmi:general#/definitions/String",
+        "value": {
+          "objectType": "Symbol",
+          "symbolExpression": "%ctrl%NotesInput::Text%/ctrl%"
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]</script>
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(190, 14, 14, 1)"
+}
+</script>
+</div>
+
+<div id="DBTestButton" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-grid-column-index="1" data-tchmi-grid-row-index="1" data-tchmi-height="10" data-tchmi-height-unit="%" data-tchmi-left-unit="%" data-tchmi-text="Write to Database" data-tchmi-top-unit="%" data-tchmi-width="20" data-tchmi-width-unit="%" data-tchmi-word-wrap="True" data-tchmi-text-font-size="25" data-tchmi-left="40" data-tchmi-top="80" data-tchmi-state-symbol="%s%PLC1.MAIN.WriteToDB%/s%">
+
+
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-virtual-control-right-mappings" type="application/json">
+[]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-access-config" type="application/json">
+[
+  {
+    "accessright": "operate",
+    "group": "Operators",
+    "permission": "Deny"
+  },
+  {
+    "accessright": "observe",
+    "group": "Operators",
+    "permission": "Deny"
+  },
+  {
+    "accessright": "observe",
+    "group": "Unicom Service Technicians",
+    "permission": "Deny"
+  },
+  {
+    "accessright": "operate",
+    "group": "Unicom Service Technicians",
+    "permission": "Deny"
+  }
+]
+</script>
+</div>
+
+</div>

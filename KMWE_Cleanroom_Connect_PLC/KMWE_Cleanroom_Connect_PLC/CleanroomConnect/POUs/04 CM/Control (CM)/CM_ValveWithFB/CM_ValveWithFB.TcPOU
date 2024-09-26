@@ -63,6 +63,8 @@ VAR
 	s_tonFeedBackOffTimeout : TON;
 	
 	//Hmi
+	stHmiData : ST_ValveWithFB_HMI;
+	
 	s_fbHmiBtnManualOff		: FB_HmiBtn;
 	s_fbHmiBtnManualOn		: FB_HmiBtn;
 	
@@ -197,6 +199,31 @@ _m_Devices := TRUE;
 IF NOT SUPER^._m_Hmi() THEN
 	RETURN;
 END_IF
+
+//To Hmi
+stHmiData.sDescription := i_sCmName;
+stHmiData.sNameOff := s_fbHmiBtnManualOff.p_sBtnText;
+stHmiData.sNameOn := s_fbHmiBtnManualOn.p_sBtnText;
+stHmiData.bStaOff := s_bStaValveIsOff;
+stHmiData.bStaOn := s_bStaValveIsOn;
+stHmiData.bStaOffError := s_fbHmiLedErrorOff.p_bStaLed;
+stHmiData.bStaOnError := s_fbHmiLedErrorOn.p_bStaLed;
+stHmiData.bBtnOffEnabled := s_fbHmiBtnManualOff.p_bStaEnabled;
+stHmiData.bBtnOnEnabled := s_fbHmiBtnManualOn.p_bStaEnabled;
+
+//From Hmi
+
+IF stHmiData.bCmdOffPressed THEN
+	s_fbHmiBtnManualOff.m_On();
+ELSE
+	s_fbHmiBtnManualOff.m_Off();	
+END_IF
+
+IF stHmiData.bCmdOnPressed THEN
+	s_fbHmiBtnManualOn.m_On();
+ELSE
+	s_fbHmiBtnManualOn.m_Off();	
+END_IF 
 
 //Buttons
 s_fbHmiBtnManualOff();
@@ -599,6 +626,22 @@ s_sInterlockedReason := p_sInterlockedReason;
     </LineIds>
     <LineIds Name="CM_ValveWithFB._m_Hmi">
       <LineId Id="17" Count="3" />
+      <LineId Id="188" Count="0" />
+      <LineId Id="173" Count="1" />
+      <LineId Id="176" Count="3" />
+      <LineId Id="181" Count="0" />
+      <LineId Id="180" Count="0" />
+      <LineId Id="185" Count="0" />
+      <LineId Id="184" Count="0" />
+      <LineId Id="189" Count="0" />
+      <LineId Id="186" Count="0" />
+      <LineId Id="197" Count="0" />
+      <LineId Id="196" Count="0" />
+      <LineId Id="199" Count="1" />
+      <LineId Id="202" Count="0" />
+      <LineId Id="198" Count="0" />
+      <LineId Id="204" Count="4" />
+      <LineId Id="203" Count="0" />
       <LineId Id="89" Count="0" />
       <LineId Id="91" Count="2" />
       <LineId Id="98" Count="2" />

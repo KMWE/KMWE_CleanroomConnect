@@ -88,6 +88,543 @@
             "startOffset": 1,
             "type": "array"
         },
+        "PLC1.CM_ValveWithFB": {
+            "attributes": {
+                "TcImplements": "KMWE_Generic_Library.I_Valve"
+            },
+            "properties": {
+                "I_bStaValveIsOff": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "attributes": {
+                                "TcAddressType": "Input"
+                            },
+                            "comment": "Valve is off",
+                            "propertyOrder": 13
+                        }
+                    ]
+                },
+                "I_bStaValveIsOn": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "attributes": {
+                                "TcAddressType": "Input"
+                            },
+                            "comment": "Valve is on (on = positive logic of fuction)",
+                            "propertyOrder": 12
+                        }
+                    ]
+                },
+                "Q_bCmdOff": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "attributes": {
+                                "TcAddressType": "Output"
+                            },
+                            "comment": "Command to set valve off",
+                            "propertyOrder": 15
+                        }
+                    ]
+                },
+                "Q_bCmdOn": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "attributes": {
+                                "TcAddressType": "Output"
+                            },
+                            "comment": "Commnad to set valve on",
+                            "propertyOrder": 14
+                        }
+                    ]
+                },
+                "c_MAX_FB_NAME_LENGTH": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/USINT"
+                        },
+                        {
+                            "comment": "Maximum feedback-name length",
+                            "propertyOrder": 8
+                        }
+                    ]
+                },
+                "i_bCmdReset": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 3
+                        }
+                    ]
+                },
+                "i_bIclkOff": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "comment": "TRUE = interlocked",
+                            "propertyOrder": 11
+                        }
+                    ]
+                },
+                "i_bIclkOn": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "comment": "TRUE = interlocked",
+                            "propertyOrder": 10
+                        }
+                    ]
+                },
+                "i_bReqEnable": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 1
+                        }
+                    ]
+                },
+                "i_eCtrlMode": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/PLC1.KMWE_Generic_Library.E_CtrlMode"
+                        },
+                        {
+                            "propertyOrder": 2
+                        }
+                    ]
+                },
+                "i_sCmName": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                        },
+                        {
+                            "propertyOrder": 4
+                        }
+                    ]
+                },
+                "i_stSettings": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/PLC1.ST_SettingsValveWithFB"
+                        },
+                        {
+                            "propertyOrder": 9
+                        }
+                    ]
+                },
+                "p_bCfgBiStableValve": {
+                    "$ref": "#/definitions/PLC1.PROPERTY-GET-SET-BOOL"
+                },
+                "p_bCfgReverseValve": {
+                    "$ref": "#/definitions/PLC1.PROPERTY-GET-SET-BOOL"
+                },
+                "p_bStaEnabled": {
+                    "$ref": "#/definitions/PLC1.PROPERTY-GET-BOOL"
+                },
+                "p_bStaError": {
+                    "$ref": "#/definitions/PLC1.PROPERTY-GET-BOOL"
+                },
+                "p_bStaIsOff": {
+                    "$ref": "#/definitions/PLC1.PROPERTY-GET-BOOL"
+                },
+                "p_bStaIsOn": {
+                    "$ref": "#/definitions/PLC1.PROPERTY-GET-BOOL"
+                },
+                "p_bStaValve": {
+                    "$ref": "#/definitions/PLC1.PROPERTY-GET-BOOL"
+                },
+                "p_bStaWarning": {
+                    "$ref": "#/definitions/PLC1.PROPERTY-GET-BOOL"
+                },
+                "p_eCtrlMode": {
+                    "$ref": "#/definitions/PLC1.PROPERTY-GET-KMWE_Generic_Library.E_CtrlMode"
+                },
+                "p_sCfgOffName": {
+                    "$ref": "#/definitions/PLC1.PROPERTY-GET-SET-STRING-8"
+                },
+                "p_sCfgOnName": {
+                    "$ref": "#/definitions/PLC1.PROPERTY-GET-SET-STRING-8"
+                },
+                "p_sCmName": {
+                    "$ref": "#/definitions/PLC1.PROPERTY-GET-STRING-80"
+                },
+                "p_sInterlockedReason": {
+                    "$ref": "#/definitions/PLC1.PROPERTY-GET-SET-STRING-32"
+                },
+                "s_bCfgBiStableValve": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "comment": "FALSE = MONO, TRUE = BI",
+                            "propertyOrder": 27
+                        }
+                    ]
+                },
+                "s_bCfgReverseValve": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "comment": "FALSE = NORMAL, TRUE = INVERTED",
+                            "propertyOrder": 26
+                        }
+                    ]
+                },
+                "s_bInitDone": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 5
+                        }
+                    ]
+                },
+                "s_bReqOff": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "comment": "Request",
+                            "propertyOrder": 16
+                        }
+                    ]
+                },
+                "s_bReqOn": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 17
+                        }
+                    ]
+                },
+                "s_bReqStop": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 18
+                        }
+                    ]
+                },
+                "s_bSimFeedBackIsOff": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 23
+                        }
+                    ]
+                },
+                "s_bSimFeedBackIsOn": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 24
+                        }
+                    ]
+                },
+                "s_bStaError": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 6
+                        }
+                    ]
+                },
+                "s_bStaValve": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 25
+                        }
+                    ]
+                },
+                "s_bStaValveIsOff": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "comment": "Status",
+                            "propertyOrder": 19
+                        }
+                    ]
+                },
+                "s_bStaValveIsOn": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 20
+                        }
+                    ]
+                },
+                "s_bStaWarning": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 21
+                        }
+                    ]
+                },
+                "s_errFeedbackOffTimeout": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 35
+                        }
+                    ]
+                },
+                "s_errFeedbackOnTimeout": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 34
+                        }
+                    ]
+                },
+                "s_fbAlarmHandlerFeedbackOffTimeout": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/PLC1.KMWE_Generic_Library.FB_AlarmHandler"
+                        },
+                        {
+                            "propertyOrder": 31
+                        }
+                    ]
+                },
+                "s_fbAlarmHandlerFeedbackOnTimeout": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/PLC1.KMWE_Generic_Library.FB_AlarmHandler"
+                        },
+                        {
+                            "comment": "Alarms",
+                            "propertyOrder": 30
+                        }
+                    ]
+                },
+                "s_fbAlarmHandlerOffInterlocked": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/PLC1.KMWE_Generic_Library.FB_AlarmHandler"
+                        },
+                        {
+                            "propertyOrder": 33
+                        }
+                    ]
+                },
+                "s_fbAlarmHandlerOnInterlocked": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/PLC1.KMWE_Generic_Library.FB_AlarmHandler"
+                        },
+                        {
+                            "propertyOrder": 32
+                        }
+                    ]
+                },
+                "s_fbHmiBtnManualOff": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/PLC1.KMWE_Generic_Library.FB_HmiBtn"
+                        },
+                        {
+                            "propertyOrder": 41
+                        }
+                    ]
+                },
+                "s_fbHmiBtnManualOn": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/PLC1.KMWE_Generic_Library.FB_HmiBtn"
+                        },
+                        {
+                            "propertyOrder": 42
+                        }
+                    ]
+                },
+                "s_fbHmiLedErrorOff": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/PLC1.KMWE_Generic_Library.FB_HmiLed"
+                        },
+                        {
+                            "propertyOrder": 45
+                        }
+                    ]
+                },
+                "s_fbHmiLedErrorOn": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/PLC1.KMWE_Generic_Library.FB_HmiLed"
+                        },
+                        {
+                            "propertyOrder": 46
+                        }
+                    ]
+                },
+                "s_fbHmiLedIsOff": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/PLC1.KMWE_Generic_Library.FB_HmiLed"
+                        },
+                        {
+                            "propertyOrder": 43
+                        }
+                    ]
+                },
+                "s_fbHmiLedIsOn": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/PLC1.KMWE_Generic_Library.FB_HmiLed"
+                        },
+                        {
+                            "propertyOrder": 44
+                        }
+                    ]
+                },
+                "s_osrReqEnable": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/PLC1.Tc2_Standard.R_TRIG"
+                        },
+                        {
+                            "propertyOrder": 7
+                        }
+                    ]
+                },
+                "s_sCfgOffName": {
+                    "allOf": [
+                        {
+                            "maxLength": 8,
+                            "propertyOrder": 28
+                        },
+                        {
+                            "$ref": "tchmi:general#/definitions/String"
+                        }
+                    ]
+                },
+                "s_sCfgOnName": {
+                    "allOf": [
+                        {
+                            "maxLength": 8,
+                            "propertyOrder": 29
+                        },
+                        {
+                            "$ref": "tchmi:general#/definitions/String"
+                        }
+                    ]
+                },
+                "s_sInterlockedReason": {
+                    "allOf": [
+                        {
+                            "comment": "External interlocked reason for clarifying reason",
+                            "maxLength": 32,
+                            "propertyOrder": 22
+                        },
+                        {
+                            "$ref": "tchmi:general#/definitions/String"
+                        }
+                    ]
+                },
+                "s_tonFeedBackOffTimeout": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/PLC1.Tc2_Standard.TON"
+                        },
+                        {
+                            "propertyOrder": 39
+                        }
+                    ]
+                },
+                "s_tonFeedbackOnTimeout": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/PLC1.Tc2_Standard.TON"
+                        },
+                        {
+                            "comment": "Timers",
+                            "propertyOrder": 38
+                        }
+                    ]
+                },
+                "s_wrnOffInterlocked": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 37
+                        }
+                    ]
+                },
+                "s_wrnOnInterlocked": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 36
+                        }
+                    ]
+                },
+                "stHmiData": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/PLC1.ST_ValveWithFB_HMI"
+                        },
+                        {
+                            "comment": "Hmi",
+                            "propertyOrder": 40
+                        }
+                    ]
+                }
+            },
+            "type": "object"
+        },
         "PLC1.KMWE_Generic_Library.E_AlarmLevel": {
             "attributes": {
                 "qualified_only": "",
@@ -121,6 +658,270 @@
                 }
             ],
             "type": "integer"
+        },
+        "PLC1.KMWE_Generic_Library.E_CtrlMode": {
+            "attributes": {
+                "qualified_only": "",
+                "strict": ""
+            },
+            "enum": [
+                0,
+                1,
+                2
+            ],
+            "options": [
+                {
+                    "label": "IDLE",
+                    "value": 0
+                },
+                {
+                    "label": "AUTOMATIC",
+                    "value": 1
+                },
+                {
+                    "label": "MANUAL",
+                    "value": 2
+                }
+            ],
+            "type": "integer"
+        },
+        "PLC1.KMWE_Generic_Library.E_HmiButtonType": {
+            "attributes": {
+                "qualified_only": "",
+                "strict": ""
+            },
+            "enum": [
+                0,
+                1
+            ],
+            "options": [
+                {
+                    "label": "PUSHBUTTON",
+                    "value": 0
+                },
+                {
+                    "label": "TOGGLEBUTTON",
+                    "value": 1
+                }
+            ],
+            "type": "integer"
+        },
+        "PLC1.KMWE_Generic_Library.FB_AlarmHandler": {
+            "properties": {
+                "__FB_ALARMHANDLER__M_MAIN__S_BINITDONE": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 9
+                        }
+                    ]
+                },
+                "__FB_ALARMHANDLER___M_REFRESHALARM__NCOUNTER": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/UDINT"
+                        },
+                        {
+                            "propertyOrder": 8
+                        }
+                    ]
+                },
+                "i_bStaActive": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "comment": "Set to false every scan by the alarm manager. So if alarm needs to stay active you need to actively set to true every scan",
+                            "propertyOrder": 1
+                        }
+                    ]
+                },
+                "i_eAlarmLevel": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/PLC1.KMWE_Generic_Library.E_AlarmLevel"
+                        },
+                        {
+                            "propertyOrder": 2
+                        }
+                    ]
+                },
+                "i_sAlarmText": {
+                    "allOf": [
+                        {
+                            "maxLength": 255,
+                            "propertyOrder": 3
+                        },
+                        {
+                            "$ref": "tchmi:general#/definitions/String"
+                        }
+                    ]
+                },
+                "q_bStaActive": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 4
+                        }
+                    ]
+                },
+                "q_osrStaActive": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 5
+                        }
+                    ]
+                },
+                "s_osrStaActive": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/PLC1.Tc2_Standard.R_TRIG"
+                        },
+                        {
+                            "propertyOrder": 7
+                        }
+                    ]
+                },
+                "s_stAlarm": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/PLC1.KMWE_Generic_Library.ST_Alarm"
+                        },
+                        {
+                            "propertyOrder": 6
+                        }
+                    ]
+                }
+            },
+            "type": "object"
+        },
+        "PLC1.KMWE_Generic_Library.FB_HmiBtn": {
+            "properties": {
+                "__FB_HMIBTN__M_MAIN__S_BINITDONE": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 4
+                        }
+                    ]
+                },
+                "p_bCfgDefaultOn": {
+                    "$ref": "#/definitions/PLC1.PROPERTY-GET-SET-BOOL"
+                },
+                "p_bStaBtn": {
+                    "$ref": "#/definitions/PLC1.PROPERTY-GET-BOOL"
+                },
+                "p_bStaEnabled": {
+                    "$ref": "#/definitions/PLC1.PROPERTY-GET-SET-BOOL"
+                },
+                "p_bStaVisible": {
+                    "$ref": "#/definitions/PLC1.PROPERTY-GET-SET-BOOL"
+                },
+                "p_eButtontype": {
+                    "$ref": "#/definitions/PLC1.PROPERTY-GET-SET-KMWE_Generic_Library.E_HmiButtonType"
+                },
+                "p_osfBtnPress": {
+                    "$ref": "#/definitions/PLC1.PROPERTY-GET-BOOL"
+                },
+                "p_osrBtnPress": {
+                    "$ref": "#/definitions/PLC1.PROPERTY-GET-BOOL"
+                },
+                "p_sBtnText": {
+                    "$ref": "#/definitions/PLC1.PROPERTY-GET-SET-STRING-80"
+                },
+                "s_bFromHmiPressed": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 1
+                        }
+                    ]
+                },
+                "s_sToHmiToggleState": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                        },
+                        {
+                            "propertyOrder": 2
+                        }
+                    ]
+                },
+                "s_sToHmiVisible": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                        },
+                        {
+                            "propertyOrder": 3
+                        }
+                    ]
+                }
+            },
+            "type": "object"
+        },
+        "PLC1.KMWE_Generic_Library.FB_HmiLed": {
+            "properties": {
+                "__FB_HMILED__M_MAIN__S_BINITDONE": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 3
+                        }
+                    ]
+                },
+                "i_bStaLed": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "comment": "True = On, False = Off",
+                            "propertyOrder": 1
+                        }
+                    ]
+                },
+                "p_bStaLed": {
+                    "$ref": "#/definitions/PLC1.PROPERTY-GET-BOOL"
+                },
+                "p_bStaVisible": {
+                    "$ref": "#/definitions/PLC1.PROPERTY-GET-SET-BOOL"
+                },
+                "p_osfLedOff": {
+                    "$ref": "#/definitions/PLC1.PROPERTY-GET-BOOL"
+                },
+                "p_osrLedOn": {
+                    "$ref": "#/definitions/PLC1.PROPERTY-GET-BOOL"
+                },
+                "p_sToHmiDescriptionLed": {
+                    "$ref": "#/definitions/PLC1.PROPERTY-GET-SET-STRING-80"
+                },
+                "s_sToHmiVisible": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                        },
+                        {
+                            "propertyOrder": 2
+                        }
+                    ]
+                }
+            },
+            "type": "object"
         },
         "PLC1.KMWE_Generic_Library.ST_Alarm": {
             "properties": {
@@ -337,6 +1138,16 @@
                 }
             ]
         },
+        "PLC1.PROPERTY-GET-KMWE_Generic_Library.E_CtrlMode": {
+            "allOf": [
+                {
+                    "$ref": "#/definitions/PLC1.KMWE_Generic_Library.E_CtrlMode"
+                },
+                {
+                    "function": true
+                }
+            ]
+        },
         "PLC1.PROPERTY-GET-SET-BOOL": {
             "allOf": [
                 {
@@ -346,6 +1157,73 @@
                     "function": true,
                     "writeValue": {
                         "$ref": "tchmi:general#/definitions/BOOL"
+                    }
+                }
+            ]
+        },
+        "PLC1.PROPERTY-GET-SET-KMWE_Generic_Library.E_HmiButtonType": {
+            "allOf": [
+                {
+                    "$ref": "#/definitions/PLC1.KMWE_Generic_Library.E_HmiButtonType"
+                },
+                {
+                    "function": true,
+                    "writeValue": {
+                        "$ref": "#/definitions/PLC1.KMWE_Generic_Library.E_HmiButtonType"
+                    }
+                }
+            ]
+        },
+        "PLC1.PROPERTY-GET-SET-STRING-32": {
+            "allOf": [
+                {
+                    "allOf": [
+                        {
+                            "maxLength": 32
+                        },
+                        {
+                            "$ref": "tchmi:general#/definitions/String"
+                        }
+                    ]
+                },
+                {
+                    "function": true,
+                    "writeValue": {
+                        "allOf": [
+                            {
+                                "maxLength": 32
+                            },
+                            {
+                                "$ref": "tchmi:general#/definitions/String"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "PLC1.PROPERTY-GET-SET-STRING-8": {
+            "allOf": [
+                {
+                    "allOf": [
+                        {
+                            "maxLength": 8
+                        },
+                        {
+                            "$ref": "tchmi:general#/definitions/String"
+                        }
+                    ]
+                },
+                {
+                    "function": true,
+                    "writeValue": {
+                        "allOf": [
+                            {
+                                "maxLength": 8
+                            },
+                            {
+                                "$ref": "tchmi:general#/definitions/String"
+                            }
+                        ]
                     }
                 }
             ]
@@ -376,6 +1254,157 @@
                 }
             ]
         },
+        "PLC1.PROPERTY-GET-STRING-80": {
+            "allOf": [
+                {
+                    "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                },
+                {
+                    "function": true
+                }
+            ]
+        },
+        "PLC1.ST_SettingsValveWithFB": {
+            "properties": {
+                "tValveOffTimeout": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/TIME"
+                        },
+                        {
+                            "comment": "Timeout for switching valve on [default: 10s]",
+                            "propertyOrder": 2
+                        }
+                    ]
+                },
+                "tValveOnTimeout": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/TIME"
+                        },
+                        {
+                            "propertyOrder": 1
+                        }
+                    ]
+                }
+            },
+            "type": "object"
+        },
+        "PLC1.ST_ValveWithFB_HMI": {
+            "properties": {
+                "bBtnOffEnabled": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 10
+                        }
+                    ]
+                },
+                "bBtnOnEnabled": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 11
+                        }
+                    ]
+                },
+                "bCmdOffPressed": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 8
+                        }
+                    ]
+                },
+                "bCmdOnPressed": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 9
+                        }
+                    ]
+                },
+                "bStaOff": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 4
+                        }
+                    ]
+                },
+                "bStaOffError": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 6
+                        }
+                    ]
+                },
+                "bStaOn": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 5
+                        }
+                    ]
+                },
+                "bStaOnError": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 7
+                        }
+                    ]
+                },
+                "sDescription": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                        },
+                        {
+                            "propertyOrder": 1
+                        }
+                    ]
+                },
+                "sNameOff": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                        },
+                        {
+                            "propertyOrder": 2
+                        }
+                    ]
+                },
+                "sNameOn": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                        },
+                        {
+                            "propertyOrder": 3
+                        }
+                    ]
+                }
+            },
+            "type": "object"
+        },
         "PLC1.StatusLEDs": {
             "allOf": [
                 {
@@ -403,6 +1432,118 @@
                     "$ref": "tchmi:general#/definitions/INT16"
                 }
             ]
+        },
+        "PLC1.Tc2_Standard.R_TRIG": {
+            "attributes": {
+                "conditionalshow_all_locals": ""
+            },
+            "properties": {
+                "CLK": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "comment": "Signal to detect",
+                            "propertyOrder": 1
+                        }
+                    ]
+                },
+                "M": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "attributes": {
+                                "conditionalshow": ""
+                            },
+                            "propertyOrder": 3
+                        }
+                    ]
+                },
+                "Q": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "comment": "rising edge at signal detected",
+                            "propertyOrder": 2
+                        }
+                    ]
+                }
+            },
+            "type": "object"
+        },
+        "PLC1.Tc2_Standard.TON": {
+            "properties": {
+                "ET": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/TIME"
+                        },
+                        {
+                            "comment": "elapsed time",
+                            "propertyOrder": 4
+                        }
+                    ]
+                },
+                "IN": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "comment": "starts timer with rising edge, resets timer with falling edge",
+                            "propertyOrder": 1
+                        }
+                    ]
+                },
+                "M": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 5
+                        }
+                    ]
+                },
+                "PT": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/TIME"
+                        },
+                        {
+                            "comment": "time to pass, before Q is set",
+                            "propertyOrder": 2
+                        }
+                    ]
+                },
+                "Q": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "comment": "gets TRUE, delay time (PT) after a rising edge at IN",
+                            "propertyOrder": 3
+                        }
+                    ]
+                },
+                "StartTime": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/TIME"
+                        },
+                        {
+                            "propertyOrder": 6
+                        }
+                    ]
+                }
+            },
+            "type": "object"
         }
     },
     "DEFLATECOMPRESSIONLEVEL": 5,
@@ -3291,134 +4432,93 @@
             },
             "USEMAPPING": true
         },
-        "PLC1.GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.i_sCmName": {
+        "PLC1.GVL_Modules.g_emDockingInterface.s_cmDockingClampsLower.stHmiData": {
             "ACCESS": 3,
             "DOMAIN": "ADS",
             "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_cmCenteringUnit::i_sCmName",
+            "MAPPING": "PLC1::GVL_Modules::g_emDockingInterface::s_cmDockingClampsLower::stHmiData",
             "SCHEMA": {
                 "allOf": [
                     {
-                        "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                        "$ref": "tchmi:server#/definitions/PLC1.ST_ValveWithFB_HMI"
                     },
                     {
-                        "propertyOrder": 4
+                        "comment": "Hmi",
+                        "propertyOrder": 40
                     }
                 ]
             },
             "USEMAPPING": true
         },
-        "PLC1.GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.s_fbHmiBtnManualOff.p_bStaEnabled": {
+        "PLC1.GVL_Modules.g_emDockingInterface.s_cmDockingClampsUpper.stHmiData": {
             "ACCESS": 3,
             "DOMAIN": "ADS",
             "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_cmCenteringUnit::s_fbHmiBtnManualOff::p_bStaEnabled",
-            "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-BOOL"
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.s_fbHmiBtnManualOff.p_sBtnText": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_cmCenteringUnit::s_fbHmiBtnManualOff::p_sBtnText",
-            "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-80"
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.s_fbHmiBtnManualOff.s_bFromHmiPressed": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_cmCenteringUnit::s_fbHmiBtnManualOff::s_bFromHmiPressed",
+            "MAPPING": "PLC1::GVL_Modules::g_emDockingInterface::s_cmDockingClampsUpper::stHmiData",
             "SCHEMA": {
                 "allOf": [
                     {
-                        "$ref": "tchmi:general#/definitions/BOOL"
+                        "$ref": "tchmi:server#/definitions/PLC1.ST_ValveWithFB_HMI"
                     },
                     {
-                        "propertyOrder": 1
+                        "comment": "Hmi",
+                        "propertyOrder": 40
                     }
                 ]
             },
             "USEMAPPING": true
         },
-        "PLC1.GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.s_fbHmiBtnManualOn.p_bStaEnabled": {
+        "PLC1.GVL_Modules.g_emDockingInterface.s_cmDoorOpener.stHmiData": {
             "ACCESS": 3,
             "DOMAIN": "ADS",
             "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_cmCenteringUnit::s_fbHmiBtnManualOn::p_bStaEnabled",
-            "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-BOOL"
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.s_fbHmiBtnManualOn.p_sBtnText": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_cmCenteringUnit::s_fbHmiBtnManualOn::p_sBtnText",
-            "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-80"
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.s_fbHmiBtnManualOn.s_bFromHmiPressed": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_cmCenteringUnit::s_fbHmiBtnManualOn::s_bFromHmiPressed",
+            "MAPPING": "PLC1::GVL_Modules::g_emDockingInterface::s_cmDoorOpener::stHmiData",
             "SCHEMA": {
                 "allOf": [
                     {
-                        "$ref": "tchmi:general#/definitions/BOOL"
+                        "$ref": "tchmi:server#/definitions/PLC1.ST_ValveWithFB_HMI"
                     },
                     {
-                        "propertyOrder": 1
+                        "comment": "Hmi",
+                        "propertyOrder": 40
                     }
                 ]
             },
             "USEMAPPING": true
         },
-        "PLC1.GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.s_fbHmiLedErrorOff.p_bStaLed": {
+        "PLC1.GVL_Modules.g_emDockingInterface.s_cmDoorShutter.stHmiData": {
             "ACCESS": 3,
             "DOMAIN": "ADS",
             "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_cmCenteringUnit::s_fbHmiLedErrorOff::p_bStaLed",
+            "MAPPING": "PLC1::GVL_Modules::g_emDockingInterface::s_cmDoorShutter::stHmiData",
             "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-BOOL"
+                "allOf": [
+                    {
+                        "$ref": "tchmi:server#/definitions/PLC1.ST_ValveWithFB_HMI"
+                    },
+                    {
+                        "comment": "Hmi",
+                        "propertyOrder": 40
+                    }
+                ]
             },
             "USEMAPPING": true
         },
-        "PLC1.GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.s_fbHmiLedErrorOn.p_bStaLed": {
+        "PLC1.GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.stHmiData": {
             "ACCESS": 3,
             "DOMAIN": "ADS",
             "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_cmCenteringUnit::s_fbHmiLedErrorOn::p_bStaLed",
+            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_cmCenteringUnit::stHmiData",
             "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-BOOL"
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.s_fbHmiLedIsOff.p_bStaLed": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_cmCenteringUnit::s_fbHmiLedIsOff::p_bStaLed",
-            "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-BOOL"
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.s_fbHmiLedIsOn.p_bStaLed": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_cmCenteringUnit::s_fbHmiLedIsOn::p_bStaLed",
-            "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-BOOL"
+                "allOf": [
+                    {
+                        "$ref": "tchmi:server#/definitions/PLC1.ST_ValveWithFB_HMI"
+                    },
+                    {
+                        "comment": "Hmi",
+                        "propertyOrder": 40
+                    }
+                ]
             },
             "USEMAPPING": true
         },
@@ -3596,6 +4696,36 @@
             },
             "USEMAPPING": true
         },
+        "PLC1.GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.s_fbHmiLedBrakeReleased.p_bStaLed": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_cmPalletConveyor::s_fbHmiLedBrakeReleased::p_bStaLed",
+            "SCHEMA": {
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-BOOL"
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.s_fbHmiLedDriveError.p_bStaLed": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_cmPalletConveyor::s_fbHmiLedDriveError::p_bStaLed",
+            "SCHEMA": {
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-BOOL"
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.s_fbHmiLedMotorStopped.p_bStaLed": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_cmPalletConveyor::s_fbHmiLedMotorStopped::p_bStaLed",
+            "SCHEMA": {
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-BOOL"
+            },
+            "USEMAPPING": true
+        },
         "PLC1.GVL_Modules.g_emPalletConveyor.s_diStaAtCenteringPosition.p_bStaInput": {
             "ACCESS": 3,
             "DOMAIN": "ADS",
@@ -3613,6 +4743,154 @@
             "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_diStaAtDockingPosition::p_bStaInput",
             "SCHEMA": {
                 "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-BOOL"
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL_Modules.g_emPalletConveyor.s_fbHmiBtnTB_Centering.p_bStaEnabled": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_fbHmiBtnTB_Centering::p_bStaEnabled",
+            "SCHEMA": {
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-BOOL"
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL_Modules.g_emPalletConveyor.s_fbHmiBtnTB_Centering.p_sBtnText": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_fbHmiBtnTB_Centering::p_sBtnText",
+            "SCHEMA": {
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-80"
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL_Modules.g_emPalletConveyor.s_fbHmiBtnTB_Centering.s_bFromHmiPressed": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_fbHmiBtnTB_Centering::s_bFromHmiPressed",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/BOOL"
+                    },
+                    {
+                        "propertyOrder": 1
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL_Modules.g_emPalletConveyor.s_fbHmiBtnTB_ToCentering.p_bStaEnabled": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_fbHmiBtnTB_ToCentering::p_bStaEnabled",
+            "SCHEMA": {
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-BOOL"
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL_Modules.g_emPalletConveyor.s_fbHmiBtnTB_ToCentering.p_sBtnText": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_fbHmiBtnTB_ToCentering::p_sBtnText",
+            "SCHEMA": {
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-80"
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL_Modules.g_emPalletConveyor.s_fbHmiBtnTB_ToCentering.s_bFromHmiPressed": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_fbHmiBtnTB_ToCentering::s_bFromHmiPressed",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/BOOL"
+                    },
+                    {
+                        "propertyOrder": 1
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL_Modules.g_emPalletConveyor.s_fbHmiBtnTB_ToDocking.p_bStaEnabled": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_fbHmiBtnTB_ToDocking::p_bStaEnabled",
+            "SCHEMA": {
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-BOOL"
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL_Modules.g_emPalletConveyor.s_fbHmiBtnTB_ToDocking.p_sBtnText": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_fbHmiBtnTB_ToDocking::p_sBtnText",
+            "SCHEMA": {
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-80"
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL_Modules.g_emPalletConveyor.s_fbHmiBtnTB_ToDocking.s_bFromHmiPressed": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_fbHmiBtnTB_ToDocking::s_bFromHmiPressed",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/BOOL"
+                    },
+                    {
+                        "propertyOrder": 1
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL_Modules.g_emPalletConveyor.s_fbHmiBtnTB_ToInfeed.p_bStaEnabled": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_fbHmiBtnTB_ToInfeed::p_bStaEnabled",
+            "SCHEMA": {
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-BOOL"
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL_Modules.g_emPalletConveyor.s_fbHmiBtnTB_ToInfeed.p_sBtnText": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_fbHmiBtnTB_ToInfeed::p_sBtnText",
+            "SCHEMA": {
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-80"
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL_Modules.g_emPalletConveyor.s_fbHmiBtnTB_ToInfeed.s_bFromHmiPressed": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_fbHmiBtnTB_ToInfeed::s_bFromHmiPressed",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/BOOL"
+                    },
+                    {
+                        "propertyOrder": 1
+                    }
+                ]
             },
             "USEMAPPING": true
         },
@@ -5745,7 +7023,25 @@
                 "PLC1.GVL_KMWEGenericLib.g_fbParamManager.s_nFromHmiFileSelected": 3,
                 "PLC1.GVL_KMWEGenericLib.g_fbParamManager.s_sFromHmiExportName": 3,
                 "PLC1.GVL_KMWEGenericLib.g_fbParamManager.s_sToHmiLoadedFile": 3,
+                "PLC1.GVL_Modules.g_emDockingInterface.s_cmDockingClampsLower.stHmiData": 3,
+                "PLC1.GVL_Modules.g_emDockingInterface.s_cmDockingClampsUpper.stHmiData": 3,
+                "PLC1.GVL_Modules.g_emDockingInterface.s_cmDoorOpener.stHmiData": 3,
+                "PLC1.GVL_Modules.g_emDockingInterface.s_cmDoorShutter.stHmiData": 3,
+                "PLC1.GVL_Modules.g_emDockingInterface.s_cmUnlockingPinLower.i_sCmName": 3,
+                "PLC1.GVL_Modules.g_emDockingInterface.s_cmUnlockingPinLower.s_fbHmiBtnManualOff.p_sBtnText": 3,
+                "PLC1.GVL_Modules.g_emDockingInterface.s_cmUnlockingPinLower.s_fbHmiBtnManualOff.s_sToHmiVisible": 3,
+                "PLC1.GVL_Modules.g_emDockingInterface.s_cmUnlockingPinLower.s_fbHmiBtnManualOn.p_sBtnText": 3,
+                "PLC1.GVL_Modules.g_emDockingInterface.s_cmUnlockingPinLower.s_fbHmiLedIsOff.p_bStaLed": 3,
+                "PLC1.GVL_Modules.g_emDockingInterface.s_cmUnlockingPinLower.s_fbHmiLedIsOn.p_bStaLed": 3,
+                "PLC1.GVL_Modules.g_emDockingInterface.s_cmUnlockingPinLower.stHmiData": 3,
+                "PLC1.GVL_Modules.g_emDockingInterface.s_cmUnlockingPinUpper": 3,
+                "PLC1.GVL_Modules.g_emDockingInterface.s_cmUnlockingPinUpper.stHmiData": 3,
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.i_sCmName": 3,
+                "PLC1.GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.s_bStaValveIsOff": 3,
+                "PLC1.GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.s_bStaValveIsOff1": 3,
+                "PLC1.GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.s_bStaValveIsOff2": 3,
+                "PLC1.GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.s_bStaValveIsOn1": 3,
+                "PLC1.GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.s_bStaValveIsOn2": 3,
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.s_fbHmiBtnManualOff.p_bStaEnabled": 3,
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.s_fbHmiBtnManualOff.p_sBtnText": 3,
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.s_fbHmiBtnManualOff.s_bFromHmiPressed": 3,
@@ -5756,6 +7052,7 @@
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.s_fbHmiLedErrorOn.p_bStaLed": 3,
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.s_fbHmiLedIsOff.p_bStaLed": 3,
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.s_fbHmiLedIsOn.p_bStaLed": 3,
+                "PLC1.GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.stHmiData": 3,
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_nSetTargetSpeed": 3,
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.s_fTargetSpeed": 3,
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.s_fbHmiBtnManualApplyBrake.p_bStaEnabled": 3,
@@ -5768,8 +7065,23 @@
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.s_fbHmiBtnManualReleaseBrake.s_bFromHmiPressed": 3,
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.s_fbHmiBtnManualStop.p_bStaEnabled": 3,
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.s_fbHmiBtnManualStop.s_bFromHmiPressed": 3,
+                "PLC1.GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.s_fbHmiLedBrakeReleased.p_bStaLed": 3,
+                "PLC1.GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.s_fbHmiLedDriveError.p_bStaLed": 3,
+                "PLC1.GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.s_fbHmiLedMotorStopped.p_bStaLed": 3,
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_diStaAtCenteringPosition.p_bStaInput": 3,
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_diStaAtDockingPosition.p_bStaInput": 3,
+                "PLC1.GVL_Modules.g_emPalletConveyor.s_fbHmiBtnTB_Centering.p_bStaEnabled": 3,
+                "PLC1.GVL_Modules.g_emPalletConveyor.s_fbHmiBtnTB_Centering.p_sBtnText": 3,
+                "PLC1.GVL_Modules.g_emPalletConveyor.s_fbHmiBtnTB_Centering.s_bFromHmiPressed": 3,
+                "PLC1.GVL_Modules.g_emPalletConveyor.s_fbHmiBtnTB_ToCentering.p_bStaEnabled": 3,
+                "PLC1.GVL_Modules.g_emPalletConveyor.s_fbHmiBtnTB_ToCentering.p_sBtnText": 3,
+                "PLC1.GVL_Modules.g_emPalletConveyor.s_fbHmiBtnTB_ToCentering.s_bFromHmiPressed": 3,
+                "PLC1.GVL_Modules.g_emPalletConveyor.s_fbHmiBtnTB_ToDocking.p_bStaEnabled": 3,
+                "PLC1.GVL_Modules.g_emPalletConveyor.s_fbHmiBtnTB_ToDocking.p_sBtnText": 3,
+                "PLC1.GVL_Modules.g_emPalletConveyor.s_fbHmiBtnTB_ToDocking.s_bFromHmiPressed": 3,
+                "PLC1.GVL_Modules.g_emPalletConveyor.s_fbHmiBtnTB_ToInfeed.p_bStaEnabled": 3,
+                "PLC1.GVL_Modules.g_emPalletConveyor.s_fbHmiBtnTB_ToInfeed.p_sBtnText": 3,
+                "PLC1.GVL_Modules.g_emPalletConveyor.s_fbHmiBtnTB_ToInfeed.s_bFromHmiPressed": 3,
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_fbHmiLedDoorOpened.p_bStaLed": 3,
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_fbHmiLedInfeedFrontPosition.p_bStaLed": 3,
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_fbHmiLedInfeedFrontPosition.p_sToHmiDescriptionLed": 3,

@@ -1,122 +1,36 @@
 <div id="Desktop_1" data-tchmi-type="TcHmi.Controls.System.TcHmiView" data-tchmi-left="0" data-tchmi-width-mode="Content" data-tchmi-min-width="100" data-tchmi-min-width-unit="%" data-tchmi-height-mode="Content" data-tchmi-min-height="100" data-tchmi-min-height-unit="%" data-tchmi-background-image="Images/Promo Set 1.jpg" data-tchmi-background-image-height="100" data-tchmi-background-image-width="100" data-tchmi-background-image-height-unit="%" data-tchmi-background-image-width-unit="%">
 
-<div id="TopRegion" data-tchmi-type="TcHmi.Controls.System.TcHmiRegion" data-tchmi-height="10" data-tchmi-height-unit="%" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-top="0" data-tchmi-top-unit="px" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-target-content="WebContent/Top/TopBar.content">
-
-</div>
-
-<div id="BottomRegion" data-tchmi-type="TcHmi.Controls.System.TcHmiRegion" data-tchmi-height="10" data-tchmi-height-unit="%" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-top="90" data-tchmi-top-unit="%" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-target-content="WebContent/Bottom/NavigationBarStart.content">
-
-</div>
-
-<div id="ContentRegion" data-tchmi-type="TcHmi.Controls.System.TcHmiRegion" data-tchmi-height="80" data-tchmi-height-unit="%" data-tchmi-left="0.0" data-tchmi-left-unit="%" data-tchmi-top="10.0" data-tchmi-top-unit="%" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-target-content="WebContent/Start.content" data-tchmi-visibility="Visible">
-
-
-<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">[
-  {
-    "event": "ContentRegion.onTargetContentReplaced",
-    "actions": [
-      {
-        "objectType": "WriteToSymbol",
-        "active": true,
-        "symbolExpression": "%s%PLC1.MAIN.User%/s%",
-        "valueType": "tchmi:general#/definitions/String",
-        "value": {
-          "objectType": "FunctionExpression",
-          "functionExpression": " TcHmi.Server.getCurrentUser()"
-        },
-        "asyncWait": true
-      },
-      {
-        "objectType": "Condition",
-        "active": true,
-        "asyncWait": true,
-        "parts": [
-          {
-            "if": [
-              {
-                "compare1": {
-                  "objectType": "Symbol",
-                  "symbolExpression": "%s%PLC1.MAIN.InitDone%/s%"
-                },
-                "compare2": {
-                  "objectType": "StaticValue",
-                  "valueType": "tchmi:general#/definitions/BOOL",
-                  "value": true
-                },
-                "compareOperator": "==",
-                "logic": null
-              }
-            ],
-            "then": [
-              {
-                "objectType": "WriteToSymbol",
-                "active": true,
-                "symbolExpression": "%ctrl%ConnectionErrorMessage::Visibility%/ctrl%",
-                "valueType": "tchmi:framework#/definitions/Visibility",
-                "value": {
-                  "objectType": "StaticValue",
-                  "valueType": "tchmi:framework#/definitions/Visibility",
-                  "value": "Hidden"
-                },
-                "asyncWait": true
-              },
-              {
-                "objectType": "WriteToSymbol",
-                "active": true,
-                "symbolExpression": "%ctrl%KMWELogo::Visibility%/ctrl%",
-                "valueType": "tchmi:framework#/definitions/Visibility",
-                "value": {
-                  "objectType": "StaticValue",
-                  "valueType": "tchmi:framework#/definitions/Visibility",
-                  "value": "Visible"
-                },
-                "asyncWait": true
-              }
-            ]
-          },
-          {
-            "else": [
-              {
-                "objectType": "WriteToSymbol",
-                "active": true,
-                "symbolExpression": "%ctrl%ConnectionErrorMessage::Visibility%/ctrl%",
-                "valueType": "tchmi:framework#/definitions/Visibility",
-                "value": {
-                  "objectType": "StaticValue",
-                  "valueType": "tchmi:framework#/definitions/Visibility",
-                  "value": "Visible"
-                },
-                "asyncWait": true
-              },
-              {
-                "objectType": "WriteToSymbol",
-                "active": true,
-                "symbolExpression": "%ctrl%KMWELogo::Visibility%/ctrl%",
-                "valueType": "tchmi:framework#/definitions/Visibility",
-                "value": {
-                  "objectType": "StaticValue",
-                  "valueType": "tchmi:framework#/definitions/Visibility",
-                  "value": "Hidden"
-                },
-                "asyncWait": true
-              }
-            ]
-          }
-        ]
-      }
-    ]
-  }
-]</script>
-</div>
-
-<div id="TcHmiContainer_1" data-tchmi-type="TcHmi.Controls.System.TcHmiContainer" data-tchmi-height="240" data-tchmi-height-unit="px" data-tchmi-left="365" data-tchmi-left-unit="px" data-tchmi-top="435" data-tchmi-top-unit="px" data-tchmi-width="296" data-tchmi-width-unit="px" data-tchmi-visibility="Hidden">
+<div id="TcHmiContainer_Numpad" data-tchmi-type="TcHmi.Controls.System.TcHmiContainer" data-tchmi-height="240" data-tchmi-height-unit="px" data-tchmi-left="365" data-tchmi-left-unit="px" data-tchmi-top="435" data-tchmi-top-unit="px" data-tchmi-width="296" data-tchmi-width-unit="px" data-tchmi-visibility="Collapsed" data-tchmi-zindex="1">
 
 <script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
 {
   "color": "rgba(127, 127, 127, 1)"
 }
 </script>
-<div id="TcHmiKeyboard_1" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiKeyboard" data-tchmi-height="228" data-tchmi-height-unit="px" data-tchmi-label-font-size="14" data-tchmi-layout-file="KeyboardLayouts/Numpad.keyboard.json" data-tchmi-left="6" data-tchmi-left-unit="px" data-tchmi-scale-mode="ScaleToFit" data-tchmi-top="6" data-tchmi-top-unit="px" data-tchmi-width="228" data-tchmi-width-unit="px">
+<div id="TcHmiButton_CloseNumpad" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="48" data-tchmi-height-unit="px" data-tchmi-left="242" data-tchmi-left-unit="px" data-tchmi-text="X" data-tchmi-top="6" data-tchmi-top-unit="px" data-tchmi-width="48" data-tchmi-width-unit="px" data-tchmi-word-wrap="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "TcHmiButton_CloseNumpad.onPressed",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%ctrl%TcHmiContainer_Numpad::Visibility%/ctrl%",
+        "value": {
+          "objectType": "StaticValue",
+          "valueType": "tchmi:framework#/definitions/Visibility",
+          "value": "Collapsed"
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="TcHmiKeyboard_Numpad" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiKeyboard" data-tchmi-height="228" data-tchmi-height-unit="px" data-tchmi-label-font-size="14" data-tchmi-layout-file="KeyboardLayouts/Numpad.keyboard.json" data-tchmi-left="6" data-tchmi-left-unit="px" data-tchmi-scale-mode="ScaleToFit" data-tchmi-top="6" data-tchmi-top-unit="px" data-tchmi-width="228" data-tchmi-width-unit="px">
 <script data-tchmi-target-attribute="data-tchmi-indirect-input-padding" type="application/json">
 {
   "top": 3,
@@ -163,21 +77,138 @@
 </script>
 
 </div>
-<div id="TcHmiButton_78" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="48" data-tchmi-height-unit="px" data-tchmi-left="242" data-tchmi-left-unit="px" data-tchmi-text="X" data-tchmi-top="6" data-tchmi-top-unit="px" data-tchmi-width="48" data-tchmi-width-unit="px" data-tchmi-word-wrap="true">
+</div>
+<div id="TcHmiGrid_HMI" data-tchmi-type="TcHmi.Controls.System.TcHmiGrid" data-tchmi-height="100" data-tchmi-height-unit="%" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-top="0" data-tchmi-top-unit="%" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-right-unit="%" data-tchmi-bottom-unit="%" data-tchmi-right="0" data-tchmi-bottom="0" data-tchmi-width-mode="Value">
 
+<script data-tchmi-target-attribute="data-tchmi-row-options" type="application/json">
+[
+  {
+    "height": 10.0,
+    "heightUnit": "%",
+    "heightMode": "Value",
+    "maxHeightUnit": "%",
+    "minHeightUnit": "%",
+    "overflow": false
+  },
+  {
+    "height": 80.0,
+    "heightUnit": "%",
+    "heightMode": "Value",
+    "maxHeightUnit": "%",
+    "minHeightUnit": "%",
+    "overflow": false
+  },
+  {
+    "height": 10.0,
+    "heightUnit": "%",
+    "heightMode": "Value",
+    "maxHeightUnit": "%",
+    "minHeightUnit": "%",
+    "overflow": false
+  }
+]
+</script>
+<div id="TopRegion" data-tchmi-type="TcHmi.Controls.System.TcHmiRegion" data-tchmi-height="1000" data-tchmi-height-unit="%" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-top="0" data-tchmi-top-unit="%" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-target-content="WebContent/Top/TopBar.content">
+</div>
+<div data-tchmi-grid-row-index="1" data-tchmi-grid-column-index="0" id="ContentRegion" data-tchmi-type="TcHmi.Controls.System.TcHmiRegion" data-tchmi-height="100" data-tchmi-height-unit="%" data-tchmi-left="0.0" data-tchmi-left-unit="%" data-tchmi-top="0" data-tchmi-top-unit="%" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-target-content="WebContent/Start.content" data-tchmi-visibility="Visible" data-tchmi-width-mode="Value">
 <script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
 [
   {
-    "event": "TcHmiButton_78.onPressed",
+    "event": "ContentRegion.onTargetContentReplaced",
     "actions": [
       {
         "objectType": "WriteToSymbol",
         "active": true,
-        "symbolExpression": "%ctrl%TcHmiContainer_1::Visibility%/ctrl%",
+        "symbolExpression": "%s%PLC1.MAIN.User%/s%",
         "value": {
-          "objectType": "StaticValue",
-          "valueType": "tchmi:framework#/definitions/Visibility",
-          "value": "Hidden"
+          "objectType": "FunctionExpression",
+          "functionExpression": " TcHmi.Server.getCurrentUser()"
+        },
+        "asyncWait": true
+      },
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/BOOL",
+                  "symbolExpression": "%s%PLC1.MAIN.InitDone%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/BOOL",
+                  "value": true
+                },
+                "compareOperator": "==",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%ConnectionErrorMessage::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Collapsed"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%KMWELogo::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": false,
+                "symbolExpression": "%ctrl%ConnectionErrorMessage::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": false,
+                "symbolExpression": "%ctrl%KMWELogo::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Collapsed"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%ScreenName%/i%",
+        "value": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%ctrl%ContentRegion::CurrentContent%/ctrl%"
         },
         "asyncWait": true
       }
@@ -185,6 +216,8 @@
   }
 ]
 </script>
+</div>
+<div data-tchmi-grid-row-index="2" data-tchmi-grid-column-index="0" id="BottomRegion" data-tchmi-type="TcHmi.Controls.System.TcHmiRegion" data-tchmi-height="1000" data-tchmi-height-unit="%" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-top="0" data-tchmi-top-unit="%" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-target-content="WebContent/Bottom/NavigationBarStart.content" data-tchmi-height-mode="Value" data-tchmi-width-mode="Value">
 </div>
 </div>
 </div>

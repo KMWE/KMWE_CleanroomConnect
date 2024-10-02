@@ -1,5 +1,5 @@
-<div id="Desktop_1" data-tchmi-type="TcHmi.Controls.System.TcHmiView" data-tchmi-width-mode="Value" data-tchmi-min-width="100" data-tchmi-min-width-unit="%" data-tchmi-height-mode="Value" data-tchmi-min-height="100" data-tchmi-min-height-unit="%" data-tchmi-background-image="Images/Promo Set 1.jpg" data-tchmi-background-image-height="100" data-tchmi-background-image-width="100" data-tchmi-background-image-height-unit="%" data-tchmi-background-image-width-unit="%" data-tchmi-bottom-unit="px" data-tchmi-width-unit="%" data-tchmi-width="100" data-tchmi-left-unit="%" data-tchmi-top-unit="%" data-tchmi-left="0" data-tchmi-top="0" data-tchmi-height-unit="%" data-tchmi-height="100">
-<div id="TcHmiGrid_HMI" data-tchmi-type="TcHmi.Controls.System.TcHmiGrid" data-tchmi-height="100" data-tchmi-height-unit="%" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-top="0" data-tchmi-top-unit="%" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-right-unit="%" data-tchmi-bottom-unit="%" data-tchmi-right="0" data-tchmi-bottom="0" data-tchmi-width-mode="Value">
+<div id="HMI" data-tchmi-type="TcHmi.Controls.System.TcHmiView" data-tchmi-width-mode="Value" data-tchmi-min-width="100" data-tchmi-min-width-unit="%" data-tchmi-height-mode="Value" data-tchmi-min-height="100" data-tchmi-min-height-unit="%" data-tchmi-background-image="Images/Promo Set 1.jpg" data-tchmi-background-image-height="100" data-tchmi-background-image-width="100" data-tchmi-background-image-height-unit="%" data-tchmi-background-image-width-unit="%" data-tchmi-bottom-unit="px" data-tchmi-width-unit="%" data-tchmi-width="100" data-tchmi-left-unit="%" data-tchmi-top-unit="%" data-tchmi-left="0" data-tchmi-top="0" data-tchmi-height-unit="%" data-tchmi-height="100" data-tchmi-zindex="1">
+<div id="TcHmiGrid_HMI" data-tchmi-type="TcHmi.Controls.System.TcHmiGrid" data-tchmi-height="100" data-tchmi-height-unit="%" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-top="0" data-tchmi-top-unit="%" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-right-unit="%" data-tchmi-bottom-unit="%" data-tchmi-right="0" data-tchmi-bottom="0" data-tchmi-width-mode="Value" data-tchmi-zindex="1">
 
 <script data-tchmi-target-attribute="data-tchmi-row-options" type="application/json">
 [
@@ -29,9 +29,9 @@
   }
 ]
 </script>
-<div id="TopRegion" data-tchmi-type="TcHmi.Controls.System.TcHmiRegion" data-tchmi-height="1000" data-tchmi-height-unit="%" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-top="0" data-tchmi-top-unit="%" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-target-content="WebContent/Top/TopBar.content">
+<div id="TopRegion" data-tchmi-type="TcHmi.Controls.System.TcHmiRegion" data-tchmi-height="1000" data-tchmi-height-unit="%" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-top="0" data-tchmi-top-unit="%" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-target-content="WebContent/Top/TopBar.content" data-tchmi-zindex="1">
 </div>
-<div data-tchmi-grid-row-index="1" data-tchmi-grid-column-index="0" id="ContentRegion" data-tchmi-type="TcHmi.Controls.System.TcHmiRegion" data-tchmi-height="100" data-tchmi-height-unit="%" data-tchmi-left="0.0" data-tchmi-left-unit="%" data-tchmi-top="0" data-tchmi-top-unit="%" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-target-content="WebContent/Start.content" data-tchmi-visibility="Visible" data-tchmi-width-mode="Value">
+<div data-tchmi-grid-row-index="1" data-tchmi-grid-column-index="0" id="ContentRegion" data-tchmi-type="TcHmi.Controls.System.TcHmiRegion" data-tchmi-height="100" data-tchmi-height-unit="%" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-top="0" data-tchmi-top-unit="%" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-target-content="WebContent/Start.content" data-tchmi-visibility="Visible" data-tchmi-width-mode="Value" data-tchmi-zindex="1">
 <script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
 [
   {
@@ -140,6 +140,17 @@
         "value": {
           "objectType": "Symbol",
           "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%i%ActualContentPath%/i%"
+        },
+        "asyncWait": true
+      },
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%ActualContentPath%/i%",
+        "value": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
           "symbolExpression": "%ctrl%ContentRegion::TargetContent%/ctrl%"
         },
         "asyncWait": true
@@ -149,111 +160,43 @@
 ]
 </script>
 </div>
-<div data-tchmi-grid-row-index="2" data-tchmi-grid-column-index="0" id="BottomRegion" data-tchmi-type="TcHmi.Controls.System.TcHmiRegion" data-tchmi-height="1000" data-tchmi-height-unit="%" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-top="0" data-tchmi-top-unit="%" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-target-content="WebContent/Bottom/NavigationBarStart.content" data-tchmi-height-mode="Value" data-tchmi-width-mode="Value">
+<div data-tchmi-grid-row-index="2" data-tchmi-grid-column-index="0" id="BottomRegion" data-tchmi-type="TcHmi.Controls.System.TcHmiRegion" data-tchmi-height="1000" data-tchmi-height-unit="%" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-top="0" data-tchmi-top-unit="%" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-target-content="WebContent/Bottom/NavigationBarStart.content" data-tchmi-height-mode="Value" data-tchmi-width-mode="Value" data-tchmi-zindex="1">
 </div>
-<div id="TcHmiTextbox_8" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextbox" data-tchmi-grid-column-index="0" data-tchmi-grid-row-index="1" data-tchmi-height="26" data-tchmi-height-unit="px" data-tchmi-left="128" data-tchmi-left-unit="px" data-tchmi-text="Num" data-tchmi-top="129" data-tchmi-top-unit="px" data-tchmi-width="150" data-tchmi-width-unit="px" data-tchmi-auto-focus-out="true" data-tchmi-auto-select-text="true">
-<script data-tchmi-target-attribute="data-tchmi-content-padding" type="application/json">
+<div id="TcHmiRectangle_4" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiRectangle" data-tchmi-grid-column-index="0" data-tchmi-grid-row-index="1" data-tchmi-height="100" data-tchmi-height-unit="%" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-top="0" data-tchmi-top-unit="%" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-zindex="0">
+
+<script data-tchmi-target-attribute="data-tchmi-border-style" type="application/json">
 {
-  "top": 3,
-  "right": 3,
-  "bottom": 3,
-  "left": 3
+  "left": "Dashed",
+  "right": "Dashed",
+  "top": "Dashed",
+  "bottom": "Dashed"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-border-width" type="application/json">
+{
+  "left": 1,
+  "right": 1,
+  "top": 1,
+  "bottom": 1,
+  "leftUnit": "px",
+  "rightUnit": "px",
+  "topUnit": "px",
+  "bottomUnit": "px"
 }
 </script>
 
 
-<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
-[
-  {
-    "event": "TcHmiTextbox_8.onPressed",
-    "actions": [
-      {
-        "objectType": "JavaScript",
-        "active": true,
-        "sourceLines": [
-          "$('#TcHmiContainer_NumPad').animate({",
-          "\ttop: '60%'",
-          "});"
-        ],
-        "injectContextObject": false,
-        "asyncWait": true,
-        "waitMode": "Synchronous"
-      }
-    ]
-  },
-  {
-    "event": "TcHmiTextbox_8.onUserInteractionFinished",
-    "actions": [
-      {
-        "objectType": "JavaScript",
-        "active": true,
-        "sourceLines": [
-          "$('#TcHmiContainer_NumPad').animate({",
-          "\ttop: '-100%'",
-          "});"
-        ],
-        "injectContextObject": false,
-        "asyncWait": true,
-        "waitMode": "Synchronous"
-      }
-    ]
-  }
-]
-</script>
-</div>
-<div id="TcHmiTextbox_9" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextbox" data-tchmi-grid-column-index="0" data-tchmi-grid-row-index="1" data-tchmi-height="26" data-tchmi-height-unit="px" data-tchmi-left="129" data-tchmi-left-unit="px" data-tchmi-top="189" data-tchmi-top-unit="px" data-tchmi-width="149" data-tchmi-width-unit="px" data-tchmi-auto-focus-out="true" data-tchmi-auto-select-text="true" data-tchmi-text="Text">
-<script data-tchmi-target-attribute="data-tchmi-content-padding" type="application/json">
+
+<script data-tchmi-target-attribute="data-tchmi-fill-color" type="application/json">
 {
-  "top": 3,
-  "right": 3,
-  "bottom": 3,
-  "left": 3
+  "color": "None"
 }
 </script>
-
-
-<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
-[
-  {
-    "event": "TcHmiTextbox_9.onPressed",
-    "actions": [
-      {
-        "objectType": "JavaScript",
-        "active": true,
-        "sourceLines": [
-          "$('#TcHmiContainer_Keyboard').animate({",
-          "\ttop: '50%'",
-          "});"
-        ],
-        "injectContextObject": false,
-        "asyncWait": true,
-        "waitMode": "Synchronous"
-      }
-    ]
-  },
-  {
-    "event": "TcHmiTextbox_9.onUserInteractionFinished",
-    "actions": [
-      {
-        "objectType": "JavaScript",
-        "active": true,
-        "sourceLines": [
-          "$('#TcHmiContainer_Keyboard').animate({",
-          "\ttop: '200%'",
-          "});"
-        ],
-        "injectContextObject": false,
-        "asyncWait": true,
-        "waitMode": "Synchronous"
-      }
-    ]
-  }
-]
-</script>
 </div>
 </div>
-<div id="TcHmiContainer_NumPad" data-tchmi-type="TcHmi.Controls.System.TcHmiContainer" data-tchmi-grid-column-index="0" data-tchmi-grid-row-index="1" data-tchmi-height="25" data-tchmi-height-unit="%" data-tchmi-left="40" data-tchmi-left-unit="%" data-tchmi-top="200" data-tchmi-top-unit="%" data-tchmi-width="20" data-tchmi-width-unit="%">
-<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="TcHmiKeyboard_1" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiKeyboard" data-tchmi-height="100" data-tchmi-height-unit="%" data-tchmi-label-font-size="14" data-tchmi-layout-file="KeyboardLayouts/Numpad.keyboard.json" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-scale-mode="ScaleToFit" data-tchmi-top="0" data-tchmi-top-unit="%" data-tchmi-width="100" data-tchmi-width-unit="%">
+<div id="TcHmiContainer_NumPad" data-tchmi-type="TcHmi.Controls.System.TcHmiContainer" data-tchmi-grid-column-index="0" data-tchmi-grid-row-index="1" data-tchmi-height="24" data-tchmi-height-unit="%" data-tchmi-left="40" data-tchmi-left-unit="%" data-tchmi-top="105" data-tchmi-top-unit="%" data-tchmi-width="12" data-tchmi-width-unit="%" data-tchmi-zindex="1">
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="TcHmiNumpad" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiKeyboard" data-tchmi-height="100" data-tchmi-height-unit="%" data-tchmi-label-font-size="14" data-tchmi-layout-file="KeyboardLayouts/Numpad.keyboard.json" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-scale-mode="ScaleToFit" data-tchmi-top="0" data-tchmi-top-unit="%" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-zindex="1">
 <script data-tchmi-target-attribute="data-tchmi-indirect-input-padding" type="application/json">
 {
   "top": 3,
@@ -335,19 +278,19 @@
 }
 </script>
 </div>
-<div id="TcHmiTextblock_297" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-grid-column-index="0" data-tchmi-grid-row-index="0" data-tchmi-height="30" data-tchmi-height-unit="px" data-tchmi-left="100" data-tchmi-left-unit="%" data-tchmi-text="X" data-tchmi-top="-30" data-tchmi-top-unit="px" data-tchmi-width="30" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-vertical-alignment="Center" data-tchmi-zindex="2">
+<div id="TcHmiNumpadClose" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-grid-column-index="0" data-tchmi-grid-row-index="0" data-tchmi-height="30" data-tchmi-height-unit="px" data-tchmi-left="100" data-tchmi-left-unit="%" data-tchmi-text="X" data-tchmi-top="-30" data-tchmi-top-unit="px" data-tchmi-width="30" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-vertical-alignment="Center" data-tchmi-zindex="3">
 
 <script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
 [
   {
-    "event": "TcHmiTextblock_297.onPressed",
+    "event": "TcHmiNumpadClose.onPressed",
     "actions": [
       {
         "objectType": "JavaScript",
         "active": true,
         "sourceLines": [
           "$('#TcHmiContainer_NumPad').animate({",
-          "\ttop: '-100%'",
+          "\ttop: '105%'",
           "});"
         ],
         "injectContextObject": false,
@@ -409,8 +352,8 @@
 </script>
 </div>
 </div>
-<div id="TcHmiContainer_Keyboard" data-tchmi-type="TcHmi.Controls.System.TcHmiContainer" data-tchmi-grid-column-index="0" data-tchmi-grid-row-index="1" data-tchmi-height="40" data-tchmi-height-unit="%" data-tchmi-left="10" data-tchmi-left-unit="%" data-tchmi-top="100" data-tchmi-top-unit="%" data-tchmi-width="80" data-tchmi-width-unit="%">
-<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="TcHmiKeyboard_2" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiKeyboard" data-tchmi-height="100" data-tchmi-height-unit="%" data-tchmi-label-font-size="14" data-tchmi-layout-file="KeyboardLayouts/US - basic.keyboard.json" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-scale-mode="ScaleToFit" data-tchmi-top="0" data-tchmi-top-unit="%" data-tchmi-width="100" data-tchmi-width-unit="%">
+<div id="TcHmiContainer_Keyboard" data-tchmi-type="TcHmi.Controls.System.TcHmiContainer" data-tchmi-grid-column-index="0" data-tchmi-grid-row-index="1" data-tchmi-height="40" data-tchmi-height-unit="%" data-tchmi-left="10" data-tchmi-left-unit="%" data-tchmi-top="105" data-tchmi-top-unit="%" data-tchmi-width="80" data-tchmi-width-unit="%" data-tchmi-zindex="1">
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="TcHmiKeyboard2" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiKeyboard" data-tchmi-height="100" data-tchmi-height-unit="%" data-tchmi-label-font-size="14" data-tchmi-layout-file="KeyboardLayouts/US - basic.keyboard.json" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-scale-mode="ScaleToFit" data-tchmi-top="0" data-tchmi-top-unit="%" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-zindex="1">
 <script data-tchmi-target-attribute="data-tchmi-indirect-input-padding" type="application/json">
 {
   "top": 3,
@@ -492,19 +435,19 @@
 }
 </script>
 </div>
-<div id="TcHmiTextblock_298" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-grid-column-index="0" data-tchmi-grid-row-index="0" data-tchmi-height="30" data-tchmi-height-unit="px" data-tchmi-left="100" data-tchmi-left-unit="%" data-tchmi-text="X" data-tchmi-top="-30" data-tchmi-top-unit="px" data-tchmi-width="30" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-vertical-alignment="Center" data-tchmi-zindex="2">
+<div id="TcHmiKeyboardClose" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-grid-column-index="0" data-tchmi-grid-row-index="0" data-tchmi-height="30" data-tchmi-height-unit="px" data-tchmi-left="100" data-tchmi-left-unit="%" data-tchmi-text="X" data-tchmi-top="-30" data-tchmi-top-unit="px" data-tchmi-width="30" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-vertical-alignment="Center" data-tchmi-zindex="3">
 
 <script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
 [
   {
-    "event": "TcHmiTextblock_298.onPressed",
+    "event": "TcHmiKeyboardClose.onPressed",
     "actions": [
       {
         "objectType": "JavaScript",
         "active": true,
         "sourceLines": [
           "$('#TcHmiContainer_Keyboard').animate({",
-          "\ttop: '200%'",
+          "\ttop: '105%'",
           "});"
         ],
         "injectContextObject": false,

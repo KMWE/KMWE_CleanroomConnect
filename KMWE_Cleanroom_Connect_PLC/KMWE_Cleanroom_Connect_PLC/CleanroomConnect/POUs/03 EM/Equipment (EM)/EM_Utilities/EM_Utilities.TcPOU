@@ -64,9 +64,9 @@ IF NOT SUPER^._m_Alarms() THEN
 END_IF
 
 //Set error bits
-s_bErrSafetyNotOk := NOT(s_bStaSafetyOk);
-s_bErrPowerOk := NOT(s_bStsPowerOk);
-s_bErrAirPressureNotOk := NOT(s_bStaAirPressureOk);
+s_bErrSafetyNotOk S= NOT(s_bStaSafetyOk);
+s_bErrPowerOk S= NOT(s_bStsPowerOk);
+s_bErrAirPressureNotOk S= NOT(s_bStaAirPressureOk);
 
 // Alarm Handlers
 s_fbAlarmHandlerSafetyNotOk(
@@ -84,12 +84,10 @@ s_fbAlarmHandlerAirPressureNotOk(
 	i_eAlarmLevel := E_AlarmLevel.Alarm, 
 	i_sAlarmText := CONCAT(i_sEmName, ' - Air pressure not OK'));
 	
-// Reset warnings
-IF i_bCmdReset THEN
-	s_bErrSafetyNotOk := FALSE;
-	s_bErrPowerOk := FALSE;
-	s_bErrAirPressureNotOk := FALSE;
-END_IF
+// Reset Errors
+s_bErrSafetyNotOk R= i_bCmdReset AND s_bStaSafetyOk;
+s_bErrPowerOk R= i_bCmdReset AND s_bStsPowerOk;
+s_bErrAirPressureNotOk R= i_bCmdReset AND s_bStaAirPressureOk;
 
 s_bStaError := 
 	s_fbAlarmHandlerSafetyNotOk.q_bStaActive
@@ -158,9 +156,9 @@ IF NOT SUPER^._m_Init() THEN
 END_IF
 
 //Control Modules
-s_diSafetyOk.i_stSettings.tmInputDelay := T#3S;
-s_diPowerOk.i_stSettings.tmInputDelay := T#3S;
-s_diAirPressureOk.i_stSettings.tmInputDelay := T#3S;
+s_diSafetyOk.i_stSettings.tmInputDelay := T#1S;
+s_diPowerOk.i_stSettings.tmInputDelay := T#1S;
+s_diAirPressureOk.i_stSettings.tmInputDelay := T#1S;
 
 s_doBeaconLedGreen.i_stSettings.bCfgDelay := FALSE;
 s_doBeaconLedGreen.i_stSettings.tmOutputDelay := T#0S;
@@ -305,9 +303,10 @@ p_bStsPowerOk := s_bStsPowerOk;
       <LineId Id="72" Count="2" />
       <LineId Id="71" Count="0" />
       <LineId Id="50" Count="0" />
-      <LineId Id="56" Count="3" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="58" Count="1" />
       <LineId Id="77" Count="0" />
-      <LineId Id="60" Count="2" />
+      <LineId Id="61" Count="1" />
       <LineId Id="44" Count="0" />
       <LineId Id="75" Count="1" />
       <LineId Id="32" Count="0" />

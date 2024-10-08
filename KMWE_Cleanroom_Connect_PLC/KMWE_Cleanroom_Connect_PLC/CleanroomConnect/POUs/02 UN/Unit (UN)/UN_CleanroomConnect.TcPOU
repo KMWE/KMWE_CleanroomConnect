@@ -384,6 +384,7 @@ GVL_Modules.g_emDockingInterface.i_sEmName  := 'EM Docking Interface';
 //--20240924 s_stSettings.stSettingsDockingInterface.bOpenClampsAfterClosingTimeout := FALSE; 
 
 //EM Lifting Transport
+(* ++
 _m_AddModule(i_itfModuleBase := GVL_Modules.g_emLiftingTransport);
 
 GVL_Modules.g_emLiftingTransport.i_bReqEnable := FALSE;
@@ -402,8 +403,10 @@ s_stSettings.stSettingsLiftingTransport.stLiftSpeedProfilePositioning.fVelocity	
 s_stSettings.stSettingsLiftingTransport.stLiftSpeedProfilePositioning.fAcceleration	:= 25.0; //mm/s^2
 s_stSettings.stSettingsLiftingTransport.stLiftSpeedProfilePositioning.fDeceleration	:= 25.0; //mm/s^2
 s_stSettings.stSettingsLiftingTransport.stLiftSpeedProfilePositioning.fJerk	:= 250.0; //mm/s^3
+*)
 
 //Automatic-Positioning Lift
+(* ++
 s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[0].sName	:= 'Idle';
 s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[0].fPosition := 50.0; //[mm]
 s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[0].fVelocity := 100.0; //[mm/s] 
@@ -523,13 +526,15 @@ s_stSettings.stSettingsLiftingTransport.arr_TransportUnitPositioningProfile[5].f
 s_stSettings.stSettingsLiftingTransport.arr_TransportUnitPositioningProfile[5].fAcceleration := 10.0;  //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_TransportUnitPositioningProfile[5].fDeceleration := 10.0; //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_TransportUnitPositioningProfile[5].fJerk := 100.0; //[mm/s^3]
+*)
 
 GVL_Modules.g_emPalletConveyor.i_ref_stSettings REF= s_stSettings.stSettingsPalletConveyor;
 GVL_Modules.g_emDockingInterface.i_ref_stSettings REF= s_stSettings.stSettingsDockingInterface;
-GVL_Modules.g_emLiftingTransport.i_ref_stSettings REF= s_stSettings.stSettingsLiftingTransport;
+//++GVL_Modules.g_emLiftingTransport.i_ref_stSettings REF= s_stSettings.stSettingsLiftingTransport;
+
 
 /////
-(*
+(* ++
 _m_AddModule(i_itfModuleBase := GVL_Modules.g_emDockingCabin);
 
 GVL_Modules.g_emDockingCabin.i_bReqEnable := FALSE;
@@ -636,7 +641,8 @@ GVL_Modules.g_emUtilities(
 bReqEnable :=
 	GVL_Modules.g_emUtilities.p_bStaSafetyOk
 	AND GVL_Modules.g_emUtilities.p_bStsPowerOk
-	AND GVL_Modules.g_emUtilities.p_bStaAirPressureOk;
+	AND GVL_Modules.g_emUtilities.p_bStaAirPressureOk
+	AND NOT GVL_Modules.g_emUtilities.p_bStaError;
 	
 s_fbExtIlckConvFwd(i_bInterlocked := NOT(GVL_Modules.g_emDockingInterface.p_bStaUndocked));
 s_fbExtIlckConvFwd.p_sReason := 'TB not undocked (clamps not opened)';
@@ -673,17 +679,16 @@ GVL_Modules.g_emDockingInterface(
 	i_sEmName := 'EM Docking Interface',
 	i_refTB := GVL_Modules.g_objCarrier);	
 
-GVL_Modules.g_emLiftingTransport(
-	i_bReqEnable := bReqEnable,
-	i_eCtrlMode := s_eCtrlMode,
-	i_bIlckLiftUp := FALSE, //TODO
-	i_bIlckLiftDown := FALSE, //TODO
-	i_bIlckTransportExtract := FALSE, //TODO
-	i_bIlckTransportRetract := FALSE, //TODO
-	i_bCmdReset := p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn, //Add temp reset button,
-	i_sEmName := 'EM Lifting Tranport',
-	i_refTB := GVL_Modules.g_objCarrier);
-	
+//++GVL_Modules.g_emLiftingTransport(
+//++	i_bReqEnable := bReqEnable,
+//++	i_eCtrlMode := s_eCtrlMode,
+//++	i_bIlckLiftUp := FALSE, //TODO
+//++	i_bIlckLiftDown := FALSE, //TODO
+//++	i_bIlckTransportExtract := FALSE, //TODO
+//++	i_bIlckTransportRetract := FALSE, //TODO
+//++	i_bCmdReset := p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn, //Add temp reset button,
+//++	i_sEmName := 'EM Lifting Tranport',
+//++	i_refTB := GVL_Modules.g_objCarrier);	
 	
 //??GVL_Modules.g_emDockingCabin(
 //??	i_bReqEnable := TRUE,
@@ -1090,20 +1095,31 @@ GVL_Modules.g_emPalletConveyor.m_CmdTB_ToInfeed();
       <LineId Id="8" Count="0" />
     </LineIds>
     <LineIds Name="UN_CleanroomConnect._m_Init">
-      <LineId Id="1635" Count="61" />
+      <LineId Id="1635" Count="55" />
+      <LineId Id="1918" Count="0" />
+      <LineId Id="1691" Count="5" />
       <LineId Id="1908" Count="0" />
-      <LineId Id="1698" Count="41" />
+      <LineId Id="1698" Count="10" />
+      <LineId Id="1919" Count="0" />
+      <LineId Id="1709" Count="1" />
+      <LineId Id="1916" Count="0" />
+      <LineId Id="1711" Count="28" />
       <LineId Id="1911" Count="0" />
       <LineId Id="1741" Count="88" />
+      <LineId Id="1921" Count="0" />
       <LineId Id="1913" Count="0" />
       <LineId Id="1830" Count="0" />
       <LineId Id="1914" Count="0" />
       <LineId Id="1832" Count="0" />
-      <LineId Id="1834" Count="71" />
+      <LineId Id="1834" Count="0" />
+      <LineId Id="1917" Count="0" />
+      <LineId Id="1835" Count="70" />
       <LineId Id="78" Count="0" />
     </LineIds>
     <LineIds Name="UN_CleanroomConnect._m_Modules">
-      <LineId Id="848" Count="35" />
+      <LineId Id="848" Count="19" />
+      <LineId Id="946" Count="0" />
+      <LineId Id="868" Count="15" />
       <LineId Id="922" Count="0" />
       <LineId Id="924" Count="0" />
       <LineId Id="927" Count="1" />
@@ -1114,7 +1130,8 @@ GVL_Modules.g_emPalletConveyor.m_CmdTB_ToInfeed();
       <LineId Id="884" Count="0" />
       <LineId Id="933" Count="0" />
       <LineId Id="923" Count="0" />
-      <LineId Id="885" Count="36" />
+      <LineId Id="885" Count="16" />
+      <LineId Id="903" Count="18" />
       <LineId Id="20" Count="0" />
     </LineIds>
     <LineIds Name="UN_CleanroomConnect._m_SelectConfigFile">

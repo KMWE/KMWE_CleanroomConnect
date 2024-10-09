@@ -16,6 +16,11 @@ VAR
 	Q_bStaBeaconLedYellow AT %Q* : BOOL;
 	Q_bStaBeaconLedRed AT %Q* : BOOL;
 	
+	s_eCmdForceQ_BeaconLedGreen : E_ForceValue := E_ForceValue.RELEASED; 
+	s_eCmdForceQ_BeaconLedYellow : E_ForceValue := E_ForceValue.RELEASED;
+	s_eCmdForceQ_BeaconLedRed : E_ForceValue := E_ForceValue.RELEASED;
+	
+	
 	//States
 	s_bStaSafetyOk : BOOL := FALSE;
 	s_bStsPowerOk : BOOL := FALSE;
@@ -223,9 +228,24 @@ s_doBeaconLedGreen.i_bStaOutput := s_bExtRunning;
 s_doBeaconLedYellow.i_bStaOutput := s_bExtWarning;
 s_doBeaconLedRed.i_bStaOutput := s_bExtError;
 
-Q_bStaBeaconLedGreen := s_doBeaconLedGreen.p_bStaOutput;
-Q_bStaBeaconLedYellow := s_doBeaconLedYellow.p_bStaOutput;
-Q_bStaBeaconLedRed := s_doBeaconLedRed.p_bStaOutput;
+
+IF s_eCmdForceQ_BeaconLedGreen = E_ForceValue.RELEASED THEN
+	Q_bStaBeaconLedGreen := s_doBeaconLedGreen.p_bStaOutput;
+ELSE
+	Q_bStaBeaconLedGreen := (s_eCmdForceQ_BeaconLedGreen = E_ForceValue.FORCE_ON);
+END_IF
+
+IF s_eCmdForceQ_BeaconLedYellow = E_ForceValue.RELEASED THEN
+	Q_bStaBeaconLedYellow := s_doBeaconLedYellow.p_bStaOutput;
+ELSE
+	Q_bStaBeaconLedYellow := (s_eCmdForceQ_BeaconLedYellow = E_ForceValue.FORCE_ON);
+END_IF
+
+IF s_eCmdForceQ_BeaconLedRed = E_ForceValue.RELEASED THEN
+	Q_bStaBeaconLedRed := s_doBeaconLedRed.p_bStaOutput;
+ELSE
+	Q_bStaBeaconLedRed := (s_eCmdForceQ_BeaconLedRed = E_ForceValue.FORCE_ON);
+END_IF
 
 q_bStaWarning := s_bStaWarning;
 
@@ -374,10 +394,14 @@ p_bStsPowerOk := s_bStsPowerOk;
       <LineId Id="6" Count="2" />
       <LineId Id="42" Count="0" />
       <LineId Id="34" Count="2" />
+      <LineId Id="54" Count="3" />
+      <LineId Id="59" Count="1" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="62" Count="4" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="68" Count="4" />
+      <LineId Id="67" Count="0" />
       <LineId Id="38" Count="0" />
-      <LineId Id="37" Count="0" />
-      <LineId Id="39" Count="1" />
-      <LineId Id="44" Count="0" />
       <LineId Id="47" Count="0" />
       <LineId Id="22" Count="0" />
       <LineId Id="5" Count="0" />

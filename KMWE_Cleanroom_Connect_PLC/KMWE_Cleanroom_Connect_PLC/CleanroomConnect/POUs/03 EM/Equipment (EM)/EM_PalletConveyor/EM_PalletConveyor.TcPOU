@@ -26,7 +26,7 @@ END_VAR
 
 VAR
 
-bTest : BOOL;
+s_arr_bTest : ARRAY[0..7] OF BOOL;;
 
 //Interlock test	
 fbInterlockHandlerConvFwd : FB_InterlockHandler;
@@ -503,8 +503,7 @@ fbInterlockHandlerConvFwd.i_stInterlockList.arr_Interlocks[0].sReason := 'Center
 fbInterlockHandlerConvFwd.i_stInterlockList.arr_Interlocks[1].bState := i_fbExtIlckConvFwd.p_bInterlocked;
 fbInterlockHandlerConvFwd.i_stInterlockList.arr_Interlocks[1].sReason := i_fbExtIlckConvFwd.p_sReason;
 fbInterlockHandlerConvFwd.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_bStaDoorOpened) AND s_bStaAtInfeedRearPosition;
-fbInterlockHandlerConvFwd.i_stInterlockList.arr_Interlocks[2].sReason := 'Outer door not detected';
-
+fbInterlockHandlerConvFwd.i_stInterlockList.arr_Interlocks[2].sReason := 'Outer TB door not detected';
 
 fbInterlockHandlerConvBwd.i_stInterlockList.arr_Interlocks[0].bState := NOT(s_bStaCenteringIdle);
 fbInterlockHandlerConvBwd.i_stInterlockList.arr_Interlocks[0].sReason := 'Centering not at idle-position';
@@ -523,10 +522,12 @@ fbInterlockHandlerConvBwd();
 fbInterlockHandlerCenteringIdle();
 fbInterlockHandlerCenteringCenter();
 
-s_bIlckConveyorForward := fbInterlockHandlerConvFwd.p_bInterlocked;
-s_bIlckConveyorBackward := fbInterlockHandlerConvBwd.p_bInterlocked; 
+s_bIlckConveyorForward := fbInterlockHandlerConvFwd.p_bInterlocked OR s_arr_bTest[0];
+s_bIlckConveyorBackward := fbInterlockHandlerConvBwd.p_bInterlocked OR s_arr_bTest[1]; 
 s_bIlckCenteringToCenter := fbInterlockHandlerCenteringCenter.p_bInterlocked;
 s_bIlckCenteringToIdle := fbInterlockHandlerCenteringIdle.p_bInterlocked;
+
+ 
 
 s_bStaTB_CenteringDone := i_refTB.p_bCenteringDone;
 s_bStaTB_AtInfeed := i_refTB.p_eLocation = E_Location.INFEED;
@@ -536,7 +537,7 @@ s_bStaTB_AtDocking := i_refTB.p_eLocation = E_Location.DOCKING;
 //Reasons (own reason first: Cm->Em->Un)
 //--IF i_bIlckConveyorForward OR i_bIlckConveyorBackward THEN
 //--	s_cmPalletConveyor.p_sInterlockedReason := 'External interlocked';
-
+(*
 IF NOT(s_bStaCenteringIdle) THEN
 	s_cmPalletConveyor.p_sInterlockedReason := 'Centering not at idle-position';
 //--s_cmPalletConveyor.i_fbInterlockConvFwd.p_sReason := 'Centering not at idle-position';
@@ -550,13 +551,13 @@ ELSIF i_fbExtIlckConvBwd.p_bInterlocked THEN
 //--s_cmPalletConveyor.i_fbInterlockConvBwd.p_sReason := i_fbInterlockConvBwd.p_sReason;
 //--s_cmPalletConveyor.i_fbInterlockConvBwd := i_fbInterlockConvBwd;
 END_IF
-
+*)
 IF fbInterlockHandlerConvFwd.p_bInterlocked THEN
 	s_cmPalletConveyor.p_sInterlockedReason := fbInterlockHandlerConvFwd.p_sReason;
 ELSIF fbInterlockHandlerConvBwd.p_bInterlocked THEN
 	s_cmPalletConveyor.p_sInterlockedReason := fbInterlockHandlerConvBwd.p_sReason;
 ELSE
-	s_cmPalletConveyor.p_sInterlockedReason := 'geen';
+	s_cmPalletConveyor.p_sInterlockedReason := 'none.';
 END_IF
 
 //-- 2024-10-08: Vervangen door bovenstaande code
@@ -565,10 +566,10 @@ END_IF
 s_cmCenteringUnit.p_sInterlockedReason := fbInterlockHandlerCenteringCenter.p_sReason;
 s_cmCenteringUnit.p_sInterlockedReason := fbInterlockHandlerCenteringIdle.p_sReason;
 
-IF s_bIlckCenteringToCenter THEN
+(*IF s_bIlckCenteringToCenter THEN
 	s_cmCenteringUnit.p_sInterlockedReason := 'Conveyor not stopped';
 END_IF
-
+*)
 _m_Inputs := TRUE;]]></ST>
       </Implementation>
     </Method>
@@ -1625,7 +1626,6 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="169" Count="0" />
       <LineId Id="199" Count="0" />
       <LineId Id="198" Count="0" />
-      <LineId Id="197" Count="0" />
       <LineId Id="174" Count="0" />
       <LineId Id="176" Count="3" />
       <LineId Id="175" Count="0" />
@@ -1642,6 +1642,7 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="190" Count="0" />
       <LineId Id="192" Count="0" />
       <LineId Id="189" Count="0" />
+      <LineId Id="210" Count="1" />
       <LineId Id="128" Count="4" />
       <LineId Id="116" Count="3" />
       <LineId Id="149" Count="1" />

@@ -210,6 +210,7 @@ stHmiData.bStaOffError := s_fbHmiLedErrorOff.p_bStaLed;
 stHmiData.bStaOnError := s_fbHmiLedErrorOn.p_bStaLed;
 stHmiData.bBtnOffEnabled := s_fbHmiBtnManualOff.p_bStaEnabled;
 stHmiData.bBtnOnEnabled := s_fbHmiBtnManualOn.p_bStaEnabled;
+stHmiData.s_sInterlockedReason := s_sInterlockedReason;
 
 //From Hmi
 
@@ -252,10 +253,10 @@ CASE i_eCtrlMode OF
 	E_CtrlMode.MANUAL:
 		//Is het de bedoeling om op deze plekken de hmi knoppen aan te sturen, OF moet dat gedaan worden in METHOD hmi?		
 		s_fbHmiBtnManualOff.p_bStaVisible := TRUE;
-		s_fbHmiBtnManualOff.p_bStaEnabled := TRUE;
+		s_fbHmiBtnManualOff.p_bStaEnabled := i_bReqEnable AND NOT(i_bIclkOff);
 	
 		s_fbHmiBtnManualOn.p_bStaVisible := TRUE;
-		s_fbHmiBtnManualOn.p_bStaEnabled := TRUE;
+		s_fbHmiBtnManualOn.p_bStaEnabled := i_bReqEnable AND NOT(i_bIclkOn);
 		
 		IF s_fbHmiBtnManualOff.p_osrBtnPress THEN
 			m_Off();
@@ -633,6 +634,7 @@ s_sInterlockedReason := p_sInterlockedReason;
       <LineId Id="180" Count="0" />
       <LineId Id="185" Count="0" />
       <LineId Id="184" Count="0" />
+      <LineId Id="210" Count="0" />
       <LineId Id="189" Count="0" />
       <LineId Id="186" Count="0" />
       <LineId Id="197" Count="0" />

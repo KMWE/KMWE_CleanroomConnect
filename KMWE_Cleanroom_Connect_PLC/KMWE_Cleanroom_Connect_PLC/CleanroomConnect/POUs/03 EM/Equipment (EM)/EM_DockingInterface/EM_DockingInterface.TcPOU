@@ -39,6 +39,17 @@ VAR
 	s_cmDoorOpener : CM_ValveWithFB; // Off = Close, On = Open
 	s_cmDoorShutter : CM_ValveWithFB; // Off = Open, On = Close
 	
+//Interlocks	
+fbInterlockHandlerDockTB : FB_InterlockHandler;
+fbInterlockHandlerUndockTB : FB_InterlockHandler;
+fbInterlockHandlerOpenInnerDoor : FB_InterlockHandler;
+fbInterlockHandlerCloseInnerDoor : FB_InterlockHandler;	
+
+s_bIlckDockTB : BOOL := TRUE;
+s_bIlckUndockTB : BOOL := TRUE;
+s_bIlckOpenInnerDoor : BOOL := TRUE;
+s_bIlckCloseInnerDoor : BOOL := TRUE;
+	
 //------------------------------------------//
 
 //------------------------------------------//
@@ -1133,10 +1144,14 @@ s_cmUnlockingPinLower.p_sInterlockedReason := 'n/a';
 
 IF NOT(s_bStaDoorShutterOpened) THEN
 	s_cmDoorOpener.p_sInterlockedReason := 'Door shutter not opened';
+ELSE
+	s_cmDoorOpener.p_sInterlockedReason := '-';
 END_IF
 	
 IF NOT(s_bStaDoorOpenerClosed) AND NOT(s_bStaDoorOpenerAlmostClosed) THEN
 	s_cmDoorShutter.p_sInterlockedReason := 'Door opener not (almost) closed';
+ELSE	
+	s_cmDoorShutter.p_sInterlockedReason := '-';
 END_IF
 
 //--s_diStaBoxAtPreDockingPosition();
@@ -1315,17 +1330,27 @@ _m_Params := TRUE;
 s_bReqDockingClampsUpperHighPressure := FALSE; //Low pressure 
 s_bReqDockingClampsLowerHighPressure := FALSE; //Low pressure
 
-//IF s_cmDoorShutter.m_Off()THEN //Open Door Shutter
-	IF s_cmDoorOpener.m_Off() OR s_bStaDoorOpenerAlmostClosed THEN //Close Door Opener
-		IF s_cmDoorShutter.m_On()THEN //Close Door Shutter
-			IF s_cmUnlockingPinUpper.m_Off() AND s_cmUnlockingPinLower.m_Off() THEN //Lock Unlocking Pins
-				IF s_cmDockingClampsUpper.m_Off() AND s_cmDockingClampsLower.m_Off() THEN // Open Docking Clamps
-					_m_SeqStartup := TRUE;
-				END_IF
-			END_IF						
-		END_IF
+(*
+IF s_cmDoorOpener.m_Off() OR s_bStaDoorOpenerAlmostClosed THEN //Close Door Opener
+	IF s_cmDoorShutter.m_On()THEN //Close Door Shutter
+		IF s_cmUnlockingPinUpper.m_Off() AND s_cmUnlockingPinLower.m_Off() THEN //Lock Unlocking Pins
+			IF s_cmDockingClampsUpper.m_Off() AND s_cmDockingClampsLower.m_Off() THEN // Open Docking Clamps
+				_m_SeqStartup := TRUE;
+			END_IF
+		END_IF						
 	END_IF
-//END_IF
+END_IF
+*)
+
+IF s_cmDoorOpener.m_Off() OR s_bStaDoorOpenerAlmostClosed THEN //Close Door Opener
+	IF s_cmDoorShutter.m_On() THEN //Close Door Shutter
+		IF s_cmUnlockingPinUpper.m_Off() AND s_cmUnlockingPinLower.m_Off() THEN //Lock Unlocking Pins
+			IF s_cmDockingClampsUpper.m_Off() AND s_cmDockingClampsLower.m_Off() THEN // Open Docking Clamps
+				_m_SeqStartup := TRUE;
+			END_IF
+		END_IF						
+	END_IF
+END_IF
 ]]></ST>
       </Implementation>
     </Method>
@@ -2211,10 +2236,12 @@ p_bStaUndocked := s_bStaUndocked;
       <LineId Id="110" Count="0" />
       <LineId Id="109" Count="0" />
       <LineId Id="97" Count="0" />
+      <LineId Id="119" Count="1" />
       <LineId Id="111" Count="0" />
       <LineId Id="107" Count="0" />
       <LineId Id="112" Count="0" />
       <LineId Id="98" Count="0" />
+      <LineId Id="117" Count="1" />
       <LineId Id="115" Count="0" />
       <LineId Id="48" Count="0" />
       <LineId Id="51" Count="0" />
@@ -2302,8 +2329,8 @@ p_bStaUndocked := s_bStaUndocked;
       <LineId Id="395" Count="0" />
       <LineId Id="392" Count="0" />
       <LineId Id="394" Count="0" />
+      <LineId Id="410" Count="0" />
       <LineId Id="397" Count="0" />
-      <LineId Id="367" Count="0" />
       <LineId Id="369" Count="1" />
       <LineId Id="375" Count="0" />
       <LineId Id="387" Count="0" />
@@ -2312,7 +2339,9 @@ p_bStaUndocked := s_bStaUndocked;
       <LineId Id="389" Count="0" />
       <LineId Id="388" Count="0" />
       <LineId Id="383" Count="0" />
-      <LineId Id="398" Count="0" />
+      <LineId Id="411" Count="0" />
+      <LineId Id="401" Count="8" />
+      <LineId Id="400" Count="0" />
       <LineId Id="293" Count="0" />
     </LineIds>
     <LineIds Name="EM_DockingInterface.m_CloseInnerDoor">

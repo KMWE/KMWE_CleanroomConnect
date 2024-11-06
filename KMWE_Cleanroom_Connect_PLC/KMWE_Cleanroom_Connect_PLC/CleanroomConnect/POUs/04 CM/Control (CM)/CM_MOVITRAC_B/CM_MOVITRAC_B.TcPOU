@@ -6,8 +6,6 @@ VAR_INPUT
 	i_stSettings : ST_SettingsMOVITRAC_B_WithBrake;
 	i_bIclkForward : BOOL := TRUE; //TRUE = interlocked
 	i_bIclkBackward : BOOL := TRUE; //TRUE = interlocked
-//--	i_fbInterlockConvFwd : FB_Interlock;
-//--	i_fbInterlockConvBwd : FB_Interlock;
 END_VAR
 VAR
 	// Inputs
@@ -49,7 +47,8 @@ VAR
 	s_bStaMotorStopped : BOOL;
 	s_bStaWarning : BOOL;
 	
-	s_sInterlockedReason : STRING; //External interlocked reason for clarifying reason
+	s_sInterlockedReasonForward : STRING; //External interlocked reason for clarifying reason
+	s_sInterlockedReasonBackward : STRING; //External interlocked reason for clarifying reason
 	
 	// Setpoints
 	s_fTargetSpeed : LREAL; // Target speed [mm/s]
@@ -153,14 +152,13 @@ s_wrnStartMotorNotAllowed R= s_bStaBrakeReleased;
 s_fbAlarmHandlerMotorForwardInterlocked(
 	i_bStaActive := s_wrnMotorForwardInterlocked,
 	i_eAlarmLevel := E_AlarmLevel.Warning,
-	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move forward, Reason: ',CONCAT(s_sInterlockedReason, '.'))));
+	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move forward, Reason: ',CONCAT(s_sInterlockedReasonForward, '.'))));
 	//--i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move forward, Reason: ',CONCAT(i_fbInterlockConvFwd.p_sReason, '.'))));
-	
 	
 s_fbAlarmHandlerMotorBackwardInterlocked(
 	i_bStaActive := s_wrnMotorBackwardInterlocked,
 	i_eAlarmLevel := E_AlarmLevel.Warning,
-	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move backward, Reason: ',CONCAT(s_sInterlockedReason, '.'))));
+	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move backward, Reason: ',CONCAT(s_sInterlockedReasonBackward, '.'))));
 	//--i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move backward, Reason: ',CONCAT(i_fbInterlockConvBwd.p_sReason, '.'))));
 	
 // Alarm collector	
@@ -626,8 +624,6 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-//--IF NOT(i_bIclkForward) THEN
-//--IF NOT(i_fbInterlockConvFwd.p_bInterlocked) THEN
 IF NOT(s_bIclkForward) THEN
 	s_bReqStartForward := TRUE;
 	
@@ -710,14 +706,34 @@ p_bStaWarning := s_bStaWarning;
         </Implementation>
       </Get>
     </Property>
-    <Property Name="p_sInterlockedReason" Id="{ee05b23b-0c2f-4ed6-802a-db01c009192a}" FolderPath="Properties\">
+    <Property Name="p_sInterlockedReasonBackward" Id="{0c7533b0-6229-4bd7-a6ac-beef68a0441b}" FolderPath="Properties\">
       <Declaration><![CDATA[{attribute 'monitoring':='call'}
-PROPERTY PUBLIC p_sInterlockedReason : STRING(GVL.g_MAX_LEN_INTERLOCK_REASON)]]></Declaration>
+PROPERTY PUBLIC p_sInterlockedReasonBackward : STRING(GVL.g_MAX_LEN_INTERLOCK_REASON)]]></Declaration>
+      <Get Name="Get" Id="{89d301ab-99e1-407a-8ad8-3decf2378b91}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_sInterlockedReasonBackward := s_sInterlockedReasonBackward;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{f1403b8e-daa5-4ba7-a249-a1171f717224}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+s_sInterlockedReasonBackward := p_sInterlockedReasonBackward;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="p_sInterlockedReasonForward" Id="{ee05b23b-0c2f-4ed6-802a-db01c009192a}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_sInterlockedReasonForward : STRING(GVL.g_MAX_LEN_INTERLOCK_REASON)]]></Declaration>
       <Get Name="Get" Id="{d1567d66-dae7-4c45-a522-cf9b9ae0c9db}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_sInterlockedReason := s_sInterlockedReason;
+p_sInterlockedReasonForward := s_sInterlockedReasonForward;
 ]]></ST>
         </Implementation>
       </Get>
@@ -725,7 +741,7 @@ p_sInterlockedReason := s_sInterlockedReason;
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-s_sInterlockedReason := p_sInterlockedReason;
+s_sInterlockedReasonForward := p_sInterlockedReasonForward;
 ]]></ST>
         </Implementation>
       </Set>
@@ -764,9 +780,8 @@ s_sInterlockedReason := p_sInterlockedReason;
       <LineId Id="135" Count="0" />
       <LineId Id="143" Count="2" />
       <LineId Id="140" Count="0" />
-      <LineId Id="146" Count="0" />
+      <LineId Id="186" Count="0" />
       <LineId Id="183" Count="0" />
-      <LineId Id="182" Count="0" />
       <LineId Id="148" Count="2" />
       <LineId Id="180" Count="0" />
       <LineId Id="184" Count="0" />
@@ -1029,8 +1044,7 @@ s_sInterlockedReason := p_sInterlockedReason;
       <LineId Id="34" Count="0" />
       <LineId Id="26" Count="2" />
       <LineId Id="73" Count="0" />
-      <LineId Id="38" Count="0" />
-      <LineId Id="83" Count="1" />
+      <LineId Id="84" Count="0" />
       <LineId Id="41" Count="0" />
       <LineId Id="48" Count="0" />
       <LineId Id="50" Count="5" />
@@ -1070,12 +1084,22 @@ s_sInterlockedReason := p_sInterlockedReason;
       <LineId Id="7" Count="0" />
       <LineId Id="6" Count="0" />
     </LineIds>
-    <LineIds Name="CM_MOVITRAC_B.p_sInterlockedReason.Get">
+    <LineIds Name="CM_MOVITRAC_B.p_sInterlockedReasonBackward.Get">
       <LineId Id="5" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="6" Count="0" />
     </LineIds>
-    <LineIds Name="CM_MOVITRAC_B.p_sInterlockedReason.Set">
+    <LineIds Name="CM_MOVITRAC_B.p_sInterlockedReasonBackward.Set">
+      <LineId Id="6" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="7" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_MOVITRAC_B.p_sInterlockedReasonForward.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_MOVITRAC_B.p_sInterlockedReasonForward.Set">
       <LineId Id="6" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="7" Count="0" />

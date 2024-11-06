@@ -620,6 +620,7 @@ VAR
 	s_fbExtIlckUnlockingPinsToLock : FB_Interlock;
 	s_fbExtIlckUnlockingPinsToRelease : FB_Interlock;
 	
+	s_bSimCleanroomDoorClosed : BOOL := TRUE;
 END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[GVL_Modules.g_objCarrier();
@@ -652,29 +653,29 @@ s_fbExtIlckConvBwd.p_sReason := 'TB not undocked (clamps not opened)';
 GVL_Modules.g_emPalletConveyor(
 	i_bReqEnable := bReqEnable,
 	i_eCtrlMode := s_eCtrlMode,
-	//--i_bIlckConveyorForward := NOT(GVL_Modules.g_emDockingInterface.p_bStaUndocked),
-	//--i_bIlckConveyorBackward := NOT(GVL_Modules.g_emDockingInterface.p_bStaUndocked),
 	i_fbExtIlckConvFwd := s_fbExtIlckConvFwd,
 	i_fbExtIlckConvBwd :=  s_fbExtIlckConvBwd,
 	i_bCmdReset := p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn, //Add temp reset button
 	i_sEmName := 'EM Pallet Conveyor',
 	i_refTB := GVL_Modules.g_objCarrier);
 
-s_fbExtIlckDockingClampsToClose(i_bInterlocked := NOT(GVL_Modules.g_emDockingInterface.p_bStaUndocked));
-s_fbExtIlckDockingClampsToClose;
+s_fbExtIlckDockingClampsToClose(i_bInterlocked := NOT(GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking)); // NOT(GVL_Modules.g_emDockingInterface.p_bStaUndocked));
+s_fbExtIlckDockingClampsToClose.p_sReason := 'No TB detected';
 
-s_fbExtIlckDockingClampsToOpen;
-s_fbExtIlckDockingClampsToOpen;
+s_fbExtIlckDockingClampsToOpen(i_bInterlocked := NOT(s_bSimCleanroomDoorClosed));
+s_fbExtIlckDockingClampsToOpen.p_sReason := 'Cleanroon Door not closed';
 
-s_fbExtIlckUnlockingPinsToLock;
-s_fbExtIlckUnlockingPinsToLock;
+//--s_fbExtIlckUnlockingPinsToLock;
+//--s_fbExtIlckUnlockingPinsToLock;
 
-s_fbExtIlckUnlockingPinsToRelease;
-s_fbExtIlckUnlockingPinsToRelease;	
+//--s_fbExtIlckUnlockingPinsToRelease;
+//--s_fbExtIlckUnlockingPinsToRelease;	
 	
 GVL_Modules.g_emDockingInterface(
 	i_bReqEnable := bReqEnable,
 	i_eCtrlMode := s_eCtrlMode,
+	i_fbExtIlckDockingClampsToOpen := s_fbExtIlckDockingClampsToOpen,
+	i_fbExtIlckDockingClampsToClose := s_fbExtIlckDockingClampsToClose, 
 	i_bCmdReset := p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn, //Add temp reset button
 	i_sEmName := 'EM Docking Interface',
 	i_refTB := GVL_Modules.g_objCarrier);	
@@ -875,27 +876,31 @@ END_VAR]]></Declaration>
 		AND GVL_Modules.g_objCarrier.p_eLocation = E_Location.DOCKING
 		AND GVL_Modules.g_objCarrier.p_eDestination > E_Location.DOCKING 
 		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaDocked) THEN
-			GVL_Modules.g_emDockingInterface.m_DockBox();
+			//--GVL_Modules.g_emDockingInterface.m_DockBox();
+			GVL_Modules.g_emDockingInterface.m_ReqDockTB();
 			
 	ELSIF GVL_Modules.g_objCarrier.p_eDestination <> E_Location.UNKNOWN
 		AND GVL_Modules.g_objCarrier.p_eLocation = E_Location.DOCKING
 		AND GVL_Modules.g_objCarrier.p_eDestination < E_Location.DOCKING
 		AND GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosedAndLocked
 		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaUndocked) THEN  
-			GVL_Modules.g_emDockingInterface.m_UndockBox();
+			//--GVL_Modules.g_emDockingInterface.m_UndockBox();
+			GVL_Modules.g_emDockingInterface.m_ReqUndockTB();
 
 	ELSIF GVL_Modules.g_objCarrier.p_eDestination <> E_Location.UNKNOWN
 		AND GVL_Modules.g_objCarrier.p_eLocation = E_Location.DOCKING
 		AND GVL_Modules.g_objCarrier.p_eDestination > E_Location.DOCKING
 		AND GVL_Modules.g_emDockingInterface.p_bStaDocked
 		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpenedAndReleased) THEN  
-			GVL_Modules.g_emDockingInterface.m_OpenInnerDoor();
+			//--GVL_Modules.g_emDockingInterface.m_OpenInnerDoor();
+			GVL_Modules.g_emDockingInterface.m_ReqOpenInnerDoor();
 			
 	ELSIF GVL_Modules.g_objCarrier.p_eDestination <> E_Location.UNKNOWN
 		AND GVL_Modules.g_objCarrier.p_eLocation = E_Location.DOCKING
 		AND GVL_Modules.g_objCarrier.p_eDestination < E_Location.DOCKING
 		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosedAndLocked) THEN  
-			GVL_Modules.g_emDockingInterface.m_CloseInnerDoor();		
+			//--GVL_Modules.g_emDockingInterface.m_CloseInnerDoor();
+			GVL_Modules.g_emDockingInterface.m_ReqCloseInnerDoor();
 			
 	END_IF		]]></ST>
       </Implementation>
@@ -912,7 +917,8 @@ END_VAR]]></Declaration>
 GVL_Modules.g_emPalletConveyor.m_CmdTB_ToCenter(i_refReason := sReason);
 GVL_Modules.g_emPalletConveyor.m_CmdCenteringTB(i_refReason := sReason);
 GVL_Modules.g_emPalletConveyor.m_CmdTB_ToDocking(i_refReason := sReason);
-GVL_Modules.g_emDockingInterface.m_DockBox();
+//--GVL_Modules.g_emDockingInterface.m_DockBox();
+GVL_Modules.g_emDockingInterface.m_ReqDockTB();
 //GVL_Modules.g_emDockingInterface.m_OpenDoors();
 ]]></ST>
       </Implementation>
@@ -987,7 +993,8 @@ END_VAR]]></Declaration>
 // Onderstaande sequencer zal nog verder moeten worden opgebouwd
 
 //GVL_Modules.g_emDockingInterface.m_CloseDoors();
-GVL_Modules.g_emDockingInterface.m_UndockBox();
+//--GVL_Modules.g_emDockingInterface.m_UndockBox();
+GVL_Modules.g_emDockingInterface.m_ReqUndockTB();
 GVL_Modules.g_emPalletConveyor.m_CmdTB_ToInfeed(i_refReason := sReason);
 ]]></ST>
       </Implementation>
@@ -1119,7 +1126,8 @@ GVL_Modules.g_emPalletConveyor.m_CmdTB_ToInfeed(i_refReason := sReason);
     <LineIds Name="UN_CleanroomConnect._m_Modules">
       <LineId Id="848" Count="19" />
       <LineId Id="946" Count="0" />
-      <LineId Id="868" Count="15" />
+      <LineId Id="868" Count="8" />
+      <LineId Id="879" Count="4" />
       <LineId Id="922" Count="0" />
       <LineId Id="924" Count="0" />
       <LineId Id="927" Count="1" />
@@ -1130,7 +1138,10 @@ GVL_Modules.g_emPalletConveyor.m_CmdTB_ToInfeed(i_refReason := sReason);
       <LineId Id="884" Count="0" />
       <LineId Id="933" Count="0" />
       <LineId Id="923" Count="0" />
-      <LineId Id="885" Count="16" />
+      <LineId Id="885" Count="2" />
+      <LineId Id="959" Count="0" />
+      <LineId Id="961" Count="0" />
+      <LineId Id="888" Count="13" />
       <LineId Id="903" Count="18" />
       <LineId Id="20" Count="0" />
     </LineIds>
@@ -1186,6 +1197,7 @@ GVL_Modules.g_emPalletConveyor.m_CmdTB_ToInfeed(i_refReason := sReason);
       <LineId Id="149" Count="0" />
       <LineId Id="174" Count="0" />
       <LineId Id="148" Count="0" />
+      <LineId Id="191" Count="0" />
       <LineId Id="150" Count="0" />
       <LineId Id="154" Count="0" />
       <LineId Id="185" Count="0" />
@@ -1193,6 +1205,7 @@ GVL_Modules.g_emPalletConveyor.m_CmdTB_ToInfeed(i_refReason := sReason);
       <LineId Id="168" Count="0" />
       <LineId Id="157" Count="0" />
       <LineId Id="152" Count="0" />
+      <LineId Id="192" Count="0" />
       <LineId Id="163" Count="0" />
       <LineId Id="165" Count="0" />
       <LineId Id="186" Count="0" />
@@ -1200,11 +1213,13 @@ GVL_Modules.g_emPalletConveyor.m_CmdTB_ToInfeed(i_refReason := sReason);
       <LineId Id="173" Count="0" />
       <LineId Id="167" Count="0" />
       <LineId Id="164" Count="0" />
+      <LineId Id="193" Count="0" />
       <LineId Id="158" Count="0" />
       <LineId Id="160" Count="0" />
       <LineId Id="187" Count="0" />
       <LineId Id="161" Count="1" />
       <LineId Id="159" Count="0" />
+      <LineId Id="194" Count="0" />
       <LineId Id="153" Count="0" />
       <LineId Id="151" Count="0" />
     </LineIds>
@@ -1214,6 +1229,7 @@ GVL_Modules.g_emPalletConveyor.m_CmdTB_ToInfeed(i_refReason := sReason);
       <LineId Id="73" Count="0" />
       <LineId Id="76" Count="0" />
       <LineId Id="79" Count="0" />
+      <LineId Id="99" Count="0" />
       <LineId Id="82" Count="0" />
       <LineId Id="95" Count="0" />
     </LineIds>
@@ -1242,6 +1258,7 @@ GVL_Modules.g_emPalletConveyor.m_CmdTB_ToInfeed(i_refReason := sReason);
       <LineId Id="92" Count="0" />
       <LineId Id="84" Count="0" />
       <LineId Id="81" Count="0" />
+      <LineId Id="96" Count="0" />
       <LineId Id="77" Count="0" />
       <LineId Id="91" Count="0" />
     </LineIds>

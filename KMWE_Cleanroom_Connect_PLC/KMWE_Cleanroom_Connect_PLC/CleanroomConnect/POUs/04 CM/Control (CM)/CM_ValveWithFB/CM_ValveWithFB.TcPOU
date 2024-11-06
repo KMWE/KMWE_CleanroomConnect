@@ -22,6 +22,9 @@ VAR
 	Q_bCmdOn AT %Q* : BOOL; //Commnad to set valve on
 	Q_bCmdOff AT %Q* : BOOL; //Command to set valve off
 
+	s_sInterlockedReasonOn : STRING(GVL.g_MAX_LEN_INTERLOCK_REASON); //External interlocked reason for clarifying reason
+	s_sInterlockedReasonOff : STRING(GVL.g_MAX_LEN_INTERLOCK_REASON); //External interlocked reason for clarifying reason
+	
 	// Request
 	s_bReqOff : BOOL;
 	s_bReqOn : BOOL;
@@ -30,9 +33,7 @@ VAR
 	// Status
 	s_bStaValveIsOff : BOOL;
 	s_bStaValveIsOn : BOOL; 
-	s_bStaWarning : BOOL;
-	
-	s_sInterlockedReason : STRING(GVL.g_MAX_LEN_INTERLOCK_REASON); //External interlocked reason for clarifying reason
+	s_bStaWarning : BOOL;	
 	
 	s_bSimFeedBackIsOff : BOOL;
 	s_bSimFeedBackIsOn : BOOL;
@@ -149,12 +150,12 @@ s_fbAlarmHandlerFeedbackOnTimeout(
 s_fbAlarmHandlerOffInterlocked(
 	i_bStaActive := s_wrnOffInterlocked, 
 	i_eAlarmLevel := E_AlarmLevel.Warning,
-	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': ', CONCAT(s_sCfgOffName, CONCAT(' interlocked, Reason: ', CONCAT(s_sInterlockedReason, '.'))))));
+	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': ', CONCAT(s_sCfgOffName, CONCAT(' interlocked, Reason: ', CONCAT(s_sInterlockedReasonOff, '.'))))));
 	
 s_fbAlarmHandlerOnInterlocked(
 	i_bStaActive := s_wrnOnInterlocked, 
 	i_eAlarmLevel := E_AlarmLevel.Warning,
-	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': ', CONCAT(s_sCfgOnName, CONCAT(' interlocked, Reason: ', CONCAT(s_sInterlockedReason, '.'))))));
+	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': ', CONCAT(s_sCfgOnName, CONCAT(' interlocked, Reason: ', CONCAT(s_sInterlockedReasonOn, '.'))))));
 
 s_bStaError := 
 	s_fbAlarmHandlerFeedbackOffTimeout.q_bStaActive
@@ -210,7 +211,7 @@ stHmiData.bStaOffError := s_fbHmiLedErrorOff.p_bStaLed;
 stHmiData.bStaOnError := s_fbHmiLedErrorOn.p_bStaLed;
 stHmiData.bBtnOffEnabled := s_fbHmiBtnManualOff.p_bStaEnabled;
 stHmiData.bBtnOnEnabled := s_fbHmiBtnManualOn.p_bStaEnabled;
-stHmiData.s_sInterlockedReason := s_sInterlockedReason;
+stHmiData.s_sInterlockedReason := s_sInterlockedReasonOn;
 
 //From Hmi
 
@@ -544,14 +545,34 @@ s_sCfgOnName := p_sCfgOnName;
         </Implementation>
       </Set>
     </Property>
-    <Property Name="p_sInterlockedReason" Id="{b24a6931-c2e3-421b-b6f4-b6b6e4b211f0}" FolderPath="Properties\">
+    <Property Name="p_sInterlockedReasonOff" Id="{cdc50d80-dd3b-45d6-9938-b97cfd8c2c8d}" FolderPath="Properties\">
       <Declaration><![CDATA[{attribute 'monitoring':='call'}
-PROPERTY PUBLIC p_sInterlockedReason : STRING(GVL.g_MAX_LEN_INTERLOCK_REASON)]]></Declaration>
+PROPERTY PUBLIC p_sInterlockedReasonOff : STRING(GVL.g_MAX_LEN_INTERLOCK_REASON)]]></Declaration>
+      <Get Name="Get" Id="{26a427b6-79a8-4171-ada6-9c859ffbe371}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_sInterlockedReasonOff := s_sInterlockedReasonOff;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{1b87e532-db6d-42c9-bd47-3689ae1f28e3}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+s_sInterlockedReasonOff := p_sInterlockedReasonOff;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="p_sInterlockedReasonOn" Id="{b24a6931-c2e3-421b-b6f4-b6b6e4b211f0}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_sInterlockedReasonOn : STRING(GVL.g_MAX_LEN_INTERLOCK_REASON)]]></Declaration>
       <Get Name="Get" Id="{6e6b895e-e800-4eb0-b895-f2bece4a2598}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_sInterlockedReason := s_sInterlockedReason;
+p_sInterlockedReasonOn := s_sInterlockedReasonOn;
 ]]></ST>
         </Implementation>
       </Get>
@@ -559,7 +580,7 @@ p_sInterlockedReason := s_sInterlockedReason;
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-s_sInterlockedReason := p_sInterlockedReason;
+s_sInterlockedReasonOn := p_sInterlockedReasonOn;
 ]]></ST>
         </Implementation>
       </Set>
@@ -807,12 +828,22 @@ s_sInterlockedReason := p_sInterlockedReason;
       <LineId Id="7" Count="0" />
       <LineId Id="5" Count="1" />
     </LineIds>
-    <LineIds Name="CM_ValveWithFB.p_sInterlockedReason.Get">
+    <LineIds Name="CM_ValveWithFB.p_sInterlockedReasonOff.Get">
       <LineId Id="5" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="6" Count="0" />
     </LineIds>
-    <LineIds Name="CM_ValveWithFB.p_sInterlockedReason.Set">
+    <LineIds Name="CM_ValveWithFB.p_sInterlockedReasonOff.Set">
+      <LineId Id="6" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="7" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_ValveWithFB.p_sInterlockedReasonOn.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_ValveWithFB.p_sInterlockedReasonOn.Set">
       <LineId Id="6" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="7" Count="0" />

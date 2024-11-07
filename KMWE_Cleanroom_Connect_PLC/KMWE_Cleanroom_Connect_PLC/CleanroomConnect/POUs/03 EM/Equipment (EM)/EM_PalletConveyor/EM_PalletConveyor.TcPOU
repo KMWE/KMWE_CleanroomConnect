@@ -257,6 +257,94 @@ _m_SeqTransport();
 _m_SeqCentering();]]></ST>
       </Implementation>
     </Method>
+    <Method Name="_m_CmdCenteringTB" Id="{ff42404a-08cf-4a4b-a12c-748d8f3fd351}">
+      <Declaration><![CDATA[METHOD PRIVATE _m_CmdCenteringTB : BOOL
+VAR_INPUT
+	i_refReason : REFERENCE TO STRING;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+IF s_bIlckCenteringToCenter THEN
+	i_refReason := CONCAT('Cmd Centering: Interlocked - ', s_cmCenteringUnit.p_sInterlockedReasonOn);
+	_m_CmdCenteringTB := FALSE;
+ELSE
+	i_refReason := '-';
+	_m_CmdCenteringTB := TRUE;	
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_CmdTB_ToCenter" Id="{9a04d893-3f3d-441b-875a-c54a1fc8d77d}">
+      <Declaration><![CDATA[METHOD PRIVATE _m_CmdTB_ToCenter : BOOL
+VAR_INPUT
+	i_refReason : REFERENCE TO STRING;
+END_VAR
+	]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+IF s_bIlckConveyorForward THEN
+	i_refReason := CONCAT('Cmd To Center: Interlocked - ', fbIlckHandlerConveyorForward.p_sReason);
+	_m_CmdTB_ToCenter := FALSE;
+ELSE
+	i_refReason := '-';
+	_m_CmdTB_ToCenter := TRUE;	
+END_IF
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_CmdTB_ToDocking" Id="{2bfcdc46-8a0a-4837-b71a-35dd909a0ae6}">
+      <Declaration><![CDATA[METHOD PRIVATE _m_CmdTB_ToDocking : BOOL
+VAR_INPUT
+	i_refReason : REFERENCE TO STRING;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+IF s_bIlckConveyorForward THEN
+	i_refReason := CONCAT('Cmd To Docking: Interlocked - ', fbIlckHandlerConveyorForward.p_sReason);
+	_m_CmdTB_ToDocking := FALSE;
+ELSE
+	i_refReason := '-';
+	_m_CmdTB_ToDocking := TRUE;	
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_CmdTB_ToInfeed" Id="{cf16f0e7-53a6-4bd4-b559-f1ce284b5a59}">
+      <Declaration><![CDATA[METHOD PRIVATE _m_CmdTB_ToInfeed : BOOL
+VAR_INPUT
+	i_refReason : REFERENCE TO STRING;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+IF s_bIlckConveyorBackward THEN
+	i_refReason := CONCAT('Cmd To Infeed: Interlocked - ', fbIlckHandlerConveyorBackward.p_sReason);
+	_m_CmdTB_ToInfeed := FALSE;
+ELSE
+	i_refReason := '-';
+	_m_CmdTB_ToInfeed := TRUE;	
+END_IF]]></ST>
+      </Implementation>
+    </Method>
     <Method Name="_m_Devices" Id="{a5afe549-ba9e-46b9-b9ab-569cdd3f8cbd}">
       <Declaration><![CDATA[METHOD PROTECTED _m_Devices : BOOL
 ]]></Declaration>
@@ -318,16 +406,19 @@ END_IF
 IF i_bReqEnable AND i_eCtrlMode = E_CtrlMode.AUTOMATIC THEN
 	s_fbHmiBtnTB_ToInfeed.p_bStaEnabled :=
 		NOT(s_bIlckConveyorBackward)
+		AND NOT(s_bStaAtInfeedRearPosition) //Added extra condition here instead of 
 		AND NOT(s_cmPalletConveyor.p_bStaError)
 		AND NOT(s_bReqCenteringTB);
 	
 	s_fbHmiBtnTB_ToCentering.p_bStaEnabled :=
 		NOT(s_bIlckConveyorForward)
+		AND NOT(s_bStaAtCenteringPosition) //Added extra condition here instead of
 		AND NOT(s_cmPalletConveyor.p_bStaError)
 		AND NOT(s_bReqCenteringTB);
 	
 	s_fbHmiBtnTB_ToDocking.p_bStaEnabled :=
 		NOT(s_bIlckConveyorForward)
+		AND NOT(s_bStaAtDockingPosition) //Added extra condition here instead of
 		AND NOT(s_cmPalletConveyor.p_bStaError)
 		AND NOT(s_bReqCenteringTB);
 	
@@ -357,7 +448,8 @@ s_fbHmiLedDoorOpened(i_bStaLed := s_bStaDoorOpened);
 s_fbHmiLedCenteringCenter(i_bStaLed := s_bStaCenteringCenter);
 s_fbHmiLedCenteringIdle(i_bStaLed := s_bStaCenteringIdle);
 
-_m_Hmi := TRUE;]]></ST>
+_m_Hmi := TRUE;
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_Init" Id="{a6194918-083d-460c-8c8c-f7fff673bb61}">
@@ -496,15 +588,15 @@ END_IF
 fbIlckHandlerConveyorBackward.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckConvBwd.p_bInterlocked;
 fbIlckHandlerConveyorBackward.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckConvBwd.p_sReason;
 fbIlckHandlerConveyorBackward.i_stInterlockList.arr_Interlocks[1].bState := NOT(s_bStaCenteringIdle);
-fbIlckHandlerConveyorBackward.i_stInterlockList.arr_Interlocks[2].bState := s_bStaAtInfeedRearPosition;
+//--fbIlckHandlerConveyorBackward.i_stInterlockList.arr_Interlocks[2].bState := s_bStaAtInfeedRearPosition;	//Not sure if this is really a interlock?
 fbIlckHandlerConveyorBackward();
 
 fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckConvFwd.p_bInterlocked;
 fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckConvFwd.p_sReason;
 fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[1].bState := NOT(s_bStaCenteringIdle);
 fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_bStaDoorOpened) AND s_bStaAtInfeedRearPosition;
-fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[3].bState := s_bStaAtCenteringPosition;
-fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[4].bState := s_bStaAtDockingPosition;
+//--fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[3].bState := s_bStaAtCenteringPosition; //Not sure if this is really a interlock?
+//--fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[4].bState := s_bStaAtDockingPosition; //Not sure if this is really a interlock?
 fbIlckHandlerConveyorForward();
 
 s_bIlckConveyorBackward := fbIlckHandlerConveyorBackward.p_bInterlocked;
@@ -520,14 +612,6 @@ fbInterlockHandlerCenteringCenter();
 s_bIlckCenteringToIdle := fbInterlockHandlerCenteringIdle.p_bInterlocked;
 s_bIlckCenteringToCenter := fbInterlockHandlerCenteringCenter.p_bInterlocked;
   
-//TB States
-s_bStaTB_CenteringDone := i_refTB.p_bCenteringDone;
-s_bStaTB_AtInfeed := i_refTB.p_eLocation = E_Location.INFEED;
-s_bStaTB_AtCentering := i_refTB.p_eLocation = E_Location.CENTERING;
-s_bStaTB_AtDocking := i_refTB.p_eLocation = E_Location.DOCKING;
-
-s_bStaTB_AtDocking := s_bStaAtDockingPosition;
-
 //Reasons (own reason first: Cm->Em->Un)
 //Conveyor
 IF s_bIlckConveyorBackward THEN
@@ -555,6 +639,19 @@ ELSE
 	s_cmCenteringUnit.p_sInterlockedReasonOn := '-';
 END_IF
 
+//TB States (only use data if a valid ID is pressent else use sensor states)
+IF __ISVALIDREF(i_refTB) AND (i_refTB.p_nId > 0) THEN 
+	s_bStaTB_CenteringDone := i_refTB.p_bCenteringDone;
+	s_bStaTB_AtInfeed := i_refTB.p_eActLocation = E_Location.INFEED;
+	s_bStaTB_AtCentering := i_refTB.p_eActLocation = E_Location.CENTERING;
+	s_bStaTB_AtDocking := i_refTB.p_eActLocation = E_Location.DOCKING;
+ELSE
+	s_bStaTB_CenteringDone := s_eTmpCenteringDone;
+	s_bStaTB_AtInfeed := s_bStaAtInfeedRearPosition OR s_bStaAtInfeedFrontPosition;
+	s_bStaTB_AtCentering := s_bStaAtCenteringPosition;
+	s_bStaTB_AtDocking := s_bStaAtDockingPosition;	
+END_IF
+	
 _m_Inputs := TRUE;]]></ST>
       </Implementation>
     </Method>
@@ -738,7 +835,7 @@ CASE s_eSeqCentering OF
 		END_IF
 	
 		IF s_fbHmiBtnTB_Centering.p_osrBtnPress OR s_bReqCenteringTB THEN
-			IF m_CmdCenteringTB(i_refReason := s_sMessage) THEN
+			IF _m_CmdCenteringTB(i_refReason := s_sMessage) THEN
 				s_eSeqCentering := E_SeqCentering.MOVE_TO_CENTER;	
 			END_IF
 			
@@ -809,14 +906,14 @@ CASE s_eSeqTransport OF
 		
 	E_SeqTransport.READY:
 		IF s_fbSeqTransportControl.q_bStaEntry THEN
-			i_refTB.p_eLocation := s_eTmpLocation;
+			i_refTB.p_eActLocation := s_eTmpLocation;
 			s_eTmpLocation := E_Location.UNKNOWN;
 		END_IF
 		
 		i_refTB.p_bOuterDoorOpened S= s_bStaAtInfeedRearPosition AND s_bStaAtInfeedFrontPosition AND s_bStaDoorOpened;
 	
 		IF s_fbHmiBtnTB_ToInfeed.p_osrBtnPress OR s_bReqTB_ToInfeed THEN
-			IF m_CmdTB_ToInfeed(i_refReason := s_sMessage) THEN
+			IF _m_CmdTB_ToInfeed(i_refReason := s_sMessage) THEN
 				s_eSeqTransport := E_SeqTransport.MOVE_TO_INFEED;
 			ELSE	
 				//Write message
@@ -830,7 +927,7 @@ CASE s_eSeqTransport OF
 			
 		ELSIF s_fbHmiBtnTB_ToCentering.p_osrBtnPress OR s_bReqTB_ToCenter THEN
 			//--IF m_CmdTB_ToCenter(o_sReason => s_sMessage) THEN
-			IF m_CmdTB_ToCenter(i_refReason := s_sMessage) THEN
+			IF _m_CmdTB_ToCenter(i_refReason := s_sMessage) THEN
 				s_eSeqTransport := E_SeqTransport.MOVE_TO_CENTERING;
 			ELSE	
 				//Write message
@@ -849,7 +946,7 @@ CASE s_eSeqTransport OF
 			//--END_IF
 			
 		ELSIF s_fbHmiBtnTB_ToDocking.p_osrBtnPress OR s_bReqTB_ToDocking THEN
-			IF m_CmdTB_ToDocking(i_refReason := s_sMessage) THEN
+			IF _m_CmdTB_ToDocking(i_refReason := s_sMessage) THEN
 				s_eSeqTransport := E_SeqTransport.MOVE_TO_DOCKING;
 			ELSE	
 				//Write message
@@ -939,94 +1036,6 @@ CASE s_eSeqTransport OF
 		
 END_CASE
 ]]></ST>
-      </Implementation>
-    </Method>
-    <Method Name="m_CmdCenteringTB" Id="{ff42404a-08cf-4a4b-a12c-748d8f3fd351}">
-      <Declaration><![CDATA[METHOD PUBLIC m_CmdCenteringTB : BOOL
-VAR_INPUT
-	i_refReason : REFERENCE TO STRING;
-END_VAR
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
-	RETURN;
-END_IF
-
-IF s_bIlckCenteringToCenter THEN
-	i_refReason := CONCAT('Cmd Centering: Interlocked - ', s_cmCenteringUnit.p_sInterlockedReasonOn);
-	m_CmdCenteringTB := FALSE;
-ELSE
-	i_refReason := '-';
-	m_CmdCenteringTB := TRUE;	
-END_IF
-]]></ST>
-      </Implementation>
-    </Method>
-    <Method Name="m_CmdTB_ToCenter" Id="{9a04d893-3f3d-441b-875a-c54a1fc8d77d}">
-      <Declaration><![CDATA[METHOD PUBLIC m_CmdTB_ToCenter : BOOL
-VAR_INPUT
-	i_refReason : REFERENCE TO STRING;
-END_VAR
-	]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
-	RETURN;
-END_IF
-
-IF s_bIlckConveyorForward THEN
-	i_refReason := CONCAT('Cmd To Center: Interlocked - ', fbIlckHandlerConveyorForward.p_sReason);
-	m_CmdTB_ToCenter := FALSE;
-ELSE
-	i_refReason := '-';
-	m_CmdTB_ToCenter := TRUE;	
-END_IF
-
-]]></ST>
-      </Implementation>
-    </Method>
-    <Method Name="m_CmdTB_ToDocking" Id="{2bfcdc46-8a0a-4837-b71a-35dd909a0ae6}">
-      <Declaration><![CDATA[METHOD PUBLIC m_CmdTB_ToDocking : BOOL
-VAR_INPUT
-	i_refReason : REFERENCE TO STRING;
-END_VAR
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
-	RETURN;
-END_IF
-
-IF s_bIlckConveyorForward THEN
-	i_refReason := CONCAT('Cmd To Docking: Interlocked - ', fbIlckHandlerConveyorForward.p_sReason);
-	m_CmdTB_ToDocking := FALSE;
-ELSE
-	i_refReason := '-';
-	m_CmdTB_ToDocking := TRUE;	
-END_IF
-]]></ST>
-      </Implementation>
-    </Method>
-    <Method Name="m_CmdTB_ToInfeed" Id="{cf16f0e7-53a6-4bd4-b559-f1ce284b5a59}">
-      <Declaration><![CDATA[METHOD PUBLIC m_CmdTB_ToInfeed : BOOL
-VAR_INPUT
-	i_refReason : REFERENCE TO STRING;
-END_VAR
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
-	RETURN;
-END_IF
-
-IF s_bIlckConveyorBackward THEN
-	i_refReason := CONCAT('Cmd To Infeed: Interlocked - ', fbIlckHandlerConveyorBackward.p_sReason);
-	m_CmdTB_ToInfeed := FALSE;
-ELSE
-	i_refReason := '-';
-	m_CmdTB_ToInfeed := TRUE;	
-END_IF]]></ST>
       </Implementation>
     </Method>
     <Method Name="m_Main" Id="{aa6670a8-50a5-40e7-bcf1-bbb60244f9de}">
@@ -1436,6 +1445,49 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="473" Count="4" />
       <LineId Id="293" Count="0" />
     </LineIds>
+    <LineIds Name="EM_PalletConveyor._m_CmdCenteringTB">
+      <LineId Id="34" Count="0" />
+      <LineId Id="26" Count="2" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="88" Count="2" />
+      <LineId Id="98" Count="0" />
+      <LineId Id="117" Count="0" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="100" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_PalletConveyor._m_CmdTB_ToCenter">
+      <LineId Id="34" Count="0" />
+      <LineId Id="26" Count="2" />
+      <LineId Id="121" Count="0" />
+      <LineId Id="123" Count="0" />
+      <LineId Id="142" Count="0" />
+      <LineId Id="126" Count="1" />
+      <LineId Id="141" Count="0" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="122" Count="0" />
+      <LineId Id="119" Count="0" />
+      <LineId Id="77" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_PalletConveyor._m_CmdTB_ToDocking">
+      <LineId Id="34" Count="0" />
+      <LineId Id="26" Count="2" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="110" Count="0" />
+      <LineId Id="122" Count="0" />
+      <LineId Id="112" Count="3" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="100" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_PalletConveyor._m_CmdTB_ToInfeed">
+      <LineId Id="34" Count="0" />
+      <LineId Id="26" Count="2" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="109" Count="0" />
+      <LineId Id="115" Count="0" />
+      <LineId Id="111" Count="3" />
+      <LineId Id="107" Count="0" />
+    </LineIds>
     <LineIds Name="EM_PalletConveyor._m_Devices">
       <LineId Id="41" Count="0" />
       <LineId Id="6" Count="7" />
@@ -1456,14 +1508,17 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="303" Count="0" />
       <LineId Id="298" Count="0" />
       <LineId Id="336" Count="0" />
+      <LineId Id="348" Count="0" />
       <LineId Id="319" Count="1" />
       <LineId Id="299" Count="0" />
       <LineId Id="318" Count="0" />
       <LineId Id="337" Count="0" />
+      <LineId Id="349" Count="0" />
       <LineId Id="321" Count="1" />
       <LineId Id="300" Count="0" />
       <LineId Id="315" Count="0" />
       <LineId Id="343" Count="0" />
+      <LineId Id="350" Count="0" />
       <LineId Id="316" Count="1" />
       <LineId Id="314" Count="0" />
       <LineId Id="297" Count="0" />
@@ -1484,6 +1539,7 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="280" Count="0" />
       <LineId Id="292" Count="0" />
       <LineId Id="6" Count="0" />
+      <LineId Id="351" Count="0" />
     </LineIds>
     <LineIds Name="EM_PalletConveyor._m_Init">
       <LineId Id="203" Count="0" />
@@ -1594,10 +1650,7 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="278" Count="0" />
       <LineId Id="276" Count="0" />
       <LineId Id="258" Count="0" />
-      <LineId Id="128" Count="4" />
-      <LineId Id="364" Count="0" />
-      <LineId Id="363" Count="0" />
-      <LineId Id="116" Count="1" />
+      <LineId Id="117" Count="0" />
       <LineId Id="355" Count="0" />
       <LineId Id="323" Count="1" />
       <LineId Id="331" Count="1" />
@@ -1613,7 +1666,14 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="339" Count="0" />
       <LineId Id="358" Count="4" />
       <LineId Id="357" Count="0" />
-      <LineId Id="127" Count="0" />
+      <LineId Id="366" Count="0" />
+      <LineId Id="368" Count="0" />
+      <LineId Id="376" Count="0" />
+      <LineId Id="369" Count="3" />
+      <LineId Id="377" Count="0" />
+      <LineId Id="382" Count="2" />
+      <LineId Id="378" Count="1" />
+      <LineId Id="373" Count="0" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="EM_PalletConveyor._m_ManualControl">
@@ -1675,49 +1735,6 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="1792" Count="0" />
       <LineId Id="1746" Count="44" />
       <LineId Id="89" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor.m_CmdCenteringTB">
-      <LineId Id="34" Count="0" />
-      <LineId Id="26" Count="2" />
-      <LineId Id="71" Count="0" />
-      <LineId Id="88" Count="2" />
-      <LineId Id="98" Count="0" />
-      <LineId Id="117" Count="0" />
-      <LineId Id="99" Count="0" />
-      <LineId Id="77" Count="0" />
-      <LineId Id="100" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor.m_CmdTB_ToCenter">
-      <LineId Id="34" Count="0" />
-      <LineId Id="26" Count="2" />
-      <LineId Id="121" Count="0" />
-      <LineId Id="123" Count="0" />
-      <LineId Id="142" Count="0" />
-      <LineId Id="126" Count="1" />
-      <LineId Id="141" Count="0" />
-      <LineId Id="128" Count="0" />
-      <LineId Id="122" Count="0" />
-      <LineId Id="119" Count="0" />
-      <LineId Id="77" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor.m_CmdTB_ToDocking">
-      <LineId Id="34" Count="0" />
-      <LineId Id="26" Count="2" />
-      <LineId Id="71" Count="0" />
-      <LineId Id="110" Count="0" />
-      <LineId Id="122" Count="0" />
-      <LineId Id="112" Count="3" />
-      <LineId Id="108" Count="0" />
-      <LineId Id="100" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor.m_CmdTB_ToInfeed">
-      <LineId Id="34" Count="0" />
-      <LineId Id="26" Count="2" />
-      <LineId Id="71" Count="0" />
-      <LineId Id="109" Count="0" />
-      <LineId Id="115" Count="0" />
-      <LineId Id="111" Count="3" />
-      <LineId Id="107" Count="0" />
     </LineIds>
     <LineIds Name="EM_PalletConveyor.m_Main">
       <LineId Id="2483" Count="54" />

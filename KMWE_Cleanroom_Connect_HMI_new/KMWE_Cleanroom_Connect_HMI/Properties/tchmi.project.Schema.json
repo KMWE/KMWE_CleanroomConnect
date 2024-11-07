@@ -295,6 +295,287 @@
         }
       },
       "type": "object"
+    },
+    "ucCarrier": {
+      "frameworkControlNamespace": "TcHmi.Controls.Beckhoff",
+      "frameworkControlType": "TcHmi.Controls.System.TcHmiUserControl",
+      "frameworkInstanceOf": "TcHmi.Controls.System.TcHmiControl",
+      "frameworkUserControlConfig": "UserControl\\ucCarrier.usercontrol.json",
+      "id": "tchmi:project#/definitions/ucCarrier",
+      "type": "object"
+    },
+    "PLC1.E_Location": {
+      "generate_implicit_init_function": "",
+      "qualified_only": "",
+      "strict": "",
+      "to_string": "",
+      "to_string_function": "__TO_STRING__158",
+      "to_wstring_function": "__TO_WSTRING__158",
+      "type": "integer",
+      "enum": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "options": [
+        {
+          "value": 0,
+          "label": "UNKNOWN"
+        },
+        {
+          "value": 1,
+          "label": "INFEED"
+        },
+        {
+          "value": 2,
+          "label": "CENTERING"
+        },
+        {
+          "value": 3,
+          "label": "PRE_DOCKING"
+        },
+        {
+          "value": 4,
+          "label": "DOCKING"
+        },
+        {
+          "value": 5,
+          "label": "AIR_LOCK"
+        },
+        {
+          "value": 6,
+          "label": "FLUSHING_CLEAN"
+        },
+        {
+          "value": 7,
+          "label": "CLEAN_ROOM"
+        }
+      ]
+    },
+    "PLC1.METHOD-RETURNING-BOOL": {
+      "allOf": [
+        {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        },
+        {
+          "function": true
+        }
+      ]
+    },
+    "PLC1.METHOD-RETURNING-BOOL-PARAMETERS-i_eDestination-E_Location": {
+      "allOf": [
+        {
+          "$ref": "tchmi:general#/definitions/BOOL"
+        },
+        {
+          "properties": {
+            "i_eDestination": {
+              "allOf": [
+                {
+                  "$ref": "tchmi:project#/definitions/PLC1.E_Location"
+                },
+                {
+                  "comment": "i_stCarrier : ST_Carrier;"
+                }
+              ]
+            }
+          },
+          "type": "object",
+          "required": [
+            "i_eDestination"
+          ],
+          "function": true
+        }
+      ]
+    },
+    "PLC1.OBJ_Carrier": {
+      "TcImplements": "I_Carrier",
+      "properties": {
+        "m_Create": {
+          "$ref": "tchmi:project#/definitions/PLC1.METHOD-RETURNING-BOOL-PARAMETERS-i_eDestination-E_Location"
+        },
+        "m_Destroy": {
+          "$ref": "tchmi:project#/definitions/PLC1.METHOD-RETURNING-BOOL"
+        },
+        "s_eLocationTmp": {
+          "allOf": [
+            {
+              "$ref": "tchmi:project#/definitions/PLC1.E_Location"
+            },
+            {
+              "comment": "--s_eDestination : E_Location;\r\n--s_eLocation : E_Location;\r\n--s_eLocationPrev : E_Location;\r\n--s_nId : UINT;\r\n--s_bRegisterNewTBAtInfeed : BOOL; //NEW\r\n--s_bOuterDoorOpened : BOOL;\r\n--s_bApprovedAtInfeed : BOOL;\r\n--s_bCenteringDone : BOOL;\r\n--s_bDockingDone : BOOL;\r\n--s_bUndockingDone : BOOL;\r\n--s_bCloseInnerDoorDone : BOOL;\r\n--s_bOpenInnerDoorDone : BOOL;\r\n--s_bFlushedCleaned : BOOL;",
+              "propertyOrder": 2
+            }
+          ]
+        },
+        "s_nIdCnt": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/UDINT"
+            },
+            {
+              "propertyOrder": 3
+            }
+          ]
+        },
+        "s_stCarrier": {
+          "allOf": [
+            {
+              "$ref": "tchmi:project#/definitions/PLC1.ST_Carrier"
+            },
+            {
+              "propertyOrder": 1
+            }
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "PLC1.ST_Carrier": {
+      "properties": {
+        "bApprovedAtInfeed": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "propertyOrder": 7
+            }
+          ]
+        },
+        "bCenteringDone": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "Centering",
+              "propertyOrder": 8
+            }
+          ]
+        },
+        "bCloseInnerDoorDone": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "Open/close inner door",
+              "propertyOrder": 11
+            }
+          ]
+        },
+        "bDockingDone": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "(Un)docking",
+              "propertyOrder": 9
+            }
+          ]
+        },
+        "bFlushedCleaned": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "Cleaning",
+              "propertyOrder": 13
+            }
+          ]
+        },
+        "bNewTBAtInfeed": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "comment": "NEW",
+              "propertyOrder": 5
+            }
+          ]
+        },
+        "bOpenInnerDoorDone": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "propertyOrder": 12
+            }
+          ]
+        },
+        "bOuterDoorOpened": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "propertyOrder": 6
+            }
+          ]
+        },
+        "bUndockingDone": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            {
+              "propertyOrder": 10
+            }
+          ]
+        },
+        "eActLocation": {
+          "allOf": [
+            {
+              "$ref": "tchmi:project#/definitions/PLC1.E_Location"
+            },
+            {
+              "propertyOrder": 3
+            }
+          ]
+        },
+        "eDestination": {
+          "allOf": [
+            {
+              "$ref": "tchmi:project#/definitions/PLC1.E_Location"
+            },
+            {
+              "comment": "Locations",
+              "propertyOrder": 2
+            }
+          ]
+        },
+        "ePrevLocation": {
+          "allOf": [
+            {
+              "$ref": "tchmi:project#/definitions/PLC1.E_Location"
+            },
+            {
+              "propertyOrder": 4
+            }
+          ]
+        },
+        "nId": {
+          "allOf": [
+            {
+              "$ref": "tchmi:general#/definitions/UDINT"
+            },
+            {
+              "propertyOrder": 1
+            }
+          ]
+        }
+      },
+      "type": "object"
     }
   }
 }

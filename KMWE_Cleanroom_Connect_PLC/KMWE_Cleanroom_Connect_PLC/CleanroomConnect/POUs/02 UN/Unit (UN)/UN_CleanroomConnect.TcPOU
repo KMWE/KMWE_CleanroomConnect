@@ -838,12 +838,21 @@ VAR_INPUT
 END_VAR
 
 
-VAR
-	sReason : STRING;
+VAR_INST
+	osrTbToCenter : R_TRIG;
+	osrTbToDocking : R_TRIG;
+	osrTbToInfeed : R_TRIG;
+	osrCenterTb : R_TRIG;
+	
+	osrDockTb : R_TRIG;
+	osrUndockTb : R_TRIG;
+	osrOpenInnerDoor : R_TRIG;
+	osrCloseInnerDoor : R_TRIG;
 	
 END_VAR]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF NOT(__ISVALIDREF(i_objTB)) THEN
+        <ST><![CDATA[
+IF NOT(__ISVALIDREF(i_objTB)) THEN
 	RETURN;
 END_IF
 
@@ -853,6 +862,101 @@ END_IF
 {warning '#TODO na gaan of het in onderstaande code niet beter zou zijn om puur te kijken naar de data uit de struct ipv naar properties uit de onderliggende modules?'}
 // zoals bij voorbeeld voor TB centered status
 
+//EM_PalletConveyor
+IF i_objTB.p_eDestination <> E_Location.UNKNOWN	THEN
+
+	//Transporting TB to Center
+	osrTbToCenter(
+		CLK := i_objTB.p_eDestination > i_objTB.p_eActLocation
+		AND i_objTB.p_eActLocation < E_Location.CENTERING  
+		AND i_objTB.p_bOuterDoorOpened
+		AND i_objTB.p_bApprovedAtInfeed);
+	
+	IF osrTbToCenter.Q THEN
+		GVL_Modules.g_emPalletConveyor.m_ReqTB_ToCenter();
+	END_IF
+			
+	//Transporting TB to Docking
+	osrTbToDocking(
+		CLK := i_objTB.p_eDestination > i_objTB.p_eActLocation
+		AND i_objTB.p_eActLocation < E_Location.DOCKING 
+		AND GVL_Modules.g_emPalletConveyor.p_bStaTB_CenteringDone
+		AND GVL_Modules.g_emDockingInterface.p_bStaUndocked);
+	
+	IF osrTbToDocking.Q THEN
+		GVL_Modules.g_emPalletConveyor.m_ReqTB_ToDocking();
+	END_IF	
+		
+	//Transporting TB to Infeed
+	osrTbToInfeed(
+		CLK := i_objTB.p_eDestination < i_objTB.p_eActLocation
+		AND i_objTB.p_eActLocation > E_Location.INFEED
+		AND GVL_Modules.g_emDockingInterface.p_bStaUndocked);
+	
+	IF osrTbToInfeed.Q THEN
+		GVL_Modules.g_emPalletConveyor.m_ReqTB_ToInfeed();
+	END_IF
+	
+	//Centering TB
+	osrCenterTb(
+		CLK := i_objTB.p_eActLocation = E_Location.CENTERING  
+		AND NOT(GVL_Modules.g_emPalletConveyor.p_bStaTB_CenteringDone));
+	
+	IF osrCenterTb.Q THEN
+		GVL_Modules.g_emPalletConveyor.m_ReqCenteringTB();
+	END_IF
+	
+END_IF
+	
+//EM_DockingInterface
+IF i_objTB.p_eDestination <> E_Location.UNKNOWN	THEN
+	
+	//Docking TB
+	osrDockTb(
+		CLK := i_objTB.p_eActLocation = E_Location.DOCKING
+		AND i_objTB.p_eDestination > E_Location.DOCKING 
+		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaDocked));
+
+	IF osrDockTb.Q THEN
+		GVL_Modules.g_emDockingInterface.m_ReqDockTB();
+	END_IF
+	
+	//Undocking TB
+	osrUndockTb(
+		CLK := i_objTB.p_eActLocation = E_Location.DOCKING //Is this about the TB or Trolley location? 
+		AND i_objTB.p_eDestination < E_Location.DOCKING
+		AND GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosedAndLocked
+		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaUndocked));
+	
+	IF osrUndockTb.Q THEN
+		GVL_Modules.g_emDockingInterface.m_ReqUndockTB();
+	END_IF
+
+	//Opening Inner Door TB
+	osrOpenInnerDoor(
+		CLK := i_objTB.p_eActLocation = E_Location.DOCKING
+		AND i_objTB.p_eDestination > E_Location.DOCKING
+		AND GVL_Modules.g_emDockingInterface.p_bStaDocked
+		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpenedAndReleased));
+	
+	IF osrOpenInnerDoor.Q THEN
+		GVL_Modules.g_emDockingInterface.m_ReqOpenInnerDoor();
+	END_IF
+			
+	//Closing Inner Door TB
+	osrCloseInnerDoor(
+		CLK := i_objTB.p_eActLocation = E_Location.DOCKING
+		AND i_objTB.p_eDestination < E_Location.DOCKING
+		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosedAndLocked));
+	
+	IF osrCloseInnerDoor.Q THEN
+		GVL_Modules.g_emDockingInterface.m_ReqCloseInnerDoor();
+	END_IF
+	
+END_IF	
+	
+	
+(* Lod Code 20241108	
 //EM_PalletConveyor
 	
 	//Transporting TB to Center
@@ -883,10 +987,19 @@ END_IF
 	//Centering TB
 	IF i_objTB.p_eDestination <> E_Location.UNKNOWN
 		AND i_objTB.p_eActLocation = E_Location.CENTERING  
-		//--AND NOT(GVL_Modules.g_emPalletConveyor.p_bStaTB_CenteringDone) THEN
-		AND NOT(i_objTB.p_bCenteringDone) THEN
-			GVL_Modules.g_emPalletConveyor.m_ReqCenteringTB();
-			
+		AND NOT(GVL_Modules.g_emPalletConveyor.p_bStaTB_CenteringDone) THEN
+		///AND NOT(i_objTB.p_bCenteringDone) AND NOT(bTest) THEN
+		; 
+		//	GVL_Modules.g_emPalletConveyor.m_ReqCenteringTB();
+	END_IF
+	
+	osrCenterTb(
+		CLK := i_objTB.p_eDestination <> E_Location.UNKNOWN
+		AND i_objTB.p_eActLocation = E_Location.CENTERING  
+		AND NOT(GVL_Modules.g_emPalletConveyor.p_bStaTB_CenteringDone));
+	
+	IF osrCenterTb.Q THEN
+		GVL_Modules.g_emPalletConveyor.m_ReqCenteringTB();
 	END_IF
 	
 //EM_DockingInterface
@@ -922,7 +1035,7 @@ END_IF
 			GVL_Modules.g_emDockingInterface.m_ReqCloseInnerDoor();
 			
 	END_IF
-
+*)
 //EM_LiftingTransport
 	//Get Trolley from TB to Cabin
 	//Get Trolley from Cabin to TB
@@ -1201,8 +1314,65 @@ GVL_Modules.g_emPalletConveyor._m_CmdTB_ToInfeed(i_refReason := sReason);
       <LineId Id="203" Count="0" />
     </LineIds>
     <LineIds Name="UN_CleanroomConnect.m_FullCycle">
+      <LineId Id="569" Count="0" />
       <LineId Id="312" Count="5" />
       <LineId Id="422" Count="2" />
+      <LineId Id="474" Count="0" />
+      <LineId Id="476" Count="1" />
+      <LineId Id="564" Count="0" />
+      <LineId Id="478" Count="0" />
+      <LineId Id="557" Count="0" />
+      <LineId Id="573" Count="0" />
+      <LineId Id="571" Count="1" />
+      <LineId Id="560" Count="3" />
+      <LineId Id="554" Count="0" />
+      <LineId Id="485" Count="1" />
+      <LineId Id="575" Count="0" />
+      <LineId Id="578" Count="0" />
+      <LineId Id="581" Count="0" />
+      <LineId Id="580" Count="0" />
+      <LineId Id="577" Count="0" />
+      <LineId Id="574" Count="0" />
+      <LineId Id="584" Count="1" />
+      <LineId Id="583" Count="0" />
+      <LineId Id="582" Count="0" />
+      <LineId Id="494" Count="0" />
+      <LineId Id="589" Count="0" />
+      <LineId Id="597" Count="1" />
+      <LineId Id="593" Count="3" />
+      <LineId Id="586" Count="0" />
+      <LineId Id="502" Count="1" />
+      <LineId Id="512" Count="1" />
+      <LineId Id="515" Count="4" />
+      <LineId Id="600" Count="0" />
+      <LineId Id="599" Count="0" />
+      <LineId Id="520" Count="2" />
+      <LineId Id="601" Count="0" />
+      <LineId Id="523" Count="0" />
+      <LineId Id="605" Count="0" />
+      <LineId Id="613" Count="1" />
+      <LineId Id="609" Count="0" />
+      <LineId Id="627" Count="0" />
+      <LineId Id="611" Count="1" />
+      <LineId Id="602" Count="0" />
+      <LineId Id="604" Count="0" />
+      <LineId Id="530" Count="0" />
+      <LineId Id="617" Count="0" />
+      <LineId Id="624" Count="2" />
+      <LineId Id="620" Count="3" />
+      <LineId Id="615" Count="0" />
+      <LineId Id="537" Count="1" />
+      <LineId Id="630" Count="0" />
+      <LineId Id="638" Count="2" />
+      <LineId Id="634" Count="3" />
+      <LineId Id="628" Count="0" />
+      <LineId Id="545" Count="1" />
+      <LineId Id="643" Count="0" />
+      <LineId Id="651" Count="1" />
+      <LineId Id="647" Count="3" />
+      <LineId Id="641" Count="1" />
+      <LineId Id="553" Count="0" />
+      <LineId Id="567" Count="1" />
       <LineId Id="318" Count="1" />
       <LineId Id="387" Count="0" />
       <LineId Id="320" Count="4" />
@@ -1213,7 +1383,19 @@ GVL_Modules.g_emPalletConveyor._m_CmdTB_ToInfeed(i_refReason := sReason);
       <LineId Id="390" Count="0" />
       <LineId Id="334" Count="11" />
       <LineId Id="427" Count="0" />
-      <LineId Id="346" Count="4" />
+      <LineId Id="460" Count="0" />
+      <LineId Id="346" Count="0" />
+      <LineId Id="348" Count="0" />
+      <LineId Id="453" Count="0" />
+      <LineId Id="455" Count="0" />
+      <LineId Id="473" Count="0" />
+      <LineId Id="459" Count="0" />
+      <LineId Id="457" Count="0" />
+      <LineId Id="454" Count="0" />
+      <LineId Id="449" Count="0" />
+      <LineId Id="451" Count="1" />
+      <LineId Id="450" Count="0" />
+      <LineId Id="350" Count="0" />
       <LineId Id="388" Count="0" />
       <LineId Id="351" Count="30" />
       <LineId Id="407" Count="0" />

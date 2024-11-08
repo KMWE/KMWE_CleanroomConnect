@@ -21,10 +21,27 @@ VAR
 	simLiftHomed AT %Q* : BOOL;
 	simTransportUnitActPos AT %I* : LREAL;
 	simTransportUnitHomed AT %Q* : BOOL;
+	
+	bInitDone : BOOL;
+	simSafetyOK AT %Q* : BOOL;
+	simPowerOK AT %Q* : BOOL;
+	simAirPressureOK AT %Q* : BOOL;
+	
 END_VAR
 ]]></Declaration>
     <Implementation>
       <ST><![CDATA[
+IF NOT(bInitDone) THEN
+	simSafetyOK := TRUE;
+	simPowerOK := TRUE;
+	simAirPressureOK := TRUE;
+	
+	simDoorShutter.mForceOff();
+	simDoorOpener.mForceOff();
+	
+	bInitDone := TRUE;
+END_IF
+
 //EM Pallet Conveyor
 sim_MOVITRAC_B();
 simCentering();
@@ -46,6 +63,14 @@ simDoorOpenerAlmostClosed := tonDoorOpenerAlmosClosed.Q;
 //simLiftHomed := FALSE;]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
+      <LineId Id="140" Count="1" />
+      <LineId Id="145" Count="0" />
+      <LineId Id="147" Count="1" />
+      <LineId Id="155" Count="0" />
+      <LineId Id="157" Count="1" />
+      <LineId Id="156" Count="0" />
+      <LineId Id="144" Count="0" />
+      <LineId Id="143" Count="0" />
       <LineId Id="38" Count="1" />
       <LineId Id="80" Count="0" />
       <LineId Id="40" Count="0" />

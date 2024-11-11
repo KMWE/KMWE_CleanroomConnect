@@ -1,0 +1,236 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_ModeStateControl" Id="{e7765408-b769-4eed-9a68-858e05e5d218}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ModeStateControl
+VAR_INPUT
+	i_bReqStopAlarm	: BOOL;
+	i_bStaAllStopped : BOOL;
+END_VAR
+VAR_OUTPUT
+END_VAR
+VAR
+	s_bInitDone : BOOL := FALSE;	
+
+	s_eCtrlMode : E_CtrlMode := E_CtrlMode.IDLE;
+	s_eCtrlState : E_CtrlState := E_CtrlState.STOPPED;
+	
+	s_fbHmiBtnModeAutomatic : FB_HmiBtn;
+	s_fbHmiBtnModeManual : FB_HmiBtn;
+	s_fbHmiBtnModeMaintenance : FB_HmiBtn;
+	s_fbHmiBtnModeIO : FB_HmiBtn;
+	s_fbHmiBtnModeCleaning : FB_HmiBtn;
+	
+	s_fbHmiBtnStateStart : FB_HmiBtn;
+	s_fbHmiBtnStateStop : FB_HmiBtn;
+	s_fbHmiBtnStateReset : FB_HmiBtn;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Init
+IF NOT (s_bInitDone) THEN 
+//Mode buttons
+s_fbHmiBtnModeAutomatic.p_bStaEnabled := FALSE;
+s_fbHmiBtnModeAutomatic.p_bStaVisible := FALSE;
+s_fbHmiBtnModeAutomatic.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnModeAutomatic.p_sBtnText := 'Automatic';
+
+s_fbHmiBtnModeManual.p_bStaEnabled := FALSE;
+s_fbHmiBtnModeManual.p_bStaVisible := FALSE;
+s_fbHmiBtnModeManual.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnModeManual.p_sBtnText := 'Manual';
+
+s_fbHmiBtnModeMaintenance.p_bStaEnabled := FALSE;
+s_fbHmiBtnModeMaintenance.p_bStaVisible := FALSE;
+s_fbHmiBtnModeMaintenance.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnModeMaintenance.p_sBtnText := 'Maintenance';
+
+s_fbHmiBtnModeIO.p_bStaEnabled := FALSE;
+s_fbHmiBtnModeIO.p_bStaVisible := FALSE;
+s_fbHmiBtnModeIO.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnModeIO.p_sBtnText := 'IO';
+
+s_fbHmiBtnModeCleaning.p_bStaEnabled := FALSE;
+s_fbHmiBtnModeCleaning.p_bStaVisible := FALSE;
+s_fbHmiBtnModeCleaning.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnModeCleaning.p_sBtnText := 'Cleaning';
+
+
+//State buttons
+s_fbHmiBtnStateStart.p_bStaEnabled := FALSE;
+s_fbHmiBtnStateStart.p_bStaVisible := FALSE;
+s_fbHmiBtnStateStart.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnStateStart.p_sBtnText := 'Start';
+
+s_fbHmiBtnStateStop.p_bStaEnabled := FALSE;
+s_fbHmiBtnStateStop.p_bStaVisible := FALSE;
+s_fbHmiBtnStateStop.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnStateStop.p_sBtnText := 'Stop';
+
+s_fbHmiBtnStateReset.p_bStaEnabled := FALSE;
+s_fbHmiBtnStateReset.p_bStaVisible := FALSE;
+s_fbHmiBtnStateReset.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnStateReset.p_sBtnText := 'Reset';
+
+s_bInitDone := TRUE;
+END_IF
+
+s_fbHmiBtnModeAutomatic();
+s_fbHmiBtnModeManual();
+s_fbHmiBtnModeMaintenance();
+s_fbHmiBtnModeIO();
+s_fbHmiBtnModeCleaning();
+
+s_fbHmiBtnStateStart();
+s_fbHmiBtnStateStop();
+s_fbHmiBtnStateReset();
+
+CASE s_eCtrlMode OF
+	E_CtrlMode.IDLE:
+		s_fbHmiBtnModeAutomatic.p_bStaVisible := TRUE;
+		s_fbHmiBtnModeManual.p_bStaVisible := TRUE;
+		s_fbHmiBtnModeMaintenance.p_bStaVisible := TRUE;
+		s_fbHmiBtnModeIO.p_bStaVisible := TRUE;
+		s_fbHmiBtnModeCleaning.p_bStaVisible := TRUE;
+	
+		s_fbHmiBtnStateStart.p_bStaVisible := TRUE;
+		s_fbHmiBtnStateStop.p_bStaVisible := TRUE;
+		s_fbHmiBtnStateReset.p_bStaVisible := TRUE;
+	
+	E_CtrlMode.AUTOMATIC:
+		;
+	
+	E_CtrlMode.MANUAL:
+		;
+	
+	E_CtrlMode.MAINTENANCE:
+		;
+	
+	E_CtrlMode.IO:
+		;
+		
+	E_CtrlMode.CLEANING:
+		;
+	ELSE
+		s_eCtrlMode := E_CtrlMode.IDLE;
+END_CASE
+
+IF (s_eCtrlState = E_CtrlState.STOPPED) OR (s_eCtrlState = E_CtrlState.IDLE) THEN
+		IF s_fbHmiBtnModeAutomatic.p_osrBtnPress THEN
+			s_eCtrlMode := E_CtrlMode.AUTOMATIC;
+
+		ELSIF s_fbHmiBtnModeManual.p_osrBtnPress THEN			
+			s_eCtrlMode := E_CtrlMode.MANUAL;
+		
+		ELSIF s_fbHmiBtnModeMaintenance.p_osrBtnPress THEN
+			s_eCtrlMode := E_CtrlMode.MAINTENANCE;
+		
+		ELSIF s_fbHmiBtnModeIO.p_osrBtnPress THEN
+			s_eCtrlMode := E_CtrlMode.IO;
+		
+		ELSIF s_fbHmiBtnModeCleaning.p_osrBtnPress THEN
+			s_eCtrlMode := E_CtrlMode.CLEANING;
+			
+		END_IF
+	END_IF
+
+CASE s_eCtrlState OF
+	
+	E_CtrlState.STOPPED:
+	
+		IF s_fbHmiBtnStateReset.p_osrBtnPress THEN
+			s_eCtrlState := E_CtrlState.IDLE;
+		END_IF 
+	
+	E_CtrlState.IDLE:
+	
+		IF s_fbHmiBtnStateStart.p_osrBtnPress THEN
+			s_eCtrlState := E_CtrlState.RUNNING;
+		END_IF
+			
+	E_CtrlState.RUNNING:
+	
+		IF s_fbHmiBtnStateStop.p_osrBtnPress OR i_bReqStopAlarm THEN
+			s_eCtrlState := E_CtrlState.STOPPING;
+		END_IF
+	
+	E_CtrlState.STOPPING:
+	
+		IF i_bStaAllStopped THEN
+			s_eCtrlState := E_CtrlState.STOPPED;
+		END_IF
+		
+ELSE
+	s_eCtrlState := E_CtrlState.STOPPED;
+END_CASE
+
+IF (s_eCtrlState = E_CtrlState.IDLE)
+	OR (s_eCtrlState = E_CtrlState.STOPPED)
+THEN
+	s_fbHmiBtnModeAutomatic.p_bStaEnabled := s_eCtrlMode <> E_CtrlMode.AUTOMATIC;
+	s_fbHmiBtnModeManual.p_bStaEnabled := s_eCtrlMode <> E_CtrlMode.MANUAL;
+	s_fbHmiBtnModeMaintenance.p_bStaEnabled := s_eCtrlMode <> E_CtrlMode.MAINTENANCE;
+	s_fbHmiBtnModeIO.p_bStaEnabled := s_eCtrlMode <> E_CtrlMode.IO;
+	s_fbHmiBtnModeCleaning.p_bStaEnabled := s_eCtrlMode <> E_CtrlMode.CLEANING;
+ELSE
+	s_fbHmiBtnModeAutomatic.p_bStaEnabled := FALSE;
+	s_fbHmiBtnModeManual.p_bStaEnabled := FALSE;
+	s_fbHmiBtnModeMaintenance.p_bStaEnabled := FALSE;
+	s_fbHmiBtnModeIO.p_bStaEnabled := FALSE;
+	s_fbHmiBtnModeCleaning.p_bStaEnabled := FALSE;
+END_IF
+
+IF s_eCtrlMode <> E_CtrlMode.IDLE THEN
+	s_fbHmiBtnStateStart.p_bStaEnabled := s_eCtrlState = E_CtrlState.IDLE;
+	s_fbHmiBtnStateStop.p_bStaEnabled := s_eCtrlState = E_CtrlState.RUNNING;
+	s_fbHmiBtnStateReset.p_bStaEnabled := s_eCtrlState <> E_CtrlState.STOPPED;
+ELSE
+	s_fbHmiBtnStateStart.p_bStaEnabled := FALSE;
+	s_fbHmiBtnStateStop.p_bStaEnabled := FALSE;
+	s_fbHmiBtnStateReset.p_bStaEnabled := FALSE;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ModeStateControl">
+      <LineId Id="555" Count="0" />
+      <LineId Id="665" Count="0" />
+      <LineId Id="664" Count="0" />
+      <LineId Id="649" Count="12" />
+      <LineId Id="648" Count="0" />
+      <LineId Id="667" Count="8" />
+      <LineId Id="666" Count="0" />
+      <LineId Id="663" Count="0" />
+      <LineId Id="662" Count="0" />
+      <LineId Id="647" Count="0" />
+      <LineId Id="556" Count="13" />
+      <LineId Id="726" Count="0" />
+      <LineId Id="716" Count="0" />
+      <LineId Id="715" Count="0" />
+      <LineId Id="727" Count="1" />
+      <LineId Id="730" Count="3" />
+      <LineId Id="735" Count="2" />
+      <LineId Id="734" Count="0" />
+      <LineId Id="570" Count="2" />
+      <LineId Id="722" Count="1" />
+      <LineId Id="720" Count="0" />
+      <LineId Id="724" Count="1" />
+      <LineId Id="719" Count="0" />
+      <LineId Id="573" Count="69" />
+      <LineId Id="679" Count="0" />
+      <LineId Id="681" Count="1" />
+      <LineId Id="699" Count="0" />
+      <LineId Id="695" Count="3" />
+      <LineId Id="694" Count="0" />
+      <LineId Id="684" Count="0" />
+      <LineId Id="686" Count="2" />
+      <LineId Id="690" Count="1" />
+      <LineId Id="689" Count="0" />
+      <LineId Id="701" Count="0" />
+      <LineId Id="700" Count="0" />
+      <LineId Id="711" Count="1" />
+      <LineId Id="710" Count="0" />
+      <LineId Id="706" Count="0" />
+      <LineId Id="708" Count="1" />
+      <LineId Id="705" Count="0" />
+      <LineId Id="703" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

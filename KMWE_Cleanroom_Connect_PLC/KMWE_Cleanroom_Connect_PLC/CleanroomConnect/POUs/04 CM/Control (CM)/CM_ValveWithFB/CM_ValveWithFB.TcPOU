@@ -22,6 +22,10 @@ VAR
 	Q_bCmdOn AT %Q* : BOOL; //Commnad to set valve on
 	Q_bCmdOff AT %Q* : BOOL; //Command to set valve off
 
+	// Force outputs (IO-test functions)
+	s_fbForceCmdOn : FB_ForceOutput;
+	s_fbForceCmdOff : FB_ForceOutput;
+	
 	s_sInterlockedReasonOn : STRING(GVL.g_MAX_LEN_INTERLOCK_REASON); //External interlocked reason for clarifying reason
 	s_sInterlockedReasonOff : STRING(GVL.g_MAX_LEN_INTERLOCK_REASON); //External interlocked reason for clarifying reason
 	
@@ -323,7 +327,10 @@ _m_Inputs := TRUE;
     </Method>
     <Method Name="_m_Outputs" Id="{96cb9638-dd25-4e5f-a9d1-28835e3be357}" FolderPath="Methods\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Outputs : BOOL
-]]></Declaration>
+VAR_INST
+	s_bCmdOff : BOOL;
+	s_bCmdOn : BOOL;
+END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[
 IF NOT SUPER^._m_Outputs() THEN
@@ -333,29 +340,43 @@ END_IF
 CASE BOOL_TO_USINT(s_bCfgBiStableValve) OF
 	0 : // MONO-STABLE
 		IF i_bReqEnable AND s_bReqOff AND NOT(i_bIclkOff) THEN
-			Q_bCmdOff := TRUE;
-			Q_bCmdOn := FALSE;
+			s_bCmdOff := TRUE;
+			s_bCmdOn := FALSE;
 		ELSIF i_bReqEnable AND s_bReqOn AND NOT(i_bIclkOn) THEN
-			Q_bCmdOff := FALSE;
-			Q_bCmdOn := TRUE;
+			s_bCmdOff := FALSE;
+			s_bCmdOn := TRUE;
 		ELSE
-			Q_bCmdOff := FALSE;
-			Q_bCmdOn := FALSE;	
+			s_bCmdOff := FALSE;
+			s_bCmdOn := FALSE;	
 		END_IF
 		
 		//Force output FALSE if interlocked
 		IF i_bIclkOff THEN
-			Q_bCmdOff := FALSE;
+			s_bCmdOff := FALSE;
 		END_IF
 		
 		IF i_bIclkOn THEN
-			Q_bCmdOn := FALSE;
+			s_bCmdOn := FALSE;
 		END_IF
 	
 	1 : // BI-STABLE
-		Q_bCmdOff := i_bReqEnable AND s_bReqOff AND NOT(s_bStaValveIsOff) AND NOT(i_bIclkOff);
-		Q_bCmdOn := i_bReqEnable AND s_bReqOn AND NOT(s_bStaValveIsOn) AND NOT(i_bIclkOn);
+		s_bCmdOff := i_bReqEnable AND s_bReqOff AND NOT(s_bStaValveIsOff) AND NOT(i_bIclkOff);
+		s_bCmdOn := i_bReqEnable AND s_bReqOn AND NOT(s_bStaValveIsOn) AND NOT(i_bIclkOn);
 END_CASE
+
+{warning #TODO: Nog bepalen OF het beter is om onderstaande code te verwerken in FB_Force output}
+IF i_eCtrlMode <> E_CtrlMode.IO THEN
+	s_fbForceCmdOn.i_eForceValue := E_ForceValue.RELEASED;
+	s_fbForceCmdOff.i_eForceValue := E_ForceValue.RELEASED;
+END_IF 
+
+s_fbForceCmdOn(
+	i_ref_bCmdInput := s_bCmdOn,
+	i_ref_bCmdOutput := Q_bCmdOn);
+	
+s_fbForceCmdOff(
+	i_ref_bCmdInput := s_bCmdOff,
+	i_ref_bCmdOutput := Q_bCmdOff);
 
 _m_Outputs := TRUE;
 ]]></ST>
@@ -732,6 +753,12 @@ s_sInterlockedReasonOn := p_sInterlockedReasonOn;
       <LineId Id="83" Count="0" />
       <LineId Id="80" Count="2" />
       <LineId Id="78" Count="0" />
+      <LineId Id="105" Count="0" />
+      <LineId Id="107" Count="1" />
+      <LineId Id="138" Count="0" />
+      <LineId Id="137" Count="0" />
+      <LineId Id="115" Count="7" />
+      <LineId Id="106" Count="0" />
       <LineId Id="103" Count="0" />
       <LineId Id="10" Count="0" />
       <LineId Id="32" Count="0" />

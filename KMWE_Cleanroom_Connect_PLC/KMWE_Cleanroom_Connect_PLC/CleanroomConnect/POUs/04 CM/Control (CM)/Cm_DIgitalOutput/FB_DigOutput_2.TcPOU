@@ -1,0 +1,235 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_DigOutput_2" Id="{f6926334-60a3-431a-8319-95017baa0ee2}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_DigOutput_2
+VAR_INPUT
+	i_bStaOutput	: BOOL;
+	i_stSettings 	: ST_DigOutputSettings;
+	i_eCtrlMode		: E_CtrlMode;
+END_VAR
+VAR
+//----------------------Outputs---------------------------//
+	Q_bStaOutput AT %Q* : BOOL;
+	
+	// Force outputs (IO-test functions)
+	s_fbForceCmdOutput : FB_ForceOutput;
+	
+//------------------------------------------------------//
+
+//----------------------Properties---------------------------//
+	{attribute 'hide'}
+	s_bStaOutput			: BOOL;
+	{attribute 'hide'}
+	s_bStaOutputDelayed 	: BOOL;	
+	{attribute 'hide'}
+	s_bStaError			: BOOL;
+	{attribute 'hide'}
+	s_osrOn				: R_TRIG;
+	{attribute 'hide'}
+	s_osfOff		 	: F_TRIG;
+
+//------------------------------------------------------//
+
+//----------------------Variables---------------------------//
+	s_bInitDone 	: BOOL;
+	s_tonDelay 		: TON;
+//------------------------------------------------------//
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+m_Main();]]></ST>
+    </Implementation>
+    <Method Name="_m_Init" Id="{58eaf209-c641-4c2f-b3df-64ebcea68410}">
+      <Declaration><![CDATA[METHOD PRIVATE _m_Init : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+s_bStaOutputDelayed := s_bStaOutput;
+
+_m_Init := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Outputs" Id="{e570ab94-2a26-4b08-93d9-96af8fab708a}">
+      <Declaration><![CDATA[METHOD PRIVATE _m_Outputs : BOOL
+VAR_INST
+	s_bCmdOutput : BOOL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_stSettings.bCfgDelay THEN
+	s_bCmdOutput := s_bStaOutput;
+ELSE
+	s_bCmdOutput := s_bStaOutputDelayed;
+END_IF
+
+IF i_eCtrlMode <> E_CtrlMode.IO THEN
+	s_fbForceCmdOutput.i_eForceValue := E_ForceValue.RELEASED; 	
+END_IF
+
+s_fbForceCmdOutput(
+	i_ref_bCmdInput := s_bCmdOutput,
+	i_ref_bCmdOutput := Q_bStaOutput);
+
+_m_Outputs := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_Main" Id="{2dd33bfc-7121-4f83-aa70-6c1522573289}">
+      <Declaration><![CDATA[METHOD PUBLIC m_Main : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+s_bStaOutput := i_bStaOutput;
+
+IF NOT s_bInitDone THEN
+	IF _m_Init() THEN
+		s_bInitDone := TRUE;
+	END_IF 
+END_IF
+
+s_osrOn(CLK := s_bStaOutput);
+s_osfOff(CLK := s_bStaOutput);
+
+s_tonDelay(IN := s_bStaOutput <> s_bStaOutputDelayed, PT := i_stSettings.tmOutputDelay);
+
+IF s_bStaOutput AND s_tonDelay.Q THEN
+	s_bStaOutputDelayed := TRUE;
+END_IF
+
+IF NOT s_bStaOutput AND s_tonDelay.Q THEN
+	s_bStaOutputDelayed := FALSE;
+END_IF
+
+_m_Outputs();
+
+m_Main := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="p_bStaError" Id="{7a2eb779-abd4-40a3-9fc7-949ad97645b2}">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bStaError : BOOL]]></Declaration>
+      <Get Name="Get" Id="{80d87ae8-eca1-4817-b904-fc6fac61aa99}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[p_bStaError := s_bStaError;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaOutput" Id="{cdc0ff34-12d0-4b48-b5e8-b09853bb5cc9}">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bStaOutput : BOOL]]></Declaration>
+      <Get Name="Get" Id="{42e85b44-18f0-412a-9346-64d13e29ff2a}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[p_bStaOutput := s_bStaOutput;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaOutputDelayed" Id="{3637332a-480c-4238-8efd-ba968e49b075}">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bStaOutputDelayed : BOOL]]></Declaration>
+      <Get Name="Get" Id="{68503e08-d1d6-43c3-9027-f0e9b82449cd}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[p_bStaOutputDelayed := s_bStaOutputDelayed;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_osfOff" Id="{3b5a356d-bcf3-414b-9d28-f67f1ceb42ac}">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_osfOff : BOOL]]></Declaration>
+      <Get Name="Get" Id="{dcac5d8d-7ae8-4951-a311-58d0e8870f48}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[p_osfOff := s_osfOff.Q;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_osrOn" Id="{5e53c104-78f3-4605-a50c-a888c0276e40}">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_osrOn : BOOL]]></Declaration>
+      <Get Name="Get" Id="{b1ff90c4-6746-4d37-9bd2-d6308f16b98c}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[p_osrOn := s_osrOn.Q;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <LineIds Name="FB_DigOutput_2">
+      <LineId Id="115" Count="0" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_DigOutput_2._m_Init">
+      <LineId Id="19" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="9" Count="1" />
+    </LineIds>
+    <LineIds Name="FB_DigOutput_2._m_Outputs">
+      <LineId Id="48" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="37" Count="3" />
+      <LineId Id="50" Count="3" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="46" Count="1" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="56" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_DigOutput_2.m_Main">
+      <LineId Id="98" Count="0" />
+      <LineId Id="80" Count="1" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="39" Count="2" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="64" Count="0" />
+      <LineId Id="66" Count="1" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_DigOutput_2.p_bStaError.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_DigOutput_2.p_bStaOutput.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_DigOutput_2.p_bStaOutputDelayed.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_DigOutput_2.p_osfOff.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_DigOutput_2.p_osrOn.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

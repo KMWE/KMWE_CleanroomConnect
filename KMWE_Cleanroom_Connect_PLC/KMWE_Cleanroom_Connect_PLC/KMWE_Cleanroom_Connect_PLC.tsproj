@@ -1894,7 +1894,7 @@ External Setpoint Generation:
 		</Motion>
 		<Plc>
 			<Project GUID="{13F6CD22-9663-4738-8378-3A901949CB98}" Name="CleanroomConnect" PrjFilePath="CleanroomConnect\CleanroomConnect.plcproj" TmcFilePath="CleanroomConnect\CleanroomConnect.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="CleanroomConnect\CleanroomConnect.tmc" TmcHash="{D95660E0-65ED-A3F4-70B7-19009DCE0EC9}">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="CleanroomConnect\CleanroomConnect.tmc" TmcHash="{7E740D7A-D983-7AEB-5453-197D20D293D6}">
 					<Name>CleanroomConnect Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1">
@@ -1907,6 +1907,11 @@ External Setpoint Generation:
 						<Var>
 							<Name>GVL_KMWEGenericLib.g_IMasterAdsAdr</Name>
 							<Type GUID="{18071995-0000-0000-0000-000000000041}">AMSNETID</Type>
+						</Var>
+						<Var>
+							<Name>GVL.g_unCleanroomConnect.s_diEmergencyBtn.I_bStaInput</Name>
+							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>GVL_Modules.g_emUtilities.s_diSafetyOk.I_bStaInput</Name>
@@ -2063,14 +2068,24 @@ External Setpoint Generation:
 							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
-						<Var>
-							<Name>GVL.g_unCleanroomConnect.s_diEmergencyBtn.I_bStaInput</Name>
-							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
 					</Vars>
 					<Vars VarGrpType="2" AreaNo="1">
 						<Name>PlcTask Outputs</Name>
+						<Var>
+							<Name>GVL.g_unCleanroomConnect.s_CmKmweLeds.s_doLedRed.Q_bStaOutput</Name>
+							<Comment><![CDATA[----------------------Outputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL.g_unCleanroomConnect.s_CmKmweLeds.s_doLedGreen.Q_bStaOutput</Name>
+							<Comment><![CDATA[----------------------Outputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL.g_unCleanroomConnect.s_CmKmweLeds.s_doLedIdle.Q_bStaOutput</Name>
+							<Comment><![CDATA[----------------------Outputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
 						<Var>
 							<Name>GVL_Modules.g_emUtilities.s_doBeaconLedGreen.Q_bStaOutput</Name>
 							<Comment><![CDATA[----------------------Outputs---------------------------//]]></Comment>
@@ -2084,19 +2099,6 @@ External Setpoint Generation:
 						<Var>
 							<Name>GVL_Modules.g_emUtilities.s_doBeaconLedRed.Q_bStaOutput</Name>
 							<Comment><![CDATA[----------------------Outputs---------------------------//]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emUtilities.Q_bStaBeaconLedGreen</Name>
-							<Comment><![CDATA[?? see outputs below]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emUtilities.Q_bStaBeaconLedYellow</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emUtilities.Q_bStaBeaconLedRed</Name>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
@@ -2209,21 +2211,6 @@ External Setpoint Generation:
 							<Comment><![CDATA[----------------------Outputs---------------------------//]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
-						<Var>
-							<Name>GVL.g_unCleanroomConnect.s_CmKmweLeds.s_doLedRed.Q_bStaOutput</Name>
-							<Comment><![CDATA[----------------------Outputs---------------------------//]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL.g_unCleanroomConnect.s_CmKmweLeds.s_doLedGreen.Q_bStaOutput</Name>
-							<Comment><![CDATA[----------------------Outputs---------------------------//]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL.g_unCleanroomConnect.s_CmKmweLeds.s_doLedIdle.Q_bStaOutput</Name>
-							<Comment><![CDATA[----------------------Outputs---------------------------//]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
 					</Vars>
 					<UnrestoredVarLinks ImportTime="2024-06-17T15:00:21">
 						<OwnerA Name="OutputSrc" Prefix="TIPC^CleanroomConnect^CleanroomConnect Instance" Type="2">
@@ -2324,7 +2311,7 @@ External Setpoint Generation:
 				</Instance>
 			</Project>
 			<Project GUID="{E422F207-C83D-4C9F-9DAA-6F15793ED578}" Name="HardwareSimulator" PrjFilePath="HardwareSimulator\HardwareSimulator.plcproj" TmcFilePath="HardwareSimulator\HardwareSimulator.tmc" ReloadTmc="true" AmsPort="852" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502040" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="HardwareSimulator\HardwareSimulator.tmc" TmcHash="{1E73DF23-9986-94CB-6647-01250D33C16C}">
+				<Instance Id="#x08502040" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="HardwareSimulator\HardwareSimulator.tmc" TmcHash="{CDC9D26A-319D-11FB-B629-6203B716CCEB}">
 					<Name>HardwareSimulator Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1">

@@ -21,6 +21,14 @@ VAR
 	Q_bCmdReleaseBrake AT %Q* : BOOL; // Command to release brake
 	Q_nSetTargetSpeed AT %Q* : INT; // Target speed
 	
+	// Force outputs (IO-test functions)
+	s_fbForceCmdReset : FB_ForceOutput;
+	s_fbForceCmdEnable : FB_ForceOutput;
+	s_fbForceCmdStartCW : FB_ForceOutput;
+	s_fbForceCmdStartCCW : FB_ForceOutput;
+	s_fbForceCmdReleaseBrake : FB_ForceOutput;
+	s_fForceValueTargetSpeed : LREAL; //[0..100%]
+	
 	//Interlocks
 	s_bIclkForward : BOOL;
 	s_bIclkBackward : BOOL;
@@ -496,9 +504,7 @@ _m_Inputs := TRUE;
     </Method>
     <Method Name="_m_Outputs" Id="{ba15960a-e792-4086-9871-b1105c2a6ed2}" FolderPath="Methods\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Outputs : BOOL
-VAR_INST
-	bCmdStart : BOOL;
-END_VAR]]></Declaration>
+]]></Declaration>
       <Implementation>
         <ST><![CDATA[
 IF NOT SUPER^._m_Outputs() THEN
@@ -506,14 +512,48 @@ IF NOT SUPER^._m_Outputs() THEN
 END_IF
 
 //Write outputs to drive
-Q_bCmdEnable := s_bCmdEnable;
-Q_bCmdReset := s_bCmdReset;
-Q_bCmdStartCW := s_bCmdForward;
-Q_bCmdStartCCW := s_bCmdBackward;
+//--Q_bCmdEnable := s_bCmdEnable;
+//--Q_bCmdReset := s_bCmdReset;
+//--Q_bCmdStartCW := s_bCmdForward;
+//--Q_bCmdStartCCW := s_bCmdBackward;
+//--Q_bCmdReleaseBrake := s_bCmdReleaseBrake;
+//--Q_nSetTargetSpeed := LREAL_TO_INT(s_fTargetSpeed / i_stSettings.rMaxTargetSpeed * cMAX_INT_VALUE);
 
-Q_bCmdReleaseBrake := s_bCmdReleaseBrake;
+{warning #TODO: Nog bepalen OF het beter is om onderstaande code te verwerken in FB_Force output}
+IF i_eCtrlMode <> E_CtrlMode.IO THEN
+	s_fbForceCmdEnable.i_eForceValue := E_ForceValue.RELEASED;
+	s_fbForceCmdReset.i_eForceValue := E_ForceValue.RELEASED;
+	s_fbForceCmdStartCW.i_eForceValue := E_ForceValue.RELEASED;
+	s_fbForceCmdStartCCW.i_eForceValue := E_ForceValue.RELEASED;
+	s_fbForceCmdReleaseBrake.i_eForceValue := E_ForceValue.RELEASED;
+	s_fForceValueTargetSpeed := 0.0;
+END_IF 
 
-Q_nSetTargetSpeed := LREAL_TO_INT(s_fTargetSpeed / i_stSettings.rMaxTargetSpeed * cMAX_INT_VALUE);
+s_fbForceCmdEnable(
+	i_ref_bCmdInput := s_bCmdEnable,
+	i_ref_bCmdOutput := Q_bCmdEnable);
+	
+s_fbForceCmdReset(
+	i_ref_bCmdInput := s_bCmdReset,
+	i_ref_bCmdOutput := Q_bCmdReset);
+	
+s_fbForceCmdStartCW(
+	i_ref_bCmdInput := s_bCmdForward,
+	i_ref_bCmdOutput := Q_bCmdStartCW);
+	
+s_fbForceCmdStartCCW(
+	i_ref_bCmdInput := s_bCmdBackward,
+	i_ref_bCmdOutput := Q_bCmdStartCCW);
+	
+s_fbForceCmdReleaseBrake(
+	i_ref_bCmdInput := s_bCmdReleaseBrake,
+	i_ref_bCmdOutput := Q_bCmdReleaseBrake);
+
+IF s_fForceValueTargetSpeed = 0.0 THEN
+	Q_nSetTargetSpeed := LREAL_TO_INT(s_fTargetSpeed / i_stSettings.rMaxTargetSpeed * cMAX_INT_VALUE); // [mm/s]
+ELSE	
+	Q_nSetTargetSpeed := LREAL_TO_INT(s_fForceValueTargetSpeed / 100.0  * cMAX_INT_VALUE); // [%]
+END_IF 
 	
 _m_Outputs := TRUE;
 ]]></ST>
@@ -979,11 +1019,26 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="135" Count="0" />
       <LineId Id="137" Count="1" />
       <LineId Id="140" Count="0" />
-      <LineId Id="145" Count="0" />
       <LineId Id="143" Count="0" />
-      <LineId Id="133" Count="0" />
-      <LineId Id="128" Count="0" />
-      <LineId Id="80" Count="0" />
+      <LineId Id="152" Count="0" />
+      <LineId Id="181" Count="0" />
+      <LineId Id="153" Count="4" />
+      <LineId Id="172" Count="0" />
+      <LineId Id="170" Count="0" />
+      <LineId Id="202" Count="0" />
+      <LineId Id="158" Count="11" />
+      <LineId Id="150" Count="0" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="175" Count="1" />
+      <LineId Id="174" Count="0" />
+      <LineId Id="177" Count="0" />
+      <LineId Id="179" Count="1" />
+      <LineId Id="178" Count="0" />
+      <LineId Id="193" Count="0" />
+      <LineId Id="201" Count="0" />
+      <LineId Id="204" Count="2" />
+      <LineId Id="203" Count="0" />
+      <LineId Id="194" Count="0" />
       <LineId Id="10" Count="0" />
       <LineId Id="39" Count="0" />
     </LineIds>

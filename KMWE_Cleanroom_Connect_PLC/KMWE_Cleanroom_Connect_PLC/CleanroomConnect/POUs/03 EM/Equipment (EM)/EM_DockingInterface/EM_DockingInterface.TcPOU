@@ -69,8 +69,8 @@ fbIlckHandlerDoorShutterOpen : FB_InterlockHandler;
 	
 //------------------------------------------//
 //Outputs
-	s_doCmdClampsUpperHighPressure : FB_DigOutput;
-	s_doCmdClampsLowerHighPressure : FB_DigOutput;
+	s_doCmdClampsUpperHighPressure : FB_DigOutput_2;
+	s_doCmdClampsLowerHighPressure : FB_DigOutput_2;
 
 //------------------------------------------//
 
@@ -1466,8 +1466,8 @@ IF NOT SUPER^._m_Outputs() THEN
 	RETURN;
 END_IF
 
-s_doCmdClampsUpperHighPressure();
-s_doCmdClampsLowerHighPressure();
+s_doCmdClampsUpperHighPressure(i_eCtrlMode := i_eCtrlMode);
+s_doCmdClampsLowerHighPressure(i_eCtrlMode := i_eCtrlMode);
 
 s_bStaDocked	:=	s_cmDockingClampsUpper.p_bStaIsOn AND s_doCmdClampsUpperHighPressure.p_bStaOutput
 				AND s_cmDockingClampsLower.p_bStaIsOn AND s_doCmdClampsLowerHighPressure.p_bStaOutput;  

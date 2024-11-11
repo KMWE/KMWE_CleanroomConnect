@@ -664,6 +664,80 @@ _m_Inputs := TRUE;]]></ST>
 ]]></ST>
       </Implementation>
     </Method>
+    <Method Name="_m_ManualMode" Id="{6f9a5e61-3cba-4c7f-b913-42c3cd40da1f}">
+      <Declaration><![CDATA[METHOD PRIVATE _m_ManualMode : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+{warning #TODO: Nog niet duidelijk OF dit de juist manier is voor het aansturen van de mode gereateerde zaken???}
+
+s_fbHmiBtnTB_Centering.p_bStaVisible := TRUE;
+s_fbHmiBtnTB_Centering.p_bStaEnabled := TRUE;
+
+s_fbSeqCenteringControl(
+	i_nSeqStep := s_eSeqCentering, 
+	i_sStepName := TO_STRING(s_eSeqCentering), 
+	i_bCmdReset := i_bCmdReset
+					AND (s_eSeqCentering = E_SeqCentering.ERROR) // Only reset/resume sequencer from ERROR state
+					AND NOT(s_cmCenteringUnit.p_bStaError)
+					AND NOT(s_cmPalletConveyor.p_bStaError)
+					AND i_bReqEnable, 
+	i_bStaError := s_bStaError OR NOT(i_bReqEnable));
+
+CASE s_eSeqCentering OF
+	
+	E_SeqCentering.IDLE:
+		s_bReqCenteringTB := FALSE;
+		s_eSeqCentering := E_SeqCentering.START;
+	
+	E_SeqCentering.START:
+		IF s_fbSeqCenteringControl.q_tmStepTime > T#1S THEN
+			s_eSeqCentering := E_SeqCentering.MOVE_TO_IDLE;
+		END_IF
+		
+	E_SeqCentering.MOVE_TO_IDLE:
+		IF s_cmCenteringUnit.m_Off() THEN
+			s_eSeqCentering := E_SeqCentering.AT_IDLE;
+		END_IF
+	
+	E_SeqCentering.AT_IDLE:
+		IF s_fbSeqCenteringControl.q_tmStepTime > T#1S THEN
+			s_eSeqCentering := E_SeqCentering.READY;
+		END_IF
+	
+	E_SeqCentering.READY:
+		IF s_fbSeqCenteringControl.q_bStaEntry THEN
+			i_refTB.p_bCenteringDone S= s_eTmpCenteringDone; //Explicity SET value
+			s_eTmpCenteringDone := FALSE;
+		END_IF
+	
+		IF s_fbHmiBtnTB_Centering.p_osrBtnPress OR s_bReqCenteringTB THEN
+			IF _m_CmdCenteringTB(i_refReason := s_sMessage) THEN
+				s_eSeqCentering := E_SeqCentering.MOVE_TO_CENTER;	
+			END_IF
+			
+			s_bReqCenteringTB := FALSE;
+		END_IF	
+		
+	E_SeqCentering.MOVE_TO_CENTER:
+		IF s_cmCenteringUnit.m_On() THEN
+			//--s_bReqCenteringTB := FALSE;
+			s_eSeqCentering := E_SeqCentering.AT_CENTER;
+		END_IF
+		
+	E_SeqCentering.AT_CENTER:
+		IF s_fbSeqCenteringControl.q_tmStepTime > i_ref_stSettings.tCenteringDuration THEN
+			s_eTmpCenteringDone := TRUE;
+			s_eSeqCentering := E_SeqCentering.MOVE_TO_IDLE;
+		END_IF
+		
+	E_SeqCentering.ERROR:
+		s_cmCenteringUnit.m_Stop();
+	
+END_CASE
+]]></ST>
+      </Implementation>
+    </Method>
     <Method Name="_m_Outputs" Id="{dde91033-d57b-467b-929e-41cce55dae6e}">
       <Declaration><![CDATA[METHOD PROTECTED _m_Outputs : BOOL
 ]]></Declaration>
@@ -1297,6 +1371,17 @@ CASE i_eCtrlMode OF
 			s_cmPalletConveyor.m_StartBackward(i_rTargetSpeed := i_stSettings.rSpeedManual);
 		END_IF
 *)		
+
+	E_CtrlMode.MAINTENANCE:
+		;//Execute maintenance related code
+							
+	E_CtrlMode.IO:
+		;//Enable all hmi controls for forcing outputs
+		
+	E_CtrlMode.CLEANING:
+		;//Execute cleaning releated code
+	
+
 END_CASE
 
 m_Main := TRUE;
@@ -1680,6 +1765,12 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="397" Count="1" />
       <LineId Id="403" Count="0" />
     </LineIds>
+    <LineIds Name="EM_PalletConveyor._m_ManualMode">
+      <LineId Id="480" Count="0" />
+      <LineId Id="546" Count="0" />
+      <LineId Id="481" Count="64" />
+      <LineId Id="293" Count="0" />
+    </LineIds>
     <LineIds Name="EM_PalletConveyor._m_Outputs">
       <LineId Id="20" Count="0" />
       <LineId Id="6" Count="2" />
@@ -1745,7 +1836,15 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="2902" Count="1" />
       <LineId Id="2895" Count="0" />
       <LineId Id="2894" Count="0" />
-      <LineId Id="2850" Count="39" />
+      <LineId Id="2850" Count="36" />
+      <LineId Id="2915" Count="2" />
+      <LineId Id="2919" Count="0" />
+      <LineId Id="2907" Count="0" />
+      <LineId Id="2910" Count="1" />
+      <LineId Id="2913" Count="1" />
+      <LineId Id="2909" Count="0" />
+      <LineId Id="2905" Count="0" />
+      <LineId Id="2887" Count="2" />
       <LineId Id="179" Count="0" />
     </LineIds>
     <LineIds Name="EM_PalletConveyor.m_ReqCenteringTB">

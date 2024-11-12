@@ -79,6 +79,38 @@
             "startOffset": 1,
             "type": "array"
         },
+        "PLC1.E_CtrlState": {
+            "attributes": {
+                "generate_implicit_init_function": "",
+                "qualified_only": "",
+                "strict": ""
+            },
+            "enum": [
+                0,
+                1,
+                2,
+                3
+            ],
+            "options": [
+                {
+                    "label": "STOPPED",
+                    "value": 0
+                },
+                {
+                    "label": "IDLE",
+                    "value": 1
+                },
+                {
+                    "label": "RUNNING",
+                    "value": 2
+                },
+                {
+                    "label": "STOPPING",
+                    "value": 3
+                }
+            ],
+            "type": "integer"
+        },
         "PLC1.E_ForceValue": {
             "attributes": {
                 "generate_implicit_init_function": "",
@@ -238,7 +270,10 @@
             "enum": [
                 0,
                 1,
-                2
+                2,
+                3,
+                4,
+                5
             ],
             "options": [
                 {
@@ -252,6 +287,18 @@
                 {
                     "label": "MANUAL",
                     "value": 2
+                },
+                {
+                    "label": "MAINTENANCE",
+                    "value": 3
+                },
+                {
+                    "label": "IO",
+                    "value": 4
+                },
+                {
+                    "label": "CLEANING",
+                    "value": 5
                 }
             ],
             "type": "integer"
@@ -3834,6 +3881,256 @@
             },
             "USEMAPPING": true
         },
+        "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_eCtrlMode": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL::g_unCleanroomConnect::sFbModeStateControl::s_eCtrlMode",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:server#/definitions/PLC1.KMWE_Generic_Library.E_CtrlMode"
+                    },
+                    {
+                        "propertyOrder": 4
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_eCtrlState": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL::g_unCleanroomConnect::sFbModeStateControl::s_eCtrlState",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:server#/definitions/PLC1.E_CtrlState"
+                    },
+                    {
+                        "propertyOrder": 5
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnModeAutomatic.p_bStaEnabled": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL::g_unCleanroomConnect::sFbModeStateControl::s_fbHmiBtnModeAutomatic::p_bStaEnabled",
+            "SCHEMA": {
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-BOOL"
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnModeAutomatic.s_bFromHmiPressed": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL::g_unCleanroomConnect::sFbModeStateControl::s_fbHmiBtnModeAutomatic::s_bFromHmiPressed",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/BOOL"
+                    },
+                    {
+                        "propertyOrder": 1
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnModeCleaning.p_bStaEnabled": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL::g_unCleanroomConnect::sFbModeStateControl::s_fbHmiBtnModeCleaning::p_bStaEnabled",
+            "SCHEMA": {
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-BOOL"
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnModeCleaning.s_bFromHmiPressed": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL::g_unCleanroomConnect::sFbModeStateControl::s_fbHmiBtnModeCleaning::s_bFromHmiPressed",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/BOOL"
+                    },
+                    {
+                        "propertyOrder": 1
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnModeIO.p_bStaEnabled": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL::g_unCleanroomConnect::sFbModeStateControl::s_fbHmiBtnModeIO::p_bStaEnabled",
+            "SCHEMA": {
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-BOOL"
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnModeIO.s_bFromHmiPressed": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL::g_unCleanroomConnect::sFbModeStateControl::s_fbHmiBtnModeIO::s_bFromHmiPressed",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/BOOL"
+                    },
+                    {
+                        "propertyOrder": 1
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnModeMaintenance.p_bStaEnabled": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL::g_unCleanroomConnect::sFbModeStateControl::s_fbHmiBtnModeMaintenance::p_bStaEnabled",
+            "SCHEMA": {
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-BOOL"
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnModeMaintenance.s_bFromHmiPressed": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL::g_unCleanroomConnect::sFbModeStateControl::s_fbHmiBtnModeMaintenance::s_bFromHmiPressed",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/BOOL"
+                    },
+                    {
+                        "propertyOrder": 1
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnModeManual.p_bStaEnabled": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL::g_unCleanroomConnect::sFbModeStateControl::s_fbHmiBtnModeManual::p_bStaEnabled",
+            "SCHEMA": {
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-BOOL"
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnModeManual.s_bFromHmiPressed": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL::g_unCleanroomConnect::sFbModeStateControl::s_fbHmiBtnModeManual::s_bFromHmiPressed",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/BOOL"
+                    },
+                    {
+                        "propertyOrder": 1
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnStateReset.p_bStaEnabled": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL::g_unCleanroomConnect::sFbModeStateControl::s_fbHmiBtnStateReset::p_bStaEnabled",
+            "SCHEMA": {
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-BOOL"
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnStateReset.s_bFromHmiPressed": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL::g_unCleanroomConnect::sFbModeStateControl::s_fbHmiBtnStateReset::s_bFromHmiPressed",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/BOOL"
+                    },
+                    {
+                        "propertyOrder": 1
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnStateStart.p_bStaEnabled": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL::g_unCleanroomConnect::sFbModeStateControl::s_fbHmiBtnStateStart::p_bStaEnabled",
+            "SCHEMA": {
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-BOOL"
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnStateStart.s_bFromHmiPressed": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL::g_unCleanroomConnect::sFbModeStateControl::s_fbHmiBtnStateStart::s_bFromHmiPressed",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/BOOL"
+                    },
+                    {
+                        "propertyOrder": 1
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnStateStop.p_bStaEnabled": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL::g_unCleanroomConnect::sFbModeStateControl::s_fbHmiBtnStateStop::p_bStaEnabled",
+            "SCHEMA": {
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-BOOL"
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnStateStop.s_bFromHmiPressed": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL::g_unCleanroomConnect::sFbModeStateControl::s_fbHmiBtnStateStop::s_bFromHmiPressed",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/BOOL"
+                    },
+                    {
+                        "propertyOrder": 1
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
         "PLC1.GVL.g_unCleanroomConnect.s_fbHmiBtnAutomatic.p_bStaEnabled": {
             "ACCESS": 3,
             "DOMAIN": "ADS",
@@ -5876,6 +6173,23 @@
                     },
                     {
                         "propertyOrder": 4
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL_Modules.g_emPalletConveyor.s_bHmiForceOutputEnabled": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_bHmiForceOutputEnabled",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/BOOL"
+                    },
+                    {
+                        "propertyOrder": 92
                     }
                 ]
             },
@@ -9641,6 +9955,24 @@
                 "Login": 3,
                 "Logout": 3,
                 "PLC1.GVL.g_unCleanroomConnect.p_eCtrlMode": 3,
+                "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_eCtrlMode": 3,
+                "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_eCtrlState": 3,
+                "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnModeAutomatic.p_bStaEnabled": 3,
+                "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnModeAutomatic.s_bFromHmiPressed": 3,
+                "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnModeCleaning.p_bStaEnabled": 3,
+                "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnModeCleaning.s_bFromHmiPressed": 3,
+                "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnModeIO.p_bStaEnabled": 3,
+                "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnModeIO.s_bFromHmiPressed": 3,
+                "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnModeMaintenance.p_bStaEnabled": 3,
+                "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnModeMaintenance.s_bFromHmiPressed": 3,
+                "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnModeManual.p_bStaEnabled": 3,
+                "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnModeManual.s_bFromHmiPressed": 3,
+                "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnStateReset.p_bStaEnabled": 3,
+                "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnStateReset.s_bFromHmiPressed": 3,
+                "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnStateStart.p_bStaEnabled": 3,
+                "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnStateStart.s_bFromHmiPressed": 3,
+                "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnStateStop.p_bStaEnabled": 3,
+                "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnStateStop.s_bFromHmiPressed": 3,
                 "PLC1.GVL.g_unCleanroomConnect.s_fbHmiBtnAutomatic.p_bStaEnabled": 3,
                 "PLC1.GVL.g_unCleanroomConnect.s_fbHmiBtnAutomatic.p_sBtnText": 3,
                 "PLC1.GVL.g_unCleanroomConnect.s_fbHmiBtnAutomatic.s_bFromHmiPressed": 3,
@@ -9787,6 +10119,7 @@
                 "PLC1.GVL_Modules.g_emPalletConveyor.i_eCtrlMode": 3,
                 "PLC1.GVL_Modules.g_emPalletConveyor.i_ref_stSettings": 3,
                 "PLC1.GVL_Modules.g_emPalletConveyor.i_sEmName": 3,
+                "PLC1.GVL_Modules.g_emPalletConveyor.s_bHmiForceOutputEnabled": 3,
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.I_bStaValveIsOff": 3,
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.I_bStaValveIsOff2": 3,
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.I_bStaValveIsOn": 3,

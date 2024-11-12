@@ -14,6 +14,9 @@ VAR
 //------------------------------------------//
 //Function Blocks
 
+
+	sFbModeStateControl : FB_ModeStateControl;
+
 //------------------------------------------//
 
 //------------------------------------------//
@@ -64,6 +67,8 @@ END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[
 SUPER^();
+
+
 
 //fbJson(initStatus => hResult);
 (*
@@ -621,6 +626,8 @@ VAR
 	s_fbExtIlckUnlockingPinsToRelease : FB_Interlock;
 	
 	s_bSimCleanroomDoorClosed : BOOL := TRUE;
+	
+	s_eCtrlState : E_CtrlState;
 END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[GVL_Modules.g_objCarrier();
@@ -628,6 +635,13 @@ END_VAR]]></Declaration>
 IF s_bCreate THEN GVL_Modules.g_objCarrier.m_Create(i_eDestination := E_Location.CLEANROOM); s_bCreate := FALSE; END_IF; 
 IF s_bDestroy THEN GVL_Modules.g_objCarrier.m_Destroy(); s_bDestroy := FALSE; END_IF;
 
+sFbModeStateControl(
+	i_bReqStopAlarm := FALSE,
+	i_bStaAllStopped := TRUE);
+
+s_eCtrlMode := sFbModeStateControl.p_eCtrlMode;
+s_eCtrlState :=	sFbModeStateControl.p_eCtrlState;
+	
 GVL_Modules.g_emUtilities.m_GetGeneralState(
 	i_bError := s_bStaError,
 	i_bWarning := s_bStaWarning,
@@ -636,6 +650,7 @@ GVL_Modules.g_emUtilities.m_GetGeneralState(
 GVL_Modules.g_emUtilities(
 	i_bReqEnable := TRUE,
 	i_eCtrlMode := s_eCtrlMode,
+	i_eCtrlState := s_eCtrlState,
 	i_bCmdReset := p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn, //Add temp reset button
 	i_sEmName := 'EM Utilities');
 	
@@ -653,6 +668,7 @@ s_fbExtIlckConvBwd.p_sReason := 'TB not undocked (clamps not opened)';
 GVL_Modules.g_emPalletConveyor(
 	i_bReqEnable := bReqEnable,
 	i_eCtrlMode := s_eCtrlMode,
+	i_eCtrlState := s_eCtrlState,
 	i_fbExtIlckConvFwd := s_fbExtIlckConvFwd,
 	i_fbExtIlckConvBwd :=  s_fbExtIlckConvBwd,
 	i_bCmdReset := p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn, //Add temp reset button
@@ -674,6 +690,7 @@ s_fbExtIlckDockingClampsToOpen.p_sReason := 'Cleanroon Door not closed';
 GVL_Modules.g_emDockingInterface(
 	i_bReqEnable := bReqEnable,
 	i_eCtrlMode := s_eCtrlMode,
+	i_eCtrlState := s_eCtrlState,
 	i_fbExtIlckDockingClampsToOpen := s_fbExtIlckDockingClampsToOpen,
 	i_fbExtIlckDockingClampsToClose := s_fbExtIlckDockingClampsToClose, 
 	i_bCmdReset := p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn, //Add temp reset button
@@ -1156,6 +1173,7 @@ GVL_Modules.g_emPalletConveyor._m_CmdTB_ToInfeed(i_refReason := sReason);
     <LineIds Name="UN_CleanroomConnect">
       <LineId Id="171" Count="0" />
       <LineId Id="168" Count="0" />
+      <LineId Id="387" Count="1" />
       <LineId Id="297" Count="0" />
       <LineId Id="292" Count="0" />
       <LineId Id="314" Count="0" />
@@ -1278,9 +1296,20 @@ GVL_Modules.g_emPalletConveyor._m_CmdTB_ToInfeed(i_refReason := sReason);
       <LineId Id="78" Count="0" />
     </LineIds>
     <LineIds Name="UN_CleanroomConnect._m_Modules">
-      <LineId Id="848" Count="19" />
+      <LineId Id="848" Count="3" />
+      <LineId Id="978" Count="0" />
+      <LineId Id="980" Count="1" />
+      <LineId Id="979" Count="0" />
+      <LineId Id="984" Count="0" />
+      <LineId Id="982" Count="0" />
+      <LineId Id="852" Count="0" />
+      <LineId Id="983" Count="0" />
+      <LineId Id="853" Count="7" />
+      <LineId Id="1001" Count="0" />
+      <LineId Id="861" Count="6" />
       <LineId Id="946" Count="0" />
       <LineId Id="868" Count="8" />
+      <LineId Id="975" Count="0" />
       <LineId Id="879" Count="4" />
       <LineId Id="922" Count="0" />
       <LineId Id="924" Count="0" />
@@ -1293,6 +1322,7 @@ GVL_Modules.g_emPalletConveyor._m_CmdTB_ToInfeed(i_refReason := sReason);
       <LineId Id="933" Count="0" />
       <LineId Id="923" Count="0" />
       <LineId Id="885" Count="2" />
+      <LineId Id="1000" Count="0" />
       <LineId Id="959" Count="0" />
       <LineId Id="961" Count="0" />
       <LineId Id="888" Count="13" />

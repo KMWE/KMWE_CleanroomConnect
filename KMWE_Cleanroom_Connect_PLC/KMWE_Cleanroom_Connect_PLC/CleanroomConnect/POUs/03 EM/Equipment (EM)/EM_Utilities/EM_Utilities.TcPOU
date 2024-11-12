@@ -40,6 +40,13 @@ VAR
 	s_fbHmiLedBeaconGreen : FB_HmiLed;
 	s_fbHmiLedBeaconYellow : FB_HmiLed;
 	s_fbHmiLedBeaconRed : FB_HmiLed;
+	
+	{warning '#TODO' Het zou beter zijn om dit onder te brengen in de onderstaande control modules}
+	s_bHmiForceOutputEnabled : BOOL;
+END_VAR
+
+VAR_INPUT
+	i_eCtrlState		: E_CtrlState;
 END_VAR
 
 VAR_OUTPUT
@@ -241,6 +248,39 @@ s_bExtRunning := i_bRunning;
 ]]></ST>
       </Implementation>
     </Method>
+    <Method Name="m_Main" Id="{6ee57644-97c7-4cd8-ab66-2c7443d8efae}">
+      <Declaration><![CDATA[METHOD PUBLIC m_Main : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^.m_Main() THEN
+	RETURN;
+END_IF
+
+CASE i_eCtrlMode OF
+	E_CtrlMode.IDLE:
+		;
+	E_CtrlMode.AUTOMATIC:
+		;
+	E_CtrlMode.MANUAL:
+		;	
+	E_CtrlMode.MAINTENANCE:
+		;	
+	E_CtrlMode.IO:
+		;
+	E_CtrlMode.CLEANING:
+		;	
+END_CASE
+
+//IO-mode
+IF (i_eCtrlMode = E_CtrlMode.IO) AND (i_eCtrlState = E_CtrlState.RUNNING) THEN
+	s_bHmiForceOutputEnabled := TRUE;
+ELSE
+	s_bHmiForceOutputEnabled := FALSE;	
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
     <Property Name="p_bStaAirPressureOk" Id="{0af5c43c-8953-4fa1-af7f-5b3f4e44e13a}">
       <Declaration><![CDATA[PROPERTY PUBLIC p_bStaAirPressureOk : BOOL]]></Declaration>
       <Get Name="Get" Id="{4dede668-7bed-49aa-adc6-f4d7ad59be53}">
@@ -376,6 +416,27 @@ p_bStsPowerOk := s_bStsPowerOk;
       <LineId Id="9" Count="1" />
       <LineId Id="15" Count="1" />
       <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Utilities.m_Main">
+      <LineId Id="178" Count="0" />
+      <LineId Id="6" Count="2" />
+      <LineId Id="397" Count="0" />
+      <LineId Id="184" Count="0" />
+      <LineId Id="186" Count="0" />
+      <LineId Id="469" Count="0" />
+      <LineId Id="332" Count="0" />
+      <LineId Id="430" Count="0" />
+      <LineId Id="460" Count="1" />
+      <LineId Id="458" Count="0" />
+      <LineId Id="463" Count="0" />
+      <LineId Id="465" Count="0" />
+      <LineId Id="457" Count="0" />
+      <LineId Id="468" Count="0" />
+      <LineId Id="466" Count="0" />
+      <LineId Id="187" Count="0" />
+      <LineId Id="451" Count="5" />
+      <LineId Id="450" Count="0" />
+      <LineId Id="179" Count="0" />
     </LineIds>
     <LineIds Name="EM_Utilities.p_bStaAirPressureOk.Get">
       <LineId Id="5" Count="0" />

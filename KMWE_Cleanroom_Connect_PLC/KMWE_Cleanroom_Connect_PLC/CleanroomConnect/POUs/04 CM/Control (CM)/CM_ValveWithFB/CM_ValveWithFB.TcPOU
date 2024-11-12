@@ -11,6 +11,8 @@ VAR_INPUT
 	i_stSettings : ST_SettingsValveWithFB;
 	i_bIclkOn : BOOL := TRUE; //TRUE = interlocked
 	i_bIclkOff : BOOL := TRUE; //TRUE = interlocked
+	
+	i_ref_eCtrlState : REFERENCE TO E_CtrlState;
 END_VAR
 
 VAR
@@ -218,7 +220,6 @@ stHmiData.bBtnOnEnabled := s_fbHmiBtnManualOn.p_bStaEnabled;
 stHmiData.s_sInterlockedReason := s_sInterlockedReasonOn;
 
 //From Hmi
-
 IF stHmiData.bCmdOffPressed THEN
 	s_fbHmiBtnManualOff.m_On();
 ELSE
@@ -241,10 +242,11 @@ s_fbHmiLedIsOn(i_bStaLed := s_bStaValveIsOn);
 s_fbHmiLedErrorOff(i_bStaLed := s_errFeedbackOffTimeout);
 s_fbHmiLedErrorOn(i_bStaLed := s_errFeedbackOnTimeout);
 
+(*
 {warning '#TODO: Add manual control from hmi'}
 CASE i_eCtrlMode OF
 
-	E_CtrlMode.IDLE..
+	E_CtrlMode.IDLE,
 	E_CtrlMode.AUTOMATIC:
 		s_fbHmiBtnManualOff.p_bStaVisible := FALSE;
 		s_fbHmiBtnManualOff.p_bStaEnabled := FALSE;
@@ -255,23 +257,52 @@ CASE i_eCtrlMode OF
 		s_fbHmiBtnManualOn.p_bStaVisible := FALSE;
 		s_fbHmiBtnManualOn.p_bStaEnabled := FALSE;
 
-	E_CtrlMode.MANUAL:
-		//Is het de bedoeling om op deze plekken de hmi knoppen aan te sturen, OF moet dat gedaan worden in METHOD hmi?		
+	E_CtrlMode.MAINTENANCE:
 		s_fbHmiBtnManualOff.p_bStaVisible := TRUE;
 		s_fbHmiBtnManualOff.p_bStaEnabled := i_bReqEnable AND NOT(i_bIclkOff);
-	
+		
 		s_fbHmiBtnManualOn.p_bStaVisible := TRUE;
 		s_fbHmiBtnManualOn.p_bStaEnabled := i_bReqEnable AND NOT(i_bIclkOn);
-		
+			
 		IF s_fbHmiBtnManualOff.p_osrBtnPress THEN
 			m_Off();
 		END_IF
-		
+			
 		IF s_fbHmiBtnManualOn.p_osrBtnPress THEN
 			m_On();
 		END_IF
 END_CASE
+*)		
+IF __ISVALIDREF(i_ref_eCtrlState) THEN
+	//MAINTENANCE-mode is running
+	IF (i_eCtrlMode = E_CtrlMode.MAINTENANCE) AND (i_ref_eCtrlState = E_CtrlState.RUNNING) THEN
+		s_fbHmiBtnManualOff.p_bStaVisible := TRUE;
+		s_fbHmiBtnManualOff.p_bStaEnabled := i_bReqEnable AND NOT(i_bIclkOff);
 		
+		s_fbHmiBtnManualOn.p_bStaVisible := TRUE;
+		s_fbHmiBtnManualOn.p_bStaEnabled := i_bReqEnable AND NOT(i_bIclkOn);
+			
+		IF s_fbHmiBtnManualOff.p_osrBtnPress THEN
+			m_Off();
+		END_IF
+			
+		IF s_fbHmiBtnManualOn.p_osrBtnPress THEN
+			m_On();
+		END_IF
+		
+	//other-mode	
+	ELSE
+		s_fbHmiBtnManualOff.p_bStaVisible := FALSE;
+		s_fbHmiBtnManualOff.p_bStaEnabled := FALSE;
+	
+		s_fbHmiBtnManualOn.p_bStaVisible := FALSE;
+		s_fbHmiBtnManualOn.p_bStaEnabled := FALSE;
+
+		s_fbHmiBtnManualOn.p_bStaVisible := FALSE;
+		s_fbHmiBtnManualOn.p_bStaEnabled := FALSE;
+	END_IF
+END_IF	
+	
 _m_Hmi := TRUE;
 ]]></ST>
       </Implementation>
@@ -365,9 +396,11 @@ CASE BOOL_TO_USINT(s_bCfgBiStableValve) OF
 END_CASE
 
 {warning #TODO: Nog bepalen OF het beter is om onderstaande code te verwerken in FB_Force output}
-IF i_eCtrlMode <> E_CtrlMode.IO THEN
-	s_fbForceCmdOn.i_eForceValue := E_ForceValue.RELEASED;
-	s_fbForceCmdOff.i_eForceValue := E_ForceValue.RELEASED;
+IF __ISVALIDREF(i_ref_eCtrlState) THEN
+	IF (i_eCtrlMode <> E_CtrlMode.IO) OR (i_ref_eCtrlState <> E_CtrlState.RUNNING) THEN
+		s_fbForceCmdOn.i_eForceValue := E_ForceValue.RELEASED;
+		s_fbForceCmdOff.i_eForceValue := E_ForceValue.RELEASED;
+	END_IF
 END_IF 
 
 s_fbForceCmdOn(
@@ -679,7 +712,6 @@ s_sInterlockedReasonOn := p_sInterlockedReasonOn;
       <LineId Id="210" Count="0" />
       <LineId Id="189" Count="0" />
       <LineId Id="186" Count="0" />
-      <LineId Id="197" Count="0" />
       <LineId Id="196" Count="0" />
       <LineId Id="199" Count="1" />
       <LineId Id="202" Count="0" />
@@ -691,6 +723,7 @@ s_sInterlockedReasonOn := p_sInterlockedReasonOn;
       <LineId Id="98" Count="2" />
       <LineId Id="102" Count="1" />
       <LineId Id="148" Count="0" />
+      <LineId Id="253" Count="0" />
       <LineId Id="104" Count="0" />
       <LineId Id="106" Count="0" />
       <LineId Id="151" Count="0" />
@@ -704,7 +737,8 @@ s_sInterlockedReasonOn := p_sInterlockedReasonOn;
       <LineId Id="164" Count="0" />
       <LineId Id="159" Count="0" />
       <LineId Id="150" Count="0" />
-      <LineId Id="107" Count="4" />
+      <LineId Id="216" Count="0" />
+      <LineId Id="109" Count="2" />
       <LineId Id="141" Count="0" />
       <LineId Id="113" Count="0" />
       <LineId Id="146" Count="0" />
@@ -714,6 +748,19 @@ s_sInterlockedReasonOn := p_sInterlockedReasonOn;
       <LineId Id="143" Count="0" />
       <LineId Id="169" Count="0" />
       <LineId Id="84" Count="0" />
+      <LineId Id="221" Count="0" />
+      <LineId Id="251" Count="0" />
+      <LineId Id="222" Count="0" />
+      <LineId Id="240" Count="0" />
+      <LineId Id="229" Count="10" />
+      <LineId Id="226" Count="0" />
+      <LineId Id="250" Count="0" />
+      <LineId Id="252" Count="0" />
+      <LineId Id="224" Count="0" />
+      <LineId Id="243" Count="6" />
+      <LineId Id="241" Count="1" />
+      <LineId Id="217" Count="0" />
+      <LineId Id="225" Count="0" />
       <LineId Id="15" Count="0" />
       <LineId Id="87" Count="0" />
     </LineIds>
@@ -754,9 +801,12 @@ s_sInterlockedReasonOn := p_sInterlockedReasonOn;
       <LineId Id="80" Count="2" />
       <LineId Id="78" Count="0" />
       <LineId Id="105" Count="0" />
-      <LineId Id="107" Count="1" />
+      <LineId Id="107" Count="0" />
+      <LineId Id="143" Count="0" />
+      <LineId Id="108" Count="0" />
       <LineId Id="138" Count="0" />
       <LineId Id="137" Count="0" />
+      <LineId Id="144" Count="0" />
       <LineId Id="115" Count="7" />
       <LineId Id="106" Count="0" />
       <LineId Id="103" Count="0" />

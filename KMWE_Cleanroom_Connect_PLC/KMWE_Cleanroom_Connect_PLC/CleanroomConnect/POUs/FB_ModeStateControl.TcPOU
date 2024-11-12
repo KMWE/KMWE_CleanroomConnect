@@ -26,60 +26,23 @@ VAR
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[//Init
-IF NOT (s_bInitDone) THEN 
+      <ST><![CDATA[
+m_Main();
+]]></ST>
+    </Implementation>
+    <Method Name="_m_Devices" Id="{3599078c-5754-42cd-9cf9-50037344806e}">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Devices : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
 //Mode buttons
-s_fbHmiBtnModeAutomatic.p_bStaEnabled := FALSE;
-s_fbHmiBtnModeAutomatic.p_bStaVisible := FALSE;
-s_fbHmiBtnModeAutomatic.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-s_fbHmiBtnModeAutomatic.p_sBtnText := 'Automatic';
-
-s_fbHmiBtnModeManual.p_bStaEnabled := FALSE;
-s_fbHmiBtnModeManual.p_bStaVisible := FALSE;
-s_fbHmiBtnModeManual.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-s_fbHmiBtnModeManual.p_sBtnText := 'Manual';
-
-s_fbHmiBtnModeMaintenance.p_bStaEnabled := FALSE;
-s_fbHmiBtnModeMaintenance.p_bStaVisible := FALSE;
-s_fbHmiBtnModeMaintenance.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-s_fbHmiBtnModeMaintenance.p_sBtnText := 'Maintenance';
-
-s_fbHmiBtnModeIO.p_bStaEnabled := FALSE;
-s_fbHmiBtnModeIO.p_bStaVisible := FALSE;
-s_fbHmiBtnModeIO.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-s_fbHmiBtnModeIO.p_sBtnText := 'IO';
-
-s_fbHmiBtnModeCleaning.p_bStaEnabled := FALSE;
-s_fbHmiBtnModeCleaning.p_bStaVisible := FALSE;
-s_fbHmiBtnModeCleaning.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-s_fbHmiBtnModeCleaning.p_sBtnText := 'Cleaning';
-
-
-//State buttons
-s_fbHmiBtnStateStart.p_bStaEnabled := FALSE;
-s_fbHmiBtnStateStart.p_bStaVisible := FALSE;
-s_fbHmiBtnStateStart.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-s_fbHmiBtnStateStart.p_sBtnText := 'Start';
-
-s_fbHmiBtnStateStop.p_bStaEnabled := FALSE;
-s_fbHmiBtnStateStop.p_bStaVisible := FALSE;
-s_fbHmiBtnStateStop.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-s_fbHmiBtnStateStop.p_sBtnText := 'Stop';
-
-s_fbHmiBtnStateReset.p_bStaEnabled := FALSE;
-s_fbHmiBtnStateReset.p_bStaVisible := FALSE;
-s_fbHmiBtnStateReset.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-s_fbHmiBtnStateReset.p_sBtnText := 'Reset';
-
-s_bInitDone := TRUE;
-END_IF
-
 s_fbHmiBtnModeAutomatic();
 s_fbHmiBtnModeManual();
 s_fbHmiBtnModeMaintenance();
 s_fbHmiBtnModeIO();
 s_fbHmiBtnModeCleaning();
 
+//State buttons
 s_fbHmiBtnStateStart();
 s_fbHmiBtnStateStop();
 s_fbHmiBtnStateReset();
@@ -163,9 +126,7 @@ ELSE
 	s_eCtrlState := E_CtrlState.STOPPED;
 END_CASE
 
-IF (s_eCtrlState = E_CtrlState.IDLE)
-	OR (s_eCtrlState = E_CtrlState.STOPPED)
-THEN
+IF (s_eCtrlState = E_CtrlState.IDLE) OR (s_eCtrlState = E_CtrlState.STOPPED) THEN
 	s_fbHmiBtnModeAutomatic.p_bStaEnabled := s_eCtrlMode <> E_CtrlMode.AUTOMATIC;
 	s_fbHmiBtnModeManual.p_bStaEnabled := s_eCtrlMode <> E_CtrlMode.MANUAL;
 	s_fbHmiBtnModeMaintenance.p_bStaEnabled := s_eCtrlMode <> E_CtrlMode.MAINTENANCE;
@@ -179,58 +140,183 @@ ELSE
 	s_fbHmiBtnModeCleaning.p_bStaEnabled := FALSE;
 END_IF
 
-IF s_eCtrlMode <> E_CtrlMode.IDLE THEN
+IF (s_eCtrlMode <> E_CtrlMode.IDLE) THEN
 	s_fbHmiBtnStateStart.p_bStaEnabled := s_eCtrlState = E_CtrlState.IDLE;
 	s_fbHmiBtnStateStop.p_bStaEnabled := s_eCtrlState = E_CtrlState.RUNNING;
-	s_fbHmiBtnStateReset.p_bStaEnabled := s_eCtrlState <> E_CtrlState.STOPPED;
+	s_fbHmiBtnStateReset.p_bStaEnabled := s_eCtrlState = E_CtrlState.STOPPED;
 ELSE
 	s_fbHmiBtnStateStart.p_bStaEnabled := FALSE;
 	s_fbHmiBtnStateStop.p_bStaEnabled := FALSE;
 	s_fbHmiBtnStateReset.p_bStaEnabled := FALSE;
-END_IF]]></ST>
-    </Implementation>
+END_IF
+
+_m_Devices := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Init" Id="{a1fc126f-d49b-4a46-ba19-1bb236760050}">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Init : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+//Mode buttons
+s_fbHmiBtnModeAutomatic.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnModeAutomatic.p_bStaVisible := FALSE;
+s_fbHmiBtnModeAutomatic.p_bStaEnabled := FALSE;
+s_fbHmiBtnModeAutomatic.p_sBtnText := 'Automatic';
+
+s_fbHmiBtnModeManual.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnModeManual.p_bStaVisible := FALSE;
+s_fbHmiBtnModeManual.p_bStaEnabled := FALSE;
+s_fbHmiBtnModeManual.p_sBtnText := 'Manual';
+
+s_fbHmiBtnModeMaintenance.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnModeMaintenance.p_bStaVisible := FALSE;
+s_fbHmiBtnModeMaintenance.p_bStaEnabled := FALSE;
+s_fbHmiBtnModeMaintenance.p_sBtnText := 'Maintenance';
+
+s_fbHmiBtnModeIO.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnModeIO.p_bStaVisible := FALSE;
+s_fbHmiBtnModeIO.p_bStaEnabled := FALSE;
+s_fbHmiBtnModeIO.p_sBtnText := 'IO';
+
+s_fbHmiBtnModeCleaning.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnModeCleaning.p_bStaVisible := FALSE;
+s_fbHmiBtnModeCleaning.p_bStaEnabled := FALSE;
+s_fbHmiBtnModeCleaning.p_sBtnText := 'Cleaning';
+
+//State buttons
+s_fbHmiBtnStateStart.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnStateStart.p_bStaVisible := FALSE;
+s_fbHmiBtnStateStart.p_bStaEnabled := FALSE;
+s_fbHmiBtnStateStart.p_sBtnText := 'Start';
+
+s_fbHmiBtnStateStop.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnStateStop.p_bStaVisible := FALSE;
+s_fbHmiBtnStateStop.p_bStaEnabled := FALSE;
+s_fbHmiBtnStateStop.p_sBtnText := 'Stop';
+
+s_fbHmiBtnStateReset.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnStateReset.p_bStaVisible := FALSE;
+s_fbHmiBtnStateReset.p_bStaEnabled := FALSE;
+s_fbHmiBtnStateReset.p_sBtnText := 'Reset';
+
+_m_Init := TRUE;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_Main" Id="{c6911376-dd10-4516-ac22-b723cd116f6a}">
+      <Declaration><![CDATA[METHOD PUBLIC m_Main : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT s_bInitDone THEN
+	IF _m_Init() THEN 
+		s_bInitDone := TRUE;
+	END_IF
+END_IF
+
+_m_Devices();
+
+m_Main := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="p_eCtrlMode" Id="{d43c325f-d6ae-4847-b472-d48b2167bf38}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_eCtrlMode : E_CtrlMode]]></Declaration>
+      <Get Name="Get" Id="{688a72bc-5f64-4b43-997f-b5567a4de79d}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_eCtrlMode := s_eCtrlMode;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_eCtrlState" Id="{d5d22fac-fb6e-44b3-b9a6-27a652b66a61}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_eCtrlState : E_CtrlState]]></Declaration>
+      <Get Name="Get" Id="{23abc99e-61e4-4700-ae7a-8bc295621026}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_eCtrlState := s_eCtrlState;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
     <LineIds Name="FB_ModeStateControl">
-      <LineId Id="555" Count="0" />
-      <LineId Id="665" Count="0" />
-      <LineId Id="664" Count="0" />
-      <LineId Id="649" Count="12" />
-      <LineId Id="648" Count="0" />
-      <LineId Id="667" Count="8" />
-      <LineId Id="666" Count="0" />
-      <LineId Id="663" Count="0" />
-      <LineId Id="662" Count="0" />
-      <LineId Id="647" Count="0" />
-      <LineId Id="556" Count="13" />
-      <LineId Id="726" Count="0" />
-      <LineId Id="716" Count="0" />
+      <LineId Id="762" Count="0" />
       <LineId Id="715" Count="0" />
-      <LineId Id="727" Count="1" />
-      <LineId Id="730" Count="3" />
-      <LineId Id="735" Count="2" />
-      <LineId Id="734" Count="0" />
-      <LineId Id="570" Count="2" />
-      <LineId Id="722" Count="1" />
-      <LineId Id="720" Count="0" />
-      <LineId Id="724" Count="1" />
-      <LineId Id="719" Count="0" />
-      <LineId Id="573" Count="69" />
-      <LineId Id="679" Count="0" />
-      <LineId Id="681" Count="1" />
-      <LineId Id="699" Count="0" />
-      <LineId Id="695" Count="3" />
-      <LineId Id="694" Count="0" />
-      <LineId Id="684" Count="0" />
-      <LineId Id="686" Count="2" />
-      <LineId Id="690" Count="1" />
-      <LineId Id="689" Count="0" />
-      <LineId Id="701" Count="0" />
-      <LineId Id="700" Count="0" />
-      <LineId Id="711" Count="1" />
-      <LineId Id="710" Count="0" />
-      <LineId Id="706" Count="0" />
-      <LineId Id="708" Count="1" />
-      <LineId Id="705" Count="0" />
       <LineId Id="703" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_ModeStateControl._m_Devices">
+      <LineId Id="41" Count="0" />
+      <LineId Id="68" Count="9" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="80" Count="79" />
+      <LineId Id="162" Count="20" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_ModeStateControl._m_Init">
+      <LineId Id="203" Count="0" />
+      <LineId Id="505" Count="0" />
+      <LineId Id="547" Count="1" />
+      <LineId Id="506" Count="0" />
+      <LineId Id="509" Count="1" />
+      <LineId Id="549" Count="1" />
+      <LineId Id="511" Count="0" />
+      <LineId Id="514" Count="0" />
+      <LineId Id="551" Count="0" />
+      <LineId Id="515" Count="0" />
+      <LineId Id="552" Count="0" />
+      <LineId Id="516" Count="0" />
+      <LineId Id="519" Count="0" />
+      <LineId Id="553" Count="0" />
+      <LineId Id="520" Count="0" />
+      <LineId Id="554" Count="0" />
+      <LineId Id="521" Count="0" />
+      <LineId Id="524" Count="0" />
+      <LineId Id="555" Count="0" />
+      <LineId Id="525" Count="0" />
+      <LineId Id="556" Count="0" />
+      <LineId Id="526" Count="0" />
+      <LineId Id="529" Count="1" />
+      <LineId Id="532" Count="0" />
+      <LineId Id="557" Count="1" />
+      <LineId Id="533" Count="0" />
+      <LineId Id="536" Count="0" />
+      <LineId Id="559" Count="0" />
+      <LineId Id="537" Count="0" />
+      <LineId Id="560" Count="0" />
+      <LineId Id="538" Count="0" />
+      <LineId Id="541" Count="0" />
+      <LineId Id="561" Count="0" />
+      <LineId Id="542" Count="0" />
+      <LineId Id="562" Count="0" />
+      <LineId Id="543" Count="0" />
+      <LineId Id="546" Count="0" />
+      <LineId Id="500" Count="0" />
+      <LineId Id="4" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_ModeStateControl.m_Main">
+      <LineId Id="2921" Count="0" />
+      <LineId Id="2933" Count="3" />
+      <LineId Id="2932" Count="0" />
+      <LineId Id="2929" Count="1" />
+      <LineId Id="2888" Count="1" />
+      <LineId Id="179" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_ModeStateControl.p_eCtrlMode.Get">
+      <LineId Id="5" Count="1" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_ModeStateControl.p_eCtrlState.Get">
+      <LineId Id="3" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="4" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>

@@ -24,6 +24,8 @@ VAR_INPUT
 	
 	i_refTB : REFERENCE TO OBJ_Carrier;	//Mogelijk voor uiteindelijke machine, voor de FUMO's is dit nog niet echt relevant
 	//??i_refITF_TB : REFERENCE TO I_Carrier;
+	
+	i_eCtrlState		: E_CtrlState;
 END_VAR
 
 VAR_OUTPUT
@@ -306,6 +308,9 @@ fbIlckHandlerDoorShutterOpen : FB_InterlockHandler;
 	
 	s_fbHmiLedShutterOpened			: FB_HmiLed;
 	s_fbHmiLedShutterClosed			: FB_HmiLed;
+	
+	{warning '#TODO' Het zou beter zijn om dit onder te brengen in de onderstaande control modules}
+	s_bHmiForceOutputEnabled : BOOL;
 	
 //------------------------------------------//
 	s_bTestBool : BOOL;
@@ -783,6 +788,7 @@ END_IF
 s_cmDockingClampsUpper(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
+	i_ref_eCtrlState := i_eCtrlState,
 	i_bCmdReset := i_bCmdReset,
 	i_bIclkOn := s_bIlckDockingClampsToClose AND NOT(s_bOverruleInterlocks), 
 	i_bIclkOff := s_bIlckDockingClampsToOpen AND NOT(s_bOverruleInterlocks));
@@ -790,6 +796,7 @@ s_cmDockingClampsUpper(
 s_cmDockingClampsLower(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
+	i_ref_eCtrlState := i_eCtrlState,
 	i_bCmdReset := i_bCmdReset,
 	i_bIclkOn := s_bIlckDockingClampsToClose AND NOT(s_bOverruleInterlocks), 
 	i_bIclkOff := s_bIlckDockingClampsToOpen AND NOT(s_bOverruleInterlocks));	
@@ -811,6 +818,7 @@ s_bStaDockingClampsLowerOpened := s_cmDockingClampsLower.p_bStaIsOff;
 s_cmUnlockingPinUpper(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
+	i_ref_eCtrlState := i_eCtrlState,
 	i_bCmdReset := i_bCmdReset,
 	i_bIclkOn := s_bIlckUnlockingPinsToRelease AND NOT(s_bOverruleInterlocks), 
 	i_bIclkOff := s_bIlckUnlockingPinsToRelease AND NOT(s_bOverruleInterlocks));
@@ -818,6 +826,7 @@ s_cmUnlockingPinUpper(
 s_cmUnlockingPinLower(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
+	i_ref_eCtrlState := i_eCtrlState,
 	i_bCmdReset := i_bCmdReset,
 	i_bIclkOn := s_bIlckUnlockingPinsToRelease AND NOT(s_bOverruleInterlocks), 
 	i_bIclkOff := s_bIlckUnlockingPinsToRelease AND NOT(s_bOverruleInterlocks));
@@ -830,6 +839,7 @@ s_bStaLockingPinLowerLocked := s_cmUnlockingPinLower.p_bStaIsOff;
 s_cmDoorOpener(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
+	i_ref_eCtrlState := i_eCtrlState,
 	i_bCmdReset := i_bCmdReset,
 	i_bIclkOn := s_bIlckDoorOpenerToOpen AND NOT(s_bOverruleInterlocks), 
 	i_bIclkOff := s_bIlckDoorOpenerToClose AND NOT(s_bOverruleInterlocks));
@@ -840,6 +850,7 @@ s_bStaDoorOpenerClosed := s_cmDoorOpener.p_bStaIsOff;
 s_cmDoorShutter(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
+	i_ref_eCtrlState := i_eCtrlState,
 	i_bCmdReset := i_bCmdReset,
 	i_bIclkOn := s_bIlckDoorShutterToClose AND NOT(s_bOverruleInterlocks), 
 	i_bIclkOff := s_bIlckDoorShutterToOpen AND NOT(s_bOverruleInterlocks));
@@ -1818,6 +1829,13 @@ CASE i_eCtrlMode OF
 		_m_ManualControl();
 
 END_CASE
+
+//IO-mode
+IF (i_eCtrlMode = E_CtrlMode.IO) AND (i_eCtrlState = E_CtrlState.RUNNING) THEN
+	s_bHmiForceOutputEnabled := TRUE;
+ELSE
+	s_bHmiForceOutputEnabled := FALSE;	
+END_IF
 ]]></ST>
       </Implementation>
     </Method>
@@ -2280,11 +2298,15 @@ p_bStaUndocked := s_bStaUndocked;
       <LineId Id="156" Count="10" />
       <LineId Id="265" Count="0" />
       <LineId Id="248" Count="0" />
-      <LineId Id="250" Count="3" />
+      <LineId Id="250" Count="2" />
+      <LineId Id="288" Count="0" />
+      <LineId Id="253" Count="0" />
       <LineId Id="249" Count="0" />
       <LineId Id="266" Count="0" />
       <LineId Id="259" Count="0" />
-      <LineId Id="255" Count="3" />
+      <LineId Id="255" Count="2" />
+      <LineId Id="289" Count="0" />
+      <LineId Id="258" Count="0" />
       <LineId Id="268" Count="0" />
       <LineId Id="274" Count="0" />
       <LineId Id="168" Count="0" />
@@ -2296,11 +2318,15 @@ p_bStaUndocked := s_bStaUndocked;
       <LineId Id="201" Count="0" />
       <LineId Id="169" Count="4" />
       <LineId Id="236" Count="0" />
-      <LineId Id="238" Count="3" />
+      <LineId Id="238" Count="2" />
+      <LineId Id="290" Count="0" />
+      <LineId Id="241" Count="0" />
       <LineId Id="237" Count="0" />
       <LineId Id="278" Count="0" />
       <LineId Id="277" Count="0" />
-      <LineId Id="244" Count="3" />
+      <LineId Id="244" Count="2" />
+      <LineId Id="291" Count="0" />
+      <LineId Id="247" Count="0" />
       <LineId Id="243" Count="0" />
       <LineId Id="279" Count="0" />
       <LineId Id="174" Count="0" />
@@ -2309,13 +2335,17 @@ p_bStaUndocked := s_bStaUndocked;
       <LineId Id="214" Count="0" />
       <LineId Id="211" Count="0" />
       <LineId Id="198" Count="0" />
-      <LineId Id="224" Count="3" />
+      <LineId Id="224" Count="2" />
+      <LineId Id="292" Count="0" />
+      <LineId Id="227" Count="0" />
       <LineId Id="280" Count="1" />
       <LineId Id="218" Count="0" />
       <LineId Id="217" Count="0" />
       <LineId Id="216" Count="0" />
       <LineId Id="229" Count="0" />
-      <LineId Id="231" Count="3" />
+      <LineId Id="231" Count="2" />
+      <LineId Id="293" Count="0" />
+      <LineId Id="234" Count="0" />
       <LineId Id="220" Count="0" />
       <LineId Id="282" Count="0" />
       <LineId Id="235" Count="0" />
@@ -2832,8 +2862,10 @@ p_bStaUndocked := s_bStaUndocked;
       <LineId Id="195" Count="1" />
       <LineId Id="417" Count="0" />
       <LineId Id="427" Count="2" />
-      <LineId Id="414" Count="0" />
+      <LineId Id="447" Count="0" />
       <LineId Id="187" Count="0" />
+      <LineId Id="451" Count="5" />
+      <LineId Id="450" Count="0" />
       <LineId Id="179" Count="0" />
     </LineIds>
     <LineIds Name="EM_DockingInterface.m_ReqCloseInnerDoor">

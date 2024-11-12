@@ -6,6 +6,8 @@ VAR_INPUT
 	i_stSettings : ST_SettingsMOVITRAC_B_WithBrake;
 	i_bIclkForward : BOOL := TRUE; //TRUE = interlocked
 	i_bIclkBackward : BOOL := TRUE; //TRUE = interlocked
+	
+	i_ref_eCtrlState : REFERENCE TO E_CtrlState;
 END_VAR
 VAR
 	// Inputs
@@ -352,7 +354,7 @@ s_fbHmiBtnManualReset();
 s_fbHmiLedBrakeReleased(i_bStaLed := s_bStaBrakeReleased);
 s_fbHmiLedMotorStopped(i_bStaLed := s_bStaMotorStopped);
 s_fbHmiLedDriveError(i_bStaLed := s_bStaDriveError);
-
+(*
 {warning '#TODO: Add manual control from hmi'}
 CASE i_eCtrlMode OF
 
@@ -417,6 +419,69 @@ CASE i_eCtrlMode OF
 		END_IF	
 	
 END_CASE
+*)
+IF __ISVALIDREF(i_ref_eCtrlState) THEN
+	//MAINTENANCE-mode is running
+	IF (i_eCtrlMode = E_CtrlMode.MAINTENANCE) AND (i_ref_eCtrlState = E_CtrlState.RUNNING) THEN
+		s_fbHmiBtnManualReleaseBrake.p_bStaVisible := TRUE;
+		s_fbHmiBtnManualReleaseBrake.p_bStaEnabled := i_bReqEnable;
+		
+		s_fbHmiBtnManualApplyBrake.p_bStaVisible := TRUE;
+		s_fbHmiBtnManualApplyBrake.p_bStaEnabled := i_bReqEnable AND s_bStaMotorStopped;
+		
+		s_fbHmiBtnManualForward.p_bStaVisible := TRUE;
+		s_fbHmiBtnManualForward.p_bStaEnabled := i_bReqEnable AND s_bStaMotorStopped (*AND s_bStaBrakeReleased*) AND NOT(i_bIclkForward);
+		
+		s_fbHmiBtnManualBackward.p_bStaVisible := TRUE;
+		s_fbHmiBtnManualBackward.p_bStaEnabled := i_bReqEnable AND s_bStaMotorStopped (*AND s_bStaBrakeReleased*) AND NOT(i_bIclkBackward);
+		
+		s_fbHmiBtnManualStop.p_bStaVisible := TRUE;
+		s_fbHmiBtnManualStop.p_bStaEnabled := TRUE;
+		
+		s_fbHmiBtnManualReset.p_bStaVisible := TRUE;
+		s_fbHmiBtnManualReset.p_bStaEnabled := TRUE;
+		
+		IF s_fbHmiBtnManualReleaseBrake.p_osrBtnPress THEN
+			m_ReleaseBrake();
+		END_IF
+	
+		IF s_fbHmiBtnManualApplyBrake.p_osrBtnPress THEN
+			m_ApplyBrake();
+		END_IF
+			
+		IF s_fbHmiBtnManualStop.p_osrBtnPress THEN
+			m_Stop();	
+		ELSIF s_fbHmiBtnManualForward.p_osrBtnPress THEN
+			m_StartForward(i_rTargetSpeed := s_fTargetSpeed);
+		ELSIF s_fbHmiBtnManualBackward.p_osrBtnPress THEN
+			m_StartBackward(i_rTargetSpeed := s_fTargetSpeed);
+		END_IF
+
+		IF s_fbHmiBtnManualReset.p_osrBtnPress THEN
+			m_Reset();
+		END_IF
+		
+	//other-mode	
+	ELSE
+		s_fbHmiBtnManualReleaseBrake.p_bStaVisible := FALSE;
+		s_fbHmiBtnManualReleaseBrake.p_bStaEnabled := FALSE;
+		
+		s_fbHmiBtnManualApplyBrake.p_bStaVisible := FALSE;
+		s_fbHmiBtnManualApplyBrake.p_bStaEnabled := FALSE;
+		
+		s_fbHmiBtnManualForward.p_bStaVisible := FALSE;
+		s_fbHmiBtnManualForward.p_bStaEnabled := FALSE;
+		
+		s_fbHmiBtnManualBackward.p_bStaVisible := FALSE;
+		s_fbHmiBtnManualBackward.p_bStaEnabled := FALSE;
+		
+		s_fbHmiBtnManualStop.p_bStaVisible := FALSE;
+		s_fbHmiBtnManualStop.p_bStaEnabled := FALSE;
+		
+		s_fbHmiBtnManualReset.p_bStaVisible := FALSE;
+		s_fbHmiBtnManualReset.p_bStaEnabled := FALSE;
+	END_IF
+END_IF
 	
 _m_Hmi := TRUE;
 ]]></ST>
@@ -511,22 +576,16 @@ IF NOT SUPER^._m_Outputs() THEN
 	RETURN;
 END_IF
 
-//Write outputs to drive
-//--Q_bCmdEnable := s_bCmdEnable;
-//--Q_bCmdReset := s_bCmdReset;
-//--Q_bCmdStartCW := s_bCmdForward;
-//--Q_bCmdStartCCW := s_bCmdBackward;
-//--Q_bCmdReleaseBrake := s_bCmdReleaseBrake;
-//--Q_nSetTargetSpeed := LREAL_TO_INT(s_fTargetSpeed / i_stSettings.rMaxTargetSpeed * cMAX_INT_VALUE);
-
 {warning #TODO: Nog bepalen OF het beter is om onderstaande code te verwerken in FB_Force output}
-IF i_eCtrlMode <> E_CtrlMode.IO THEN
-	s_fbForceCmdEnable.i_eForceValue := E_ForceValue.RELEASED;
-	s_fbForceCmdReset.i_eForceValue := E_ForceValue.RELEASED;
-	s_fbForceCmdStartCW.i_eForceValue := E_ForceValue.RELEASED;
-	s_fbForceCmdStartCCW.i_eForceValue := E_ForceValue.RELEASED;
-	s_fbForceCmdReleaseBrake.i_eForceValue := E_ForceValue.RELEASED;
-	s_fForceValueTargetSpeed := 0.0;
+IF __ISVALIDREF(i_ref_eCtrlState) THEN
+	IF (i_eCtrlMode <> E_CtrlMode.IO) OR (i_ref_eCtrlState <> E_CtrlState.RUNNING) THEN
+		s_fbForceCmdEnable.i_eForceValue := E_ForceValue.RELEASED;
+		s_fbForceCmdReset.i_eForceValue := E_ForceValue.RELEASED;
+		s_fbForceCmdStartCW.i_eForceValue := E_ForceValue.RELEASED;
+		s_fbForceCmdStartCCW.i_eForceValue := E_ForceValue.RELEASED;
+		s_fbForceCmdReleaseBrake.i_eForceValue := E_ForceValue.RELEASED;
+		s_fForceValueTargetSpeed := 0.0;
+	END_IF
 END_IF 
 
 s_fbForceCmdEnable(
@@ -973,6 +1032,14 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="217" Count="0" />
       <LineId Id="192" Count="0" />
       <LineId Id="169" Count="0" />
+      <LineId Id="222" Count="0" />
+      <LineId Id="224" Count="1" />
+      <LineId Id="305" Count="0" />
+      <LineId Id="269" Count="35" />
+      <LineId Id="239" Count="3" />
+      <LineId Id="252" Count="15" />
+      <LineId Id="250" Count="1" />
+      <LineId Id="223" Count="0" />
       <LineId Id="171" Count="0" />
       <LineId Id="15" Count="0" />
       <LineId Id="87" Count="0" />
@@ -1015,18 +1082,16 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
     <LineIds Name="CM_MOVITRAC_B._m_Outputs">
       <LineId Id="29" Count="0" />
       <LineId Id="7" Count="2" />
-      <LineId Id="123" Count="1" />
-      <LineId Id="135" Count="0" />
-      <LineId Id="137" Count="1" />
-      <LineId Id="140" Count="0" />
-      <LineId Id="143" Count="0" />
-      <LineId Id="152" Count="0" />
       <LineId Id="181" Count="0" />
-      <LineId Id="153" Count="4" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="208" Count="0" />
+      <LineId Id="154" Count="3" />
       <LineId Id="172" Count="0" />
       <LineId Id="170" Count="0" />
       <LineId Id="202" Count="0" />
-      <LineId Id="158" Count="11" />
+      <LineId Id="158" Count="0" />
+      <LineId Id="210" Count="0" />
+      <LineId Id="159" Count="10" />
       <LineId Id="150" Count="0" />
       <LineId Id="173" Count="0" />
       <LineId Id="175" Count="1" />

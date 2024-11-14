@@ -24,7 +24,7 @@ VAR_OUTPUT
 END_VAR
 
 VAR
-
+fbModeControl : FB_ModeStateControl;
 s_arr_bTest : ARRAY[0..7] OF BOOL;;
 
 //Interlocks	
@@ -399,9 +399,6 @@ _m_Devices := TRUE;
     </Method>
     <Method Name="_m_Hmi" Id="{afc38d7b-1a6b-4465-996c-ac4ea040e152}">
       <Declaration><![CDATA[METHOD PROTECTED _m_Hmi : BOOL
-VAR
-	bTest : BOOL;
-END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
@@ -409,6 +406,7 @@ IF NOT SUPER^._m_Hmi() THEN
 	RETURN;
 END_IF
 
+//Buttons
 s_fbHmiBtnTB_ToInfeed();
 s_fbHmiBtnTB_ToCentering();
 s_fbHmiBtnTB_ToDocking();
@@ -845,8 +843,8 @@ _m_Params := TRUE;
       <Implementation>
         <ST><![CDATA[
 {warning '#TODO dit kan hier mogleijk vervallen, zeker als dit al gescrven wordt in de m_main()'}
-s_fbHmiBtnTB_Centering.p_bStaVisible := TRUE;
-s_fbHmiBtnTB_Centering.p_bStaEnabled := TRUE;
+//--s_fbHmiBtnTB_Centering.p_bStaVisible := TRUE;
+//--s_fbHmiBtnTB_Centering.p_bStaEnabled := TRUE;
 
 s_fbSeqCenteringControl(
 	i_nSeqStep := s_eSeqCentering, 
@@ -858,11 +856,20 @@ s_fbSeqCenteringControl(
 					AND i_bReqEnable, 
 	i_bStaError := s_bStaError OR NOT(i_bReqEnable));
 
+IF (i_eCtrlState = E_CtrlState.STOPPING) THEN
+	s_eSeqCentering := E_SeqCentering.MOVE_TO_IDLE;
+END_IF	
+	
 CASE s_eSeqCentering OF
 	
 	E_SeqCentering.IDLE:
 		s_bReqCenteringTB := FALSE;
-		s_eSeqCentering := E_SeqCentering.START;
+		
+		IF (i_eCtrlState = E_CtrlState.IDLE) THEN
+			s_eSeqCentering := E_SeqCentering.START;
+		END_IF
+		
+		//--s_eSeqCentering := E_SeqCentering.START;
 	
 	E_SeqCentering.START:
 		IF s_fbSeqCenteringControl.q_tmStepTime > T#1S THEN
@@ -916,13 +923,15 @@ END_CASE
       <Declaration><![CDATA[METHOD PRIVATE _m_SeqTransport : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[s_fbHmiBtnTB_ToInfeed.p_bStaVisible := TRUE;
+        <ST><![CDATA[
+{warning '#TODO dit kan hier mogleijk vervallen, zeker als dit al gescrven wordt in de m_main()'}
+//--s_fbHmiBtnTB_ToInfeed.p_bStaVisible := TRUE;
 //--s_fbHmiBtnTB_ToInfeed.p_bStaEnabled := TRUE;
 
-s_fbHmiBtnTB_ToCentering.p_bStaVisible := TRUE;
+//--s_fbHmiBtnTB_ToCentering.p_bStaVisible := TRUE;
 //--s_fbHmiBtnTB_ToCentering.p_bStaEnabled := TRUE;
 
-s_fbHmiBtnTB_ToDocking.p_bStaVisible := TRUE;
+//--s_fbHmiBtnTB_ToDocking.p_bStaVisible := TRUE;
 //--s_fbHmiBtnTB_ToDocking.p_bStaEnabled := TRUE;
 
 s_fbSeqTransportControl(
@@ -935,12 +944,20 @@ s_fbSeqTransportControl(
 					AND i_bReqEnable, 
 	i_bStaError := s_bStaError OR NOT(i_bReqEnable));
 
+IF (i_eCtrlState = E_CtrlState.STOPPING) THEN
+	s_eSeqTransport := E_SeqTransport.STOP;
+END_IF	
+	
 CASE s_eSeqTransport OF
 	
 	E_SeqTransport.IDLE:
 		s_eTmpLocation := E_Location.UNKNOWN;
 	
-		s_eSeqTransport := E_SeqTransport.START;
+		IF (i_eCtrlState = E_CtrlState.IDLE) THEN
+			s_eSeqTransport := E_SeqTransport.START;
+		END_IF
+			
+		//--s_eSeqTransport := E_SeqTransport.START;
 		
 	E_SeqTransport.START:
 		//--IF s_fbSeqTransportControl.q_tmStepTime > T#1S THEN
@@ -1110,45 +1127,46 @@ CASE i_eCtrlMode OF
 		s_eSeqCentering := E_SeqCentering.IDLE;
 		
 	E_CtrlMode.AUTOMATIC:
-		//Excecute automatic control
+		//Execute automatic control (based on request from higher-layer unit)
 		
 		//Automatic commands are controlled by higher-layer unit
-		
 		_m_AutomaticControl();
 
 	E_CtrlMode.MANUAL:
-		//Manual commands
-		s_eSeqTransport := E_SeqTransport.IDLE;
-		s_eSeqCentering := E_SeqCentering.IDLE;
+		//Execute manaual control (based on HMI buttons)
 		
+		//Manual commands (convert HMI buttons to requests)
 		s_bReqTB_ToInfeed := s_fbHmiBtnTB_ToInfeed.p_osrBtnPress;
 		s_bReqTB_ToCenter := s_fbHmiBtnTB_ToCentering.p_osrBtnPress;
 		s_bReqTB_ToDocking := s_fbHmiBtnTB_ToDocking.p_osrBtnPress;
-			
 		s_bReqCenteringTB := s_fbHmiBtnTB_Centering.p_osrBtnPress;
 		
 		_m_AutomaticControl();
-	
-		; //_add_some_code_here_
-
+		
 	E_CtrlMode.MAINTENANCE:
+		//Execute maintenance control (HMI control module buttons)
+		//Reset automatic/manual sequencer
+		s_eSeqTransport := E_SeqTransport.IDLE;
+		s_eSeqCentering := E_SeqCentering.IDLE;
 		; 	//Maintenance control is implemented in lower-layer control modules
 							
+		
 	E_CtrlMode.IO:
+		//Execute IO-test control (HMI output force control)
 		; 	//IO-Test control is implemented in lower-layer control modules
 			//Enabling control is done direcly under this case instruction
 		
 	E_CtrlMode.CLEANING:
+		//Execute cleaning control (cleaning  specific functionalities)
 		;	//Cleaning control is not implemented, this could be a done in the future if neccesary
 			
 END_CASE
 
-//AUTOMATIC-mode /////////////////////////////////////////////////////////////////////////////////////////////
+//AUTOMATIC-mode //////////////////////////////////////////////////////////////////////////////////
 
+//MANUAL-mode /////////////////////////////////////////////////////////////////////////////////////
 
-//MANUAL-mode ////////////////////////////////////////////////////////////////////////////////////////////////
-
-//Buttons visability
+//Buttons visibility
 IF (i_eCtrlMode = E_CtrlMode.MANUAL) THEN
 	s_fbHmiBtnTB_ToInfeed.p_bStaVisible := TRUE;
 	s_fbHmiBtnTB_ToCentering.p_bStaVisible := TRUE;
@@ -1164,41 +1182,50 @@ END_IF
 //Buttons enabling
 IF i_bReqEnable AND (i_eCtrlMode = E_CtrlMode.MANUAL) AND (i_eCtrlState = E_CtrlState.RUNNING) THEN
 
+	//Transport
 	s_fbHmiBtnTB_ToInfeed.p_bStaEnabled :=
 		NOT(s_bIlckConveyorBackward)
-		AND NOT(s_bStaAtInfeedRearPosition) //Added extra condition here instead of 
+		AND NOT(s_bStaAtInfeedRearPosition) //Added extra condition here instead of interlock only 
 		AND NOT(s_cmPalletConveyor.p_bStaError)
 		AND NOT(s_bReqCenteringTB);
 	
 	s_fbHmiBtnTB_ToCentering.p_bStaEnabled :=
 		NOT(s_bIlckConveyorForward)
-		AND NOT(s_bStaAtCenteringPosition) //Added extra condition here instead of
+		AND NOT(s_bStaAtCenteringPosition) //Added extra condition here instead of interlock only
 		AND NOT(s_cmPalletConveyor.p_bStaError)
 		AND NOT(s_bReqCenteringTB);
 	
 	s_fbHmiBtnTB_ToDocking.p_bStaEnabled :=
 		NOT(s_bIlckConveyorForward)
-		AND NOT(s_bStaAtDockingPosition) //Added extra condition here instead of
+		AND NOT(s_bStaAtDockingPosition) //Added extra condition here instead of interlock only
 		AND NOT(s_cmPalletConveyor.p_bStaError)
 		AND NOT(s_bReqCenteringTB);
 	
+	//Centering
 	s_fbHmiBtnTB_Centering.p_bStaEnabled :=
 		NOT(s_bIlckCenteringToCenter)
 		AND NOT(s_cmCenteringUnit.p_bStaError)
-		AND (s_eSeqTransport = E_SeqTransport.IDLE); 
+		AND (s_eSeqTransport = E_SeqTransport.READY); 
 ELSE
 	s_fbHmiBtnTB_ToInfeed.p_bStaEnabled := FALSE;
 	s_fbHmiBtnTB_ToCentering.p_bStaEnabled := FALSE;
 	s_fbHmiBtnTB_ToDocking.p_bStaEnabled := FALSE;
 	s_fbHmiBtnTB_Centering.p_bStaEnabled := FALSE;
-END_IF	
+END_IF
 
-//IO-mode ////////////////////////////////////////////////////////////////////////////////////////////////////
+//MAINTENANCE-mode ////////////////////////////////////////////////////////////////////////////////
+
+//Stopping control modules
+IF (i_eCtrlMode = E_CtrlMode.MAINTENANCE) AND (i_eCtrlState = E_CtrlState.STOPPING) THEN 
+	s_cmPalletConveyor.m_Stop();
+END_IF
+
+//IO-mode /////////////////////////////////////////////////////////////////////////////////////////
 IF (i_eCtrlMode = E_CtrlMode.IO) AND (i_eCtrlState = E_CtrlState.RUNNING) THEN
 	s_bHmiForceOutputEnabled := TRUE;
 ELSE
 	s_bHmiForceOutputEnabled := FALSE;	
-END_IF	
+END_IF
 
 m_Main := TRUE;
 ]]></ST>
@@ -1408,6 +1435,7 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
     <LineIds Name="EM_PalletConveyor._m_Hmi">
       <LineId Id="222" Count="0" />
       <LineId Id="7" Count="2" />
+      <LineId Id="361" Count="0" />
       <LineId Id="356" Count="0" />
       <LineId Id="260" Count="0" />
       <LineId Id="264" Count="0" />
@@ -1603,7 +1631,17 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
     <LineIds Name="EM_PalletConveyor._m_SeqCentering">
       <LineId Id="521" Count="0" />
       <LineId Id="514" Count="0" />
-      <LineId Id="443" Count="34" />
+      <LineId Id="443" Count="11" />
+      <LineId Id="532" Count="0" />
+      <LineId Id="534" Count="1" />
+      <LineId Id="455" Count="0" />
+      <LineId Id="533" Count="0" />
+      <LineId Id="456" Count="3" />
+      <LineId Id="526" Count="0" />
+      <LineId Id="530" Count="1" />
+      <LineId Id="527" Count="0" />
+      <LineId Id="529" Count="0" />
+      <LineId Id="460" Count="17" />
       <LineId Id="500" Count="0" />
       <LineId Id="515" Count="0" />
       <LineId Id="517" Count="0" />
@@ -1620,7 +1658,16 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="72" Count="0" />
     </LineIds>
     <LineIds Name="EM_PalletConveyor._m_SeqTransport">
-      <LineId Id="1623" Count="47" />
+      <LineId Id="1808" Count="0" />
+      <LineId Id="1807" Count="0" />
+      <LineId Id="1623" Count="17" />
+      <LineId Id="1813" Count="0" />
+      <LineId Id="1815" Count="1" />
+      <LineId Id="1641" Count="0" />
+      <LineId Id="1814" Count="0" />
+      <LineId Id="1642" Count="4" />
+      <LineId Id="1809" Count="3" />
+      <LineId Id="1647" Count="23" />
       <LineId Id="1797" Count="0" />
       <LineId Id="1800" Count="0" />
       <LineId Id="1671" Count="12" />
@@ -1643,29 +1690,35 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="2899" Count="0" />
       <LineId Id="3068" Count="0" />
       <LineId Id="3070" Count="0" />
-      <LineId Id="3069" Count="0" />
       <LineId Id="2900" Count="0" />
       <LineId Id="2949" Count="0" />
       <LineId Id="2951" Count="0" />
-      <LineId Id="3067" Count="0" />
-      <LineId Id="2956" Count="1" />
-      <LineId Id="2961" Count="0" />
-      <LineId Id="3063" Count="3" />
+      <LineId Id="3073" Count="0" />
+      <LineId Id="3077" Count="0" />
+      <LineId Id="3076" Count="0" />
+      <LineId Id="3063" Count="2" />
       <LineId Id="3061" Count="1" />
-      <LineId Id="2954" Count="1" />
+      <LineId Id="2954" Count="0" />
       <LineId Id="2950" Count="0" />
-      <LineId Id="2915" Count="2" />
+      <LineId Id="2916" Count="0" />
+      <LineId Id="3084" Count="0" />
+      <LineId Id="3090" Count="0" />
+      <LineId Id="3086" Count="1" />
+      <LineId Id="3075" Count="0" />
       <LineId Id="2919" Count="0" />
+      <LineId Id="3081" Count="0" />
       <LineId Id="2907" Count="0" />
+      <LineId Id="3088" Count="0" />
       <LineId Id="2910" Count="0" />
       <LineId Id="2947" Count="0" />
       <LineId Id="2911" Count="0" />
-      <LineId Id="2913" Count="1" />
+      <LineId Id="2913" Count="0" />
+      <LineId Id="3089" Count="0" />
+      <LineId Id="2914" Count="0" />
       <LineId Id="2948" Count="0" />
       <LineId Id="2887" Count="0" />
       <LineId Id="3054" Count="0" />
       <LineId Id="3053" Count="0" />
-      <LineId Id="3052" Count="0" />
       <LineId Id="3049" Count="0" />
       <LineId Id="2963" Count="0" />
       <LineId Id="3050" Count="0" />
@@ -1681,9 +1734,17 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="3032" Count="0" />
       <LineId Id="3043" Count="0" />
       <LineId Id="3041" Count="1" />
+      <LineId Id="3091" Count="0" />
       <LineId Id="3030" Count="0" />
-      <LineId Id="3002" Count="26" />
-      <LineId Id="2997" Count="1" />
+      <LineId Id="3002" Count="17" />
+      <LineId Id="3092" Count="0" />
+      <LineId Id="3020" Count="8" />
+      <LineId Id="2997" Count="0" />
+      <LineId Id="3097" Count="1" />
+      <LineId Id="3095" Count="0" />
+      <LineId Id="3094" Count="0" />
+      <LineId Id="3100" Count="2" />
+      <LineId Id="3108" Count="0" />
       <LineId Id="2937" Count="1" />
       <LineId Id="2940" Count="1" />
       <LineId Id="2944" Count="0" />

@@ -121,9 +121,9 @@ s_doBeaconLedGreen.i_bStaOutput := s_bExtRunning;
 s_doBeaconLedYellow.i_bStaOutput := s_bExtWarning;
 s_doBeaconLedRed.i_bStaOutput := s_bExtError;
 
-s_doBeaconLedGreen(i_eCtrlMode := i_eCtrlMode);
-s_doBeaconLedYellow(i_eCtrlMode := i_eCtrlMode);
-s_doBeaconLedRed(i_eCtrlMode := i_eCtrlMode);
+s_doBeaconLedGreen(i_eCtrlMode := i_eCtrlMode, i_ref_eCtrlState := i_eCtrlState);
+s_doBeaconLedYellow(i_eCtrlMode := i_eCtrlMode, i_ref_eCtrlState := i_eCtrlState);
+s_doBeaconLedRed(i_eCtrlMode := i_eCtrlMode, i_ref_eCtrlState := i_eCtrlState);
 	
 _m_Devices := TRUE;
 ]]></ST>
@@ -137,6 +137,9 @@ _m_Devices := TRUE;
 IF NOT SUPER^._m_Hmi() THEN
 	RETURN;
 END_IF
+
+//Buttons
+//..
 
 //Hmi Leds
 s_fbHmiLedSafetyOk(i_bStaLed := s_bStaSafetyOk);
@@ -259,20 +262,39 @@ END_IF
 
 CASE i_eCtrlMode OF
 	E_CtrlMode.IDLE:
-		;
+		;//Nothing
+		
 	E_CtrlMode.AUTOMATIC:
-		;
+		//Execute automatic control (based on request from higher-layer unit)
+		;//Nothing
+		
 	E_CtrlMode.MANUAL:
-		;	
+		//Execute manaual control (based on HMI buttons)
+		;//Nothing
+		
 	E_CtrlMode.MAINTENANCE:
-		;	
+		//Execute maintenance control (HMI control module buttons)
+		;//Nothing
+	
 	E_CtrlMode.IO:
-		;
+		//Execute IO-test control (HMI output force control)
+		; 	//IO-Test control is implemented in lower-layer control modules
+		
 	E_CtrlMode.CLEANING:
-		;	
+		//Execute cleaning control (cleaning  specific functionalities)
+		;	//Cleaning control is not implemented, this could be a done in the future if neccesary
 END_CASE
 
-//IO-mode
+//AUTOMATIC-mode //////////////////////////////////////////////////////////////////////////////////
+//..
+
+//MANUAL-mode /////////////////////////////////////////////////////////////////////////////////////
+//..
+
+//MAINTENANCE-mode ////////////////////////////////////////////////////////////////////////////////
+//..
+
+//IO-mode /////////////////////////////////////////////////////////////////////////////////////////
 IF (i_eCtrlMode = E_CtrlMode.IO) AND (i_eCtrlState = E_CtrlState.RUNNING) THEN
 	s_bHmiForceOutputEnabled := TRUE;
 ELSE
@@ -355,6 +377,9 @@ p_bStsPowerOk := s_bStsPowerOk;
     <LineIds Name="EM_Utilities._m_Hmi">
       <LineId Id="222" Count="0" />
       <LineId Id="7" Count="2" />
+      <LineId Id="263" Count="0" />
+      <LineId Id="262" Count="0" />
+      <LineId Id="264" Count="0" />
       <LineId Id="248" Count="0" />
       <LineId Id="239" Count="0" />
       <LineId Id="256" Count="4" />
@@ -424,18 +449,37 @@ p_bStsPowerOk := s_bStsPowerOk;
       <LineId Id="184" Count="0" />
       <LineId Id="186" Count="0" />
       <LineId Id="469" Count="0" />
+      <LineId Id="487" Count="0" />
       <LineId Id="332" Count="0" />
+      <LineId Id="484" Count="0" />
       <LineId Id="430" Count="0" />
-      <LineId Id="460" Count="1" />
+      <LineId Id="488" Count="0" />
+      <LineId Id="460" Count="0" />
+      <LineId Id="485" Count="0" />
+      <LineId Id="461" Count="0" />
+      <LineId Id="489" Count="0" />
       <LineId Id="458" Count="0" />
+      <LineId Id="486" Count="0" />
       <LineId Id="463" Count="0" />
+      <LineId Id="490" Count="0" />
       <LineId Id="465" Count="0" />
       <LineId Id="457" Count="0" />
+      <LineId Id="492" Count="0" />
+      <LineId Id="491" Count="0" />
       <LineId Id="468" Count="0" />
       <LineId Id="466" Count="0" />
+      <LineId Id="493" Count="0" />
       <LineId Id="187" Count="0" />
-      <LineId Id="451" Count="5" />
-      <LineId Id="450" Count="0" />
+      <LineId Id="494" Count="0" />
+      <LineId Id="496" Count="0" />
+      <LineId Id="498" Count="0" />
+      <LineId Id="497" Count="0" />
+      <LineId Id="495" Count="0" />
+      <LineId Id="482" Count="0" />
+      <LineId Id="471" Count="0" />
+      <LineId Id="479" Count="1" />
+      <LineId Id="472" Count="5" />
+      <LineId Id="451" Count="0" />
       <LineId Id="179" Count="0" />
     </LineIds>
     <LineIds Name="EM_Utilities.p_bStaAirPressureOk.Get">

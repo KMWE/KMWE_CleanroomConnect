@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
   <POU Name="FB_ModeStateControl" Id="{e7765408-b769-4eed-9a68-858e05e5d218}" SpecialFunc="None">
-    <Declaration><![CDATA[FUNCTION_BLOCK FB_ModeStateControl
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ModeStateControl //EXTENDS FB_ModeStateControl_Base
 VAR_INPUT
 	i_bReqStopAlarm	: BOOL;
 	i_bStaAllStopped : BOOL;
@@ -106,7 +106,9 @@ CASE s_eCtrlState OF
 	
 	E_CtrlState.IDLE:
 	
-		IF s_fbHmiBtnStateStart.p_osrBtnPress THEN
+		IF s_fbHmiBtnStateStop.p_osrBtnPress THEN
+			s_eCtrlState := E_CtrlState.STOPPING;
+		ELSIF s_fbHmiBtnStateStart.p_osrBtnPress THEN
 			s_eCtrlState := E_CtrlState.RUNNING;
 		END_IF
 			
@@ -142,7 +144,7 @@ END_IF
 
 IF (s_eCtrlMode <> E_CtrlMode.IDLE) THEN
 	s_fbHmiBtnStateStart.p_bStaEnabled := s_eCtrlState = E_CtrlState.IDLE;
-	s_fbHmiBtnStateStop.p_bStaEnabled := s_eCtrlState = E_CtrlState.RUNNING;
+	s_fbHmiBtnStateStop.p_bStaEnabled := s_eCtrlState = E_CtrlState.RUNNING OR s_eCtrlState = E_CtrlState.IDLE;
 	s_fbHmiBtnStateReset.p_bStaEnabled := s_eCtrlState = E_CtrlState.STOPPED;
 ELSE
 	s_fbHmiBtnStateStart.p_bStaEnabled := FALSE;
@@ -253,7 +255,10 @@ p_eCtrlState := s_eCtrlState;
       <LineId Id="68" Count="9" />
       <LineId Id="67" Count="0" />
       <LineId Id="78" Count="0" />
-      <LineId Id="80" Count="79" />
+      <LineId Id="80" Count="58" />
+      <LineId Id="186" Count="1" />
+      <LineId Id="185" Count="0" />
+      <LineId Id="140" Count="19" />
       <LineId Id="162" Count="20" />
       <LineId Id="79" Count="0" />
       <LineId Id="9" Count="0" />
@@ -306,7 +311,8 @@ p_eCtrlState := s_eCtrlState;
       <LineId Id="2933" Count="3" />
       <LineId Id="2932" Count="0" />
       <LineId Id="2929" Count="1" />
-      <LineId Id="2888" Count="1" />
+      <LineId Id="2938" Count="0" />
+      <LineId Id="2889" Count="0" />
       <LineId Id="179" Count="0" />
     </LineIds>
     <LineIds Name="FB_ModeStateControl.p_eCtrlMode.Get">

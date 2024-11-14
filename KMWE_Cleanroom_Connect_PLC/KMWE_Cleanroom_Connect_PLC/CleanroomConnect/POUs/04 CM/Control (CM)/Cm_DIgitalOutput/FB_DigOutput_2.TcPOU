@@ -6,6 +6,7 @@ VAR_INPUT
 	i_bStaOutput	: BOOL;
 	i_stSettings 	: ST_DigOutputSettings;
 	i_eCtrlMode		: E_CtrlMode;
+	i_ref_eCtrlState : REFERENCE TO E_CtrlState;
 END_VAR
 VAR
 //----------------------Outputs---------------------------//
@@ -66,10 +67,13 @@ ELSE
 	s_bCmdOutput := s_bStaOutputDelayed;
 END_IF
 
-IF i_eCtrlMode <> E_CtrlMode.IO THEN
-	s_fbForceCmdOutput.i_eForceValue := E_ForceValue.RELEASED; 	
-END_IF
 
+IF __ISVALIDREF(i_ref_eCtrlState) THEN
+	IF (i_eCtrlMode <> E_CtrlMode.IO) OR (i_ref_eCtrlState <> E_CtrlState.RUNNING) THEN
+		s_fbForceCmdOutput.i_eForceValue := E_ForceValue.RELEASED; 	
+	END_IF
+END_IF
+	
 s_fbForceCmdOutput(
 	i_ref_bCmdInput := s_bCmdOutput,
 	i_ref_bCmdOutput := Q_bStaOutput);
@@ -184,7 +188,9 @@ END_VAR
       <LineId Id="48" Count="0" />
       <LineId Id="35" Count="0" />
       <LineId Id="37" Count="3" />
-      <LineId Id="50" Count="3" />
+      <LineId Id="61" Count="2" />
+      <LineId Id="51" Count="2" />
+      <LineId Id="64" Count="0" />
       <LineId Id="55" Count="0" />
       <LineId Id="46" Count="1" />
       <LineId Id="44" Count="0" />

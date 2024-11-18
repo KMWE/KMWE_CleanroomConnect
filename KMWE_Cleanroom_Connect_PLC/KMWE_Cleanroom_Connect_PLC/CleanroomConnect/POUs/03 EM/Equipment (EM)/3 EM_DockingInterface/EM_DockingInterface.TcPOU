@@ -38,6 +38,9 @@ VAR
 	s_cmDockingClampsUpper : CM_ValveWithDoubleFB; // Off = Open, On = Close
 	s_cmDockingClampsLower : CM_ValveWithDoubleFB; // Off = Open, On = Close
 	
+	s_cmClampsUpperHighPressure : CM_DigOutput; // Off = Low, On = High
+	s_cmClampsLowerHighPressure : CM_DigOutput; // Off = Low, On = High
+	
 	s_cmUnlockingPinUpper : CM_ValveWithFB; // Off = Lock, On = Release
 	s_cmUnlockingPinLower : CM_ValveWithFB; // Off = Lock, On = Release
 	
@@ -71,9 +74,7 @@ fbIlckHandlerDoorShutterOpen : FB_InterlockHandler;
 	
 //------------------------------------------//
 //Outputs
-	s_doCmdClampsUpperHighPressure : FB_DigOutput_2;
-	s_doCmdClampsLowerHighPressure : FB_DigOutput_2;
-
+	
 //------------------------------------------//
 
 //Requests
@@ -328,13 +329,13 @@ SUPER^();
       <Implementation>
         <ST><![CDATA[
 //Let pressure selection toggle follow automatic state
-IF s_doCmdClampsUpperHighPressure.p_bStaOutput THEN
+IF s_cmClampsUpperHighPressure.p_bStaOutput THEN
 	s_fbHmiBtnManualClampsUpperHighPressure.m_On();
 ELSE
 	s_fbHmiBtnManualClampsUpperHighPressure.m_Off();	
 END_IF
 	
-IF s_doCmdClampsLowerHighPressure.p_bStaOutput THEN
+IF s_cmClampsLowerHighPressure.p_bStaOutput THEN
 	s_fbHmiBtnManualClampsLowerHighPressure.m_On();
 ELSE
 	s_fbHmiBtnManualClampsLowerHighPressure.m_Off();	
@@ -456,8 +457,8 @@ CASE s_eSeqDockingInterface OF
 		
 	E_SeqDockingInterface.OPEN_ALL_DOCKING_CLAMPS:
 		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN	
-			s_doCmdClampsUpperHighPressure.i_bStaOutput := FALSE;
-			s_doCmdClampsLowerHighPressure.i_bStaOutput := FALSE;
+			s_cmClampsUpperHighPressure.m_Off();
+			s_cmClampsLowerHighPressure.m_Off();
 		END_IF
 			
 		IF s_cmDockingClampsUpper.m_Off() AND s_cmDockingClampsLower.m_Off() THEN
@@ -486,8 +487,8 @@ CASE s_eSeqDockingInterface OF
 		
 	E_SeqDockingInterface.CLOSE_ALL_DOCKING_CLAMPS:
 		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN	
-			s_doCmdClampsUpperHighPressure.i_bStaOutput := FALSE;
-			s_doCmdClampsLowerHighPressure.i_bStaOutput := FALSE;
+			s_cmClampsUpperHighPressure.m_Off();
+			s_cmClampsLowerHighPressure.m_Off();
 		END_IF
 		
 		IF s_cmDockingClampsUpper.m_On() AND s_cmDockingClampsLower.m_On() THEN
@@ -498,8 +499,8 @@ CASE s_eSeqDockingInterface OF
 	
 	E_SeqDockingInterface.COMPRESS_ALL_SEAL:
 		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN	
-			s_doCmdClampsUpperHighPressure.i_bStaOutput := TRUE;
-			s_doCmdClampsLowerHighPressure.i_bStaOutput := TRUE;
+			s_cmClampsUpperHighPressure.m_On();
+			s_cmClampsLowerHighPressure.m_On();
 		END_IF
 		
 		IF s_fbSeqDockingInterfaceControl.q_tmStepTime >= i_ref_stSettings.tCompressSealDuration THEN
@@ -509,7 +510,7 @@ CASE s_eSeqDockingInterface OF
 	
 	E_SeqDockingInterface.CLOSE_LOWER_DOCKING_CLAMPS:
 		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN	
-			s_doCmdClampsLowerHighPressure.i_bStaOutput := FALSE;
+			s_cmClampsLowerHighPressure.m_Off();
 		END_IF
 		
 		IF s_cmDockingClampsLower.m_On() THEN
@@ -520,7 +521,7 @@ CASE s_eSeqDockingInterface OF
 	
 	E_SeqDockingInterface.COMPRESS_LOWER_SEAL:
 		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN	
-			s_doCmdClampsLowerHighPressure.i_bStaOutput := TRUE;
+			s_cmClampsLowerHighPressure.m_On();
 		END_IF
 		
 		IF s_fbSeqDockingInterfaceControl.q_tmStepTime >= i_ref_stSettings.tCompressSealDuration THEN
@@ -529,7 +530,7 @@ CASE s_eSeqDockingInterface OF
 		
 	E_SeqDockingInterface.CLOSE_UPPER_DOCKING_CLAMPS:
 		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN	
-			s_doCmdClampsUpperHighPressure.i_bStaOutput := FALSE;
+			s_cmClampsUpperHighPressure.m_Off();
 		END_IF
 		
 		IF s_cmDockingClampsUpper.m_On() THEN
@@ -540,7 +541,7 @@ CASE s_eSeqDockingInterface OF
 	
 	E_SeqDockingInterface.COMPRESS_UPPER_SEAL:
 		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN	
-			s_doCmdClampsUpperHighPressure.i_bStaOutput := TRUE;
+			s_cmClampsUpperHighPressure.m_On();
 		END_IF
 		
 		IF s_fbSeqDockingInterfaceControl.q_tmStepTime >= i_ref_stSettings.tCompressSealDuration THEN
@@ -681,8 +682,8 @@ CASE s_eSeqDockingInterface OF
 				AND (s_cmDockingClampsUpper.p_bStaError OR s_cmDockingClampsLower.p_bStaError) 
 				THEN
 				//Open all docking clamps if closing on low pressure has failed
-				s_doCmdClampsUpperHighPressure.i_bStaOutput := FALSE;
-				s_doCmdClampsLowerHighPressure.i_bStaOutput := FALSE;
+				s_cmClampsUpperHighPressure.m_Off();
+				s_cmClampsLowerHighPressure.m_Off();
 				s_cmDockingClampsUpper.m_Off();
 				s_cmDockingClampsLower.m_Off();
 			ELSE
@@ -819,13 +820,29 @@ s_cmDockingClampsUpper(
 	i_bIclkOn := s_bIlckDockingClampsToClose AND NOT(s_bOverruleInterlocks), 
 	i_bIclkOff := s_bIlckDockingClampsToOpen AND NOT(s_bOverruleInterlocks));
 	
+s_cmClampsUpperHighPressure(
+	i_bReqEnable := i_bReqEnable,
+	i_eCtrlMode := i_eCtrlMode,
+	i_ref_eCtrlState := i_eCtrlState,
+	i_bCmdReset := i_bCmdReset,
+	i_bIclkOn := FALSE, 
+	i_bIclkOff := FALSE);	
+	
 s_cmDockingClampsLower(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
 	i_ref_eCtrlState := i_eCtrlState,
 	i_bCmdReset := i_bCmdReset,
 	i_bIclkOn := s_bIlckDockingClampsToClose AND NOT(s_bOverruleInterlocks), 
-	i_bIclkOff := s_bIlckDockingClampsToOpen AND NOT(s_bOverruleInterlocks));	
+	i_bIclkOff := s_bIlckDockingClampsToOpen AND NOT(s_bOverruleInterlocks));
+
+s_cmClampsLowerHighPressure(
+	i_bReqEnable := i_bReqEnable,
+	i_eCtrlMode := i_eCtrlMode,
+	i_ref_eCtrlState := i_eCtrlState,
+	i_bCmdReset := i_bCmdReset,
+	i_bIclkOn := FALSE, 
+	i_bIclkOff := FALSE);	
 	
 //--s_bStaDockingClampsClosed := s_cmDockingClamps.p_bStaIsClosed;
 //--s_bStaDockingClampsOpened := s_cmDockingClamps.p_bStaIsOpened;
@@ -981,8 +998,14 @@ s_cmDockingClampsUpper.p_sCfgOnName := 'Close';
 s_cmDockingClampsUpper.p_sCfgFB1Name := 'Left';
 s_cmDockingClampsUpper.p_sCfgFB2Name := 'Right';
 
-s_doCmdClampsUpperHighPressure.i_stSettings.bCfgDelay := FALSE;
-s_doCmdClampsUpperHighPressure.i_stSettings.tmOutputDelay := T#0S;
+s_cmClampsUpperHighPressure.i_bReqEnable := FALSE;
+s_cmClampsUpperHighPressure.i_eCtrlMode := E_CtrlMode.IDLE;
+s_cmClampsUpperHighPressure.i_sCmName := 'CM Clamps Lower Pressure Select';
+s_cmClampsUpperHighPressure.i_stSettings.bCfgDelay := FALSE;
+s_cmClampsUpperHighPressure.i_stSettings.tmOutputDelay := T#0S;
+s_cmClampsUpperHighPressure.p_bCfgReverseOutput := FALSE;
+s_cmClampsUpperHighPressure.p_sCfgOffName := 'Low';
+s_cmClampsUpperHighPressure.p_sCfgOnName := 'High';
 
 s_cmDockingClampsLower.i_bReqEnable := FALSE;
 s_cmDockingClampsLower.i_eCtrlMode := E_CtrlMode.IDLE;
@@ -996,8 +1019,15 @@ s_cmDockingClampsLower.p_sCfgOnName := 'Close';
 s_cmDockingClampsLower.p_sCfgFB1Name := 'Left';
 s_cmDockingClampsLower.p_sCfgFB2Name := 'Right';
 
-s_doCmdClampsLowerHighPressure.i_stSettings.bCfgDelay := FALSE;
-s_doCmdClampsLowerHighPressure.i_stSettings.tmOutputDelay := T#0S;
+s_cmClampsLowerHighPressure.i_bReqEnable := FALSE;
+s_cmClampsLowerHighPressure.i_eCtrlMode := E_CtrlMode.IDLE;
+s_cmClampsLowerHighPressure.i_sCmName := 'CM Clamps Lower Pressure Select';
+s_cmClampsLowerHighPressure.i_stSettings.bCfgDelay := FALSE;
+s_cmClampsLowerHighPressure.i_stSettings.tmOutputDelay := T#0S;
+s_cmClampsLowerHighPressure.p_bCfgReverseOutput := FALSE;
+s_cmClampsLowerHighPressure.p_sCfgOffName := 'Low';
+s_cmClampsLowerHighPressure.p_sCfgOnName := 'High';
+
 	
 //--s_cmUnlockingPins.i_bReqEnable := FALSE;
 //--s_cmUnlockingPins.i_eCtrlMode := E_CtrlMode.IDLE;
@@ -1437,15 +1467,16 @@ _m_Inputs := TRUE;]]></ST>
         <ST><![CDATA[
 // Manual control has been implemented into lower layer control modules
 IF s_fbHmiBtnManualClampsUpperHighPressure.p_osrBtnPress THEN
-	s_doCmdClampsUpperHighPressure.i_bStaOutput := TRUE;
+	s_cmClampsUpperHighPressure.m_On();
 ELSIF s_fbHmiBtnManualClampsUpperHighPressure.p_osfBtnPress THEN
-	s_doCmdClampsUpperHighPressure.i_bStaOutput := FALSE;
+	s_cmClampsUpperHighPressure.m_Off();
 END_IF
 
 IF s_fbHmiBtnManualClampsLowerHighPressure.p_osrBtnPress THEN
-	s_doCmdClampsLowerHighPressure.i_bStaOutput := TRUE;
+	s_cmClampsLowerHighPressure.m_On();
+	
 ELSIF s_fbHmiBtnManualClampsLowerHighPressure.p_osfBtnPress THEN
-	s_doCmdClampsLowerHighPressure.i_bStaOutput := FALSE;
+	s_cmClampsLowerHighPressure.m_Off();
 END_IF
 ]]></ST>
       </Implementation>
@@ -1459,11 +1490,11 @@ IF NOT SUPER^._m_Outputs() THEN
 	RETURN;
 END_IF
 
-s_doCmdClampsUpperHighPressure(i_eCtrlMode := i_eCtrlMode, i_ref_eCtrlState := i_eCtrlState);
-s_doCmdClampsLowerHighPressure(i_eCtrlMode := i_eCtrlMode, i_ref_eCtrlState := i_eCtrlState);
+s_cmClampsUpperHighPressure(i_eCtrlMode := i_eCtrlMode, i_ref_eCtrlState := i_eCtrlState);
+s_cmClampsLowerHighPressure(i_eCtrlMode := i_eCtrlMode, i_ref_eCtrlState := i_eCtrlState);
 
-s_bStaDocked	:=	s_cmDockingClampsUpper.p_bStaIsOn AND s_doCmdClampsUpperHighPressure.p_bStaOutput
-				AND s_cmDockingClampsLower.p_bStaIsOn AND s_doCmdClampsLowerHighPressure.p_bStaOutput;  
+s_bStaDocked	:=	s_cmDockingClampsUpper.p_bStaIsOn AND s_cmClampsUpperHighPressure.p_bStaOutput
+				AND s_cmDockingClampsLower.p_bStaIsOn AND s_cmClampsLowerHighPressure.p_bStaOutput;  
 s_bStaUndocked 	:= s_cmDockingClampsUpper.p_bStaIsOff AND s_cmDockingClampsLower.p_bStaIsOff;
 
 
@@ -1710,7 +1741,7 @@ IF i_bReqEnable AND (i_eCtrlMode = E_CtrlMode.MANUAL) AND (i_eCtrlState = E_Ctrl
 	s_fbHmiBtnOpenInnerDoor.p_bStaEnabled :=
 		NOT(s_bIlckUnlockingPinsToRelease)
 		AND NOT(s_bIlckDoorShutterToOpen)
-		//AND NOT(s_bIlckDoorOpenerToOpen)
+		//AND NOT(s_bIlckDoorOpenerToOpen) //excluded to prevent interlock by sequence
 		AND NOT(s_cmUnlockingPinUpper.p_bStaError)
 		AND NOT(s_cmUnlockingPinLower.p_bStaError)
 		AND NOT(s_cmDoorShutter.p_bStaError)
@@ -1719,7 +1750,7 @@ IF i_bReqEnable AND (i_eCtrlMode = E_CtrlMode.MANUAL) AND (i_eCtrlState = E_Ctrl
 	
 	s_fbHmiBtnCloseInnerDoor.p_bStaEnabled :=
 		NOT(s_bIlckUnlockingPinsToLock)
-		//--AND NOT(s_bIlckDoorShutterToClose)
+		//--AND NOT(s_bIlckDoorShutterToClose) //excluded to prevent interlock by sequence
 		AND NOT(s_bIlckDoorOpenerToClose)
 		AND NOT(s_cmUnlockingPinUpper.p_bStaError)
 		AND NOT(s_cmUnlockingPinLower.p_bStaError)
@@ -2002,8 +2033,7 @@ p_bStaUndocked := s_bStaUndocked;
       <LineId Id="323" Count="0" />
       <LineId Id="162" Count="0" />
       <LineId Id="446" Count="0" />
-      <LineId Id="448" Count="0" />
-      <LineId Id="450" Count="0" />
+      <LineId Id="652" Count="1" />
       <LineId Id="447" Count="0" />
       <LineId Id="449" Count="0" />
       <LineId Id="371" Count="1" />
@@ -2214,11 +2244,18 @@ p_bStaUndocked := s_bStaUndocked;
       <LineId Id="249" Count="0" />
       <LineId Id="266" Count="0" />
       <LineId Id="259" Count="0" />
+      <LineId Id="297" Count="1" />
+      <LineId Id="306" Count="1" />
+      <LineId Id="300" Count="0" />
+      <LineId Id="303" Count="1" />
+      <LineId Id="296" Count="0" />
       <LineId Id="255" Count="2" />
       <LineId Id="289" Count="0" />
       <LineId Id="258" Count="0" />
       <LineId Id="268" Count="0" />
       <LineId Id="274" Count="0" />
+      <LineId Id="309" Count="6" />
+      <LineId Id="308" Count="0" />
       <LineId Id="168" Count="0" />
       <LineId Id="200" Count="0" />
       <LineId Id="202" Count="0" />
@@ -2316,15 +2353,22 @@ p_bStaUndocked := s_bStaUndocked;
       <LineId Id="576" Count="0" />
       <LineId Id="485" Count="2" />
       <LineId Id="484" Count="0" />
-      <LineId Id="504" Count="2" />
+      <LineId Id="616" Count="0" />
+      <LineId Id="620" Count="0" />
+      <LineId Id="619" Count="0" />
+      <LineId Id="618" Count="0" />
+      <LineId Id="505" Count="1" />
+      <LineId Id="622" Count="2" />
       <LineId Id="332" Count="4" />
       <LineId Id="331" Count="0" />
       <LineId Id="575" Count="0" />
       <LineId Id="574" Count="0" />
       <LineId Id="489" Count="2" />
       <LineId Id="488" Count="0" />
+      <LineId Id="625" Count="3" />
+      <LineId Id="633" Count="0" />
+      <LineId Id="630" Count="2" />
       <LineId Id="572" Count="0" />
-      <LineId Id="509" Count="0" />
       <LineId Id="507" Count="0" />
       <LineId Id="236" Count="1" />
       <LineId Id="239" Count="0" />
@@ -2541,7 +2585,10 @@ p_bStaUndocked := s_bStaUndocked;
       <LineId Id="410" Count="0" />
       <LineId Id="412" Count="0" />
       <LineId Id="411" Count="0" />
-      <LineId Id="415" Count="4" />
+      <LineId Id="415" Count="1" />
+      <LineId Id="422" Count="0" />
+      <LineId Id="421" Count="0" />
+      <LineId Id="418" Count="1" />
       <LineId Id="414" Count="0" />
       <LineId Id="403" Count="0" />
     </LineIds>

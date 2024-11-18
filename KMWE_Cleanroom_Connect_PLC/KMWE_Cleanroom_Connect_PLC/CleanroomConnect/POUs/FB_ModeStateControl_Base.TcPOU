@@ -28,6 +28,8 @@ END_VAR
 
 ]]></ST>
     </Implementation>
+    <Folder Name="modes" Id="{ceccf1e7-411f-4bb4-acde-1820b3501566}" />
+    <Folder Name="states" Id="{af1c6641-f6c5-455f-877b-136e82d39a02}" />
     <Method Name="_m_Init" Id="{0019b3fd-c704-42a7-8153-90eb9278931b}">
       <Declaration><![CDATA[METHOD PRIVATE _m_Init : BOOL
 ]]></Declaration>
@@ -83,6 +85,7 @@ _m_Init := TRUE;]]></ST>
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
+//From IDLE and STOPPED state it is possible to switch mode
 IF (s_eCtrlState = E_CtrlState.IDLE) OR (s_eCtrlState = E_CtrlState.STOPPED) THEN
 	IF i_bReqAutomatic THEN
 		s_eCtrlMode := E_CtrlMode.AUTOMATIC;
@@ -93,7 +96,7 @@ IF (s_eCtrlState = E_CtrlState.IDLE) OR (s_eCtrlState = E_CtrlState.STOPPED) THE
 	ELSIF i_bReqIoTest THEN
 		s_eCtrlMode := E_CtrlMode.IO;
 	ELSIF i_bReqCleaning THEN
-		s_eCtrlMode := E_CtrlMode.CLEANING;
+		s_eCtrlMode := E_CtrlMode.CLEANING; //Future mode? What else?
 	END_IF
 END_IF
 
@@ -159,67 +162,113 @@ m_Main := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="m_ModeAutomatic" Id="{e990f1a2-dbac-46ab-b9fa-3e2db4742949}">
+    <Method Name="m_ModeAutomatic" Id="{e990f1a2-dbac-46ab-b9fa-3e2db4742949}" FolderPath="modes\">
       <Declaration><![CDATA[METHOD PUBLIC m_ModeAutomatic : BOOL
-]]></Declaration>
+VAR_INST
+	s_eCtrlState : E_CtrlState := E_CtrlState.STOPPED;
+END_VAR]]></Declaration>
       <Implementation>
-        <ST><![CDATA[]]></ST>
+        <ST><![CDATA[
+//No implementation in Base, this could be done the child-class 
+
+CASE s_eCtrlState OF
+	
+	E_CtrlState.STOPPED:
+		IF i_bReqReset THEN
+			s_eCtrlState := E_CtrlState.STOPPED;
+		END_IF
+	
+	E_CtrlState.IDLE:
+		IF i_bReqStart THEN
+			s_eCtrlState := E_CtrlState.RUNNING;
+		END_IF
+	
+	E_CtrlState.RUNNING:
+		IF i_bReqStop THEN
+			s_eCtrlState := E_CtrlState.STOPPING;
+		END_IF
+	
+	E_CtrlState.STOPPING:
+		IF i_bStaStopped THEN
+			s_eCtrlState := E_CtrlState.STOPPED;
+		END_IF
+
+	ELSE
+		s_eCtrlState := E_CtrlState.STOPPED;
+END_CASE
+]]></ST>
       </Implementation>
     </Method>
-    <Method Name="m_ModeCleaning" Id="{719eef6e-a547-4145-9820-6ac1e3772c8e}">
+    <Method Name="m_ModeCleaning" Id="{719eef6e-a547-4145-9820-6ac1e3772c8e}" FolderPath="modes\">
       <Declaration><![CDATA[METHOD PUBLIC m_ModeCleaning : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[]]></ST>
+        <ST><![CDATA[
+//No implementation in Base, this could be done the child-class
+]]></ST>
       </Implementation>
     </Method>
-    <Method Name="m_ModeIoTest" Id="{3d73adce-d293-4a9c-aec0-9275c0db02ef}">
+    <Method Name="m_ModeIoTest" Id="{3d73adce-d293-4a9c-aec0-9275c0db02ef}" FolderPath="modes\">
       <Declaration><![CDATA[METHOD PUBLIC m_ModeIoTest : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[]]></ST>
+        <ST><![CDATA[
+//No implementation in Base, this could be done the child-class
+]]></ST>
       </Implementation>
     </Method>
-    <Method Name="m_ModeMaintenance" Id="{5b5130cb-51aa-4e7e-8d5a-a00d3d24864e}">
+    <Method Name="m_ModeMaintenance" Id="{5b5130cb-51aa-4e7e-8d5a-a00d3d24864e}" FolderPath="modes\">
       <Declaration><![CDATA[METHOD PUBLIC m_ModeMaintenance : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[]]></ST>
+        <ST><![CDATA[
+//No implementation in Base, this could be done the child-class
+]]></ST>
       </Implementation>
     </Method>
-    <Method Name="m_ModeManual" Id="{daaee783-e776-4c37-b94c-4e2b57285428}">
+    <Method Name="m_ModeManual" Id="{daaee783-e776-4c37-b94c-4e2b57285428}" FolderPath="modes\">
       <Declaration><![CDATA[METHOD PUBLIC m_ModeManual : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[]]></ST>
+        <ST><![CDATA[
+//No implementation in Base, this could be done the child-class
+]]></ST>
       </Implementation>
     </Method>
-    <Method Name="m_StateIdle" Id="{94e0b4c9-9c7b-4fe3-b7d8-03530dc9f43b}">
+    <Method Name="m_StateIdle" Id="{94e0b4c9-9c7b-4fe3-b7d8-03530dc9f43b}" FolderPath="states\">
       <Declaration><![CDATA[METHOD PUBLIC m_StateIdle : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[]]></ST>
+        <ST><![CDATA[
+//No implementation in Base, this could be done the child-class
+]]></ST>
       </Implementation>
     </Method>
-    <Method Name="m_StateRunning" Id="{4ddb2b3b-e0d3-40a1-b13b-038664c09471}">
+    <Method Name="m_StateRunning" Id="{4ddb2b3b-e0d3-40a1-b13b-038664c09471}" FolderPath="states\">
       <Declaration><![CDATA[METHOD PUBLIC m_StateRunning : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[]]></ST>
+        <ST><![CDATA[
+//No implementation in Base, this could be done the child-class
+]]></ST>
       </Implementation>
     </Method>
-    <Method Name="m_StateStopped" Id="{0f7c6642-355d-43b8-b178-611a57e55b50}">
+    <Method Name="m_StateStopped" Id="{0f7c6642-355d-43b8-b178-611a57e55b50}" FolderPath="states\">
       <Declaration><![CDATA[METHOD PUBLIC m_StateStopped : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[]]></ST>
+        <ST><![CDATA[
+//No implementation in Base, this could be done the child-class
+]]></ST>
       </Implementation>
     </Method>
-    <Method Name="m_StateStopping" Id="{736b5d08-289d-4576-842e-2ffba08064f4}">
+    <Method Name="m_StateStopping" Id="{736b5d08-289d-4576-842e-2ffba08064f4}" FolderPath="states\">
       <Declaration><![CDATA[METHOD PUBLIC m_StateStopping : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[]]></ST>
+        <ST><![CDATA[
+//No implementation in Base, this could be done the child-class
+]]></ST>
       </Implementation>
     </Method>
     <LineIds Name="FB_ModeStateControl_Base">
@@ -269,6 +318,7 @@ m_Main := TRUE;
       <LineId Id="4" Count="0" />
     </LineIds>
     <LineIds Name="FB_ModeStateControl_Base.m_Main">
+      <LineId Id="3043" Count="0" />
       <LineId Id="2921" Count="0" />
       <LineId Id="2986" Count="0" />
       <LineId Id="2989" Count="9" />
@@ -307,31 +357,65 @@ m_Main := TRUE;
       <LineId Id="179" Count="0" />
     </LineIds>
     <LineIds Name="FB_ModeStateControl_Base.m_ModeAutomatic">
+      <LineId Id="30" Count="0" />
       <LineId Id="28" Count="0" />
+      <LineId Id="34" Count="2" />
+      <LineId Id="42" Count="1" />
+      <LineId Id="50" Count="1" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="53" Count="1" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="45" Count="1" />
+      <LineId Id="56" Count="1" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="47" Count="1" />
+      <LineId Id="59" Count="1" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="38" Count="1" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="31" Count="0" />
     </LineIds>
     <LineIds Name="FB_ModeStateControl_Base.m_ModeCleaning">
+      <LineId Id="7" Count="0" />
       <LineId Id="5" Count="0" />
+      <LineId Id="8" Count="0" />
     </LineIds>
     <LineIds Name="FB_ModeStateControl_Base.m_ModeIoTest">
+      <LineId Id="7" Count="0" />
       <LineId Id="5" Count="0" />
+      <LineId Id="8" Count="0" />
     </LineIds>
     <LineIds Name="FB_ModeStateControl_Base.m_ModeMaintenance">
+      <LineId Id="7" Count="0" />
       <LineId Id="5" Count="0" />
+      <LineId Id="8" Count="0" />
     </LineIds>
     <LineIds Name="FB_ModeStateControl_Base.m_ModeManual">
+      <LineId Id="7" Count="0" />
       <LineId Id="5" Count="0" />
+      <LineId Id="8" Count="0" />
     </LineIds>
     <LineIds Name="FB_ModeStateControl_Base.m_StateIdle">
+      <LineId Id="30" Count="0" />
       <LineId Id="28" Count="0" />
+      <LineId Id="31" Count="0" />
     </LineIds>
     <LineIds Name="FB_ModeStateControl_Base.m_StateRunning">
+      <LineId Id="30" Count="0" />
       <LineId Id="28" Count="0" />
+      <LineId Id="31" Count="0" />
     </LineIds>
     <LineIds Name="FB_ModeStateControl_Base.m_StateStopped">
+      <LineId Id="30" Count="0" />
       <LineId Id="28" Count="0" />
+      <LineId Id="31" Count="0" />
     </LineIds>
     <LineIds Name="FB_ModeStateControl_Base.m_StateStopping">
+      <LineId Id="30" Count="0" />
       <LineId Id="28" Count="0" />
+      <LineId Id="31" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>

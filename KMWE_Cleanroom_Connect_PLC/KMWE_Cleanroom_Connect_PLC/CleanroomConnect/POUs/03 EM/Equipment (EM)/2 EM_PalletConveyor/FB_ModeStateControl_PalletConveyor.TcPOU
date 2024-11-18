@@ -1,0 +1,328 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_ModeStateControl_PalletConveyor" Id="{ff03d453-a497-4cb2-bf51-91830b382042}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ModeStateControl_PalletConveyor EXTENDS FB_ModeStateControl_Base
+VAR_INPUT
+	i_bReqStopAlarm	: BOOL;
+	i_bStaAllStopped : BOOL;
+END_VAR
+VAR_OUTPUT
+END_VAR
+VAR
+	s_bInitDone : BOOL := FALSE;	
+
+	s_eCtrlMode : E_CtrlMode := E_CtrlMode.IDLE;
+	s_eCtrlState : E_CtrlState := E_CtrlState.STOPPED;
+	
+	s_fbHmiBtnModeAutomatic : FB_HmiBtn;
+	s_fbHmiBtnModeManual : FB_HmiBtn;
+	s_fbHmiBtnModeMaintenance : FB_HmiBtn;
+	s_fbHmiBtnModeIO : FB_HmiBtn;
+	s_fbHmiBtnModeCleaning : FB_HmiBtn;
+	
+	s_fbHmiBtnStateStart : FB_HmiBtn;
+	s_fbHmiBtnStateStop : FB_HmiBtn;
+	s_fbHmiBtnStateReset : FB_HmiBtn;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+m_Main();
+]]></ST>
+    </Implementation>
+    <Method Name="_m_Devices" Id="{33625738-721a-4cf8-83ba-377031e6891a}">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Devices : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+//Mode buttons
+s_fbHmiBtnModeAutomatic();
+s_fbHmiBtnModeManual();
+s_fbHmiBtnModeMaintenance();
+s_fbHmiBtnModeIO();
+s_fbHmiBtnModeCleaning();
+
+//State buttons
+s_fbHmiBtnStateStart();
+s_fbHmiBtnStateStop();
+s_fbHmiBtnStateReset();
+
+CASE s_eCtrlMode OF
+	E_CtrlMode.IDLE:
+		s_fbHmiBtnModeAutomatic.p_bStaVisible := TRUE;
+		s_fbHmiBtnModeManual.p_bStaVisible := TRUE;
+		s_fbHmiBtnModeMaintenance.p_bStaVisible := TRUE;
+		s_fbHmiBtnModeIO.p_bStaVisible := TRUE;
+		s_fbHmiBtnModeCleaning.p_bStaVisible := TRUE;
+	
+		s_fbHmiBtnStateStart.p_bStaVisible := TRUE;
+		s_fbHmiBtnStateStop.p_bStaVisible := TRUE;
+		s_fbHmiBtnStateReset.p_bStaVisible := TRUE;
+	
+	E_CtrlMode.AUTOMATIC:
+		;
+	
+	E_CtrlMode.MANUAL:
+		;
+	
+	E_CtrlMode.MAINTENANCE:
+		;
+	
+	E_CtrlMode.IO:
+		;
+		
+	E_CtrlMode.CLEANING:
+		;
+	ELSE
+		s_eCtrlMode := E_CtrlMode.IDLE;
+END_CASE
+
+IF (s_eCtrlState = E_CtrlState.STOPPED) OR (s_eCtrlState = E_CtrlState.IDLE) THEN
+		IF s_fbHmiBtnModeAutomatic.p_osrBtnPress THEN
+			s_eCtrlMode := E_CtrlMode.AUTOMATIC;
+
+		ELSIF s_fbHmiBtnModeManual.p_osrBtnPress THEN			
+			s_eCtrlMode := E_CtrlMode.MANUAL;
+		
+		ELSIF s_fbHmiBtnModeMaintenance.p_osrBtnPress THEN
+			s_eCtrlMode := E_CtrlMode.MAINTENANCE;
+		
+		ELSIF s_fbHmiBtnModeIO.p_osrBtnPress THEN
+			s_eCtrlMode := E_CtrlMode.IO;
+		
+		ELSIF s_fbHmiBtnModeCleaning.p_osrBtnPress THEN
+			s_eCtrlMode := E_CtrlMode.CLEANING;
+			
+		END_IF
+	END_IF
+
+CASE s_eCtrlState OF
+	
+	E_CtrlState.STOPPED:
+	
+		IF s_fbHmiBtnStateReset.p_osrBtnPress THEN
+			s_eCtrlState := E_CtrlState.IDLE;
+		END_IF 
+	
+	E_CtrlState.IDLE:
+	
+		IF s_fbHmiBtnStateStop.p_osrBtnPress THEN
+			s_eCtrlState := E_CtrlState.STOPPING;
+		ELSIF s_fbHmiBtnStateStart.p_osrBtnPress THEN
+			s_eCtrlState := E_CtrlState.RUNNING;
+		END_IF
+			
+	E_CtrlState.RUNNING:
+	
+		IF s_fbHmiBtnStateStop.p_osrBtnPress OR i_bReqStopAlarm THEN
+			s_eCtrlState := E_CtrlState.STOPPING;
+		END_IF
+	
+	E_CtrlState.STOPPING:
+	
+		IF i_bStaAllStopped THEN
+			s_eCtrlState := E_CtrlState.STOPPED;
+		END_IF
+		
+ELSE
+	s_eCtrlState := E_CtrlState.STOPPED;
+END_CASE
+
+IF (s_eCtrlState = E_CtrlState.IDLE) OR (s_eCtrlState = E_CtrlState.STOPPED) THEN
+	s_fbHmiBtnModeAutomatic.p_bStaEnabled := s_eCtrlMode <> E_CtrlMode.AUTOMATIC;
+	s_fbHmiBtnModeManual.p_bStaEnabled := s_eCtrlMode <> E_CtrlMode.MANUAL;
+	s_fbHmiBtnModeMaintenance.p_bStaEnabled := s_eCtrlMode <> E_CtrlMode.MAINTENANCE;
+	s_fbHmiBtnModeIO.p_bStaEnabled := s_eCtrlMode <> E_CtrlMode.IO;
+	s_fbHmiBtnModeCleaning.p_bStaEnabled := s_eCtrlMode <> E_CtrlMode.CLEANING;
+ELSE
+	s_fbHmiBtnModeAutomatic.p_bStaEnabled := FALSE;
+	s_fbHmiBtnModeManual.p_bStaEnabled := FALSE;
+	s_fbHmiBtnModeMaintenance.p_bStaEnabled := FALSE;
+	s_fbHmiBtnModeIO.p_bStaEnabled := FALSE;
+	s_fbHmiBtnModeCleaning.p_bStaEnabled := FALSE;
+END_IF
+
+IF (s_eCtrlMode <> E_CtrlMode.IDLE) THEN
+	s_fbHmiBtnStateStart.p_bStaEnabled := s_eCtrlState = E_CtrlState.IDLE;
+	s_fbHmiBtnStateStop.p_bStaEnabled := s_eCtrlState = E_CtrlState.RUNNING OR s_eCtrlState = E_CtrlState.IDLE;
+	s_fbHmiBtnStateReset.p_bStaEnabled := s_eCtrlState = E_CtrlState.STOPPED;
+ELSE
+	s_fbHmiBtnStateStart.p_bStaEnabled := FALSE;
+	s_fbHmiBtnStateStop.p_bStaEnabled := FALSE;
+	s_fbHmiBtnStateReset.p_bStaEnabled := FALSE;
+END_IF
+
+_m_Devices := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Init" Id="{b092ff34-7f1a-4afd-93c3-9824bb11c678}">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Init : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+//Mode buttons
+s_fbHmiBtnModeAutomatic.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnModeAutomatic.p_bStaVisible := FALSE;
+s_fbHmiBtnModeAutomatic.p_bStaEnabled := FALSE;
+s_fbHmiBtnModeAutomatic.p_sBtnText := 'Automatic';
+
+s_fbHmiBtnModeManual.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnModeManual.p_bStaVisible := FALSE;
+s_fbHmiBtnModeManual.p_bStaEnabled := FALSE;
+s_fbHmiBtnModeManual.p_sBtnText := 'Manual';
+
+s_fbHmiBtnModeMaintenance.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnModeMaintenance.p_bStaVisible := FALSE;
+s_fbHmiBtnModeMaintenance.p_bStaEnabled := FALSE;
+s_fbHmiBtnModeMaintenance.p_sBtnText := 'Maintenance';
+
+s_fbHmiBtnModeIO.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnModeIO.p_bStaVisible := FALSE;
+s_fbHmiBtnModeIO.p_bStaEnabled := FALSE;
+s_fbHmiBtnModeIO.p_sBtnText := 'IO';
+
+s_fbHmiBtnModeCleaning.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnModeCleaning.p_bStaVisible := FALSE;
+s_fbHmiBtnModeCleaning.p_bStaEnabled := FALSE;
+s_fbHmiBtnModeCleaning.p_sBtnText := 'Cleaning';
+
+//State buttons
+s_fbHmiBtnStateStart.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnStateStart.p_bStaVisible := FALSE;
+s_fbHmiBtnStateStart.p_bStaEnabled := FALSE;
+s_fbHmiBtnStateStart.p_sBtnText := 'Start';
+
+s_fbHmiBtnStateStop.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnStateStop.p_bStaVisible := FALSE;
+s_fbHmiBtnStateStop.p_bStaEnabled := FALSE;
+s_fbHmiBtnStateStop.p_sBtnText := 'Stop';
+
+s_fbHmiBtnStateReset.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnStateReset.p_bStaVisible := FALSE;
+s_fbHmiBtnStateReset.p_bStaEnabled := FALSE;
+s_fbHmiBtnStateReset.p_sBtnText := 'Reset';
+
+_m_Init := TRUE;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_Main" Id="{e8b9b232-3821-45e0-a40b-2171ddf1e741}">
+      <Declaration><![CDATA[METHOD PUBLIC m_Main : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT s_bInitDone THEN
+	IF _m_Init() THEN 
+		s_bInitDone := TRUE;
+	END_IF
+END_IF
+
+_m_Devices();
+
+m_Main := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="p_eCtrlMode" Id="{3dd73864-0df6-4eb7-a6d0-b2e84dbfd617}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_eCtrlMode : E_CtrlMode]]></Declaration>
+      <Get Name="Get" Id="{1659e75b-a748-487f-8f35-a3b7fb0bd690}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_eCtrlMode := s_eCtrlMode;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_eCtrlState" Id="{edd22e78-fdf3-4df9-a1b6-5850176f2ebc}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_eCtrlState : E_CtrlState]]></Declaration>
+      <Get Name="Get" Id="{f52e19fb-9225-4af1-bbb5-9cfb2b9915e0}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_eCtrlState := s_eCtrlState;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <LineIds Name="FB_ModeStateControl_PalletConveyor">
+      <LineId Id="762" Count="0" />
+      <LineId Id="715" Count="0" />
+      <LineId Id="703" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_ModeStateControl_PalletConveyor._m_Devices">
+      <LineId Id="41" Count="0" />
+      <LineId Id="68" Count="9" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="80" Count="58" />
+      <LineId Id="186" Count="1" />
+      <LineId Id="185" Count="0" />
+      <LineId Id="140" Count="19" />
+      <LineId Id="162" Count="20" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_ModeStateControl_PalletConveyor._m_Init">
+      <LineId Id="203" Count="0" />
+      <LineId Id="505" Count="0" />
+      <LineId Id="547" Count="1" />
+      <LineId Id="506" Count="0" />
+      <LineId Id="509" Count="1" />
+      <LineId Id="549" Count="1" />
+      <LineId Id="511" Count="0" />
+      <LineId Id="514" Count="0" />
+      <LineId Id="551" Count="0" />
+      <LineId Id="515" Count="0" />
+      <LineId Id="552" Count="0" />
+      <LineId Id="516" Count="0" />
+      <LineId Id="519" Count="0" />
+      <LineId Id="553" Count="0" />
+      <LineId Id="520" Count="0" />
+      <LineId Id="554" Count="0" />
+      <LineId Id="521" Count="0" />
+      <LineId Id="524" Count="0" />
+      <LineId Id="555" Count="0" />
+      <LineId Id="525" Count="0" />
+      <LineId Id="556" Count="0" />
+      <LineId Id="526" Count="0" />
+      <LineId Id="529" Count="1" />
+      <LineId Id="532" Count="0" />
+      <LineId Id="557" Count="1" />
+      <LineId Id="533" Count="0" />
+      <LineId Id="536" Count="0" />
+      <LineId Id="559" Count="0" />
+      <LineId Id="537" Count="0" />
+      <LineId Id="560" Count="0" />
+      <LineId Id="538" Count="0" />
+      <LineId Id="541" Count="0" />
+      <LineId Id="561" Count="0" />
+      <LineId Id="542" Count="0" />
+      <LineId Id="562" Count="0" />
+      <LineId Id="543" Count="0" />
+      <LineId Id="546" Count="0" />
+      <LineId Id="500" Count="0" />
+      <LineId Id="4" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_ModeStateControl_PalletConveyor.m_Main">
+      <LineId Id="2921" Count="0" />
+      <LineId Id="2933" Count="3" />
+      <LineId Id="2932" Count="0" />
+      <LineId Id="2929" Count="1" />
+      <LineId Id="2938" Count="0" />
+      <LineId Id="2889" Count="0" />
+      <LineId Id="179" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_ModeStateControl_PalletConveyor.p_eCtrlMode.Get">
+      <LineId Id="5" Count="1" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_ModeStateControl_PalletConveyor.p_eCtrlState.Get">
+      <LineId Id="3" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="4" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1310,12 +1310,24 @@
             "REQUIRED": false,
             "STARTUPTYPE": 1
         },
+        "Beckhoff.TwinCAT.HMI.Server.Engineering": {
+            "ENABLED": false,
+            "NAME": "",
+            "STARTUPTYPE": 1
+        },
         "TcHmiLua": {
             "ENABLED": true,
             "NAME": "TcHmiLua",
             "PATH": "TcHmiLua\\",
             "PROCESSID": -1,
             "REQUIRED": true,
+            "STARTUPTYPE": 1
+        },
+        "TcHmiSqliteHistorize": {
+            "ENABLED": true,
+            "NAME": "TcHmiSqliteHistorize",
+            "PATH": "..\\..\\Packages\\Beckhoff.TwinCAT.HMI.SqliteHistorize.22.0.6418\\runtimes\\win-x64\\native\\",
+            "REQUIRED": false,
             "STARTUPTYPE": 1
         },
         "TcHmiSqliteLogger": {
@@ -1701,7 +1713,15 @@
     "PERMESSAGEDEFLATEENABLED": true,
     "PROJECTNAME": "KMWE_Cleanroom_Connect_HMI",
     "PROJECTVERSION": "1.0.0.0",
-    "REMOTESERVERS": {},
+    "REMOTESERVERS": {
+        "Test": {
+            "REMOTE_CONNECT_TIMEOUT": "PT5S",
+            "REMOTE_ENABLED": true,
+            "REMOTE_PASSWORD": "",
+            "REMOTE_URL": "192.168.2.15",
+            "REMOTE_USERNAME": ""
+        }
+    },
     "REMOTESERVERS_CERTIFICATES": [],
     "REQUIREAUTH": 0,
     "SAMESITE_ATTRIBUTE": 2,
@@ -1713,6 +1733,34 @@
     "SHUTDOWNTIMEOUT": "PT10S",
     "SOCKET_TIMEOUT": "PT10S",
     "SYMBOLS": {
+        "192.168.2.15.GetSchema": {
+            "ACCESS": 3,
+            "DOMAIN": "192.168.2.15",
+            "DYNAMIC": true,
+            "HIDDEN": true,
+            "MAPPING": "GetSchema",
+            "OPTIONS": {},
+            "SCHEMA": {
+                "function": true
+            },
+            "USEMAPPING": true
+        },
+        "192.168.2.15.ListSymbols": {
+            "ACCESS": 3,
+            "DOMAIN": "192.168.2.15",
+            "DYNAMIC": true,
+            "HIDDEN": true,
+            "MAPPING": "ListSymbols",
+            "OPTIONS": {},
+            "SCHEMA": {
+                "additionalProperties": {
+                    "$ref": "tchmi:server#/definitions/symbol"
+                },
+                "function": true,
+                "type": "object"
+            },
+            "USEMAPPING": true
+        },
         "ADS.AdsSyncReadDeviceInfoReq": {
             "ACCESS": 3,
             "CUSTOMERDATA": "",
@@ -3976,6 +4024,215 @@
             "SUBSYMBOL_MAPPING": "",
             "USEMAPPING": true
         },
+        "PLC1.GVL.g_sToHmiBottomContent": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL::g_sToHmiBottomContent",
+            "SCHEMA": {
+                "$ref": "tchmi:general#/definitions/STRING%2880%29"
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL.g_sToHmiMiddleContent": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL::g_sToHmiMiddleContent",
+            "SCHEMA": {
+                "$ref": "tchmi:general#/definitions/STRING%2880%29"
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL.g_sToHmiTopContent": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL::g_sToHmiTopContent",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                    },
+                    {
+                        "comment": "Hmi linked variable"
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL.g_stHmiBottomBar.Alarm": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL::g_stHmiBottomBar::Alarm",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                    },
+                    {
+                        "propertyOrder": 2
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL.g_stHmiBottomBar.General_ReturnToStart": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL::g_stHmiBottomBar::General_ReturnToStart",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                    },
+                    {
+                        "propertyOrder": 3
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL.g_stHmiBottomBar.Start": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL::g_stHmiBottomBar::Start",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                    },
+                    {
+                        "propertyOrder": 1
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL.g_stHmiMiddle.AlarmManager": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL::g_stHmiMiddle::AlarmManager",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                    },
+                    {
+                        "propertyOrder": 2
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL.g_stHmiMiddle.EM_DockingInterface": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL::g_stHmiMiddle::EM_DockingInterface",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                    },
+                    {
+                        "propertyOrder": 6
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL.g_stHmiMiddle.EM_PalletConveyor": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL::g_stHmiMiddle::EM_PalletConveyor",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                    },
+                    {
+                        "propertyOrder": 5
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL.g_stHmiMiddle.EM_Utilities": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL::g_stHmiMiddle::EM_Utilities",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                    },
+                    {
+                        "comment": "Equipment Modules",
+                        "propertyOrder": 4
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL.g_stHmiMiddle.ParameterManager": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL::g_stHmiMiddle::ParameterManager",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                    },
+                    {
+                        "propertyOrder": 3
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL.g_stHmiMiddle.Start": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL::g_stHmiMiddle::Start",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                    },
+                    {
+                        "comment": "--------------------------------//\r\nGeneral Pages",
+                        "propertyOrder": 1
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL.g_stHmiTopBar.GeneralTopbar": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL::g_stHmiTopBar::GeneralTopbar",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                    },
+                    {
+                        "propertyOrder": 1
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
         "PLC1.GVL.g_unCleanroomConnect.p_eCtrlMode": {
             "ACCESS": 3,
             "DOMAIN": "ADS",
@@ -4600,6 +4857,44 @@
             },
             "USEMAPPING": true
         },
+        "PLC1.GVL_Modules.g_emDockingInterface.s_cmClampsLowerHighPressure.Q_bStaOutput": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL_Modules::g_emDockingInterface::s_cmClampsLowerHighPressure::Q_bStaOutput",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/BOOL"
+                    },
+                    {
+                        "attributes": {
+                            "TcAddressType": "Output"
+                        },
+                        "comment": "Outputs",
+                        "propertyOrder": 13
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL_Modules.g_emDockingInterface.s_cmClampsLowerHighPressure.s_fbForceCmdOutput.i_eForceValue": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL_Modules::g_emDockingInterface::s_cmClampsLowerHighPressure::s_fbForceCmdOutput::i_eForceValue",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:server#/definitions/PLC1.E_ForceValue"
+                    },
+                    {
+                        "propertyOrder": 3
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
         "PLC1.GVL_Modules.g_emDockingInterface.s_cmClampsLowerHighPressure.stHmiData": {
             "ACCESS": 3,
             "DOMAIN": "ADS",
@@ -4613,6 +4908,44 @@
                     {
                         "comment": "------------------------------------------------------//\r\nHmi",
                         "propertyOrder": 27
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL_Modules.g_emDockingInterface.s_cmClampsUpperHighPressure.Q_bStaOutput": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL_Modules::g_emDockingInterface::s_cmClampsUpperHighPressure::Q_bStaOutput",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/BOOL"
+                    },
+                    {
+                        "attributes": {
+                            "TcAddressType": "Output"
+                        },
+                        "comment": "Outputs",
+                        "propertyOrder": 13
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL_Modules.g_emDockingInterface.s_cmClampsUpperHighPressure.s_fbForceCmdOutput.i_eForceValue": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL_Modules::g_emDockingInterface::s_cmClampsUpperHighPressure::s_fbForceCmdOutput::i_eForceValue",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:server#/definitions/PLC1.E_ForceValue"
+                    },
+                    {
+                        "propertyOrder": 3
                     }
                 ]
             },
@@ -5834,82 +6167,6 @@
                         },
                         "comment": "----------------------Inputs---------------------------//",
                         "propertyOrder": 2
-                    }
-                ]
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emDockingInterface.s_doCmdClampsLowerHighPressure.Q_bStaOutput": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emDockingInterface::s_doCmdClampsLowerHighPressure::Q_bStaOutput",
-            "SCHEMA": {
-                "allOf": [
-                    {
-                        "$ref": "tchmi:general#/definitions/BOOL"
-                    },
-                    {
-                        "attributes": {
-                            "TcAddressType": "Output"
-                        },
-                        "comment": "----------------------Outputs---------------------------//",
-                        "propertyOrder": 3
-                    }
-                ]
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emDockingInterface.s_doCmdClampsLowerHighPressure.s_fbForceCmdOutput.i_eForceValue": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emDockingInterface::s_doCmdClampsLowerHighPressure::s_fbForceCmdOutput::i_eForceValue",
-            "SCHEMA": {
-                "allOf": [
-                    {
-                        "$ref": "tchmi:server#/definitions/PLC1.E_ForceValue"
-                    },
-                    {
-                        "propertyOrder": 3
-                    }
-                ]
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emDockingInterface.s_doCmdClampsUpperHighPressure.Q_bStaOutput": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emDockingInterface::s_doCmdClampsUpperHighPressure::Q_bStaOutput",
-            "SCHEMA": {
-                "allOf": [
-                    {
-                        "$ref": "tchmi:general#/definitions/BOOL"
-                    },
-                    {
-                        "attributes": {
-                            "TcAddressType": "Output"
-                        },
-                        "comment": "----------------------Outputs---------------------------//",
-                        "propertyOrder": 3
-                    }
-                ]
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emDockingInterface.s_doCmdClampsUpperHighPressure.s_fbForceCmdOutput.i_eForceValue": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emDockingInterface::s_doCmdClampsUpperHighPressure::s_fbForceCmdOutput::i_eForceValue",
-            "SCHEMA": {
-                "allOf": [
-                    {
-                        "$ref": "tchmi:server#/definitions/PLC1.E_ForceValue"
-                    },
-                    {
-                        "propertyOrder": 3
                     }
                 ]
             },
@@ -9951,6 +10208,34 @@
             },
             "USEMAPPING": true
         },
+        "Test.GetSchema": {
+            "ACCESS": 3,
+            "DOMAIN": "Test",
+            "DYNAMIC": true,
+            "HIDDEN": true,
+            "MAPPING": "GetSchema",
+            "OPTIONS": {},
+            "SCHEMA": {
+                "function": true
+            },
+            "USEMAPPING": true
+        },
+        "Test.ListSymbols": {
+            "ACCESS": 3,
+            "DOMAIN": "Test",
+            "DYNAMIC": true,
+            "HIDDEN": true,
+            "MAPPING": "ListSymbols",
+            "OPTIONS": {},
+            "SCHEMA": {
+                "additionalProperties": {
+                    "$ref": "tchmi:server#/definitions/symbol"
+                },
+                "function": true,
+                "type": "object"
+            },
+            "USEMAPPING": true
+        },
         "Unsubscribe": {
             "ACCESS": 3,
             "CUSTOMERDATA": "",
@@ -10197,6 +10482,20 @@
                 "LocalizeText": 3,
                 "Login": 3,
                 "Logout": 3,
+                "PLC1.GVL.g_sToHmiBottomContent": 3,
+                "PLC1.GVL.g_sToHmiMiddleContent": 3,
+                "PLC1.GVL.g_sToHmiTopContent": 3,
+                "PLC1.GVL.g_stHmiBottomBar.Alarm": 3,
+                "PLC1.GVL.g_stHmiBottomBar.General_ReturnToStart": 3,
+                "PLC1.GVL.g_stHmiBottomBar.IoTest": 3,
+                "PLC1.GVL.g_stHmiBottomBar.Start": 3,
+                "PLC1.GVL.g_stHmiMiddle.AlarmManager": 3,
+                "PLC1.GVL.g_stHmiMiddle.EM_DockingInterface": 3,
+                "PLC1.GVL.g_stHmiMiddle.EM_PalletConveyor": 3,
+                "PLC1.GVL.g_stHmiMiddle.EM_Utilities": 3,
+                "PLC1.GVL.g_stHmiMiddle.ParameterManager": 3,
+                "PLC1.GVL.g_stHmiMiddle.Start": 3,
+                "PLC1.GVL.g_stHmiTopBar.GeneralTopbar": 3,
                 "PLC1.GVL.g_unCleanroomConnect.p_eCtrlMode": 3,
                 "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_eCtrlMode": 3,
                 "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_eCtrlState": 3,
@@ -10249,7 +10548,11 @@
                 "PLC1.GVL_Modules.g_emDockingInterface.i_eCtrlState": 3,
                 "PLC1.GVL_Modules.g_emDockingInterface.i_sEmName": 3,
                 "PLC1.GVL_Modules.g_emDockingInterface.s_bHmiForceOutputEnabled": 3,
+                "PLC1.GVL_Modules.g_emDockingInterface.s_cmClampsLowerHighPressure.Q_bStaOutput": 3,
+                "PLC1.GVL_Modules.g_emDockingInterface.s_cmClampsLowerHighPressure.s_fbForceCmdOutput.i_eForceValue": 3,
                 "PLC1.GVL_Modules.g_emDockingInterface.s_cmClampsLowerHighPressure.stHmiData": 3,
+                "PLC1.GVL_Modules.g_emDockingInterface.s_cmClampsUpperHighPressure.Q_bStaOutput": 3,
+                "PLC1.GVL_Modules.g_emDockingInterface.s_cmClampsUpperHighPressure.s_fbForceCmdOutput.i_eForceValue": 3,
                 "PLC1.GVL_Modules.g_emDockingInterface.s_cmClampsUpperHighPressure.stHmiData": 3,
                 "PLC1.GVL_Modules.g_emDockingInterface.s_cmDockingClampsLower.I_bStaValveIsOff": 3,
                 "PLC1.GVL_Modules.g_emDockingInterface.s_cmDockingClampsLower.I_bStaValveIsOff2": 3,

@@ -85,6 +85,9 @@
       "url": "UserControl/ucHmiValveWithDoubleFB.usercontrol"
     },
     {
+      "url": "UserControl/ucHmiDigOutput.usercontrol"
+    },
+    {
       "url": "UserControl/ucHmiValveWithFB.usercontrol"
     },
     {
@@ -92,19 +95,9 @@
     },
     {
       "url": "UserControl/ucTabEM.usercontrol"
-    },
-    {
-      "url": "UserControl/ucHmiDigOutput.usercontrol"
     }
   ],
   "content": [
-    {
-      "url": "WebContent/AlarmManager.content",
-      "preload": false,
-      "keepAlive": false,
-      "loadSync": false,
-      "preloadBindings": false
-    },
     {
       "url": "WebContent/Bottom/NavigationBarAlarm.content",
       "preload": false,
@@ -113,7 +106,7 @@
       "preloadBindings": false
     },
     {
-      "url": "WebContent/Bottom/NavigationBarIoTest.content",
+      "url": "WebContent/Bottom/NavigationBarReturnToStart.content",
       "preload": false,
       "keepAlive": false,
       "loadSync": false,
@@ -121,6 +114,13 @@
     },
     {
       "url": "WebContent/Bottom/NavigationBarStart.content",
+      "preload": false,
+      "keepAlive": false,
+      "loadSync": false,
+      "preloadBindings": false
+    },
+    {
+      "url": "WebContent/Middle/AlarmManager.content",
       "preload": false,
       "keepAlive": false,
       "loadSync": false,
@@ -253,7 +253,14 @@
       "preloadBindings": false
     },
     {
-      "url": "WebContent/ParameterManager.content",
+      "url": "WebContent/Middle/ParameterManager.content",
+      "preload": false,
+      "keepAlive": false,
+      "loadSync": false,
+      "preloadBindings": false
+    },
+    {
+      "url": "WebContent/Middle/Start.content",
       "preload": false,
       "keepAlive": false,
       "loadSync": false,
@@ -274,14 +281,21 @@
       "preloadBindings": false
     },
     {
-      "url": "WebContent/Start.content",
+      "url": "WebContent/Top/TopBar.content",
       "preload": false,
       "keepAlive": false,
       "loadSync": false,
       "preloadBindings": false
     },
     {
-      "url": "WebContent/Top/TopBar.content",
+      "url": "WebContent/Popup/Numpad.content",
+      "preload": false,
+      "keepAlive": false,
+      "loadSync": false,
+      "preloadBindings": false
+    },
+    {
+      "url": "WebContent/Popup/Keyboard.content",
       "preload": false,
       "keepAlive": false,
       "loadSync": false,
@@ -339,7 +353,65 @@
     "themedResources": {}
   },
   "trigger": [],
-  "actionTemplates": [],
+  "actionTemplates": [
+    {
+      "displayname": "WriteAllContentRegions",
+      "name": "WriteAllContentRegions",
+      "category": "Action Templates",
+      "actions": [
+        {
+          "objectType": "WriteToSymbol",
+          "active": true,
+          "symbolExpression": "%s%PLC1.GVL.g_sToHmiTopContent%/s%",
+          "value": {
+            "objectType": "Symbol",
+            "valueType": "tchmi:general#/definitions/String",
+            "symbolExpression": "%tp%Top%/tp%"
+          },
+          "asyncWait": true
+        },
+        {
+          "objectType": "WriteToSymbol",
+          "active": true,
+          "symbolExpression": "%s%PLC1.GVL.g_sToHmiMiddleContent%/s%",
+          "value": {
+            "objectType": "Symbol",
+            "valueType": "tchmi:general#/definitions/String",
+            "symbolExpression": "%tp%Middle%/tp%"
+          },
+          "asyncWait": true
+        },
+        {
+          "objectType": "WriteToSymbol",
+          "active": true,
+          "symbolExpression": "%s%PLC1.GVL.g_sToHmiBottomContent%/s%",
+          "value": {
+            "objectType": "Symbol",
+            "valueType": "tchmi:general#/definitions/String",
+            "symbolExpression": "%tp%Bottom%/tp%"
+          },
+          "asyncWait": true
+        }
+      ],
+      "parameters": [
+        {
+          "name": "Top",
+          "type": "tchmi:general#/definitions/String",
+          "description": ""
+        },
+        {
+          "name": "Middle",
+          "type": "tchmi:general#/definitions/String",
+          "description": ""
+        },
+        {
+          "name": "Bottom",
+          "type": "tchmi:general#/definitions/String",
+          "description": ""
+        }
+      ]
+    }
+  ],
   "languages": {
     "de": "Localization/de.localization",
     "en": "Localization/en.localization"

@@ -201,39 +201,9 @@ s_fbForceCmdOutput(
 	i_ref_bCmdInput := s_bCmdOutput,
 	i_ref_bCmdOutput := Q_bStaOutput);
 
+s_bStaOutput := Q_bStaOutput;	
+	
 _m_Outputs := TRUE;
-]]></ST>
-      </Implementation>
-    </Method>
-    <Method Name="m_Main" Id="{2dd33bfc-7121-4f83-aa70-6c1522573289}" FolderPath="Methods\">
-      <Declaration><![CDATA[METHOD PUBLIC m_Main : BOOL
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[
-s_bStaOutput := i_bStaOutput;
-
-IF NOT s_bInitDone THEN
-	IF _m_Init() THEN
-		s_bInitDone := TRUE;
-	END_IF 
-END_IF
-
-s_osrOn(CLK := s_bStaOutput);
-s_osfOff(CLK := s_bStaOutput);
-
-s_tonDelay(IN := s_bStaOutput <> s_bStaOutputDelayed, PT := i_stSettings.tmOutputDelay);
-
-IF s_bStaOutput AND s_tonDelay.Q THEN
-	s_bStaOutputDelayed := TRUE;
-END_IF
-
-IF NOT s_bStaOutput AND s_tonDelay.Q THEN
-	s_bStaOutputDelayed := FALSE;
-END_IF
-
-_m_Outputs();
-
-m_Main := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
@@ -493,33 +463,11 @@ s_sInterlockedReasonOn := p_sInterlockedReasonOn;
       <LineId Id="55" Count="0" />
       <LineId Id="46" Count="1" />
       <LineId Id="44" Count="0" />
+      <LineId Id="90" Count="0" />
       <LineId Id="36" Count="0" />
+      <LineId Id="91" Count="0" />
       <LineId Id="5" Count="0" />
       <LineId Id="56" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_DigOutput.m_Main">
-      <LineId Id="98" Count="0" />
-      <LineId Id="80" Count="1" />
-      <LineId Id="36" Count="0" />
-      <LineId Id="39" Count="2" />
-      <LineId Id="38" Count="0" />
-      <LineId Id="100" Count="0" />
-      <LineId Id="91" Count="0" />
-      <LineId Id="96" Count="0" />
-      <LineId Id="74" Count="0" />
-      <LineId Id="73" Count="0" />
-      <LineId Id="65" Count="0" />
-      <LineId Id="64" Count="0" />
-      <LineId Id="66" Count="1" />
-      <LineId Id="69" Count="0" />
-      <LineId Id="68" Count="0" />
-      <LineId Id="72" Count="0" />
-      <LineId Id="71" Count="0" />
-      <LineId Id="78" Count="0" />
-      <LineId Id="9" Count="0" />
-      <LineId Id="79" Count="0" />
-      <LineId Id="23" Count="0" />
-      <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="CM_DigOutput.m_Off">
       <LineId Id="25" Count="0" />

@@ -8,9 +8,9 @@ VAR
 	s_diPowerOk : FB_DigInput;
 	s_diAirPressureOk : FB_DigInput;
 
-	s_doBeaconLedGreen : CM_DigOutput;
-	s_doBeaconLedYellow : CM_DigOutput;
-	s_doBeaconLedRed : CM_DigOutput;
+	s_doBeaconLedGreen : FB_DigOutput;
+	s_doBeaconLedYellow : FB_DigOutput;
+	s_doBeaconLedRed : FB_DigOutput;
 	
 	//States
 	s_bStaSafetyOk : BOOL := FALSE;
@@ -117,14 +117,10 @@ s_diSafetyOk();
 s_diPowerOk();
 s_diAirPressureOk();
 
-//--s_doBeaconLedGreen.i_bStaOutput := s_bExtRunning;
-//--s_doBeaconLedYellow.i_bStaOutput := s_bExtWarning;
-//--s_doBeaconLedRed.i_bStaOutput := s_bExtError;
+s_doBeaconLedGreen();
+s_doBeaconLedYellow();
+s_doBeaconLedRed();
 
-s_doBeaconLedGreen(i_eCtrlMode := i_eCtrlMode, i_ref_eCtrlState := i_eCtrlState);
-s_doBeaconLedYellow(i_eCtrlMode := i_eCtrlMode, i_ref_eCtrlState := i_eCtrlState);
-s_doBeaconLedRed(i_eCtrlMode := i_eCtrlMode, i_ref_eCtrlState := i_eCtrlState);
-	
 _m_Devices := TRUE;
 ]]></ST>
       </Implementation>
@@ -225,27 +221,9 @@ IF NOT SUPER^._m_Outputs() THEN
 	RETURN;
 END_IF
 
-//--s_doBeaconLedGreen.i_bStaOutput := s_bExtRunning;
-//--s_doBeaconLedYellow.i_bStaOutput := s_bExtWarning;
-//--s_doBeaconLedRed.i_bStaOutput := s_bExtError;
-
-IF s_bExtRunning THEN 
-	s_doBeaconLedGreen.m_On();
-ELSE 
-	s_doBeaconLedGreen.m_Off();
-END_IF
-
-IF s_bExtWarning THEN
-	s_doBeaconLedYellow.m_On();
-ELSE
-	s_doBeaconLedYellow.m_Off();
-END_IF
-
-IF s_bExtError THEN
-	s_doBeaconLedRed.m_On();
-ELSE
-	s_doBeaconLedRed.m_Off();
-END_IF
+s_doBeaconLedGreen.i_bStaOutput := s_bExtRunning;
+s_doBeaconLedYellow.i_bStaOutput := s_bExtWarning;
+s_doBeaconLedRed.i_bStaOutput := s_bExtError;
 
 q_bStaWarning := s_bStaWarning;
 
@@ -388,8 +366,11 @@ p_bStsPowerOk := s_bStsPowerOk;
     </LineIds>
     <LineIds Name="EM_Utilities._m_Devices">
       <LineId Id="255" Count="0" />
-      <LineId Id="234" Count="11" />
-      <LineId Id="249" Count="5" />
+      <LineId Id="234" Count="7" />
+      <LineId Id="257" Count="2" />
+      <LineId Id="242" Count="0" />
+      <LineId Id="260" Count="0" />
+      <LineId Id="254" Count="0" />
       <LineId Id="50" Count="0" />
     </LineIds>
     <LineIds Name="EM_Utilities._m_Hmi">
@@ -448,10 +429,8 @@ p_bStsPowerOk := s_bStsPowerOk;
       <LineId Id="20" Count="0" />
       <LineId Id="6" Count="2" />
       <LineId Id="42" Count="0" />
-      <LineId Id="34" Count="2" />
-      <LineId Id="49" Count="0" />
-      <LineId Id="51" Count="15" />
-      <LineId Id="50" Count="0" />
+      <LineId Id="70" Count="1" />
+      <LineId Id="69" Count="0" />
       <LineId Id="38" Count="0" />
       <LineId Id="47" Count="0" />
       <LineId Id="22" Count="0" />

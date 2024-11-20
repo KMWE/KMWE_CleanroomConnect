@@ -1,4 +1,4 @@
-<div id="Content1_12" data-tchmi-type="TcHmi.Controls.System.TcHmiContent" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width="100" data-tchmi-height="10" data-tchmi-width-unit="%" data-tchmi-height-unit="%" data-tchmi-top-unit="%" data-tchmi-height-mode="Value">
+<div id="Content1_12" data-tchmi-type="TcHmi.Controls.System.TcHmiContent" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width="100" data-tchmi-height="100" data-tchmi-width-unit="%" data-tchmi-height-unit="%" data-tchmi-top-unit="%" data-tchmi-height-mode="Value">
 
 <div id="BottomButtonsGrid_8" data-tchmi-type="TcHmi.Controls.System.TcHmiGrid" data-tchmi-height="100" data-tchmi-height-unit="%" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-top-unit="%" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-right="0.0" data-tchmi-width-mode="Value" data-tchmi-height-mode="Value" data-tchmi-right-unit="%" data-tchmi-bottom="0" data-tchmi-bottom-unit="%" data-tchmi-top="0">
 <script data-tchmi-target-attribute="data-tchmi-column-options" type="application/json">
@@ -58,15 +58,15 @@
 
 
 
-<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">[
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
   {
     "event": "ReturnToStartButtonSimple_1.onPressed",
     "actions": [
       {
         "objectType": "WriteToSymbol",
-        "active": true,
+        "active": false,
         "symbolExpression": "%ctrl%BottomRegion::TargetContent%/ctrl%",
-        "valueType": "tchmi:framework#/definitions/ContentPath",
         "value": {
           "objectType": "StaticValue",
           "valueType": "tchmi:framework#/definitions/ContentPath",
@@ -76,19 +76,42 @@
       },
       {
         "objectType": "WriteToSymbol",
-        "active": true,
+        "active": false,
         "symbolExpression": "%ctrl%ContentRegion::TargetContent%/ctrl%",
-        "valueType": "tchmi:framework#/definitions/ContentPath",
         "value": {
           "objectType": "StaticValue",
           "valueType": "tchmi:framework#/definitions/ContentPath",
           "value": "WebContent/Start.content"
         },
         "asyncWait": true
+      },
+      {
+        "objectType": "ActionTemplate",
+        "active": true,
+        "templateName": "WriteAllContentRegions",
+        "fnParams": [
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:general#/definitions/String",
+            "symbolExpression": "%s%PLC1.GVL.g_stHmiTopBar.GeneralTopbar%/s%"
+          },
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:general#/definitions/String",
+            "symbolExpression": "%s%PLC1.GVL.g_stHmiMiddle.Start%/s%"
+          },
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:general#/definitions/String",
+            "symbolExpression": "%s%PLC1.GVL.g_stHmiBottomBar.Start%/s%"
+          }
+        ],
+        "asyncWait": true
       }
     ]
   }
-]</script>
+]
+</script>
 </div>
 <div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="3" id="ReturnToStartButtonSimple_2" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="80" data-tchmi-height-unit="%" data-tchmi-left-unit="%" data-tchmi-text="Reset" data-tchmi-top-unit="%" data-tchmi-width="80" data-tchmi-width-unit="%" data-tchmi-word-wrap="True" data-tchmi-left="10" data-tchmi-top="10" data-tchmi-text-font-size="25" data-tchmi-bottom-unit="px" data-tchmi-width-mode="Value" data-tchmi-height-mode="Value">
 <script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">

@@ -27,6 +27,9 @@ VAR
 //------------------------------------------//
 //Inputs
 //--	s_diEmergencyBtn			: FB_DigInput;
+	
+	s_diTwoHandControl			: FB_DigInput;
+
 //------------------------------------------//
 
 //------------------------------------------//
@@ -143,6 +146,7 @@ END_IF
 //------------------------------------------//
 //Inputs
 //--	s_diEmergencyBtn();	
+	s_diTwoHandControl();
 //------------------------------------------//
 
 
@@ -175,14 +179,6 @@ IF GVL_KMWEGenericLib.g_fbHmiBtnReturnToStart.p_osfBtnPress THEN
 	GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaVisible	:= TRUE;
 	GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaEnabled	:= TRUE;	
 END_IF
-
-//--IF s_fbHmiBtnAutomatic.p_osfBtnPress THEN
-//--	s_eCtrlMode := E_CtrlMode.AUTOMATIC;
-//--END_IF
-
-//--IF s_fbHmiBtnManual.p_osfBtnPress THEN
-//--	s_eCtrlMode := E_CtrlMode.MANUAL;
-//--END_IF
 
 //------------------------------------------//
 
@@ -333,7 +329,8 @@ GVL.g_fbHmiBtnSimulation();
       <Declaration><![CDATA[METHOD PROTECTED _m_Init : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF NOT SUPER^._m_Init() THEN
+        <ST><![CDATA[
+IF NOT SUPER^._m_Init() THEN
 	RETURN;
 END_IF
 
@@ -568,16 +565,6 @@ GVL.g_sToHmiBottomContent	:= GVL.g_stHmiBottomBar.Start;
 
 //------------------------------------------//
 //Buttons
-//--	s_fbHmiBtnAutomatic.p_bStaEnabled 		:= TRUE;
-//--	s_fbHmiBtnAutomatic.p_bStaVisible 		:= TRUE;
-//--	s_fbHmiBtnAutomatic.p_eButtontype		:= E_HmiButtonType.PUSHBUTTON;
-//--	s_fbHmiBtnAutomatic.p_sBtnText			:= 'Auto';
-
-//--	s_fbHmiBtnManual.p_bStaEnabled 			:= TRUE;
-//--	s_fbHmiBtnManual.p_bStaVisible 			:= TRUE;
-//--	s_fbHmiBtnManual.p_eButtontype			:= E_HmiButtonType.PUSHBUTTON;
-//--	s_fbHmiBtnManual.p_sBtnText				:= 'Manual';
-	
 	s_fbHmiBtnAlarms.p_bStaVisible 			:= TRUE;
 	s_fbHmiBtnAlarms.p_bStaEnabled			:= TRUE;
 	s_fbHmiBtnAlarms.p_eButtontype 			:= E_HmiButtonType.PUSHBUTTON;
@@ -597,6 +584,8 @@ GVL.g_sToHmiBottomContent	:= GVL.g_stHmiBottomBar.Start;
 	GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled 	:= FALSE;
 //------------------------------------------//
 
+
+s_diTwoHandControl.i_stSettings.tmInputDelay := T#2S;
 
 //------------------------------------------//
 //Database information
@@ -630,7 +619,8 @@ VAR
 	s_eCtrlState : E_CtrlState;
 END_VAR]]></Declaration>
       <Implementation>
-        <ST><![CDATA[GVL_Modules.g_objCarrier();
+        <ST><![CDATA[
+GVL_Modules.g_objCarrier();
 
 IF s_bCreate THEN GVL_Modules.g_objCarrier.m_Create(i_eDestination := E_Location.CLEANROOM); s_bCreate := FALSE; END_IF; 
 IF s_bDestroy THEN GVL_Modules.g_objCarrier.m_Destroy(); s_bDestroy := FALSE; END_IF;
@@ -879,6 +869,9 @@ END_IF
 {warning '#TODO na gaan of het in onderstaande code niet beter zou zijn om puur te kijken naar de data uit de struct ipv naar properties uit de onderliggende modules?'}
 // zoals bij voorbeeld voor TB centered status
 
+
+
+
 //EM_PalletConveyor
 IF i_objTB.p_eDestination <> E_Location.UNKNOWN	THEN
 
@@ -942,7 +935,7 @@ IF i_objTB.p_eDestination <> E_Location.UNKNOWN	THEN
 	osrUndockTb(
 		CLK := i_objTB.p_eActLocation = E_Location.DOCKING //Is this about the TB or Trolley location? 
 		AND i_objTB.p_eDestination < E_Location.DOCKING
-		AND GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosedAndLocked
+		AND GVL_Modules.g_emDockingInterface.p_bStaInnerDoorCloseAndLocked
 		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaUndocked));
 	
 	IF osrUndockTb.Q THEN
@@ -954,7 +947,7 @@ IF i_objTB.p_eDestination <> E_Location.UNKNOWN	THEN
 		CLK := i_objTB.p_eActLocation = E_Location.DOCKING
 		AND i_objTB.p_eDestination > E_Location.DOCKING
 		AND GVL_Modules.g_emDockingInterface.p_bStaDocked
-		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpenedAndReleased));
+		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpenAndReleased));
 	
 	IF osrOpenInnerDoor.Q THEN
 		GVL_Modules.g_emDockingInterface.m_ReqOpenInnerDoor();
@@ -964,7 +957,7 @@ IF i_objTB.p_eDestination <> E_Location.UNKNOWN	THEN
 	osrCloseInnerDoor(
 		CLK := i_objTB.p_eActLocation = E_Location.DOCKING
 		AND i_objTB.p_eDestination < E_Location.DOCKING
-		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosedAndLocked));
+		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorCloseAndLocked));
 	
 	IF osrCloseInnerDoor.Q THEN
 		GVL_Modules.g_emDockingInterface.m_ReqCloseInnerDoor();
@@ -1207,7 +1200,9 @@ GVL_Modules.g_emPalletConveyor._m_CmdTB_ToInfeed(i_refReason := sReason);
       <LineId Id="35" Count="0" />
       <LineId Id="6" Count="9" />
       <LineId Id="30" Count="3" />
-      <LineId Id="16" Count="9" />
+      <LineId Id="16" Count="8" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="25" Count="0" />
       <LineId Id="38" Count="2" />
       <LineId Id="26" Count="0" />
       <LineId Id="5" Count="0" />
@@ -1217,12 +1212,8 @@ GVL_Modules.g_emPalletConveyor._m_CmdTB_ToInfeed(i_refReason := sReason);
       <LineId Id="286" Count="0" />
       <LineId Id="9" Count="11" />
       <LineId Id="307" Count="0" />
-      <LineId Id="306" Count="0" />
-      <LineId Id="313" Count="1" />
-      <LineId Id="316" Count="2" />
-      <LineId Id="315" Count="0" />
-      <LineId Id="304" Count="0" />
-      <LineId Id="21" Count="26" />
+      <LineId Id="326" Count="0" />
+      <LineId Id="22" Count="25" />
       <LineId Id="274" Count="1" />
       <LineId Id="240" Count="0" />
       <LineId Id="254" Count="1" />
@@ -1274,6 +1265,7 @@ GVL_Modules.g_emPalletConveyor._m_CmdTB_ToInfeed(i_refReason := sReason);
       <LineId Id="8" Count="0" />
     </LineIds>
     <LineIds Name="UN_CleanroomConnect._m_Init">
+      <LineId Id="1923" Count="0" />
       <LineId Id="1635" Count="55" />
       <LineId Id="1918" Count="0" />
       <LineId Id="1691" Count="5" />
@@ -1292,10 +1284,14 @@ GVL_Modules.g_emPalletConveyor._m_CmdTB_ToInfeed(i_refReason := sReason);
       <LineId Id="1832" Count="0" />
       <LineId Id="1834" Count="0" />
       <LineId Id="1917" Count="0" />
-      <LineId Id="1835" Count="70" />
+      <LineId Id="1835" Count="29" />
+      <LineId Id="1875" Count="18" />
+      <LineId Id="1924" Count="1" />
+      <LineId Id="1894" Count="11" />
       <LineId Id="78" Count="0" />
     </LineIds>
     <LineIds Name="UN_CleanroomConnect._m_Modules">
+      <LineId Id="1017" Count="0" />
       <LineId Id="848" Count="3" />
       <LineId Id="978" Count="0" />
       <LineId Id="980" Count="1" />
@@ -1347,6 +1343,8 @@ GVL_Modules.g_emPalletConveyor._m_CmdTB_ToInfeed(i_refReason := sReason);
       <LineId Id="569" Count="0" />
       <LineId Id="312" Count="5" />
       <LineId Id="422" Count="2" />
+      <LineId Id="671" Count="1" />
+      <LineId Id="675" Count="0" />
       <LineId Id="474" Count="0" />
       <LineId Id="476" Count="1" />
       <LineId Id="564" Count="0" />

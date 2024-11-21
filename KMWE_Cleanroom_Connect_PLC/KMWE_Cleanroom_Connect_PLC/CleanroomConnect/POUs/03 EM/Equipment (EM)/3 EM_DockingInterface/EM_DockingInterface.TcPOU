@@ -3,13 +3,7 @@
   <POU Name="EM_DockingInterface" Id="{1a98308c-f0e0-4a53-963d-dfa6a727e4cb}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK EM_DockingInterface EXTENDS EM_Base IMPLEMENTS I_EM_DockingInterface
 VAR_INPUT
-//Inputs
 	i_ref_stSettings : REFERENCE TO ST_SettingsDockingInterface;
-	
-	//--i_bIlckDockingClampsToClose : BOOL := TRUE; //TRUE = Interlocked
-	//--i_bIlckDockingClampsToOpen : BOOL := TRUE; //TRUE = Interlocked
-	//--i_bIlckUnlockingPinsToLock : BOOL := TRUE; //TRUE = Interlocked
-	//--i_bIlckUnlockingPinsToRelease : BOOL := TRUE; //TRUE = Interlocked
 	
 	// External interlocks (from outside this EM)
 	i_fbExtIlckDockingClampsToClose : FB_Interlock;
@@ -20,10 +14,7 @@ VAR_INPUT
 	i_fbExtIlckInnerDoorOpen : FB_Interlock;
 	i_fbExtIlckInnerDoorClose : FB_Interlock;
 	
-	
-	
 	i_refTB : REFERENCE TO OBJ_Carrier;	//Mogelijk voor uiteindelijke machine, voor de FUMO's is dit nog niet echt relevant
-	//??i_refITF_TB : REFERENCE TO I_Carrier;
 	
 	i_eCtrlState		: E_CtrlState;
 END_VAR
@@ -33,8 +24,7 @@ VAR_OUTPUT
 END_VAR
 
 VAR
-//------------------------------------------//
-//Control Modules (Devices)
+	//Control Modules (Devices)
 	s_cmDockingClampsUpper : CM_ValveWithDoubleFB; // Off = Open, On = Close
 	s_cmDockingClampsLower : CM_ValveWithDoubleFB; // Off = Open, On = Close
 	
@@ -47,80 +37,62 @@ VAR
 	s_cmDoorOpener : CM_ValveWithFB; // Off = Close, On = Open
 	s_cmDoorShutter : CM_ValveWithFB; // Off = Open, On = Close
 	
-//Interlocks	
-fbIlckHandlerDockingClampsOpen : FB_InterlockHandler;
-fbIlckHandlerDockingClampsClose : FB_InterlockHandler;
-fbIlckHandlerUnlockingPinsLock : FB_InterlockHandler;
-fbIlckHandlerUnlockingPinsRelease : FB_InterlockHandler;
-fbIlckHandlerDoorOpenerClose : FB_InterlockHandler;
-fbIlckHandlerDoorOpenerOpen : FB_InterlockHandler;
-fbIlckHandlerDoorShutterClose : FB_InterlockHandler;
-fbIlckHandlerDoorShutterOpen : FB_InterlockHandler;
+	//Interlocks	
+	fbIlckHandlerDockingClampsOpen : FB_InterlockHandler;
+	fbIlckHandlerDockingClampsClose : FB_InterlockHandler;
+	fbIlckHandlerUnlockingPinsLock : FB_InterlockHandler;
+	fbIlckHandlerUnlockingPinsRelease : FB_InterlockHandler;
+	fbIlckHandlerDoorOpenerClose : FB_InterlockHandler;
+	fbIlckHandlerDoorOpenerOpen : FB_InterlockHandler;
+	fbIlckHandlerDoorShutterClose : FB_InterlockHandler;
+	fbIlckHandlerDoorShutterOpen : FB_InterlockHandler;
 
-//--fbInterlockHandlerDockTB : FB_InterlockHandler;
-//--fbInterlockHandlerUndockTB : FB_InterlockHandler;
-//--fbInterlockHandlerOpenInnerDoor : FB_InterlockHandler;
-//--fbInterlockHandlerCloseInnerDoor : FB_InterlockHandler;	
-
-
-	
-//------------------------------------------//
-
-//------------------------------------------//
-//Inputs
+	//Inputs
 	s_diStaDoorAlmostClosed : FB_DigInput;
 		
-//------------------------------------------//
-	
-//------------------------------------------//
-//Outputs
-	
-//------------------------------------------//
+	//Outputs
+	//--
 
-//Requests
+	//Requests
 	s_bReqDockTB : BOOL := FALSE;
 	s_bReqUndockTB : BOOL := FALSE;
 	s_bReqOpenInnerDoor : BOOL := FALSE;
 	s_bReqCloseInnerDoor : BOOL := FALSE;
-	s_bReqDockingClampsUpperHighPressure : BOOL := FALSE; // True = high pressure
-	s_bReqDockingClampsLowerHighPressure : BOOL := FALSE; // True = high pressure
+	//--s_bReqDockingClampsUpperHighPressure : BOOL := FALSE;
+	//--s_bReqDockingClampsLowerHighPressure : BOOL := FALSE;
 	
 	s_bOverruleInterlocks : BOOL := FALSE;
 	
-//Properties
-	s_bStaDocked : BOOL := FALSE;
-	s_bStaUndocked : BOOL := FALSE;
-	
-	s_bStaDockingClampsClosed : BOOL := FALSE;
-	s_bStaDockingClampsOpened : BOOL := FALSE;
+	//States
 	s_bStaDockingClampsUpperClosed : BOOL := FALSE;
 	s_bStaDockingClampsUpperOpened : BOOL := FALSE;
 	s_bStaDockingClampsLowerClosed : BOOL := FALSE;
 	s_bStaDockingClampsLowerOpened : BOOL := FALSE;
-	
 	s_bStaLockingPinUpperReleased : BOOL := FALSE;
 	s_bStaLockingPinUpperLocked : BOOL := FALSE;
 	s_bStaLockingPinLowerReleased : BOOL := FALSE;
 	s_bStaLockingPinLowerLocked : BOOL := FALSE;
-		
 	s_bStaDoorOpenerOpened : BOOL := FALSE;
 	s_bStaDoorOpenerClosed : BOOL := FALSE;
 	s_bStaDoorOpenerAlmostClosed : BOOL := FALSE;
-	
 	s_bStaDoorShutterOpened : BOOL := FALSE;
 	s_bStaDoorShutterClosed : BOOL := FALSE;
-		
+	
+	//Properties
+	s_bStaDocked : BOOL := FALSE;
+	s_bStaUndocked : BOOL := FALSE;
+	
+	s_bStaDockingClampsClosed : BOOL := FALSE;
+	s_bStaDockingClampsOpened : BOOL := FALSE;	
+			
 	s_bStaBoxAtPreDockingPosition : BOOL := FALSE;
 	s_bStaBoxAtDockedPosition : BOOL := FALSE;
 	s_bStaDockingPositionFree : BOOL := FALSE;
 	
-//Interlockes
-	//Higher-layer components
-	//--s_bIlckDockTB : BOOL := TRUE;
-	//--s_bIlckUndockTB : BOOL := TRUE;	
-	//--s_bIlckOpenInnerDoor : BOOL := TRUE;
-	//--s_bIlckCloseInnerDoor : BOOL := TRUE;
+	s_bStaInnerDoorCloseAndLocked : BOOL := FALSE;
+	s_bStaInnerDoorOpenAndReleased : BOOL := FALSE;
 	
+	//Interlockes
 	s_bIlckDockingClampsToClose : BOOL;
 	s_bIlckDockingClampsToOpen : BOOL;
 	s_bIlckUnlockingPinsToLock : BOOL;
@@ -141,17 +113,13 @@ fbIlckHandlerDoorShutterOpen : FB_InterlockHandler;
 	
 	s_tonTimer : TON;
 	
-	s_bTmpDockingDone : BOOL;
 	s_bTmpUndockingDone : BOOL;
-	s_bTmpOpenInnerDoorDone : BOOL;
-	s_bTmpCloseInnerDoorDone : BOOL;
 	
-//Alarms
+	//Alarms
 	s_fbAlarmHandlerClosingDoorFailed : FB_AlarmHandler;
-
 	s_bErrClosingDoorFailed : BOOL;
 	
-//Warnings
+	//Warnings
 	s_fbAlarmHandlerNoBoxPresentAtPreDockingPosition : FB_AlarmHandler;
 	s_fbAlarmHandlerNoBoxPresentAtDockedPosition : FB_AlarmHandler;
 
@@ -160,8 +128,7 @@ fbIlckHandlerDoorShutterOpen : FB_InterlockHandler;
 	
 	s_bStaWarning : BOOL;
 	
-//------------------------------------------//
-//Params
+	//Params
 	s_fbParamTimeoutDockingClamps : FB_HmiParamHandler;
 	s_fbParamTimeoutUnlockingPins : FB_HmiParamHandler;
 	s_fbParamTimeoutDoorOpener : FB_HmiParamHandler;
@@ -178,75 +145,9 @@ fbIlckHandlerDoorShutterOpen : FB_InterlockHandler;
 	s_fbParamOpenClampsAfterClosingTimeout : FB_HmiParamHandler;
 	s_fbParamCloseClampsAfterEachOther : FB_HmiParamHandler;
 
-//--	//Tool settings
-//--	s_fbParamToolHardwareNr				: FB_HmiParamHandler;
-//--    s_fbParamToolSoftwareVersion		: FB_HmiParamHandler;
-
-//--	s_fbParamName						: FB_HmiParamHandler;
-//--	s_fbParamNumber						: FB_HmiParamHandler;
-//--	s_fbParamRevision                   : FB_HmiParamHandler;
-	
-//--	s_fbParamTeslaMeterIp				: FB_HmiParamHandler;
-//--	s_fbParamTeslaMeterPort				: FB_HmiParamHandler;
-	
-//--	//Product settings (Maybe)
-//--	s_fbParamTotalStroke				: FB_HmiParamHandler;
-//--	s_fbParamStepStroke					: FB_HmiParamHandler;
-//--	s_fbParamAveragingNumberTest		: FB_HmiParamHandler;
-	
-//--	s_fbParamaMaxMagnitudeCriteria		: FB_HmiParamHandler;
-	
-//--	s_fbParamRefIduBottom				: FB_HmiParamHandler;
-//--	s_fbParamRefItm                     : FB_HmiParamHandler;
-//--	s_fbParamRefCenterTpmPipe           : FB_HmiParamHandler;
-//--	s_fbParamRefCpValve					: FB_HmiParamHandler;
-//------------------------------------------//
-
-//------------------------------------------//
-//Variables
-	s_sTestResult 						: STRING;
-	
-	//--s_eCurrentTest						: E_TestMode;
-//--	s_stCommandsTesla					: ST_SCPI_TeslaCommands;
-	
-	
-	// Interlocks
-	s_bIlckSpeedDoorOuterToOpen 		: BOOL := TRUE;
-	s_bIlckSpeedDoorOuterToClose 		: BOOL := TRUE;
-	
-	s_bIlckDoorLockCleanroomToOpen 		: BOOL := TRUE;
-	
-//------------------------------------------//
-
-//------------------------------------------//
-//Sensor data	
-//--	s_aMagneticX						: ARRAY[0..c_nResultDataSize] OF LREAL;
-//--	s_aMagneticY						: ARRAY[0..c_nResultDataSize] OF LREAL;
-//--	s_aMagneticZ						: ARRAY[0..c_nResultDataSize] OF LREAL;
-//--	s_aMagneticMagnitude				: ARRAY[0..c_nResultDataSize] OF LREAL;
-//--	s_aProbePositionZ					: ARRAY[0..c_nResultDataSize] OF LREAL;
-	
-//--	s_sXMLData							: STRING(Param_Project.n_MaxLenghtXmlDbRow*Param_Project.n_NumberofRowsXmlDb);
-	
-//--	s_aHmi_MagneticTest					: ARRAY[1..3,0..c_nResultDataSize] OF ST_POINT;
-	
-//	s_aHmi_ProbePositionZ				: ARRAY[1..1,1..GVL_Datalogging.c_nHmiLogSize] OF ST_POINT;
-//------------------------------------------//
-
-//------------------------------------------//
-//Alarms
-
-//------------------------------------------//
-
-//------------------------------------------//
-//Hmi
-	s_nToHmiStepNr					: INT;
-	s_nToHmiMaxStepNr				: INT;
-	s_sToHmiInstructionText			: T_MAXSTRING;
-	s_sToHmiProcedure				: T_MAXSTRING;
-	
+	//Hmi
 	//Buttons
-	s_fbHmiBtnReset					: FB_HmiBtn;
+	//--s_fbHmiBtnReset					: FB_HmiBtn;
 	
 	s_fbHmiBtnManualClampsUpperHighPressure : FB_HmiBtn;
 	s_fbHmiBtnManualClampsUpperOpen	: FB_HmiBtn;
@@ -323,6 +224,7 @@ END_VAR
 SUPER^();
 ]]></ST>
     </Implementation>
+    <Folder Name="Base" Id="{07fbcd8f-5aa9-45bb-81ec-c9a513967daf}" />
     <Method Name="_m_AdoptPressureSelection" Id="{bdf5c402-b106-4275-8b75-e0584a90338e}">
       <Declaration><![CDATA[METHOD PRIVATE _m_AdoptPressureSelection : BOOL
 ]]></Declaration>
@@ -344,7 +246,7 @@ END_IF
 _m_AdoptPressureSelection := TRUE;]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Alarms" Id="{c0cf83f3-e704-4016-bd6f-2d30156087ff}">
+    <Method Name="_m_Alarms" Id="{c0cf83f3-e704-4016-bd6f-2d30156087ff}" FolderPath="Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Alarms : BOOL
 ]]></Declaration>
       <Implementation>
@@ -794,7 +696,7 @@ END_IF
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Devices" Id="{b43c077f-3abc-4642-868d-7667cd19393f}">
+    <Method Name="_m_Devices" Id="{b43c077f-3abc-4642-868d-7667cd19393f}" FolderPath="Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Devices : BOOL
 ]]></Declaration>
       <Implementation>
@@ -852,6 +754,9 @@ s_bStaDockingClampsUpperOpened := s_cmDockingClampsUpper.p_bStaIsOff;
 s_bStaDockingClampsLowerClosed := s_cmDockingClampsLower.p_bStaIsOn;
 s_bStaDockingClampsLowerOpened := s_cmDockingClampsLower.p_bStaIsOff;
 
+s_bStaDockingClampsClosed := s_bStaDockingClampsUpperClosed AND s_bStaDockingClampsLowerClosed;
+s_bStaDockingClampsOpened := s_bStaDockingClampsUpperOpened AND s_bStaDockingClampsLowerOpened;
+
 //--s_cmUnlockingPins(
 //--	i_bReqEnable := i_bReqEnable,
 //--	i_eCtrlMode := i_eCtrlMode,
@@ -878,6 +783,18 @@ s_bStaLockingPinUpperReleased := s_cmUnlockingPinUpper.p_bStaIsOn;
 s_bStaLockingPinUpperLocked := s_cmUnlockingPinUpper.p_bStaIsOff;
 s_bStaLockingPinLowerReleased := s_cmUnlockingPinLower.p_bStaIsOn;
 s_bStaLockingPinLowerLocked := s_cmUnlockingPinLower.p_bStaIsOff;	
+
+s_bStaInnerDoorCloseAndLocked := 
+	s_bStaLockingPinLowerLocked
+	AND s_bStaLockingPinUpperLocked
+	AND s_bStaDoorOpenerClosed
+	AND s_bStaDoorShutterClosed;
+
+s_bStaInnerDoorOpenAndReleased := 
+	s_bStaLockingPinLowerReleased
+	AND s_bStaLockingPinUpperReleased
+	AND s_bStaDoorOpenerOpened
+	AND s_bStaDoorShutterOpened; 
 	
 s_cmDoorOpener(
 	i_bReqEnable := i_bReqEnable,
@@ -905,7 +822,7 @@ _m_Devices := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Hmi" Id="{5090ba0a-8e2b-4ba6-88b3-b451c7c7863d}">
+    <Method Name="_m_Hmi" Id="{5090ba0a-8e2b-4ba6-88b3-b451c7c7863d}" FolderPath="Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Hmi : BOOL
 ]]></Declaration>
       <Implementation>
@@ -916,7 +833,7 @@ END_IF
 
 //Buttons
 {warning '#TODO: Kan onderstaande knop kunnen koment te vervallen of kan deze worden verwijdert'?}
-s_fbHmiBtnReset();
+//--s_fbHmiBtnReset();
 
 //Manual control
 s_fbHmiBtnDockTB();
@@ -969,7 +886,7 @@ s_fbHmiLedShutterClosed(i_bStaLed := s_bStaDoorShutterClosed);
 _m_Hmi := TRUE;]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Init" Id="{f248bb7d-4543-4fa5-93e5-377095a1130a}">
+    <Method Name="_m_Init" Id="{f248bb7d-4543-4fa5-93e5-377095a1130a}" FolderPath="Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Init : BOOL
 ]]></Declaration>
       <Implementation>
@@ -1121,10 +1038,10 @@ fbIlckHandlerDoorShutterOpen.i_stInterlockList.arr_Interlocks[1].sReason := 'n/a
 	s_fbHmiBtnCloseInnerDoor.p_bStaEnabled := FALSE;		
 	s_fbHmiBtnCloseInnerDoor.p_sBtnText := 'Close Inner Door';
 	
-	s_fbHmiBtnReset.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnReset.p_bStaVisible := FALSE;
-	s_fbHmiBtnReset.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnReset.p_sBtnText := 'Reset';
+	//--s_fbHmiBtnReset.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	//--s_fbHmiBtnReset.p_bStaVisible := FALSE;
+	//--s_fbHmiBtnReset.p_bStaEnabled := FALSE;		
+	//--s_fbHmiBtnReset.p_sBtnText := 'Reset';
 	
 	//Manual
 	s_fbHmiBtnManualClampsUpperHighPressure.p_eButtontype := E_HmiButtonType.TOGGLEBUTTON;
@@ -1274,7 +1191,7 @@ fbIlckHandlerDoorShutterOpen.i_stInterlockList.arr_Interlocks[1].sReason := 'n/a
 _m_Init := TRUE;]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Inputs" Id="{15e5d91e-088b-4383-82aa-ad9257b81a9b}">
+    <Method Name="_m_Inputs" Id="{15e5d91e-088b-4383-82aa-ad9257b81a9b}" FolderPath="Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Inputs : BOOL
 ]]></Declaration>
       <Implementation>
@@ -1481,7 +1398,7 @@ END_IF
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Outputs" Id="{748b7abf-6524-428b-ad1f-dd34bf2d901c}">
+    <Method Name="_m_Outputs" Id="{748b7abf-6524-428b-ad1f-dd34bf2d901c}" FolderPath="Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Outputs : BOOL
 ]]></Declaration>
       <Implementation>
@@ -1505,7 +1422,7 @@ q_bStaWarning := s_bStaWarning;
 _m_Outputs := TRUE;]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Params" Id="{78648659-4a86-4875-84af-aa8b2b68e067}">
+    <Method Name="_m_Params" Id="{78648659-4a86-4875-84af-aa8b2b68e067}" FolderPath="Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Params : BOOL
 ]]></Declaration>
       <Implementation>
@@ -1620,8 +1537,8 @@ _m_Params := TRUE;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-s_bReqDockingClampsUpperHighPressure := FALSE; //Low pressure 
-s_bReqDockingClampsLowerHighPressure := FALSE; //Low pressure
+//--s_bReqDockingClampsUpperHighPressure := FALSE; //Low pressure 
+//--s_bReqDockingClampsLowerHighPressure := FALSE; //Low pressure
 
 (*
 IF s_cmDoorOpener.m_Off() OR s_bStaDoorOpenerAlmostClosed THEN //Close Door Opener
@@ -1635,6 +1552,9 @@ IF s_cmDoorOpener.m_Off() OR s_bStaDoorOpenerAlmostClosed THEN //Close Door Open
 END_IF
 *)
 
+s_cmClampsUpperHighPressure.m_Off();
+s_cmClampsLowerHighPressure.m_Off();
+
 IF s_cmDoorOpener.m_Off() AND s_bStaDoorOpenerAlmostClosed THEN //Close Door Opener
 	IF s_cmDoorShutter.m_On() THEN //Close Door Shutter
 		IF s_cmUnlockingPinUpper.m_Off() AND s_cmUnlockingPinLower.m_Off() THEN //Lock Unlocking Pins
@@ -1647,7 +1567,7 @@ END_IF
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="m_Main" Id="{13829dfc-fc98-4f3a-8520-8dee66cb84d9}">
+    <Method Name="m_Main" Id="{13829dfc-fc98-4f3a-8520-8dee66cb84d9}" FolderPath="Base\">
       <Declaration><![CDATA[METHOD PUBLIC m_Main : BOOL
 ]]></Declaration>
       <Implementation>
@@ -1910,32 +1830,24 @@ p_bStaDockingPositionFree := s_bStaDockingPositionFree;
         </Implementation>
       </Get>
     </Property>
-    <Property Name="p_bStaInnerDoorClosedAndLocked" Id="{dd31784c-49d6-4d32-a02f-66ee1e524851}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaInnerDoorClosedAndLocked : BOOL]]></Declaration>
+    <Property Name="p_bStaInnerDoorCloseAndLocked" Id="{dd31784c-49d6-4d32-a02f-66ee1e524851}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaInnerDoorCloseAndLocked : BOOL]]></Declaration>
       <Get Name="Get" Id="{ec81e0aa-07a2-4a59-858a-8a8d7988d797}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaInnerDoorClosedAndLocked := 
-	s_bStaLockingPinLowerLocked
-AND s_bStaLockingPinUpperLocked
-AND s_bStaDoorOpenerClosed
-AND s_bStaDoorShutterClosed; 
+p_bStaInnerDoorCloseAndLocked := s_bStaInnerDoorCloseAndLocked;
 ]]></ST>
         </Implementation>
       </Get>
     </Property>
-    <Property Name="p_bStaInnerDoorOpenedAndReleased" Id="{38547cf9-5983-403c-914e-3b92e4e4e9d8}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaInnerDoorOpenedAndReleased : BOOL]]></Declaration>
+    <Property Name="p_bStaInnerDoorOpenAndReleased" Id="{38547cf9-5983-403c-914e-3b92e4e4e9d8}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaInnerDoorOpenAndReleased : BOOL]]></Declaration>
       <Get Name="Get" Id="{c2f8547d-c997-4c85-95f1-ef32b94df578}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaInnerDoorOpenedAndReleased := 
-	s_bStaLockingPinLowerReleased
-AND s_bStaLockingPinUpperReleased
-AND s_bStaDoorOpenerOpened
-AND s_bStaDoorShutterOpened;
+p_bStaInnerDoorOpenAndReleased := s_bStaInnerDoorOpenAndReleased;
 ]]></ST>
         </Implementation>
       </Get>
@@ -2262,6 +2174,9 @@ p_bStaUndocked := s_bStaUndocked;
       <LineId Id="204" Count="0" />
       <LineId Id="208" Count="2" />
       <LineId Id="207" Count="0" />
+      <LineId Id="319" Count="0" />
+      <LineId Id="318" Count="0" />
+      <LineId Id="321" Count="0" />
       <LineId Id="201" Count="0" />
       <LineId Id="169" Count="4" />
       <LineId Id="236" Count="0" />
@@ -2281,6 +2196,11 @@ p_bStaUndocked := s_bStaUndocked;
       <LineId Id="215" Count="0" />
       <LineId Id="214" Count="0" />
       <LineId Id="211" Count="0" />
+      <LineId Id="322" Count="0" />
+      <LineId Id="324" Count="3" />
+      <LineId Id="323" Count="0" />
+      <LineId Id="329" Count="4" />
+      <LineId Id="328" Count="0" />
       <LineId Id="198" Count="0" />
       <LineId Id="224" Count="2" />
       <LineId Id="292" Count="0" />
@@ -2667,6 +2587,7 @@ p_bStaUndocked := s_bStaUndocked;
       <LineId Id="388" Count="0" />
       <LineId Id="383" Count="0" />
       <LineId Id="411" Count="0" />
+      <LineId Id="413" Count="2" />
       <LineId Id="401" Count="8" />
       <LineId Id="400" Count="0" />
       <LineId Id="293" Count="0" />
@@ -2795,17 +2716,13 @@ p_bStaUndocked := s_bStaUndocked;
       <LineId Id="2" Count="0" />
       <LineId Id="6" Count="0" />
     </LineIds>
-    <LineIds Name="EM_DockingInterface.p_bStaInnerDoorClosedAndLocked.Get">
+    <LineIds Name="EM_DockingInterface.p_bStaInnerDoorCloseAndLocked.Get">
       <LineId Id="5" Count="0" />
-      <LineId Id="11" Count="0" />
-      <LineId Id="7" Count="3" />
-      <LineId Id="6" Count="0" />
+      <LineId Id="11" Count="1" />
     </LineIds>
-    <LineIds Name="EM_DockingInterface.p_bStaInnerDoorOpenedAndReleased.Get">
+    <LineIds Name="EM_DockingInterface.p_bStaInnerDoorOpenAndReleased.Get">
       <LineId Id="5" Count="0" />
-      <LineId Id="7" Count="3" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="6" Count="0" />
+      <LineId Id="7" Count="1" />
     </LineIds>
     <LineIds Name="EM_DockingInterface.p_bStaUndocked.Get">
       <LineId Id="5" Count="0" />

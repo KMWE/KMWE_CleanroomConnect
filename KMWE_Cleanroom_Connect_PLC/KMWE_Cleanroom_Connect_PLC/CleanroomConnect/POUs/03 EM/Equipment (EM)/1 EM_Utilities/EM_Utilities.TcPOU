@@ -12,6 +12,10 @@ VAR
 	s_doBeaconLedYellow : FB_DigOutput;
 	s_doBeaconLedRed : FB_DigOutput;
 	
+	s_FbForceOutputLedGreen : FB_ForceOutput;
+	s_FbForceOutputLedYellow : FB_ForceOutput;
+	s_FbForceOutputLedRed : FB_ForceOutput;
+		
 	//States
 	s_bStaSafetyOk : BOOL := FALSE;
 	s_bStsPowerOk : BOOL := FALSE;
@@ -222,9 +226,37 @@ IF NOT SUPER^._m_Outputs() THEN
 	RETURN;
 END_IF
 
-s_doBeaconLedGreen.i_bStaOutput := s_bExtRunning;
-s_doBeaconLedYellow.i_bStaOutput := s_bExtWarning;
-s_doBeaconLedRed.i_bStaOutput := s_bExtError;
+//Reset to released if IO-Test Running is not active anymore
+IF (i_eCtrlMode <> E_CtrlMode.IO) OR (i_eCtrlState <> E_CtrlState.RUNNING) THEN
+	s_FbForceOutputLedGreen.i_eForceValue := E_ForceValue.RELEASED; 	
+END_IF
+
+IF (i_eCtrlMode <> E_CtrlMode.IO) OR (i_eCtrlState <> E_CtrlState.RUNNING) THEN
+	s_FbForceOutputLedYellow.i_eForceValue := E_ForceValue.RELEASED; 	
+END_IF 
+
+IF (i_eCtrlMode <> E_CtrlMode.IO) OR (i_eCtrlState <> E_CtrlState.RUNNING) THEN
+	s_FbForceOutputLedRed.i_eForceValue := E_ForceValue.RELEASED; 	
+END_IF
+
+//Force outputs
+IF s_FbForceOutputLedGreen.i_eForceValue = E_ForceValue.RELEASED THEN
+	s_doBeaconLedGreen.i_bStaOutput := s_bExtRunning;
+ELSE
+	s_doBeaconLedGreen.i_bStaOutput := s_FbForceOutputLedGreen.i_eForceValue = E_ForceValue.FORCE_ON;
+END_IF
+
+IF s_FbForceOutputLedYellow.i_eForceValue = E_ForceValue.RELEASED THEN
+	s_doBeaconLedYellow.i_bStaOutput := s_bExtWarning;
+ELSE
+	s_doBeaconLedYellow.i_bStaOutput := s_FbForceOutputLedYellow.i_eForceValue = E_ForceValue.FORCE_ON;
+END_IF
+
+IF s_FbForceOutputLedRed.i_eForceValue = E_ForceValue.RELEASED THEN
+	s_doBeaconLedRed.i_bStaOutput := s_bExtError;
+ELSE
+	s_doBeaconLedRed.i_bStaOutput := s_FbForceOutputLedRed.i_eForceValue = E_ForceValue.FORCE_ON;
+END_IF
 
 q_bStaWarning := s_bStaWarning;
 
@@ -429,9 +461,23 @@ p_bStsPowerOk := s_bStsPowerOk;
     <LineIds Name="EM_Utilities._m_Outputs">
       <LineId Id="20" Count="0" />
       <LineId Id="6" Count="2" />
-      <LineId Id="42" Count="0" />
-      <LineId Id="70" Count="1" />
-      <LineId Id="69" Count="0" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="76" Count="1" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="79" Count="2" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="83" Count="2" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="87" Count="1" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="90" Count="1" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="97" Count="4" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="103" Count="4" />
+      <LineId Id="102" Count="0" />
       <LineId Id="38" Count="0" />
       <LineId Id="47" Count="0" />
       <LineId Id="22" Count="0" />

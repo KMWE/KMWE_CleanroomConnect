@@ -7,13 +7,15 @@ VAR_INPUT
 //Inputs
 	i_ref_stSettings : REFERENCE TO ST_SettingsLiftingTransport;
 	
-	i_bIlckLiftUp : BOOL := TRUE;
-	i_bIlckLiftDown : BOOL := TRUE;
-	i_bIlckTransportExtract : BOOL := TRUE;
-	i_bIlckTransportRetract : BOOL := TRUE;
+	// External interlocks (from outside this EM)
+	i_fbExtIlckLiftUp : FB_Interlock;
+	i_fbExtIlckLiftDown : FB_Interlock;
+	i_fbExtIlckTransportExtract : FB_Interlock;
+	i_fbExtIlckTransportRetract : FB_Interlock;
 	
 	i_refTB : REFERENCE TO OBJ_Carrier;	//Mogelijk voor uiteindelijke machine, voor de FUMO's is dit nog niet echt relevant
 	
+	i_eCtrlState		: E_CtrlState;
 	
 	s_arr_bTest : ARRAY[0..15] OF BOOL; 
 END_VAR
@@ -23,117 +25,87 @@ VAR_OUTPUT
 END_VAR
 
 VAR
-	
-axisLift : AXIS_REF;
-axisTransportUnit : AXIS_REF;
+
+	//Interlocks	
+	fbIlckHandlerLiftUp : FB_InterlockHandler;
+	fbIlckHandlerLiftDown : FB_InterlockHandler;
+
+	fbIlckHandlerTransportExtract : FB_InterlockHandler;
+	fbIlckHandlerTransportRetract : FB_InterlockHandler;
 
 //------------------------------------------//
-//Control Modules (Devices)
+	//Control Modules (Devices)
+	axisLift : AXIS_REF;
 	s_cmLift : CM_AX5000; // Including 2 limit switched and 1 reference switch
-	s_cmTransportUnit : CM_AX5000; // Including 2 limit switched and 1 reference switch
+
+	axisTransport : AXIS_REF;
+	s_cmTransport : CM_AX5000; // Including 2 limit switched and 1 reference switch
 	
 //------------------------------------------//
 
 //------------------------------------------//
 //Inputs
-//------------------------------------------//
-
-	{warning '#TODO: only declaraton is done, impelementation needs to be done'}
 	s_diStaTrolleyOnPositionLeft : FB_DigInput;
 	s_diStaTrolleyOnPositionRight : FB_DigInput;
 	s_diStaCabinAreaOccupied : FB_DigInput;
 	s_diStaCollisionAvoidanceSensor : FB_DigInput;
 	s_diStaTrolleyLocked : FB_DigInput;
 	s_diStaTrolleyUnlocked : FB_DigInput;
-
+//------------------------------------------//	
+	
 //------------------------------------------//
 //Outputs
 
 //------------------------------------------//
 
-//Requests
-{warning '#TODO": Update to Lifting Transport'}
-s_bReqTB_ToInfeed : BOOL := FALSE;
-s_bReqTB_ToCenter : BOOL := FALSE;
-s_bReqTB_ToDocking : BOOL := FALSE;
-s_bReqCenteringTB : BOOL := FALSE;
+	//Requests
+	s_bReqGoToIdle : BOOL := FALSE;
+	s_bReqPickTrolleyFromTB : BOOL := FALSE;
+	s_bReqPlaceTrolleyInTB : BOOL := FALSE;
 
-//States
-{warning '#TODO": Update to Lifting Transport'}
-s_bStaBrakeReleased : BOOL := FALSE;
-s_bStaDriveError : BOOL := FALSE;
-
-//Properties
+	//States
+	s_bStaLiftDriveError : BOOL := FALSE;
+	s_bStaTransportDriveError : BOOL := FALSE;
 	
-//Interlockes	
+	s_bStaTrolleyInCabin : BOOL := FALSE;
+	s_bStaTrolleyInTB : BOOL := FALSE;
+		
+	s_bStaTrolleyOnPositionLeft : BOOL := FALSE;
+	s_bStaTrolleyOnPositionRight : BOOL := FALSE;
+	s_bStaCabinAreaOccupied : BOOL := FALSE;
+	s_bStaCollisionAvoidanceSensor : BOOL := FALSE;
+	s_bStaTrolleyLocked : BOOL := FALSE;
+	s_bStaTrolleyUnlocked : BOOL := FALSE;
+	
+	//Properties
+	s_bStaAtIdlePosition : BOOL := FALSE;
+	s_bStaTrolleyPickedFromTB : BOOL := FALSE;
+	s_bStaTrolleyPlacedInTB : BOOL := FALSE;	
+
+	//Interlockes	
 	s_bIlckLiftUp : BOOL := TRUE;
 	s_bIlckLiftDown : BOOL := TRUE;
 	s_bIlckTransportExtract : BOOL := TRUE;
 	s_bIlckTransportRetract : BOOL := TRUE;
 	
-	{warning '#TODO: are these variable / properies really nessecary?' }
-	s_bStaTB_AtInfeed : BOOL;
-	s_bStaTB_AtCentering : BOOL;
-	s_bStaTB_AtDocking : BOOL;
-	s_bStaTB_CenteringDone : BOOL;
-	
-	
 //Alarms
 	s_sReason : STRING;
-	{warning '#TODO": Update to Lifting Transport'}
-	s_fbAlarmHandlerTravelTimeOut : FB_AlarmHandler;
-	s_bErrTravelTimeOut : BOOL;
 	
-//Warnings
-{warning '#TODO": Update to Lifting Transport'}
-	s_fbAlarmHandlerOuterDoorNotOpened : FB_AlarmHandler;
-	s_bWrnOuterDoorNotOpened : BOOL;
+	s_fbAlarmHandlerLiftDrive : FB_AlarmHandler;
+	s_fbAlarmHandlerTransportDrive : FB_AlarmHandler;
+	
+	s_bErrLiftDrive : BOOL;
+	s_bErrTransportDrive : BOOL;
+	
+	//Warnings
+	s_fbAlarmHandlerSafetyDoorNotClosed : FB_AlarmHandler;
+	s_bWrnSafetyDoorNotClosed : BOOL;
 	
 	s_bStaWarning : BOOL;
 	
-//------------------------------------------//
-//Params
-//--	//Tool settings
-//--	s_fbParamToolHardwareNr				: FB_HmiParamHandler;
-//--    s_fbParamToolSoftwareVersion		: FB_HmiParamHandler;
-
-//--	s_fbParamName						: FB_HmiParamHandler;
-//--	s_fbParamNumber						: FB_HmiParamHandler;
-//--	s_fbParamRevision                   : FB_HmiParamHandler;
-	
-//--	s_fbParamTeslaMeterIp				: FB_HmiParamHandler;
-//--	s_fbParamTeslaMeterPort				: FB_HmiParamHandler;
-	
-//--	//Product settings (Maybe)
-//--	s_fbParamTotalStroke				: FB_HmiParamHandler;
-//--	s_fbParamStepStroke					: FB_HmiParamHandler;
-//--	s_fbParamAveragingNumberTest		: FB_HmiParamHandler;
-	
-//--	s_fbParamaMaxMagnitudeCriteria		: FB_HmiParamHandler;
-	
-//--	s_fbParamRefIduBottom				: FB_HmiParamHandler;
-//--	s_fbParamRefItm                     : FB_HmiParamHandler;
-//--	s_fbParamRefCenterTpmPipe           : FB_HmiParamHandler;
-//--	s_fbParamRefCpValve					: FB_HmiParamHandler;
-//------------------------------------------//
-
-//------------------------------------------//
-//Variables
-//--	s_sTestResult 						: STRING;
-	
-//------------------------------------------//
-
-//------------------------------------------//
-//Alarms
-	
-
-//------------------------------------------//
-
-//------------------------------------------//
-
 	s_sMessage : STRING;
 
-//Sequencers
+	//Sequencers
 	s_eSeqLiftingTransport : E_SeqLiftingTransport;
 	s_fbSeqLiftingTransportControl : FB_SeqControl;
 
@@ -145,31 +117,22 @@ s_bStaDriveError : BOOL := FALSE;
 	s_bDoorCheckTimeDisabled : BOOL := FALSE;
 	
 
-//Hmi
-{warning '#TODO": Update to Lifting Transport'}
-	s_nToHmiStepNr					: INT;
-	s_nToHmiMaxStepNr				: INT;
-	s_sToHmiInstructionText			: T_MAXSTRING;
-	s_sToHmiProcedure				: T_MAXSTRING;
-	
+	//Hmi
 	//Buttons
-	s_fbHmiBtnTB_ToInfeed				: FB_HmiBtn;
-	s_fbHmiBtnTB_ToCentering			: FB_HmiBtn;
-	s_fbHmiBtnTB_ToDocking				: FB_HmiBtn;
-	
-	s_fbHmiBtnTB_Centering				: FB_HmiBtn;
-	
+	s_fbHmiBtnGoToIdle					: FB_HmiBtn;
+	s_fbHmiBtnPickTrolleyFromTB			: FB_HmiBtn;
+	s_fbHmiBtnPlaceTrolleyInTB			: FB_HmiBtn;
+		
 	//Leds
-	s_fbHmiLedInfeedRearPosition		: FB_HmiLed;
-	s_fbHmiLedInfeedFrontPosition		: FB_HmiLed;
-	s_fbHmiLedCenteringPosition			: FB_HmiLed;
-	s_fbHmiLedDockingPosition			: FB_HmiLed;
-	s_fbHmiLedDoorOpened				: FB_HmiLed;
+	s_fbHmiLedTrolleyOnPositionLeft		: FB_HmiLed;
+	s_fbHmiLedTrolleyOnPositionRight	: FB_HmiLed;
+	s_fbHmiLedCabinAreaOccupied			: FB_HmiLed;
+	s_fbHmiLedCollisionAvoidanceSensor	: FB_HmiLed;
+	s_fbHmiLedTrolleyLocked				: FB_HmiLed;
+	s_fbHmiLedTrolleyUnlocked			: FB_HmiLed;
 	
-	s_fbHmiLedCenteringIdle				: FB_HmiLed;
-	s_fbHmiLedCenteringCenter			: FB_HmiLed;
-	
-//------------------------------------------//
+	{warning '#TODO' Het zou beter zijn om dit onder te brengen in de onderstaande control modules}
+	s_bHmiForceOutputEnabled : BOOL;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -187,33 +150,30 @@ IF NOT SUPER^._m_Alarms() THEN
 	RETURN;
 END_IF
 
-{warning '#TODO": Update to Lifting Transport'}
 // Alarm Handlers
-s_fbAlarmHandlerTravelTimeOut(
-	i_bStaActive := s_bErrTravelTimeOut, 
+s_fbAlarmHandlerLiftDrive(
+	i_bStaActive := s_bErrLiftDrive, 
 	i_eAlarmLevel := E_AlarmLevel.Alarm, 
-	i_sAlarmText := CONCAT(i_sEmName, CONCAT( ': Travel error: ', s_sReason)));
+	i_sAlarmText := CONCAT(i_sEmName, CONCAT( ': Scissor Lift Drive error: ', s_sReason)));
 	
-s_fbAlarmHandlerOuterDoorNotOpened(
-	i_bStaActive := s_bWrnOuterDoorNotOpened, 
-	i_eAlarmLevel := E_AlarmLevel.Warning, 
-	i_sAlarmText := CONCAT(i_sEmName, ': Outer-door open not detected'));
+s_fbAlarmHandlerTransportDrive(
+	i_bStaActive := s_bErrTransportDrive, 
+	i_eAlarmLevel := E_AlarmLevel.Alarm, 
+	i_sAlarmText := CONCAT(i_sEmName, CONCAT( ': Transport Unit Drive error: ', s_sReason)));
 
 // Reset warnings
 IF i_bCmdReset THEN
-	s_bErrTravelTimeOut := FALSE;
-	s_bWrnOuterDoorNotOpened := FALSE;
+	s_bWrnSafetyDoorNotClosed := FALSE;
 END_IF
 
 s_bStaError := 
-	s_cmPalletConveyor.p_bStaError
-	OR s_cmCenteringUnit.p_bStaError
-	OR s_fbAlarmHandlerTravelTimeOut.q_bStaActive;	
-
+	s_cmLift.p_bError
+	OR s_cmTransport.p_bError
+	OR s_fbAlarmHandlerLiftDrive.q_bStaActive
+	OR s_fbAlarmHandlerTransportDrive.q_bStaActive;
+	
 s_bStaWarning :=
-	s_fbAlarmHandlerOuterDoorNotOpened.q_bStaActive
-	OR s_cmPalletConveyor.p_bStaWarning
-	OR s_cmCenteringUnit.p_bStaWarning;
+	s_fbAlarmHandlerSafetyDoorNotClosed.q_bStaActive;
 	
 _m_Alarms := TRUE;
 ]]></ST>
@@ -243,16 +203,34 @@ s_cmLift(
 	i_eCtrlMode := i_eCtrlMode,
 	i_bCmdReset := i_bCmdReset,
 	i_refAxis := axisLift,
-	i_bIclkForward := FALSE,
-	i_bIclkBackward := FALSE);
+	i_bIclkForward := s_bIlckLiftUp,
+	i_bIclkBackward := s_bIlckLiftDown);
 
-s_cmTransportUnit(
+s_bStaLiftDriveError := s_cmLift.p_bError;
+	
+s_cmTransport(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
 	i_bCmdReset := i_bCmdReset,
-	i_refAxis := axisTransportUnit,
-	i_bIclkForward := FALSE, 
-	i_bIclkBackward := FALSE);
+	i_refAxis := axisTransport,
+	i_bIclkForward := s_bIlckTransportExtract, 
+	i_bIclkBackward := s_bIlckTransportRetract);
+
+s_bStaTransportDriveError := s_cmTransport.p_bError;
+
+s_diStaTrolleyOnPositionLeft();
+s_diStaTrolleyOnPositionRight();
+s_diStaCabinAreaOccupied();
+s_diStaCollisionAvoidanceSensor();
+s_diStaTrolleyLocked();
+s_diStaTrolleyUnlocked();
+
+s_bStaTrolleyOnPositionLeft := s_diStaTrolleyOnPositionLeft.p_bStaInputDelayed;
+s_bStaTrolleyOnPositionRight := s_diStaTrolleyOnPositionRight.p_bStaInputDelayed;
+s_bStaCabinAreaOccupied := s_diStaCabinAreaOccupied.p_bStaInputDelayed;
+s_bStaCollisionAvoidanceSensor := s_diStaCollisionAvoidanceSensor.p_bStaInputDelayed;
+s_bStaTrolleyLocked := s_diStaTrolleyLocked.p_bStaInputDelayed;
+s_bStaTrolleyUnlocked := s_diStaTrolleyUnlocked.p_bStaInputDelayed;
 
 _m_Devices := TRUE;
 ]]></ST>
@@ -268,27 +246,21 @@ IF NOT SUPER^._m_Hmi() THEN
 END_IF
 
 //Buttons
-s_fbHmiBtnTB_ToInfeed.p_bStaEnabled := s_bIlckConveyorBackward;
-s_fbHmiBtnTB_ToCentering.p_bStaEnabled := s_bIlckConveyorForward;
-s_fbHmiBtnTB_ToDocking.p_bStaEnabled := s_bIlckConveyorForward;
-s_fbHmiBtnTB_Centering.p_bStaEnabled := s_bIlckCenteringToCenter;
-
-s_fbHmiBtnTB_ToInfeed();
-s_fbHmiBtnTB_ToCentering();
-s_fbHmiBtnTB_ToDocking();
-s_fbHmiBtnTB_Centering();
+s_fbHmiBtnGoToIdle();
+s_fbHmiBtnPickTrolleyFromTB();
+s_fbHmiBtnPlaceTrolleyInTB();
 
 //Leds
-s_fbHmiLedInfeedRearPosition(i_bStaLed := s_bStaAtInfeedRearPosition);
-s_fbHmiLedInfeedFrontPosition(i_bStaLed := s_bStaAtInfeedFrontPosition);
-s_fbHmiLedCenteringPosition(i_bStaLed := s_bStaAtCenteringPosition);
-s_fbHmiLedDockingPosition(i_bStaLed := s_bStaAtDockingPosition);
-s_fbHmiLedDoorOpened(i_bStaLed := s_bStaDoorOpened);
 
-s_fbHmiLedCenteringCenter(i_bStaLed := s_bStaCenteringCenter);
-s_fbHmiLedCenteringIdle(i_bStaLed := s_bStaCenteringIdle);
+s_fbHmiLedTrolleyOnPositionLeft(i_bStaLed := s_bStaTrolleyOnPositionLeft);
+s_fbHmiLedTrolleyOnPositionRight(i_bStaLed := s_bStaTrolleyOnPositionRight);
+s_fbHmiLedCabinAreaOccupied(i_bStaLed := s_bStaCabinAreaOccupied);
+s_fbHmiLedCollisionAvoidanceSensor(i_bStaLed := s_bStaCollisionAvoidanceSensor);
+s_fbHmiLedTrolleyLocked(i_bStaLed := s_bStaTrolleyLocked);
+s_fbHmiLedTrolleyUnlocked(i_bStaLed := s_bStaTrolleyUnlocked);
 
-_m_Hmi := TRUE;]]></ST>
+_m_Hmi := TRUE;
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_Init" Id="{fdcbf52e-0860-4b94-915e-8e7c2bbd0a27}" FolderPath="Base\">
@@ -306,104 +278,165 @@ s_cmLift.i_eCtrlMode := E_CtrlMode.IDLE;
 s_cmLift.i_sCmName := 'CM Lift';
 s_cmLift.i_refAxis REF= axisLift;
 
-s_cmTransportUnit.i_bReqEnable := FALSE;
-s_cmTransportUnit.i_eCtrlMode := E_CtrlMode.IDLE;
-s_cmTransportUnit.i_sCmName := 'CM Transport Unit';
-s_cmTransportUnit.i_refAxis REF= axisTransportUnit;
+s_cmTransport.i_bReqEnable := FALSE;
+s_cmTransport.i_eCtrlMode := E_CtrlMode.IDLE;
+s_cmTransport.i_sCmName := 'CM Transport Unit';
+s_cmTransport.i_refAxis REF= axisTransport;
 {warning '#TODO: Dot we need to added configuration parameters? Seperate struct or via settings or dedicateed variables'}
 
-//---------------------------------//	
-	
-//----------------------------------//	
+s_diStaTrolleyOnPositionLeft.i_stSettings.tmInputDelay := T#100MS;
+s_diStaTrolleyOnPositionRight.i_stSettings.tmInputDelay := T#100MS;
+s_diStaCabinAreaOccupied.i_stSettings.tmInputDelay := T#100MS;
+s_diStaCollisionAvoidanceSensor.i_stSettings.tmInputDelay := T#100MS;
+s_diStaTrolleyLocked.i_stSettings.tmInputDelay := T#100MS;
+s_diStaTrolleyUnlocked.i_stSettings.tmInputDelay := T#100MS;
+
+//Interlock strings
+//Lift
+//	i_stInterlockList.arr_Interlocks[0].sReason --> External, dynamical will be written in m_input
+	fbIlckHandlerLiftDown.i_stInterlockList.arr_Interlocks[1].sReason := 'Transport not retracted';
+//..fbIlckHandlerLiftDown.i_stInterlockList.arr_Interlocks[2].sReason := 'Transport not retracted';
+
+//	i_stInterlockList.arr_Interlocks[0].sReason --> External, dynamical will be written in m_input
+	fbIlckHandlerLiftUp.i_stInterlockList.arr_Interlocks[1].sReason := 'Trolly at correct position';
+//..fbIlckHandlerLiftUp.i_stInterlockList.arr_Interlocks[2].sReason := '..';
+
+//Transport
+//	i_stInterlockList.arr_Interlocks[0].sReason --> External, dynamical will be written in m_input
+	fbIlckHandlerTransportRetract.i_stInterlockList.arr_Interlocks[1].sReason := 'Lift not at correct position';
+//..fbInterlockHandlerTransportRetract.i_stInterlockList.arr_Interlocks[2].sReason := 'Transport not retracted';
+
+//	i_stInterlockList.arr_Interlocks[0].sReason --> External, dynamical will be written in m_input
+	fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[1].sReason := 'Lift not at correct position';
+//..fbInterlockHandlerTransportExtract.i_stInterlockList.arr_Interlocks[2].sReason := '..';
+
 //Hmi
-{warning '#TODO: Update to Lifing Transport'} 
-	s_fbHmiBtnTB_ToInfeed.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnTB_ToInfeed.p_bStaVisible := FALSE;
-	s_fbHmiBtnTB_ToInfeed.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnTB_ToInfeed.p_sBtnText := 'TB To Infeed Position';
+	s_fbHmiBtnGoToIdle.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnGoToIdle.p_bStaVisible := FALSE;
+	s_fbHmiBtnGoToIdle.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnGoToIdle.p_sBtnText := 'Go To Idle';
 	
-	s_fbHmiBtnTB_ToCentering.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnTB_ToCentering.p_bStaVisible := FALSE;
-	s_fbHmiBtnTB_ToCentering.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnTB_ToCentering.p_sBtnText := 'TB To Centering Position';
+	s_fbHmiBtnPickTrolleyFromTB.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnPickTrolleyFromTB.p_bStaVisible := FALSE;
+	s_fbHmiBtnPickTrolleyFromTB.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnPickTrolleyFromTB.p_sBtnText := 'Pick Trolley From TB';
 	
-	s_fbHmiBtnTB_ToDocking.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnTB_ToDocking.p_bStaVisible := FALSE;
-	s_fbHmiBtnTB_ToDocking.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnTB_ToDocking.p_sBtnText := 'TB To Docking Position';
+	s_fbHmiBtnPlaceTrolleyInTB.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnPlaceTrolleyInTB.p_bStaVisible := FALSE;
+	s_fbHmiBtnPlaceTrolleyInTB.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnPlaceTrolleyInTB.p_sBtnText := 'Place Trlley In TB';
 	
-	s_fbHmiBtnTB_Centering.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnTB_Centering.p_bStaVisible := FALSE;
-	s_fbHmiBtnTB_Centering.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnTB_Centering.p_sBtnText := 'Centering TB';
+	s_fbHmiLedTrolleyLocked				: FB_HmiLed;
+	s_fbHmiLedTrolleyUnlocked			: FB_HmiLed;
 
-	s_fbHmiLedInfeedRearPosition.p_bStaVisible := FALSE;
-	s_fbHmiLedInfeedRearPosition.p_sToHmiDescriptionLed := 'Infeed Rear Position';
+	s_fbHmiLedTrolleyOnPositionLeft.p_bStaVisible := FALSE;
+	s_fbHmiLedTrolleyOnPositionLeft.p_sToHmiDescriptionLed := 'Trolley On Position Left';
 	
-	s_fbHmiLedInfeedFrontPosition.p_bStaVisible := FALSE;
-	s_fbHmiLedInfeedFrontPosition.p_sToHmiDescriptionLed := 'Infeed Front Position';
+	s_fbHmiLedTrolleyOnPositionRight.p_bStaVisible := FALSE;
+	s_fbHmiLedTrolleyOnPositionRight.p_sToHmiDescriptionLed := 'Trolley On Position Right';
 	
-	s_fbHmiLedCenteringPosition.p_bStaVisible := FALSE;
-	s_fbHmiLedCenteringPosition.p_sToHmiDescriptionLed := 'Center Position';
+	s_fbHmiLedCabinAreaOccupied.p_bStaVisible := FALSE;
+	s_fbHmiLedCabinAreaOccupied.p_sToHmiDescriptionLed := 'Cabin Area Occupied';
 	
-	s_fbHmiLedDockingPosition.p_bStaVisible := FALSE;
-	s_fbHmiLedDockingPosition.p_sToHmiDescriptionLed := 'Docking Position';
+	s_fbHmiLedCollisionAvoidanceSensor.p_bStaVisible := FALSE;
+	s_fbHmiLedCollisionAvoidanceSensor.p_sToHmiDescriptionLed := 'Collision Avoidance Sensor';
 	
-	s_fbHmiLedDoorOpened.p_bStaVisible := FALSE;
-	s_fbHmiLedDoorOpened.p_sToHmiDescriptionLed := 'Door Opened';
+	s_fbHmiLedTrolleyLocked.p_bStaVisible := FALSE;
+	s_fbHmiLedTrolleyLocked.p_sToHmiDescriptionLed := 'Trolley Locked';
 	
-	s_fbHmiLedCenteringIdle.p_bStaVisible := FALSE;
-	s_fbHmiLedCenteringIdle.p_sToHmiDescriptionLed := 'Centering Idle';
+	s_fbHmiLedTrolleyUnlocked.p_bStaVisible := FALSE;
+	s_fbHmiLedTrolleyUnlocked.p_sToHmiDescriptionLed := 'Trolley Unlocked';
 	
-	s_fbHmiLedCenteringCenter.p_bStaVisible := FALSE;
-	s_fbHmiLedCenteringCenter.p_sToHmiDescriptionLed := 'Centering Center';
-	
-//----------------------------------//	
-//Initialize all moving averages
-
-//----------------------------------//	
-
-//----------------------------------//	
-
-//Inputs
-//----------------------------------//	
-
-//----------------------------------//	
-//Outputs
-//--s_doRelayTableDown.i_stSettings.bCfgDelay		:= FALSE;	
-//--s_doRelayTableDown.i_stSettings.tmOutputDelay	:= T#0S;	
-//----------------------------------//	
-
-_m_Init := TRUE;]]></ST>
+_m_Init := TRUE;
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_Inputs" Id="{2c09f905-698a-4dfd-8c60-1a7d7f6d646b}" FolderPath="Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Inputs : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF NOT SUPER^._m_Inputs() THEN
+        <ST><![CDATA[
+IF NOT SUPER^._m_Inputs() THEN
 	RETURN;
 END_IF
 
 //Interlocks
-s_bIlckConveyorForward := i_bIlckConveyorForward OR NOT(s_bStaCenteringIdle); 
-s_bIlckConveyorBackward := i_bIlckConveyorBackward OR NOT(s_bStaCenteringIdle);
-s_bIlckConveyorBackward := NOT(s_bStaCenteringIdle);
-s_bIlckCenteringToCenter := NOT(s_cmPalletConveyor.p_bStaMotorStopped);
-s_bIlckCenteringToIdle := FALSE;
+//Lift
+fbIlckHandlerLiftDown.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckLiftDown.p_bInterlocked;
+fbIlckHandlerLiftDown.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckLiftDown.p_sReason;
+fbIlckHandlerLiftDown.i_stInterlockList.arr_Interlocks[1].bState := NOT(s_cmTransport.p_fPosition = 0); //TODO
+fbIlckHandlerLiftDown();
 
-//Reasons
-IF i_bIlckConveyorForward OR i_bIlckConveyorBackward THEN
-	s_cmPalletConveyor.p_sInterlockedReason := 'External interlocked';
-ELSIF s_bIlckConveyorForward OR s_bIlckConveyorBackward THEN
-	s_cmPalletConveyor.p_sInterlockedReason := 'Centering not in idle-position'; 
+fbIlckHandlerLiftUp.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckLiftUp.p_bInterlocked;
+fbIlckHandlerLiftUp.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckLiftUp.p_sReason;
+fbIlckHandlerLiftUp.i_stInterlockList.arr_Interlocks[1].bState := NOT(s_cmTransport.p_fPosition = 0); //TODO
+fbIlckHandlerLiftUp();
+
+s_bIlckLiftDown := fbIlckHandlerLiftDown.p_bInterlocked;
+s_bIlckLiftUp := fbIlckHandlerLiftUp.p_bInterlocked;
+
+//Transport
+fbIlckHandlerTransportRetract.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckTransportRetract.p_bInterlocked;
+fbIlckHandlerTransportRetract.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckTransportRetract.p_sReason;
+fbIlckHandlerTransportRetract.i_stInterlockList.arr_Interlocks[1].bState := NOT(s_cmLift.p_fPosition = 0); //TODO
+fbIlckHandlerTransportRetract();
+
+fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckTransportExtract.p_bInterlocked;
+fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckTransportExtract.p_sReason;
+fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[1].bState := NOT(s_cmLift.p_fPosition = 0); //TODO
+fbIlckHandlerTransportExtract();
+
+s_bIlckTransportRetract := fbIlckHandlerTransportRetract.p_bInterlocked;
+s_bIlckTransportExtract := fbIlckHandlerTransportExtract.p_bInterlocked;
+
+//Reasons (own reason first: Cm->Em->Un)
+//Lift
+IF s_bIlckLiftDown THEN
+	s_cmLift.p_sInterlockedReasonDown := fbIlckHandlerLiftDown.p_sReason;
+ELSE
+	s_cmLift.p_sInterlockedReasonDown := '-';
+END_IF
+	
+IF s_bIlckLiftUp THEN
+	s_cmLift.p_sInterlockedReasonUp := fbIlckHandlerLiftUp.p_sReason;
+ELSE
+	s_cmLift.p_sInterlockedReasonUp := '-';
 END_IF
 
-IF s_bIlckCenteringToCenter THEN
-	s_cmCenteringUnit.p_sInterlockedReason := 'Conveyor not stopped';
+//Transport
+IF s_bIlckTransportRetract THEN
+	s_cmTransport.p_sInterlockedReasonRetract := fbIlckHandlerTransportRetract.p_sReason;
+ELSE
+	s_cmTransport.p_sInterlockedReasonRetract := '-';
+END_IF
+	
+IF s_bIlckTransportExtract THEN
+	s_cmTransport.p_sInterlockedReasonExtract := fbIlckHandlerTransportExtract.p_sReason;
+ELSE
+	s_cmTransport.p_sInterlockedReasonExtract := '-';
 END_IF
 
-_m_Inputs := TRUE;]]></ST>
+{warning '#TODO: Something similar needs to be added for lifting transport'}
+//TB States (only use data if a valid ID is pressent else use sensor states)
+IF __ISVALIDREF(i_refTB) AND (i_refTB.p_nId > 0) THEN
+//++	s_bStaAtIdlePosition := i_refTB.p_b..;
+//++	s_bStaTrolleyInTB := i_refTB.p_b..;
+	s_bStaTrolleyInCabin := i_refTB.p_b..;
+	//..
+ 
+//--	s_bStaTB_CenteringDone := i_refTB.p_bCenteringDone;
+//--	s_bStaTB_AtInfeed := i_refTB.p_eActLocation = E_Location.INFEED;
+//--	s_bStaTB_AtCentering := i_refTB.p_eActLocation = E_Location.CENTERING;
+//--	s_bStaTB_AtDocking := i_refTB.p_eActLocation = E_Location.DOCKING;
+ELSE
+//--	s_bStaTB_CenteringDone := s_eTmpCenteringDone;
+//--	s_bStaTB_AtInfeed := s_bStaAtInfeedRearPosition OR s_bStaAtInfeedFrontPosition;
+//--	s_bStaTB_AtCentering := s_bStaAtCenteringPosition;
+//--	s_bStaTB_AtDocking := s_bStaAtDockingPosition;	
+END_IF
+
+_m_Inputs := TRUE;
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_ManualControl" Id="{61a84643-dbec-4bc1-99bd-3a2ec3342898}">
@@ -464,17 +497,12 @@ END_IF
 
 q_bStaWarning := s_bStaWarning;
 
-_m_Outputs := TRUE;]]></ST>
+_m_Outputs := TRUE;
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_Params" Id="{5f8e46d4-1bd2-48a0-a796-5af6a0b2577f}" FolderPath="Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Params : BOOL
-VAR_INST
-	s_fToHmiXAxisMin	: LREAL;
-	s_fToHmiXAxisMax	: LREAL;
-	s_fToHmiYAxisMin	: LREAL;
-	s_fToHmiYAxisMax	: LREAL;
-END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
@@ -482,85 +510,14 @@ IF NOT SUPER^._m_Params() THEN
 	RETURN;
 END_IF
 
-s_fbParamToolHardwareNr(i_fDefaultValue				:= 0,
-						i_nArrayFolderIndex			:= 1,
-						i_sName						:= 'Harware ID',
-						i_bIsNumber					:= FALSE);
+//Write to settings
+{warning '#TODO: Check what nees to be added here, is it nessecary add a fbParam for each parameter?'}
+	
+//++i_ref_stSettings.fSpeedManual := s_fbParamSpeedManual.p_fValue;
 
-s_fbParamToolSoftwareVersion(i_fDefaultValue		:= 0,
-							i_nArrayFolderIndex		:= 1,
-							i_sName					:= 'Software Version',
-							i_bIsNumber				:= FALSE);
-
-s_fbParamName(i_fDefaultValue						:= 0,
-				i_nArrayFolderIndex					:= 1,
-				i_sName								:= 'Description',
-				i_bIsNumber							:= FALSE);
-							
-s_fbParamTeslaMeterIp(i_fDefaultValue			:= 0,
-						i_nArrayFolderIndex		:= 1,
-						i_sName					:= 'Tesla meter ip adress',
-						i_bIsNumber				:= FALSE);
-						
-s_fbParamTeslaMeterPort(i_fDefaultValue			:= 0,
-						i_nArrayFolderIndex		:= 1,
-						i_sName					:= 'Tesla meter port number',
-						i_bIsNumber				:= TRUE);
-
-//---------
-
-						
-s_fbParamTotalStroke(i_fDefaultValue			:= 100,
-						i_nArrayFolderIndex		:= 2,
-						i_sName					:= 'Total measurement stroke',
-						i_bIsNumber				:= TRUE);
-						
-s_fbParamStepStroke(i_fDefaultValue				:= 10,
-						i_nArrayFolderIndex		:= 2,
-						i_sName					:= 'Step distance per measurement',
-						i_bIsNumber				:= TRUE);
-
-s_fbParamAveragingNumberTest(i_fDefaultValue		:= 10,
-							i_nArrayFolderIndex		:= 2,
-							i_sName					:= 'Number of measurements per step for averaging the magnetic field',
-							i_bIsNumber				:= TRUE);
-							
-s_fbParamaMaxMagnitudeCriteria(i_fDefaultValue		:= 100,
-							i_nArrayFolderIndex		:= 2,
-							i_sName					:= 'Maximum allowed magnitude magnetic field (Test)',
-							i_bIsNumber				:= TRUE);
-
-s_fbParamRefIduBottom(i_fDefaultValue				:= 0,
-							i_nArrayFolderIndex		:= 2,
-							i_sName					:= 'Distance from home position to lower IDU Bottom',
-							i_bIsNumber				:= TRUE);
-							
-s_fbParamRefItm(i_fDefaultValue						:= 0,
-							i_nArrayFolderIndex		:= 2,
-							i_sName					:= 'Distance from home position Itm lower IDU / upper IDU',
-							i_bIsNumber				:= TRUE);
-							
-s_fbParamRefCenterTpmPipe(i_fDefaultValue			:= 0,
-							i_nArrayFolderIndex		:= 2,
-							i_sName					:= 'Distance from home position to center TPM pipe',
-							i_bIsNumber				:= TRUE);
-							
-s_fbParamRefCpValve(i_fDefaultValue		:= 0,
-							i_nArrayFolderIndex		:= 2,
-							i_sName					:= 'Distance from home position to bottom C/P valve',
-							i_bIsNumber				:= TRUE);				
-
-GVL_DataLogging.g_stReportData.CabinetSerialNumber      := s_fbParamToolHardwareNr.p_sValue;
-GVL_DataLogging.g_stReportData.TesterSoftwareVersion    := s_fbParamToolSoftwareVersion.p_sValue;
-GVL_DataLogging.g_stReportData.Operator                 := GVL.g_sUser;
-GVL_DataLogging.g_stReportData.Note						:= GVL.g_sNotesEntry;
-//GVL_DataLogging.g_stReportData.Message can be filled in test procedure with for example the error if test is stopped
-GVL_DataLogging.g_stReportData.SerialNumber             := GVL.g_sSerialNumber;
-
-s_fToHmiXAxisMin	:= -2*s_fbParamaMaxMagnitudeCriteria.p_fValue;
-s_fToHmiXAxisMax	:= 2*s_fbParamaMaxMagnitudeCriteria.p_fValue;
-s_fToHmiYAxisMin	:= s_CmProbeMotor.p_fHomePosition;
-s_fToHmiYAxisMax	:= s_fbParamRefCpValve.p_fValue*1.2;
+//++i_ref_stSettings.stLiftSpeedProfileJogging :=
+//++i_ref_stSettings.stLiftSpeedProfilePositioning := 
+//++i_ref_stSettings. 
 
 _m_Params := TRUE;
 ]]></ST>
@@ -586,7 +543,7 @@ s_fbSeqLiftingTransportControl(
 	i_bCmdReset := i_bCmdReset
 					AND (s_eSeqLiftingTransport = E_SeqTransport.ERROR) // Only reset/resume sequencer from ERROR state
 					AND NOT(s_cmLift.p_bStaError)
-					AND NOT(s_cmTransportUnit.p_bStaError)
+					AND NOT(s_cmTransport.p_bStaError)
 					AND i_bReqEnable, 
 	i_bStaError := s_bStaError OR NOT(i_bReqEnable) AND FALSE);
 	
@@ -619,7 +576,7 @@ CASE s_eSeqLiftingTransport OF
 			i_fOverride := 100.0,
 			i_eBufferMode := TC2_MC2.MC_BufferMode.MC_Aborting);
 			
-		s_cmTransportUnit.m_MC_Power(
+		s_cmTransport.m_MC_Power(
 			i_bEnable := TRUE,
 			i_bEnablePositive := TRUE,
 			i_bEnableNegative := TRUE,
@@ -633,16 +590,16 @@ CASE s_eSeqLiftingTransport OF
 	
 	E_SeqLiftingTransport.HOME_TRANSPORT:
 		IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
-			s_cmTransportUnit.m_MC_Home(
+			s_cmTransport.m_MC_Home(
 				i_bExecute := TRUE,
 				i_fPosition := 0.0,
 				i_eHomingMode := Tc2_MC2.MC_HomingMode.MC_Direct,
 				i_eBufferMode := Tc2_MC2.MC_BufferMode.MC_Aborting);
 		END_IF
 		
-		IF s_cmTransportUnit.p_bDone THEN
+		IF s_cmTransport.p_bDone THEN
 			s_eSeqLiftingTransport := E_SeqLiftingTransport.HOME_LIFT;
-		ELSIF s_cmTransportUnit.p_bError THEN
+		ELSIF s_cmTransport.p_bError THEN
 			s_eSeqLiftingTransport := E_SeqLiftingTransport.ERROR;
 		ELSIF s_fbSeqLiftingTransportControl.q_tmStepTime > T#30S THEN
 			s_eSeqLiftingTransport := E_SeqLiftingTransport.ERROR;
@@ -674,12 +631,12 @@ CASE s_eSeqLiftingTransport OF
 		END_IF
 	
 	E_SeqLiftingTransport.TRANSPORT_PRE_PICK_TROLLEY_IN_TB:
-		IF _m_MoveAbsolute(	i_ref_AXIS := axisTransportUnit, i_ref_stProfile := i_ref_stSettings.arr_TransportUnitPositioningProfile[1]) THEN
+		IF _m_MoveAbsolute(	i_ref_AXIS := axisTransport, i_ref_stProfile := i_ref_stSettings.arr_TransportPositioningProfile[1]) THEN
 			s_eSeqLiftingTransport := E_SeqLiftingTransport.TRANSPORT_PICK_TROLLEY_IN_TB;
 		END_IF
 	
 	E_SeqLiftingTransport.TRANSPORT_PICK_TROLLEY_IN_TB:
-		IF _m_MoveAbsolute(	i_ref_AXIS := axisTransportUnit, i_ref_stProfile := i_ref_stSettings.arr_TransportUnitPositioningProfile[2]) THEN
+		IF _m_MoveAbsolute(	i_ref_AXIS := axisTransport, i_ref_stProfile := i_ref_stSettings.arr_TransportPositioningProfile[2]) THEN
 			s_eSeqLiftingTransport := E_SeqLiftingTransport.LIFT_PICK_TROLLEY_IN_TB;
 		END_IF
 	
@@ -695,7 +652,7 @@ CASE s_eSeqLiftingTransport OF
 
 /// PLACE TROLLEY IN TB ////////////////////////////////////////////////////////	
 	E_SeqLiftingTransport.TRANSPORT_PLACE_TROLLEY_IN_CABIN:
-		IF _m_MoveAbsolute(	i_ref_AXIS := axisTransportUnit, i_ref_stProfile := i_ref_stSettings.arr_TransportUnitPositioningProfile[3]) THEN
+		IF _m_MoveAbsolute(	i_ref_AXIS := axisTransport, i_ref_stProfile := i_ref_stSettings.arr_TransportPositioningProfile[3]) THEN
 			s_eSeqLiftingTransport := E_SeqLiftingTransport.LIFT_PRE_PLACE_TROLLEY_IN_CABIN;
 		END_IF
 		
@@ -727,12 +684,12 @@ CASE s_eSeqLiftingTransport OF
 	
 /// PLACE TROLLEY IN TB //??////////////////////////////////////////////////////
 	E_SeqLiftingTransport.TRANSPORT_PRE_PLACE_TROLLEY_IN_TB:
-		IF _m_MoveAbsolute(	i_ref_AXIS := axisTransportUnit, i_ref_stProfile := i_ref_stSettings.arr_TransportUnitPositioningProfile[4]) THEN
+		IF _m_MoveAbsolute(	i_ref_AXIS := axisTransport, i_ref_stProfile := i_ref_stSettings.arr_TransportPositioningProfile[4]) THEN
 			s_eSeqLiftingTransport := E_SeqLiftingTransport.TRANSPORT_PLACE_TROLLEY_IN_TB;
 		END_IF
 	
 	E_SeqLiftingTransport.TRANSPORT_PLACE_TROLLEY_IN_TB:
-		IF _m_MoveAbsolute(	i_ref_AXIS := axisTransportUnit, i_ref_stProfile := i_ref_stSettings.arr_TransportUnitPositioningProfile[5]) THEN
+		IF _m_MoveAbsolute(	i_ref_AXIS := axisTransport, i_ref_stProfile := i_ref_stSettings.arr_TransportPositioningProfile[5]) THEN
 			s_eSeqLiftingTransport := E_SeqLiftingTransport.LIFT_PRE_PLACE_TROLLEY_IN_TB;
 		END_IF
 
@@ -1009,261 +966,120 @@ END_IF]]></ST>
       <Declaration><![CDATA[METHOD PUBLIC m_Main : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF NOT SUPER^.m_Main() THEN
+        <ST><![CDATA[
+IF NOT SUPER^.m_Main() THEN
 	RETURN;
 END_IF
-
-// Pallet Conveyor
-//??IF i_refTB.p_eLocation = E_Location.INFEED
-//??	AND i_refTB.p_eDestination > E_Location.INFEED
-//??	THEN
-	
-//??	s_cmPalletConveyor.m_ReleaseBrake(TRUE);
-
-//??	IF s_cmPalletConveyor.p_bStaBrakeReleased THEN
-//??		s_cmPalletConveyor.m_StartForward(i_stSettings.rSpeedGoToCentering);
-//??	END_IF
-	
-//??END_IF
-
-//??CASE i_refTB.p_eLocation OF
-//??	E_Location.INFEED :
-
-//??	E_Location.Centering :
-
-//??	E_Location.DOCKING :	
-		
-//??		IF i_refTB.p_eDestination < E_Location.DOCKING 
-//??			AND NOT(i_refTB. Docked)
-//??			THEN
-//??			 s_cmPalletConveyor.m_StartBackward(i_stSettings.rSpeedReturnToInfeed);
-//??		END_IF
-
-//??END_CASE
-
-
-// Centering
-//??IF i_refTB.p_eLocation = E_Location.Centering
-//??	AND s_diStaAtCenteringPosition.p_bStaInputDelayed
-//??	AND NOT(i_refTB.p_bAlligned)
-//??	THEN
-//??		s_cmCenteringUnit.m_On();
-		
-//??		IF s_cmCenteringUnit.p_bStaIsOn THEN
-//??			i_refTB.p_bAlligned := TRUE;
-//??		END_IF
-//??ELSE
-//??	s_cmCenteringUnit.m_Off();
-//??END_IF
 
 CASE i_eCtrlMode OF
 
 	E_CtrlMode.IDLE:
-	
 		s_eSeqLiftingTransport := E_SeqLiftingTransport.IDLE;
 		
 	E_CtrlMode.AUTOMATIC:
-	
-		//Excecute automatic control
+		//Automatic commands are controlled by higher-layer unit
 		_m_AutomaticControl();
 		
-(*		s_fbSeqDockingInterface(
-			i_nSeqStep := s_eSeqDockingInterface, 
-			i_sStepName := TO_STRING(s_fbSeqDockingInterface.q_eActState), 
-			i_bCmdReset := i_bCmdReset, 
-			i_bStaError := s_bStaError);
-	
-		CASE s_eSeqDockingInterface OF
-			
-			E_SeqDockingInterface.IDLE:
-			
-				IF s_bReqDockBox THEN
-					//--IF s_diStaBoxAtPreDockingPosition.p_bStaInputDelayed THEN
-					IF s_bStaBoxAtPreDockingPosition THEN	
-						s_bStaUndockingDone := FALSE;
-						s_eSeqDockingInterface := E_SeqDockingInterface.DOCKING_CLOSE_CLAMPS;
-					ELSE
-						s_bWrnNoBoxPresentAtPreDockingPosition := TRUE;	
-					END_IF
-				END_IF
-				
-				IF s_bReqUndockBox THEN
-					IF s_diStaBoxAtDockedPosition.p_bStaInputDelayed THEN
-						s_bStaDockingDone := FALSE;
-						s_eSeqDockingInterface := E_SeqDockingInterface.UNDOCKING_LOCK_DOOR;
-					ELSE
-						s_bWrnNoBoxPresentAtDockedPosition := TRUE;	
-					END_IF	
-				END_IF
-			
-				// Seperatly opening/closing the clamps is nessescary to move these out of the way for moving of the outer door
-				// Clamps must be closed before the outer door can be moved
-				IF s_bReqClosDockingClamps THEN
-					s_eSeqDockingInterface := E_SeqDockingInterface.ONLY_CLOSE_CLAMPS;
-				END_IF
-				
-				IF s_bReqOpenDockingClamps THEN
-					s_eSeqDockingInterface := E_SeqDockingInterface.ONLY_OPEN_CLAMPS;
-				END_IF
-				
-			E_SeqDockingInterface.DOCKING_CLOSE_CLAMPS:
-				
-				IF s_fbSeqDockingInterface.q_bStaEntry THEN 
-					s_cmDockingClamps.m_Close();
-				END_IF
-				
-				IF s_cmDockingClamps.p_bStaIsClosed THEN
-					s_eSeqDockingInterface := E_SeqDockingInterface.DOCKING_UNLOCK_DOOR;
-				ELSIF s_cmDockingClamps.p_bStaError THEN 
-					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
-					// write down some info?
-				ELSIF (s_fbSeqDockingInterface.q_tmStepTime >= i_stSettings.tClampsTimeout) THEN
- 					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
-					// write down some info?
-				END_IF
-			
-			E_SeqDockingInterface.DOCKING_UNLOCK_DOOR:
-			
-				IF s_fbSeqDockingInterface.q_bStaEntry THEN 
-					s_cmUnlockingPins.m_Unlock();
-				END_IF
-				
-				IF s_cmUnlockingPins.p_bStaIsUnlocked THEN
-					s_eSeqDockingInterface := E_SeqDockingInterface.DOCKING_DONE;
-				ELSIF s_cmUnlockingPins.p_bStaError THEN 
-					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
-					// write down some info?
-				ELSIF (s_fbSeqDockingInterface.q_tmStepTime >= i_stSettings.tReleasePinsTimeout) THEN
- 					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
-					// write down some info?
-				END_IF
-			
-			E_SeqDockingInterface.DOCKING_DONE:
-				s_bStaDockingDone := TRUE;
-				s_eSeqDockingInterface := E_SeqDockingInterface.IDLE;
-			
-			E_SeqDockingInterface.UNDOCKING_LOCK_DOOR:
-			
-				IF s_fbSeqDockingInterface.q_bStaEntry THEN 
-					s_cmUnlockingPins.m_Lock();
-				END_IF
-				
-				IF s_cmUnlockingPins.p_bStaIsLocked THEN
-					s_eSeqDockingInterface := E_SeqDockingInterface.UNDOCKING_OPEN_CLAMPS;
-				ELSIF s_cmUnlockingPins.p_bStaError THEN 
-					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
-					// write down some info?
-				ELSIF (s_fbSeqDockingInterface.q_tmStepTime >= i_stSettings.tReleasePinsTimeout) THEN
- 					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
-					// write down some info?
-				END_IF
-				
-			E_SeqDockingInterface.UNDOCKING_OPEN_CLAMPS:
-			
-				IF s_fbSeqDockingInterface.q_bStaEntry THEN 
-					s_cmDockingClamps.m_Open();
-				END_IF
-				
-				IF s_cmDockingClamps.p_bStaIsOpened THEN
-					s_eSeqDockingInterface := E_SeqDockingInterface.UNDOCKING_DONE;
-				ELSIF s_cmDockingClamps.p_bStaError THEN 
-					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
-					// write down some info?
-				ELSIF (s_fbSeqDockingInterface.q_tmStepTime >= i_stSettings.tClampsTimeout) THEN
- 					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
-					// write down some info?
-				END_IF
-				
-			E_SeqDockingInterface.UNDOCKING_DONE:
-				s_bStaUndockingDone := TRUE;
-				s_eSeqDockingInterface := E_SeqDockingInterface.IDLE;
-				
-			E_SeqDockingInterface.ONLY_CLOSE_CLAMPS:
-			
-				IF s_fbSeqDockingInterface.q_bStaEntry THEN
-					s_cmDockingClamps.m_Close();
-				END_IF
-			
-				IF s_cmDockingClamps.p_bStaIsClosed THEN
-					s_eSeqDockingInterface := E_SeqDockingInterface.IDLE;
-				ELSIF (s_fbSeqDockingInterface.q_tmStepTime >= i_stSettings.tClampsTimeout) THEN
- 					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
-					// write down some info?
-				END_IF
-			
-			E_SeqDockingInterface.ONLY_OPEN_CLAMPS:	
-				
-				IF s_fbSeqDockingInterface.q_bStaEntry THEN
-					s_cmDockingClamps.m_Open();
-				END_IF
-			
-				IF s_cmDockingClamps.p_bStaIsOpened THEN
-					s_eSeqDockingInterface := E_SeqDockingInterface.IDLE;
-				ELSIF (s_fbSeqDockingInterface.q_tmStepTime >= i_stSettings.tClampsTimeout) THEN
- 					s_eSeqDockingInterface := E_SeqDockingInterface.ERROR;
-					// write down some info?
-				END_IF
-				
-			E_SeqDockingInterface.READY:
-				;
-			
-			E_SeqDockingInterface.ERROR:
-				
-				IF i_bCmdReset THEN
-					//Reset errors (probebly alredy done in the methode devices)
-					//--cmValveDockingClampsUpper.i_bCmdReset := TRUE;
-				
-					s_eSeqDockingInterface := E_SeqDockingInterface.IDLE;
-				END_IF
-				
-		END_CASE		
-*)	
-		
 	E_CtrlMode.MANUAL:
+		//Execute manaual control (based on HMI buttons)
+		
+		//Manual commands (convert HMI buttons to requests), only in state running
+		IF (i_eCtrlState = E_CtrlState.RUNNING) THEN
+			s_bReqGoToIdle := s_fbHmiBtnGoToIdle.p_osrBtnPress;
+			s_bReqPickTrolleyFromTB := s_fbHmiBtnPickTrolleyFromTB.p_osrBtnPress;
+			s_bReqPlaceTrolleyInTB := s_fbHmiBtnPlaceTrolleyInTB.p_osrBtnPress;
+		END_IF
+	
+		_m_AutomaticControl();
+		
+	E_CtrlMode.MAINTENANCE:
+		//Execute maintenance control (HMI control module buttons)
+		//Reset automatic/manual sequencer
 		s_eSeqLiftingTransport := E_SeqTransport.IDLE;
 	
-		//++_m_ManualControl();
+		; 	//Maintenance control is implemented in lower-layer control modules
+	
+	E_CtrlMode.IO:
+		//Execute IO-test control (HMI output force control)
+		; 	//IO-Test control is implemented in lower-layer control modules
+			//Enabling control is done direcly under this case instruction
 		
-//--		// Manual control placed inside the lower layer control modles
-	
-		{warning '#TODO: Add manual control from hmi'}
-		//Is het de bedoeling om op deze plekken de hmi knoppen aan te sturen, OF moet dat gedaan worden in METHOD hmi?		
-(*		s_fbHmiBtnManualConveyorApplyBrake.p_bStaVisible := TRUE;
-		s_fbHmiBtnManualConveyorApplyBrake.p_bStaEnabled := s_cmPalletConveyor.p_bStaMotorStopped;
-	
-		s_fbHmiBtnManualConveyorReleaseBrake.p_bStaVisible := TRUE;
-		s_fbHmiBtnManualConveyorReleaseBrake.p_bStaEnabled := s_cmPalletConveyor.p_bStaMotorStopped;
-		
-		s_fbHmiBtnManualConveyorStop.p_bStaVisible := TRUE;
-		s_fbHmiBtnManualConveyorStop.p_bStaEnabled := TRUE;
-	
-		s_fbHmiBtnManualConveyorForward.p_bStaVisible := TRUE;
-		s_fbHmiBtnManualConveyorForward.p_bStaEnabled := s_cmPalletConveyor.p_bStaMotorStopped;
-	
-		s_fbHmiBtnManualConveyorBackward.p_bStaVisible := TRUE;
-		s_fbHmiBtnManualConveyorBackward.p_bStaEnabled := s_cmPalletConveyor.p_bStaMotorStopped;
-		
-		IF s_fbHmiBtnManualConveyorApplyBrake.p_osrBtnPress THEN
-			s_cmPalletConveyor.m_ReleaseBrake(i_bValue := FALSE);
-		END_IF
-		
-		IF s_fbHmiBtnManualConveyorReleaseBrake.p_osrBtnPress THEN
-			s_cmPalletConveyor.m_ReleaseBrake(i_bValue := TRUE);
-		END_IF
-	
-		IF s_fbHmiBtnReset.p_osrBtnPress THEN
-			s_cmPalletConveyor.m_Reset();
-		END_IF
-			
-		IF s_fbHmiBtnManualConveyorStop.p_osrBtnPress THEN
-			s_cmPalletConveyor.m_Stop();	
-		ELSIF s_fbHmiBtnManualConveyorForward.p_osrBtnPress THEN
-			s_cmPalletConveyor.m_StartForward(i_rTargetSpeed := i_stSettings.rSpeedManual);
-		ELSIF s_fbHmiBtnManualConveyorBackward.p_osrBtnPress THEN
-			s_cmPalletConveyor.m_StartBackward(i_rTargetSpeed := i_stSettings.rSpeedManual);
-		END_IF
-*)		
+	E_CtrlMode.CLEANING:
+		//Execute cleaning control (cleaning  specific functionalities)
+		;	//Cleaning control is not implemented, this could be a done in the future if neccesary
+				
 END_CASE
+
+//AUTOMATIC-mode //////////////////////////////////////////////////////////////////////////////////
+
+//MANUAL-mode /////////////////////////////////////////////////////////////////////////////////////
+
+//Buttons visibility
+IF (i_eCtrlMode = E_CtrlMode.MANUAL) THEN
+	s_fbHmiBtnGoToIdle.p_bStaVisible := TRUE;
+	s_fbHmiBtnPickTrolleyFromTB.p_bStaVisible := TRUE;
+	s_fbHmiBtnPlaceTrolleyInTB.p_bStaVisible := TRUE;
+ELSE
+	s_fbHmiBtnGoToIdle.p_bStaVisible := FALSE;
+	s_fbHmiBtnPickTrolleyFromTB.p_bStaVisible := FALSE;
+	s_fbHmiBtnPlaceTrolleyInTB.p_bStaVisible := FALSE;
+END_IF
+
+//Buttons enabling
+IF i_bReqEnable AND (i_eCtrlMode = E_CtrlMode.MANUAL) AND (i_eCtrlState = E_CtrlState.RUNNING) THEN
+
+	//Lift/Transport
+	s_fbHmiBtnGoToIdle.p_bStaEnabled :=
+		NOT(s_bIlckLiftDown)
+		AND NOT(s_bIlckLiftUp)
+		AND NOT(s_bIlckTransportRetract)
+		AND NOT(s_bIlckTransportExtract)
+		AND NOT(s_cmLift.p_bStaError)
+		AND NOT(s_cmTransport.p_bStaError);
+	
+	s_fbHmiBtnPickTrolleyFromTB.p_bStaEnabled :=
+		NOT(s_bIlckLiftDown)
+		AND NOT(s_bIlckLiftUp)
+		AND NOT(s_bIlckTransportRetract)
+		AND NOT(s_bIlckTransportExtract)
+		AND NOT(s_cmLift.p_bStaError)
+		AND NOT(s_cmTransport.p_bStaError);
+
+	s_fbHmiBtnPlaceTrolleyInTB.p_bStaEnabled :=
+		NOT(s_bIlckLiftDown)
+		AND NOT(s_bIlckLiftUp)
+		AND NOT(s_bIlckTransportRetract)
+		AND NOT(s_bIlckTransportExtract)
+		AND NOT(s_cmLift.p_bStaError)
+		AND NOT(s_cmTransport.p_bStaError);	
+		
+ELSE
+	s_fbHmiBtnGoToIdle.p_bStaEnabled := FALSE;
+	s_fbHmiBtnPickTrolleyFromTB.p_bStaEnabled := FALSE;
+	s_fbHmiBtnPlaceTrolleyInTB.p_bStaEnabled := FALSE;
+END_IF
+
+//MAINTENANCE-mode ////////////////////////////////////////////////////////////////////////////////
+
+//Stopping control modules
+IF (i_eCtrlMode = E_CtrlMode.MAINTENANCE) AND (i_eCtrlState = E_CtrlState.STOPPING) THEN 
+	s_cmLift.m_MC_Stop(
+		i_bExecute := TRUE,
+		i_fDeceleration := i_ref_stSettings.stLiftSpeedProfilePositioning.fDeceleration,
+		i_fJerk := i_ref_stSettings.stLiftSpeedProfilePositioning.fJerk);
+		
+	s_cmTransport.m_MC_Stop(
+		i_bExecute := TRUE,
+		i_fDeceleration := i_ref_stSettings.stTransportSpeedProfilePositioning.fDeceleration,
+		i_fJerk := i_ref_stSettings.stTransportSpeedProfilePositioning.fJerk);
+END_IF
+
+//IO-mode /////////////////////////////////////////////////////////////////////////////////////////
+IF (i_eCtrlMode = E_CtrlMode.IO) AND (i_eCtrlState = E_CtrlState.RUNNING) THEN
+	s_bHmiForceOutputEnabled := TRUE;
+ELSE
+	s_bHmiForceOutputEnabled := FALSE;	
+END_IF
 
 m_Main := TRUE;
 ]]></ST>
@@ -1387,27 +1203,24 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="8" Count="1" />
       <LineId Id="7" Count="0" />
       <LineId Id="78" Count="0" />
-      <LineId Id="16" Count="0" />
       <LineId Id="20" Count="0" />
-      <LineId Id="45" Count="2" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="46" Count="1" />
       <LineId Id="44" Count="0" />
       <LineId Id="48" Count="0" />
-      <LineId Id="50" Count="2" />
+      <LineId Id="82" Count="2" />
       <LineId Id="49" Count="0" />
       <LineId Id="42" Count="0" />
       <LineId Id="11" Count="0" />
       <LineId Id="33" Count="0" />
       <LineId Id="35" Count="0" />
-      <LineId Id="53" Count="0" />
       <LineId Id="34" Count="0" />
       <LineId Id="56" Count="1" />
-      <LineId Id="66" Count="0" />
-      <LineId Id="68" Count="0" />
-      <LineId Id="64" Count="0" />
-      <LineId Id="69" Count="0" />
+      <LineId Id="85" Count="2" />
+      <LineId Id="89" Count="0" />
+      <LineId Id="88" Count="0" />
       <LineId Id="71" Count="0" />
       <LineId Id="73" Count="0" />
-      <LineId Id="75" Count="1" />
       <LineId Id="32" Count="0" />
       <LineId Id="10" Count="0" />
       <LineId Id="14" Count="0" />
@@ -1422,11 +1235,21 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="53" Count="3" />
       <LineId Id="58" Count="1" />
       <LineId Id="52" Count="0" />
+      <LineId Id="71" Count="0" />
       <LineId Id="9" Count="0" />
+      <LineId Id="72" Count="0" />
       <LineId Id="63" Count="3" />
       <LineId Id="68" Count="1" />
       <LineId Id="62" Count="0" />
-      <LineId Id="39" Count="1" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="80" Count="4" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="86" Count="5" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="40" Count="0" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport._m_Hmi">
@@ -1434,20 +1257,15 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="7" Count="2" />
       <LineId Id="246" Count="0" />
       <LineId Id="224" Count="0" />
-      <LineId Id="298" Count="2" />
-      <LineId Id="297" Count="0" />
+      <LineId Id="302" Count="2" />
       <LineId Id="295" Count="0" />
-      <LineId Id="260" Count="0" />
-      <LineId Id="264" Count="0" />
-      <LineId Id="266" Count="1" />
-      <LineId Id="248" Count="0" />
       <LineId Id="239" Count="0" />
-      <LineId Id="271" Count="4" />
-      <LineId Id="278" Count="0" />
-      <LineId Id="276" Count="0" />
-      <LineId Id="280" Count="0" />
-      <LineId Id="292" Count="0" />
+      <LineId Id="308" Count="0" />
+      <LineId Id="310" Count="4" />
+      <LineId Id="309" Count="0" />
+      <LineId Id="306" Count="0" />
       <LineId Id="6" Count="0" />
+      <LineId Id="315" Count="0" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport._m_Init">
       <LineId Id="203" Count="0" />
@@ -1462,9 +1280,21 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="469" Count="0" />
       <LineId Id="473" Count="0" />
       <LineId Id="334" Count="0" />
-      <LineId Id="343" Count="0" />
-      <LineId Id="35" Count="3" />
-      <LineId Id="474" Count="0" />
+      <LineId Id="477" Count="0" />
+      <LineId Id="479" Count="4" />
+      <LineId Id="478" Count="0" />
+      <LineId Id="488" Count="2" />
+      <LineId Id="495" Count="2" />
+      <LineId Id="543" Count="0" />
+      <LineId Id="545" Count="1" />
+      <LineId Id="544" Count="0" />
+      <LineId Id="500" Count="1" />
+      <LineId Id="506" Count="1" />
+      <LineId Id="499" Count="0" />
+      <LineId Id="548" Count="2" />
+      <LineId Id="547" Count="0" />
+      <LineId Id="484" Count="0" />
+      <LineId Id="38" Count="0" />
       <LineId Id="396" Count="2" />
       <LineId Id="395" Count="0" />
       <LineId Id="388" Count="0" />
@@ -1474,13 +1304,13 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="404" Count="2" />
       <LineId Id="403" Count="0" />
       <LineId Id="453" Count="0" />
-      <LineId Id="458" Count="0" />
-      <LineId Id="457" Count="0" />
-      <LineId Id="456" Count="0" />
-      <LineId Id="455" Count="0" />
-      <LineId Id="454" Count="0" />
+      <LineId Id="534" Count="0" />
+      <LineId Id="526" Count="0" />
+      <LineId Id="525" Count="0" />
       <LineId Id="414" Count="0" />
-      <LineId Id="424" Count="1" />
+      <LineId Id="424" Count="0" />
+      <LineId Id="538" Count="2" />
+      <LineId Id="425" Count="0" />
       <LineId Id="415" Count="0" />
       <LineId Id="426" Count="1" />
       <LineId Id="416" Count="0" />
@@ -1488,31 +1318,44 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="417" Count="0" />
       <LineId Id="429" Count="2" />
       <LineId Id="445" Count="0" />
-      <LineId Id="444" Count="0" />
+      <LineId Id="541" Count="0" />
       <LineId Id="443" Count="0" />
-      <LineId Id="420" Count="0" />
-      <LineId Id="433" Count="0" />
-      <LineId Id="436" Count="0" />
-      <LineId Id="422" Count="0" />
-      <LineId Id="437" Count="0" />
-      <LineId Id="411" Count="0" />
-      <LineId Id="92" Count="1" />
-      <LineId Id="97" Count="3" />
-      <LineId Id="314" Count="0" />
-      <LineId Id="101" Count="0" />
-      <LineId Id="119" Count="0" />
-      <LineId Id="168" Count="0" />
-      <LineId Id="170" Count="1" />
-      <LineId Id="323" Count="0" />
-      <LineId Id="322" Count="0" />
-      <LineId Id="321" Count="0" />
-      <LineId Id="120" Count="0" />
       <LineId Id="4" Count="0" />
+      <LineId Id="542" Count="0" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport._m_Inputs">
-      <LineId Id="103" Count="9" />
-      <LineId Id="116" Count="11" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="103" Count="2" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="132" Count="4" />
+      <LineId Id="138" Count="0" />
+      <LineId Id="152" Count="3" />
+      <LineId Id="151" Count="0" />
+      <LineId Id="172" Count="0" />
+      <LineId Id="174" Count="0" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="156" Count="0" />
+      <LineId Id="149" Count="0" />
+      <LineId Id="159" Count="4" />
+      <LineId Id="167" Count="2" />
+      <LineId Id="158" Count="0" />
+      <LineId Id="170" Count="1" />
+      <LineId Id="157" Count="0" />
+      <LineId Id="150" Count="0" />
+      <LineId Id="175" Count="11" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="188" Count="11" />
+      <LineId Id="187" Count="0" />
+      <LineId Id="211" Count="0" />
+      <LineId Id="106" Count="0" />
+      <LineId Id="200" Count="1" />
+      <LineId Id="212" Count="0" />
+      <LineId Id="215" Count="2" />
+      <LineId Id="213" Count="0" />
+      <LineId Id="202" Count="8" />
+      <LineId Id="126" Count="1" />
       <LineId Id="5" Count="0" />
+      <LineId Id="218" Count="0" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport._m_ManualControl">
       <LineId Id="397" Count="1" />
@@ -1535,57 +1378,21 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="22" Count="1" />
       <LineId Id="16" Count="0" />
       <LineId Id="5" Count="0" />
+      <LineId Id="25" Count="0" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport._m_Params">
       <LineId Id="291" Count="0" />
       <LineId Id="164" Count="0" />
       <LineId Id="166" Count="1" />
       <LineId Id="165" Count="0" />
-      <LineId Id="6" Count="8" />
-      <LineId Id="159" Count="3" />
-      <LineId Id="35" Count="0" />
-      <LineId Id="163" Count="0" />
-      <LineId Id="235" Count="7" />
-      <LineId Id="40" Count="0" />
-      <LineId Id="199" Count="0" />
-      <LineId Id="180" Count="0" />
-      <LineId Id="185" Count="0" />
-      <LineId Id="189" Count="0" />
-      <LineId Id="191" Count="2" />
-      <LineId Id="190" Count="0" />
-      <LineId Id="194" Count="0" />
-      <LineId Id="196" Count="2" />
-      <LineId Id="195" Count="0" />
-      <LineId Id="203" Count="0" />
-      <LineId Id="222" Count="2" />
-      <LineId Id="207" Count="0" />
-      <LineId Id="250" Count="0" />
-      <LineId Id="234" Count="0" />
-      <LineId Id="232" Count="1" />
-      <LineId Id="230" Count="0" />
-      <LineId Id="251" Count="0" />
-      <LineId Id="256" Count="2" />
-      <LineId Id="253" Count="0" />
-      <LineId Id="259" Count="0" />
-      <LineId Id="261" Count="2" />
-      <LineId Id="260" Count="0" />
-      <LineId Id="264" Count="0" />
-      <LineId Id="266" Count="2" />
-      <LineId Id="265" Count="0" />
-      <LineId Id="269" Count="0" />
-      <LineId Id="271" Count="2" />
-      <LineId Id="270" Count="0" />
-      <LineId Id="220" Count="0" />
-      <LineId Id="210" Count="1" />
-      <LineId Id="174" Count="0" />
-      <LineId Id="214" Count="0" />
-      <LineId Id="213" Count="0" />
-      <LineId Id="158" Count="0" />
-      <LineId Id="274" Count="1" />
-      <LineId Id="246" Count="0" />
-      <LineId Id="45" Count="0" />
-      <LineId Id="281" Count="0" />
-      <LineId Id="283" Count="0" />
+      <LineId Id="295" Count="0" />
+      <LineId Id="313" Count="0" />
+      <LineId Id="312" Count="0" />
+      <LineId Id="294" Count="0" />
+      <LineId Id="298" Count="0" />
+      <LineId Id="296" Count="0" />
+      <LineId Id="310" Count="1" />
+      <LineId Id="301" Count="0" />
       <LineId Id="282" Count="0" />
       <LineId Id="292" Count="0" />
     </LineIds>
@@ -1780,13 +1587,45 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="77" Count="0" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport.m_Main">
-      <LineId Id="2483" Count="54" />
+      <LineId Id="2905" Count="0" />
+      <LineId Id="2483" Count="3" />
+      <LineId Id="2530" Count="2" />
+      <LineId Id="2534" Count="2" />
       <LineId Id="2899" Count="2" />
-      <LineId Id="2692" Count="154" />
-      <LineId Id="2902" Count="1" />
-      <LineId Id="2895" Count="0" />
+      <LineId Id="2906" Count="0" />
+      <LineId Id="2908" Count="1" />
+      <LineId Id="2920" Count="4" />
+      <LineId Id="2910" Count="0" />
+      <LineId Id="2907" Count="0" />
+      <LineId Id="2925" Count="0" />
+      <LineId Id="2843" Count="1" />
+      <LineId Id="2928" Count="1" />
+      <LineId Id="2845" Count="1" />
+      <LineId Id="2930" Count="0" />
       <LineId Id="2894" Count="0" />
-      <LineId Id="2850" Count="39" />
+      <LineId Id="2933" Count="6" />
+      <LineId Id="2931" Count="1" />
+      <LineId Id="2887" Count="0" />
+      <LineId Id="2940" Count="0" />
+      <LineId Id="2942" Count="8" />
+      <LineId Id="2952" Count="3" />
+      <LineId Id="2957" Count="7" />
+      <LineId Id="3005" Count="2" />
+      <LineId Id="2965" Count="0" />
+      <LineId Id="2967" Count="1" />
+      <LineId Id="3010" Count="5" />
+      <LineId Id="3008" Count="0" />
+      <LineId Id="3017" Count="6" />
+      <LineId Id="3016" Count="0" />
+      <LineId Id="3009" Count="0" />
+      <LineId Id="2986" Count="3" />
+      <LineId Id="2991" Count="6" />
+      <LineId Id="3024" Count="3" />
+      <LineId Id="3029" Count="2" />
+      <LineId Id="3028" Count="0" />
+      <LineId Id="2998" Count="6" />
+      <LineId Id="2941" Count="0" />
+      <LineId Id="2888" Count="1" />
       <LineId Id="179" Count="0" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport.m_ReqCenteringTB">

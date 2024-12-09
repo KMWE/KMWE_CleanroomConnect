@@ -29,8 +29,8 @@ VAR
 	fbIlckHandlerConveyorBackward : FB_InterlockHandler;
 	fbIlckHandlerConveyorForward : FB_InterlockHandler;
 
-	fbInterlockHandlerCenteringIdle : FB_InterlockHandler;
-	fbInterlockHandlerCenteringCenter : FB_InterlockHandler;
+	fbIlckHandlerCenteringIdle : FB_InterlockHandler;
+	fbIlckHandlerCenteringCenter : FB_InterlockHandler;
 
 //------------------------------------------//
 	//Control Modules (Devices)
@@ -428,9 +428,9 @@ fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[3].sReason := 'Alr
 fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[4].sReason := 'Already at docking position';
 
 //Centering
-fbInterlockHandlerCenteringIdle.i_stInterlockList.arr_Interlocks[0].sReason := 'n/a';
+fbIlckHandlerCenteringIdle.i_stInterlockList.arr_Interlocks[0].sReason := 'n/a';
 
-fbInterlockHandlerCenteringCenter.i_stInterlockList.arr_Interlocks[0].sReason := 'Conveyor not stopped';
+fbIlckHandlerCenteringCenter.i_stInterlockList.arr_Interlocks[0].sReason := 'Conveyor not stopped';
 
 //---------------------------------//	
 	
@@ -477,23 +477,8 @@ fbInterlockHandlerCenteringCenter.i_stInterlockList.arr_Interlocks[0].sReason :=
 	s_fbHmiLedCenteringCenter.p_bStaVisible := FALSE;
 	s_fbHmiLedCenteringCenter.p_sToHmiDescriptionLed := 'Centering Center';
 	
-//----------------------------------//	
-//Initialize all moving averages
-
-//----------------------------------//	
-
-//----------------------------------//	
-
-//Inputs
-//----------------------------------//	
-
-//----------------------------------//	
-//Outputs
-//--s_doRelayTableDown.i_stSettings.bCfgDelay		:= FALSE;	
-//--s_doRelayTableDown.i_stSettings.tmOutputDelay	:= T#0S;	
-//----------------------------------//	
-
-_m_Init := TRUE;]]></ST>
+_m_Init := TRUE;
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_Inputs" Id="{6338a124-287d-498f-bd5c-dc8edaa7899d}" FolderPath="Base\">
@@ -504,8 +489,6 @@ _m_Init := TRUE;]]></ST>
 IF NOT SUPER^._m_Inputs() THEN
 	RETURN;
 END_IF
-
-{warning 'TODO# de teksten van onderstaande code mogelijk verplaatsten naar de init method om processor beloasting the verkleinen'}
 
 //Interlocks
 //Conveyor
@@ -527,14 +510,14 @@ s_bIlckConveyorBackward := fbIlckHandlerConveyorBackward.p_bInterlocked;
 s_bIlckConveyorForward := fbIlckHandlerConveyorForward.p_bInterlocked;
 
 //Centering
-fbInterlockHandlerCenteringIdle.i_stInterlockList.arr_Interlocks[0].bState := FALSE;
-fbInterlockHandlerCenteringIdle();
+fbIlckHandlerCenteringIdle.i_stInterlockList.arr_Interlocks[0].bState := FALSE;
+fbIlckHandlerCenteringIdle();
 
-fbInterlockHandlerCenteringCenter.i_stInterlockList.arr_Interlocks[0].bState := NOT(s_cmPalletConveyor.p_bStaMotorStopped);
-fbInterlockHandlerCenteringCenter();
+fbIlckHandlerCenteringCenter.i_stInterlockList.arr_Interlocks[0].bState := NOT(s_cmPalletConveyor.p_bStaMotorStopped);
+fbIlckHandlerCenteringCenter();
 
-s_bIlckCenteringToIdle := fbInterlockHandlerCenteringIdle.p_bInterlocked;
-s_bIlckCenteringToCenter := fbInterlockHandlerCenteringCenter.p_bInterlocked;
+s_bIlckCenteringToIdle := fbIlckHandlerCenteringIdle.p_bInterlocked;
+s_bIlckCenteringToCenter := fbIlckHandlerCenteringCenter.p_bInterlocked;
   
 //Reasons (own reason first: Cm->Em->Un)
 //Conveyor
@@ -552,13 +535,13 @@ END_IF
 
 //Centring	
 IF s_bIlckCenteringToIdle THEN
-	s_cmCenteringUnit.p_sInterlockedReasonOff := fbInterlockHandlerCenteringIdle.p_sReason;
+	s_cmCenteringUnit.p_sInterlockedReasonOff := fbIlckHandlerCenteringIdle.p_sReason;
 ELSE
 	s_cmCenteringUnit.p_sInterlockedReasonOff := '-';
 END_IF
 
 IF s_bIlckCenteringToCenter THEN
-	s_cmCenteringUnit.p_sInterlockedReasonOn := fbInterlockHandlerCenteringCenter.p_sReason;
+	s_cmCenteringUnit.p_sInterlockedReasonOn := fbIlckHandlerCenteringCenter.p_sReason;
 ELSE
 	s_cmCenteringUnit.p_sInterlockedReasonOn := '-';
 END_IF
@@ -590,7 +573,8 @@ END_IF
 
 q_bStaWarning := s_bStaWarning;
 
-_m_Outputs := TRUE;]]></ST>
+_m_Outputs := TRUE;
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_Params" Id="{b7688a2b-8ea9-42be-9d82-c5b14e9212e5}" FolderPath="Base\">
@@ -986,19 +970,12 @@ IF NOT SUPER^.m_Main() THEN
 	RETURN;
 END_IF
 
-///// NEW CODE FOR THE USE OF THE MDOE MANAERE ////
-
-
-///////////////////////////////////////////////////
-
 CASE i_eCtrlMode OF
 
 	E_CtrlMode.IDLE:
 		s_eSeqCentering := E_SeqCentering.IDLE;
 		
 	E_CtrlMode.AUTOMATIC:
-		//Execute automatic control (based on request from higher-layer unit)
-		
 		//Automatic commands are controlled by higher-layer unit
 		_m_AutomaticControl();
 
@@ -1006,6 +983,7 @@ CASE i_eCtrlMode OF
 		//Execute manaual control (based on HMI buttons)
 		
 		//Store the selected action (so it could be rstart / resumed if two-hand-control is activated)
+		{warning 'TODO: Could be omitted if 2HCtrl is not used'}
 		IF s_fbHmiBtnTB_ToInfeed.p_osrBtnPress THEN
 			eActionSelection := E_ActionSelection.MOVE_TO_INFEED;
 		ELSIF s_fbHmiBtnTB_ToCentering.p_osrBtnPress THEN	
@@ -1405,24 +1383,14 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="422" Count="0" />
       <LineId Id="437" Count="0" />
       <LineId Id="411" Count="0" />
-      <LineId Id="92" Count="1" />
-      <LineId Id="97" Count="3" />
-      <LineId Id="314" Count="0" />
-      <LineId Id="101" Count="0" />
-      <LineId Id="119" Count="0" />
-      <LineId Id="168" Count="0" />
-      <LineId Id="170" Count="1" />
-      <LineId Id="323" Count="0" />
-      <LineId Id="322" Count="0" />
-      <LineId Id="321" Count="0" />
-      <LineId Id="120" Count="0" />
       <LineId Id="4" Count="0" />
+      <LineId Id="500" Count="0" />
     </LineIds>
     <LineIds Name="EM_PalletConveyor._m_Inputs">
       <LineId Id="156" Count="0" />
       <LineId Id="103" Count="2" />
-      <LineId Id="303" Count="1" />
-      <LineId Id="106" Count="1" />
+      <LineId Id="303" Count="0" />
+      <LineId Id="107" Count="0" />
       <LineId Id="267" Count="0" />
       <LineId Id="306" Count="0" />
       <LineId Id="305" Count="0" />
@@ -1480,6 +1448,7 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="22" Count="1" />
       <LineId Id="16" Count="0" />
       <LineId Id="5" Count="0" />
+      <LineId Id="25" Count="0" />
     </LineIds>
     <LineIds Name="EM_PalletConveyor._m_Params">
       <LineId Id="291" Count="0" />
@@ -1609,21 +1578,17 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
     <LineIds Name="EM_PalletConveyor.m_Main">
       <LineId Id="2946" Count="0" />
       <LineId Id="2483" Count="2" />
-      <LineId Id="3110" Count="1" />
-      <LineId Id="3113" Count="0" />
-      <LineId Id="3112" Count="0" />
-      <LineId Id="3114" Count="0" />
       <LineId Id="2529" Count="3" />
       <LineId Id="2534" Count="2" />
-      <LineId Id="2899" Count="0" />
-      <LineId Id="3068" Count="0" />
       <LineId Id="3070" Count="0" />
       <LineId Id="2900" Count="0" />
       <LineId Id="2949" Count="0" />
       <LineId Id="2951" Count="0" />
       <LineId Id="3073" Count="0" />
       <LineId Id="3077" Count="0" />
-      <LineId Id="3118" Count="1" />
+      <LineId Id="3118" Count="0" />
+      <LineId Id="3139" Count="0" />
+      <LineId Id="3119" Count="0" />
       <LineId Id="3124" Count="0" />
       <LineId Id="3128" Count="0" />
       <LineId Id="3125" Count="0" />

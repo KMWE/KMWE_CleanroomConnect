@@ -54,9 +54,8 @@ VAR
 	s_bStaDriveError: BOOL;
 	s_bStaWarning : BOOL;
 	
-	
-	
-	s_sInterlockedReason : STRING; //External interlocked reason for clarifying reason
+	s_sInterlockedReasonForward : STRING; //External interlocked reason for clarifying reason
+	s_sInterlockedReasonBackward : STRING; //External interlocked reason for clarifying reason
 	
 	// Setpoints
 	s_fTargetSpeed : LREAL; // Target speed [mm/s]
@@ -499,6 +498,46 @@ p_nErrorID := s_nErrorID;
         </Implementation>
       </Get>
     </Property>
+    <Property Name="p_sInterlockedReasonBackward" Id="{2cbc61be-2980-49ea-9737-516b9cc082cc}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_sInterlockedReasonBackward : STRING(GVL.g_MAX_LEN_INTERLOCK_REASON)]]></Declaration>
+      <Get Name="Get" Id="{6302c11b-5d35-483e-93f6-02d7e278d314}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_sInterlockedReasonBackward := s_sInterlockedReasonBackward;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{736eeda3-1c6b-466b-a8c9-83add0319e61}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+s_sInterlockedReasonBackward := p_sInterlockedReasonBackward;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="p_sInterlockedReasonForward" Id="{54c2d2dd-7915-4fa3-818c-250a80b85813}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_sInterlockedReasonForward : STRING(GVL.g_MAX_LEN_INTERLOCK_REASON)]]></Declaration>
+      <Get Name="Get" Id="{c021f6d7-6c1d-45d2-8cf8-029294050c22}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_sInterlockedReasonForward := s_sInterlockedReasonForward;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{ae73b161-60cd-49c4-958c-4f84879e0c7c}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+s_sInterlockedReasonForward := p_sInterlockedReasonForward;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
     <LineIds Name="CM_AX5000">
       <LineId Id="410" Count="0" />
       <LineId Id="47" Count="0" />
@@ -622,6 +661,26 @@ p_nErrorID := s_nErrorID;
       <LineId Id="5" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_AX5000.p_sInterlockedReasonBackward.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_AX5000.p_sInterlockedReasonBackward.Set">
+      <LineId Id="6" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="7" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_AX5000.p_sInterlockedReasonForward.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_AX5000.p_sInterlockedReasonForward.Set">
+      <LineId Id="6" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="7" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>

@@ -3,6 +3,12 @@
   <POU Name="EM_LiftingTransport" Id="{82ac1e56-2937-4df1-886d-5bc6dc15361f}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK EM_LiftingTransport EXTENDS EM_Base IMPLEMENTS I_EM_LiftingTransport
 
+VAR CONSTANT
+	c_fHEIGHT_OFFSET : LREAL := 100.0; //[mm]
+	c_fSPINDLE_OFFSET : LREAL := 50.0; //[mm]
+	c_fLEG_LENGTH : LREAL := 1000.0; //[mm]
+END_VAR
+
 VAR_INPUT
 //Inputs
 	i_ref_stSettings : REFERENCE TO ST_SettingsLiftingTransport;
@@ -35,10 +41,10 @@ VAR
 
 //------------------------------------------//
 	//Control Modules (Devices)
-	axisLift : AXIS_REF;
+	axisLift : TC2_MC2.AXIS_REF; //??AXIS_REF;
 	s_cmLift : CM_AX5000; // Including 2 limit switched and 1 reference switch
 
-	axisTransport : AXIS_REF;
+	axisTransport : TC2_MC2.AXIS_REF; //??AXIS_REF
 	s_cmTransport : CM_AX5000; // Including 2 limit switched and 1 reference switch
 	
 //------------------------------------------//
@@ -133,10 +139,16 @@ VAR
 	
 	{warning '#TODO' Het zou beter zijn om dit onder te brengen in de onderstaande control modules}
 	s_bHmiForceOutputEnabled : BOOL;
+	
+	target : LREAL;
+	test : LREAL;
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[	
+      <ST><![CDATA[
+test := _m_ConvertLiftToSpindlePosition(target);
+_m_MoveAbsolute(	i_ref_AXIS := axisLift, i_ref_stProfile := i_ref_stSettings.arr_LiftPositioningProfile[1]);
+	
 SUPER^();
 ]]></ST>
     </Implementation>
@@ -187,6 +199,118 @@ _m_Alarms := TRUE;
 //Lifting Transport
 _m_SeqLiftingTransport();
 		]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_CmdGoToIdle" Id="{5f07294c-c083-4786-a1a2-586c95e439f7}">
+      <Declaration><![CDATA[{attribute 'TcRpcEnable'}
+METHOD PRIVATE _m_CmdGoToIdle : BOOL
+VAR_INPUT
+	i_refReason : REFERENCE TO STRING;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+	_m_CmdGoToIdle := FALSE;
+
+IF s_bIlckLiftDown THEN
+	i_refReason := CONCAT('Cmd Go To Idle: Lift Interlocked - ', fbIlckHandlerLiftDown.p_sReason);
+ELSIF s_bIlckLiftUp THEN
+	i_refReason := CONCAT('Cmd Go To Idle: Lift Interlocked - ', fbIlckHandlerLiftUp.p_sReason);
+ELSIF s_bIlckTransportRetract THEN
+	i_refReason := CONCAT('Cmd Go To Idle: Transpoort Interlocked - ', fbIlckHandlerTransportRetract.p_sReason);
+ELSIF s_bIlckTransportExtract THEN
+	i_refReason := CONCAT('Cmd Go To Idle: Transport Interlocked - ', fbIlckHandlerTransportExtract.p_sReason);
+ELSE
+	i_refReason := '-';
+	_m_CmdGoToIdle := TRUE;	
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_CmdPickTrolleyFromTB" Id="{3a534c15-c636-468b-8b82-6fd59e761d1a}">
+      <Declaration><![CDATA[METHOD PRIVATE _m_CmdPickTrolleyFromTB : BOOL
+VAR_INPUT
+	i_refReason : REFERENCE TO STRING;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+_m_CmdPickTrolleyFromTB := FALSE;
+
+IF s_bIlckLiftDown THEN
+	i_refReason := CONCAT('Cmd Pick Trolley From TB: Lift Interlocked - ', fbIlckHandlerLiftDown.p_sReason);
+ELSIF s_bIlckLiftUp THEN
+	i_refReason := CONCAT('Cmd Pick Trolley From TB: Lift Interlocked - ', fbIlckHandlerLiftUp.p_sReason);
+ELSIF s_bIlckTransportRetract THEN
+	i_refReason := CONCAT('Cmd Pick Trolley From TB: Transpoort Interlocked - ', fbIlckHandlerTransportRetract.p_sReason);
+ELSIF s_bIlckTransportExtract THEN
+	i_refReason := CONCAT('Cmd Pick Trolley From TB: Transport Interlocked - ', fbIlckHandlerTransportExtract.p_sReason);
+ELSE
+	i_refReason := '-';
+	_m_CmdPickTrolleyFromTB := TRUE;	
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_CmdPlaceTrolleyInTB" Id="{fddfe49e-6281-47a3-8534-8abf984608e2}">
+      <Declaration><![CDATA[METHOD PRIVATE _m_CmdPlaceTrolleyInTB : BOOL
+VAR_INPUT
+	i_refReason : REFERENCE TO STRING;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+_m_CmdPlaceTrolleyInTB := FALSE;
+
+IF s_bIlckLiftDown THEN
+	i_refReason := CONCAT('Cmd Place Trolley In TB: Lift Interlocked - ', fbIlckHandlerLiftDown.p_sReason);
+ELSIF s_bIlckLiftUp THEN
+	i_refReason := CONCAT('Cmd Place Trolley In TB: Lift Interlocked - ', fbIlckHandlerLiftUp.p_sReason);
+ELSIF s_bIlckTransportRetract THEN
+	i_refReason := CONCAT('Cmd Place Trolley In TB: Transpoort Interlocked - ', fbIlckHandlerTransportRetract.p_sReason);
+ELSIF s_bIlckTransportExtract THEN
+	i_refReason := CONCAT('Cmd Place Trolley In TB: Transport Interlocked - ', fbIlckHandlerTransportExtract.p_sReason);
+ELSE
+	i_refReason := '-';
+	_m_CmdPlaceTrolleyInTB := TRUE;	
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_ConvertLiftToSpindlePosition" Id="{8617e5f7-c58b-4537-8cd1-e74ba22bdca2}">
+      <Declaration><![CDATA[METHOD PRIVATE _m_ConvertLiftToSpindlePosition : LREAL
+VAR_INPUT
+	i_fSetLiftHeight : LREAL; //[mm]
+	
+END_VAR
+VAR
+	s_fScissorHeight : LREAL;
+	s_fScissorBase : LREAL; //[mm]
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//Calculate actual lift height, as function of spindle position
+// a^2 + b^2 = c^2
+// 	a = s_fScissorHeight
+// 	b = s_fScissorBase
+// 	c = c_fHEIGHT_OFFSET
+
+//Calculate Lift Target
+//	b = SQRT( c^2 - a^2 )
+s_fScissorHeight := i_fSetLiftHeight - c_fHEIGHT_OFFSET;
+s_fScissorBase := SQRT(EXPT(c_fLEG_LENGTH, 2) - EXPT(s_fScissorHeight, 2));
+_m_ConvertLiftToSpindlePosition := c_fLEG_LENGTH - (s_fScissorBase - c_fSPINDLE_OFFSET);
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_Devices" Id="{b95b1090-f72e-49a8-b75a-87fbc22bb2f7}" FolderPath="Base\">
@@ -326,9 +450,6 @@ s_diStaTrolleyUnlocked.i_stSettings.tmInputDelay := T#100MS;
 	s_fbHmiBtnPlaceTrolleyInTB.p_bStaEnabled := FALSE;		
 	s_fbHmiBtnPlaceTrolleyInTB.p_sBtnText := 'Place Trlley In TB';
 	
-	s_fbHmiLedTrolleyLocked				: FB_HmiLed;
-	s_fbHmiLedTrolleyUnlocked			: FB_HmiLed;
-
 	s_fbHmiLedTrolleyOnPositionLeft.p_bStaVisible := FALSE;
 	s_fbHmiLedTrolleyOnPositionLeft.p_sToHmiDescriptionLed := 'Trolley On Position Left';
 	
@@ -392,28 +513,28 @@ s_bIlckTransportExtract := fbIlckHandlerTransportExtract.p_bInterlocked;
 //Reasons (own reason first: Cm->Em->Un)
 //Lift
 IF s_bIlckLiftDown THEN
-	s_cmLift.p_sInterlockedReasonDown := fbIlckHandlerLiftDown.p_sReason;
+	s_cmLift.p_sInterlockedReasonBackward := fbIlckHandlerLiftDown.p_sReason;
 ELSE
-	s_cmLift.p_sInterlockedReasonDown := '-';
+	s_cmLift.p_sInterlockedReasonBackward := '-';
 END_IF
 	
 IF s_bIlckLiftUp THEN
-	s_cmLift.p_sInterlockedReasonUp := fbIlckHandlerLiftUp.p_sReason;
+	s_cmLift.p_sInterlockedReasonForward := fbIlckHandlerLiftUp.p_sReason;
 ELSE
-	s_cmLift.p_sInterlockedReasonUp := '-';
+	s_cmLift.p_sInterlockedReasonForward := '-';
 END_IF
 
 //Transport
 IF s_bIlckTransportRetract THEN
-	s_cmTransport.p_sInterlockedReasonRetract := fbIlckHandlerTransportRetract.p_sReason;
+	s_cmTransport.p_sInterlockedReasonBackward := fbIlckHandlerTransportRetract.p_sReason;
 ELSE
-	s_cmTransport.p_sInterlockedReasonRetract := '-';
+	s_cmTransport.p_sInterlockedReasonBackward := '-';
 END_IF
 	
 IF s_bIlckTransportExtract THEN
-	s_cmTransport.p_sInterlockedReasonExtract := fbIlckHandlerTransportExtract.p_sReason;
+	s_cmTransport.p_sInterlockedReasonForward := fbIlckHandlerTransportExtract.p_sReason;
 ELSE
-	s_cmTransport.p_sInterlockedReasonExtract := '-';
+	s_cmTransport.p_sInterlockedReasonForward := '-';
 END_IF
 
 {warning '#TODO: Something similar needs to be added for lifting transport'}
@@ -421,7 +542,7 @@ END_IF
 IF __ISVALIDREF(i_refTB) AND (i_refTB.p_nId > 0) THEN
 //++	s_bStaAtIdlePosition := i_refTB.p_b..;
 //++	s_bStaTrolleyInTB := i_refTB.p_b..;
-	s_bStaTrolleyInCabin := i_refTB.p_b..;
+//++	s_bStaTrolleyInCabin := i_refTB.p_b..;
 	//..
  
 //--	s_bStaTB_CenteringDone := i_refTB.p_bCenteringDone;
@@ -439,25 +560,23 @@ _m_Inputs := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_ManualControl" Id="{61a84643-dbec-4bc1-99bd-3a2ec3342898}">
-      <Declaration><![CDATA[METHOD PRIVATE _m_ManualControl : BOOL
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[
-// Manual control has been implemented into lower layer control modules
-]]></ST>
-      </Implementation>
-    </Method>
     <Method Name="_m_MoveAbsolute" Id="{7f8f7561-70c1-4897-9a57-d3b7b8c51729}">
       <Declaration><![CDATA[METHOD _m_MoveAbsolute : BOOL
 VAR_INPUT
 	i_ref_axis : REFERENCE TO TC2_MC2.AXIS_REF;
 	i_ref_stProfile : ST_PositioningProfile;
+//--	i_fAlternativePosition : LREAL := 0.0;
 END_VAR
 
 VAR_INST
 	s_MC_MoveAbsolute : TC2_MC2.MC_MoveAbsolute;
-END_VAR]]></Declaration>
+END_VAR
+
+VAR
+	test : TC2_MC2.AXIS_REF;
+	adres : ST_AdsAddress;
+END_VAR
+]]></Declaration>
       <Implementation>
         <ST><![CDATA[
 IF NOT(__ISVALIDREF(i_ref_axis)) THEN
@@ -465,10 +584,27 @@ IF NOT(__ISVALIDREF(i_ref_axis)) THEN
 	RETURN;
 END_IF
 
+i_ref_axis REF= test; 
+
+adres := i_ref_axis.ADS; 
+
+//IF i_ref_axis = axisLift THEN
+IF FALSE THEN
+	s_MC_MoveAbsolute.Position := i_ref_stProfile.fPosition; //from profile
+ELSE
+	s_MC_MoveAbsolute.Position := _m_ConvertLiftToSpindlePosition(i_ref_stProfile.fPosition); //coverted
+END_IF
+
+//--IF i_fAlternativePosition = 0.0 THEN
+//--	s_MC_MoveAbsolute.Position := i_ref_stProfile.fPosition; //from profile
+//--ELSE
+//--	s_MC_MoveAbsolute.Position := i_fAlternativePosition; //from input
+//--END_IF
+
 s_MC_MoveAbsolute(
 	Axis := i_ref_axis,
 	Execute := TRUE AND NOT(s_MC_MoveAbsolute.Busy OR s_MC_MoveAbsolute.Done OR s_MC_MoveAbsolute.Error),
-	Position := i_ref_stProfile.fPosition,
+	//--Position := i_ref_stProfile.fPosition,
 	Velocity := i_ref_stProfile.fVelocity,
 	Acceleration := i_ref_stProfile.fAcceleration,
 	Deceleration := i_ref_stProfile.fDeceleration,
@@ -488,12 +624,38 @@ _m_MoveAbsolute := s_MC_MoveAbsolute.Done;
     </Method>
     <Method Name="_m_Outputs" Id="{0027b51b-0e3b-4c47-b79c-c262d8cada1b}" FolderPath="Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Outputs : BOOL
+VAR
+	s_fScissorHeight : LREAL; //[mm]
+	s_fScissorBase : LREAL; //[mm] 
+	s_fActLiftHeight : LREAL; //[mm]
+	s_fSetLiftTarget : LREAL; //[mm]
+	
+	s_fSetpointHeight : LREAL; //[mm]
+END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
 IF NOT SUPER^._m_Outputs() THEN
 	RETURN;
 END_IF
+
+//Calculate actual lift height, as function of spindle position
+// a^2 + b^2 = c^2
+// 	a = s_fScissorHeight
+// 	b = s_fScissorBase
+// 	c = c_fHEIGHT_OFFSET
+
+//Calculate Lift Height:
+s_fScissorBase := s_cmLift.p_fPosition + c_fSPINDLE_OFFSET;
+//	a = SQRT( c^2 - b^2 )
+s_fScissorHeight := SQRT(EXPT(c_fLEG_LENGTH, 2) - EXPT(s_fScissorBase, 2));
+s_fActLiftHeight := s_fScissorHeight + c_fHEIGHT_OFFSET;
+
+//Calculate Lift Target
+//	b = SQRT( c^2 - a^2 )
+s_fScissorHeight := s_fSetpointHeight - c_fHEIGHT_OFFSET;
+s_fScissorBase := SQRT(EXPT(c_fLEG_LENGTH, 2) - EXPT(s_fScissorHeight, 2));
+s_fSetLiftTarget := c_fLEG_LENGTH - (s_fScissorBase - c_fSPINDLE_OFFSET);
 
 q_bStaWarning := s_bStaWarning;
 
@@ -519,24 +681,48 @@ END_IF
 //++i_ref_stSettings.stLiftSpeedProfilePositioning := 
 //++i_ref_stSettings. 
 
+
+
 _m_Params := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_SeqLiftingTransport" Id="{adfb5128-2b00-4a29-b7de-b50ba035879a}">
-      <Declaration><![CDATA[METHOD PRIVATE _m_SeqLiftingTransport : BOOL
+    <Method Name="_m_PowerAxes" Id="{b3649590-c32d-4573-996f-0fb561be337e}">
+      <Declaration><![CDATA[///Enable power of all drives on/off, returns TRUE if all powered
+METHOD PRIVATE _m_PowerAxes : BOOL
+VAR_INPUT
+	i_bEnable : BOOL; ///FALSE = power off, TRUE = power on
+END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-s_fbHmiBtnTB_ToInfeed.p_bStaVisible := TRUE;
-//--s_fbHmiBtnTB_ToInfeed.p_bStaEnabled := TRUE;
+s_cmLift.m_MC_Power(
+	i_bEnable := TRUE,
+	i_bEnablePositive := TRUE,
+	i_bEnableNegative := TRUE,
+	i_fOverride := 100.0,
+	i_eBufferMode := TC2_MC2.MC_BufferMode.MC_Aborting);
+			
+s_cmTransport.m_MC_Power(
+	i_bEnable := TRUE,
+	i_bEnablePositive := TRUE,
+	i_bEnableNegative := TRUE,
+	i_fOverride := 100.0,
+	i_eBufferMode := TC2_MC2.MC_BufferMode.MC_Aborting);
 
-s_fbHmiBtnTB_ToCentering.p_bStaVisible := TRUE;
-//--s_fbHmiBtnTB_ToCentering.p_bStaEnabled := TRUE;
+_m_PowerAxes := s_cmLift.p_bDone AND s_cmTransport.p_bDone;
+	]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_SeqLiftingTransport" Id="{adfb5128-2b00-4a29-b7de-b50ba035879a}">
+      <Declaration><![CDATA[METHOD PRIVATE _m_SeqLiftingTransport : BOOL
+VAR
+	fTargetPosition : LREAL := 0.0;
+END_VAR
 
-s_fbHmiBtnTB_ToDocking.p_bStaVisible := TRUE;
-//--s_fbHmiBtnTB_ToDocking.p_bStaEnabled := TRUE;
-
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
 s_fbSeqLiftingTransportControl(
 	i_nSeqStep := s_eSeqLiftingTransport, 
 	i_sStepName := TO_STRING(s_eSeqLiftingTransport), 
@@ -545,47 +731,47 @@ s_fbSeqLiftingTransportControl(
 					AND NOT(s_cmLift.p_bStaError)
 					AND NOT(s_cmTransport.p_bStaError)
 					AND i_bReqEnable, 
-	i_bStaError := s_bStaError OR NOT(i_bReqEnable) AND FALSE);
+	i_bStaError := s_bStaError OR NOT(i_bReqEnable));
+
+IF (i_eCtrlState = E_CtrlState.STOPPING) THEN
+	{warning '#TODO: Add condition to stop contorl modules in a controlle way'}
+	s_eSeqLiftingTransport := E_SeqLiftingTransport.STOP;
+END_IF
 	
 CASE s_eSeqLiftingTransport OF
 	
 	E_SeqLiftingTransport.IDLE:
 		s_eTmpLocation := E_Location.UNKNOWN;
 	
-		
-		
-		s_eSeqLiftingTransport := E_SeqLiftingTransport.START;
+		IF (i_eCtrlState = E_CtrlState.IDLE) THEN
+			s_eSeqLiftingTransport := E_SeqLiftingTransport.START;
+		END_IF
 		
 	E_SeqLiftingTransport.START:
-		//--IF s_fbSeqTransportControl.q_tmStepTime > T#1S THEN
-		//--	s_eSeqTransport := E_SeqTransport.READY;
-		//--END_IF
-		
 		IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
-			;//--s_cmPalletConveyor.m_Stop();
+			//Stop both axes
+			_m_StopLiftAndTransport();
 		END_IF		
 	
-		//IF s_cmPalletConveyor.p_bStaMotorStopped AND_THEN NOT(s_cmPalletConveyor.p_bStaBrakeReleased) AND s_fbSeqTransportControl.q_tmStepTime > T#1S THEN
-		//	s_eSeqLiftingTransport := E_SeqTransport.READY;
-		//END_IF
+		_m_PowerAxes(FALSE);
 		
-		s_cmLift.m_MC_Power(
-			i_bEnable := TRUE,
-			i_bEnablePositive := TRUE,
-			i_bEnableNegative := TRUE,
-			i_fOverride := 100.0,
-			i_eBufferMode := TC2_MC2.MC_BufferMode.MC_Aborting);
+		//--s_cmLift.m_MC_Power(
+		//--	i_bEnable := TRUE,
+		//--	i_bEnablePositive := TRUE,
+		//--	i_bEnableNegative := TRUE,
+		//--	i_fOverride := 100.0,
+		//--	i_eBufferMode := TC2_MC2.MC_BufferMode.MC_Aborting);
 			
-		s_cmTransport.m_MC_Power(
-			i_bEnable := TRUE,
-			i_bEnablePositive := TRUE,
-			i_bEnableNegative := TRUE,
-			i_fOverride := 100.0,
-			i_eBufferMode := TC2_MC2.MC_BufferMode.MC_Aborting);
+		//--s_cmTransport.m_MC_Power(
+		//--	i_bEnable := TRUE,
+		//--	i_bEnablePositive := TRUE,
+		//--	i_bEnableNegative := TRUE,
+		//--	i_fOverride := 100.0,
+		//--	i_eBufferMode := TC2_MC2.MC_BufferMode.MC_Aborting);
 		
 		IF s_arr_bTest[0] THEN
 			s_arr_bTest[0] := FALSE;
-			s_eSeqLiftingTransport := E_SeqLiftingTransport.LIFT_PRE_PICK_TROLLEY_IN_TB;
+			s_eSeqLiftingTransport := E_SeqLiftingTransport.LIFT_PRE_PICK_FROM_TB;
 		END_IF
 	
 	E_SeqLiftingTransport.HOME_TRANSPORT:
@@ -624,342 +810,164 @@ CASE s_eSeqLiftingTransport OF
 	
 	E_SeqLiftingTransport.MOVE_TO_IDLE:
 	
-/// PICK TROLLEY IN TB /////////////////////////////////////////////////////////
-	E_SeqLiftingTransport.LIFT_PRE_PICK_TROLLEY_IN_TB:
+	E_SeqLiftingTransport.READY:
+		IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
+			_m_PowerAxes(FALSE);
+		END_IF
+		
+		IF s_bReqGoToIdle THEN
+			IF _m_CmdGoToIdle(i_refReason := s_sMessage) THEN
+				IF _m_PowerAxes(TRUE) THEN
+					s_eSeqLiftingTransport := E_SeqLiftingTransport.MOVE_TO_IDLE;
+				END_IF	
+			//ELSE	If failed (command not allowed): the message will be written with the interlock reason
+			END_IF
+			s_bReqGoToIdle := FALSE;
+		
+		ELSIF s_bReqPickTrolleyFromTB THEN
+			IF _m_CmdPickTrolleyFromTB(i_refReason := s_sMessage) THEN
+				IF _m_PowerAxes(TRUE) THEN
+					s_eSeqLiftingTransport := E_SeqLiftingTransport.LIFT_PRE_PICK_FROM_TB;
+				END_IF
+			//ELSE	If failed (command not allowed): the message will be written with the interlock reason
+			END_IF
+			s_bReqPickTrolleyFromTB := FALSE;
+		
+		ELSIF s_bReqPlaceTrolleyInTB THEN
+			IF _m_CmdPlaceTrolleyInTB(i_refReason := s_sMessage) THEN
+				IF _m_PowerAxes(TRUE) THEN
+					s_eSeqLiftingTransport := E_SeqLiftingTransport.LIFT_PRE_PICK_FROM_CABIN;
+				END_IF
+			//ELSE	If failed (command not allowed): the message will be written with the interlock reason
+			END_IF
+			s_bReqPlaceTrolleyInTB := FALSE;
+		END_IF
+
+/// PICK TROLLEY FROM TB /////////////////////////////////////////////////////////
+	E_SeqLiftingTransport.LIFT_PRE_PICK_FROM_TB:
+		
 		IF _m_MoveAbsolute(	i_ref_AXIS := axisLift, i_ref_stProfile := i_ref_stSettings.arr_LiftPositioningProfile[1]) THEN
-			s_eSeqLiftingTransport := E_SeqLiftingTransport.TRANSPORT_PRE_PICK_TROLLEY_IN_TB;
+			s_eSeqLiftingTransport := E_SeqLiftingTransport.TRANSPORT_PRE_PICK_FROM_TB;
 		END_IF
 	
-	E_SeqLiftingTransport.TRANSPORT_PRE_PICK_TROLLEY_IN_TB:
+	E_SeqLiftingTransport.TRANSPORT_PRE_PICK_FROM_TB:
 		IF _m_MoveAbsolute(	i_ref_AXIS := axisTransport, i_ref_stProfile := i_ref_stSettings.arr_TransportPositioningProfile[1]) THEN
-			s_eSeqLiftingTransport := E_SeqLiftingTransport.TRANSPORT_PICK_TROLLEY_IN_TB;
+			s_eSeqLiftingTransport := E_SeqLiftingTransport.TRANSPORT_PICK_FROM_TB;
 		END_IF
 	
-	E_SeqLiftingTransport.TRANSPORT_PICK_TROLLEY_IN_TB:
+	E_SeqLiftingTransport.TRANSPORT_PICK_FROM_TB:
 		IF _m_MoveAbsolute(	i_ref_AXIS := axisTransport, i_ref_stProfile := i_ref_stSettings.arr_TransportPositioningProfile[2]) THEN
-			s_eSeqLiftingTransport := E_SeqLiftingTransport.LIFT_PICK_TROLLEY_IN_TB;
+			s_eSeqLiftingTransport := E_SeqLiftingTransport.LIFT_PICK_FROM_TB;
 		END_IF
 	
-	E_SeqLiftingTransport.LIFT_PICK_TROLLEY_IN_TB:
+	E_SeqLiftingTransport.LIFT_PICK_FROM_TB:
 		IF _m_MoveAbsolute(	i_ref_AXIS := axisLift, i_ref_stProfile := i_ref_stSettings.arr_LiftPositioningProfile[2]) THEN
-			s_eSeqLiftingTransport := E_SeqLiftingTransport.LIFT_RAISE_TROLLEY_IN_TB;
+			s_eSeqLiftingTransport := E_SeqLiftingTransport.LIFT_RAISE_FROM_TB;
 		END_IF
 	
-	E_SeqLiftingTransport.LIFT_RAISE_TROLLEY_IN_TB:
+	E_SeqLiftingTransport.LIFT_RAISE_FROM_TB:
 		IF _m_MoveAbsolute(	i_ref_AXIS := axisLift, i_ref_stProfile := i_ref_stSettings.arr_LiftPositioningProfile[3]) THEN
-			s_eSeqLiftingTransport := E_SeqLiftingTransport.TRANSPORT_PLACE_TROLLEY_IN_CABIN;
+			s_eSeqLiftingTransport := E_SeqLiftingTransport.TRANSPORT_PLACE_IN_CABIN;
 		END_IF
 
 /// PLACE TROLLEY IN TB ////////////////////////////////////////////////////////	
-	E_SeqLiftingTransport.TRANSPORT_PLACE_TROLLEY_IN_CABIN:
+	E_SeqLiftingTransport.TRANSPORT_PLACE_IN_CABIN:
 		IF _m_MoveAbsolute(	i_ref_AXIS := axisTransport, i_ref_stProfile := i_ref_stSettings.arr_TransportPositioningProfile[3]) THEN
-			s_eSeqLiftingTransport := E_SeqLiftingTransport.LIFT_PRE_PLACE_TROLLEY_IN_CABIN;
+			s_eSeqLiftingTransport := E_SeqLiftingTransport.LIFT_PRE_PLACE_IN_CABIN;
 		END_IF
 		
-	E_SeqLiftingTransport.LIFT_PRE_PLACE_TROLLEY_IN_CABIN:
+	E_SeqLiftingTransport.LIFT_PRE_PLACE_IN_CABIN:
 		IF _m_MoveAbsolute(	i_ref_AXIS := axisLift, i_ref_stProfile := i_ref_stSettings.arr_LiftPositioningProfile[4]) THEN
-			s_eSeqLiftingTransport := E_SeqLiftingTransport.LIFT_PLACE_TROLLEY_IN_CABIN;
+			s_eSeqLiftingTransport := E_SeqLiftingTransport.LIFT_PLACE_IN_CABIN;
 		END_IF
 		
-	E_SeqLiftingTransport.LIFT_PLACE_TROLLEY_IN_CABIN:
+	E_SeqLiftingTransport.LIFT_PLACE_IN_CABIN:
 		IF _m_MoveAbsolute(	i_ref_AXIS := axisLift, i_ref_stProfile := i_ref_stSettings.arr_LiftPositioningProfile[5]) THEN
-			s_eSeqLiftingTransport := E_SeqLiftingTransport.LIFT_PRE_PICK_TROLLEY_IN_CABIN;
+			s_eSeqLiftingTransport := E_SeqLiftingTransport.LIFT_PRE_PICK_FROM_CABIN;
 		END_IF
 
 /// PICK TROLLEY IN CABIN //////////////////////////////////////////////////////		
-	E_SeqLiftingTransport.LIFT_PRE_PICK_TROLLEY_IN_CABIN:
+	E_SeqLiftingTransport.LIFT_PRE_PICK_FROM_CABIN:
 		IF _m_MoveAbsolute(	i_ref_AXIS := axisLift, i_ref_stProfile := i_ref_stSettings.arr_LiftPositioningProfile[6]) THEN
-			s_eSeqLiftingTransport := E_SeqLiftingTransport.LIFT_PICK_TROLLEY_IN_CABIN;
+			s_eSeqLiftingTransport := E_SeqLiftingTransport.LIFT_PICK_FROM_CABIN;
 		END_IF
 		
-	E_SeqLiftingTransport.LIFT_PICK_TROLLEY_IN_CABIN:
+	E_SeqLiftingTransport.LIFT_PICK_FROM_CABIN:
 		IF _m_MoveAbsolute(	i_ref_AXIS := axisLift, i_ref_stProfile := i_ref_stSettings.arr_LiftPositioningProfile[7]) THEN
-			s_eSeqLiftingTransport := E_SeqLiftingTransport.LIFT_RAISE_TROLLEY_IN_CABIN;
+			s_eSeqLiftingTransport := E_SeqLiftingTransport.LIFT_RAISE_FROM_CABIN;
 		END_IF
 		
-	E_SeqLiftingTransport.LIFT_RAISE_TROLLEY_IN_CABIN:
+	E_SeqLiftingTransport.LIFT_RAISE_FROM_CABIN:
 		IF _m_MoveAbsolute(	i_ref_AXIS := axisLift, i_ref_stProfile := i_ref_stSettings.arr_LiftPositioningProfile[8]) THEN
-			s_eSeqLiftingTransport := E_SeqLiftingTransport.TRANSPORT_PRE_PLACE_TROLLEY_IN_TB;
+			s_eSeqLiftingTransport := E_SeqLiftingTransport.TRANSPORT_PRE_PLACE_IN_TB;
 		END_IF
 	
-/// PLACE TROLLEY IN TB //??////////////////////////////////////////////////////
-	E_SeqLiftingTransport.TRANSPORT_PRE_PLACE_TROLLEY_IN_TB:
+/// PLACE TROLLEY IN TB //////////////////////////////////////////////////////
+	E_SeqLiftingTransport.TRANSPORT_PRE_PLACE_IN_TB:
 		IF _m_MoveAbsolute(	i_ref_AXIS := axisTransport, i_ref_stProfile := i_ref_stSettings.arr_TransportPositioningProfile[4]) THEN
-			s_eSeqLiftingTransport := E_SeqLiftingTransport.TRANSPORT_PLACE_TROLLEY_IN_TB;
+			s_eSeqLiftingTransport := E_SeqLiftingTransport.TRANSPORT_PLACE_IN_TB;
 		END_IF
 	
-	E_SeqLiftingTransport.TRANSPORT_PLACE_TROLLEY_IN_TB:
+	E_SeqLiftingTransport.TRANSPORT_PLACE_IN_TB:
 		IF _m_MoveAbsolute(	i_ref_AXIS := axisTransport, i_ref_stProfile := i_ref_stSettings.arr_TransportPositioningProfile[5]) THEN
-			s_eSeqLiftingTransport := E_SeqLiftingTransport.LIFT_PRE_PLACE_TROLLEY_IN_TB;
+			s_eSeqLiftingTransport := E_SeqLiftingTransport.LIFT_PRE_PLACE_IN_TB;
 		END_IF
 
-	E_SeqLiftingTransport.LIFT_PRE_PLACE_TROLLEY_IN_TB:
+	E_SeqLiftingTransport.LIFT_PRE_PLACE_IN_TB:
 		IF _m_MoveAbsolute(	i_ref_AXIS := axisLift, i_ref_stProfile := i_ref_stSettings.arr_LiftPositioningProfile[9]) THEN
-			s_eSeqLiftingTransport := E_SeqLiftingTransport.LIFT_PLACE_TROLLEY_IN_TB;
+			s_eSeqLiftingTransport := E_SeqLiftingTransport.LIFT_PLACE_IN_TB;
 		END_IF
 		
-	E_SeqLiftingTransport.LIFT_PLACE_TROLLEY_IN_TB:
+	E_SeqLiftingTransport.LIFT_PLACE_IN_TB:
 		IF _m_MoveAbsolute(	i_ref_AXIS := axisLift, i_ref_stProfile := i_ref_stSettings.arr_LiftPositioningProfile[10]) THEN
+			s_eSeqLiftingTransport := E_SeqLiftingTransport.TRANSPORT_RETURN_IN_CABIN;
+		END_IF
+		
+	E_SeqLiftingTransport.TRANSPORT_RETURN_IN_CABIN:
+		IF _m_MoveAbsolute(	i_ref_AXIS := axisTransport, i_ref_stProfile := i_ref_stSettings.arr_TransportPositioningProfile[6]) THEN
+			s_eSeqLiftingTransport := E_SeqLiftingTransport.LIFT_PLACE_IN_TB;
+		END_IF
+
+	E_SeqLiftingTransport.LIFT_RETURN_IN_CABIN:
+		IF _m_MoveAbsolute(	i_ref_AXIS := axisLift, i_ref_stProfile := i_ref_stSettings.arr_LiftPositioningProfile[11]) THEN
+			s_eSeqLiftingTransport := E_SeqLiftingTransport.START;
+		END_IF	
+		
+	
+	E_SeqLiftingTransport.STOP:
+		IF _m_StopLiftAndTransport() THEN
 			s_eSeqLiftingTransport := E_SeqLiftingTransport.START;
 		END_IF
-		
-	E_SeqLiftingTransport.READY:
-		IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
-			i_refTB.p_eLocation := s_eTmpLocation;
-			s_eTmpLocation := E_Location.UNKNOWN;
-		END_IF
-		
-(*		i_refTB.p_bOuterDoorOpened S= s_bStaAtInfeedRearPosition AND s_bStaAtInfeedFrontPosition AND s_bStaDoorOpened;
-	
-		IF s_fbHmiBtnTB_ToInfeed.p_osrBtnPress OR s_bReqTB_ToInfeed THEN
-			IF m_CmdTB_ToInfeed(o_sReason => s_sMessage) THEN
-				s_eSeqTransport := E_SeqTransport.MOVE_TO_INFEED;
-			ELSE	
-				//Write message
-				//--s_sMessage := m_TB_ToCenter.o_sReason;
-			END_IF
- 
-			s_bReqTB_ToInfeed := FALSE;
 			
-			//--AND NOT(s_bStaAtInfeedRearPosition)
-			//--THEN
+	//--E_SeqLiftingTransport.READY:
+	//--	IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
+	//--		i_refTB.p_eActLocation := s_eTmpLocation;
+	//--		s_eTmpLocation := E_Location.UNKNOWN;
+	//--	END_IF
 			
-		ELSIF s_fbHmiBtnTB_ToCentering.p_osrBtnPress OR s_bReqTB_ToCenter THEN
-			IF m_CmdTB_ToCenter(o_sReason => s_sMessage) THEN
-				s_eSeqTransport := E_SeqTransport.MOVE_TO_CENTERING;
-			ELSE	
-				//Write message
-				//--s_sMessage := m_TB_ToCenter.o_sReason;
-			END_IF	
-		
-			s_bReqTB_ToCenter := FALSE;
-			
-			//--AND NOT(s_bStaAtCenteringPosition)
-			//--THEN
-			
-			//--IF s_bStaDoorOpened THEN
-			//--	s_eSeqTransport := E_SeqTransport.MOVE_TO_Centering;
-			//--ELSE
-			//--	s_bWrnOuterDoorNotOpened := TRUE;
-			//--END_IF
-			
-		ELSIF s_fbHmiBtnTB_ToDocking.p_osrBtnPress OR s_bReqTB_ToDocking THEN
-			IF m_CmdTB_ToDocking(o_sReason => s_sMessage) THEN
-				s_eSeqTransport := E_SeqTransport.MOVE_TO_DOCKING;
-			ELSE	
-				//Write message
-				//--s_sMessage := m_TB_ToDocking.o_sReason;
-			END_IF	
-		
-			s_bReqTB_ToDocking := FALSE;
-			
-		//--	AND NOT(s_bStaAtDockingPosition)
-		//--	THEN
-		//--	s_eSeqTransport := E_SeqTransport.MOVE_TO_DOCKING;
-		END_IF	
-	
-	E_SeqTransport.MOVE_TO_INFEED:
-		IF s_fbSeqTransportControl.q_bStaEntry THEN		
-			s_tMaxTravelTime := LREAL_TO_TIME((i_ref_stSettings.fDistanceToInfeed / i_ref_stSettings.fSpeedGoToInfeed) * i_ref_stSettings.fTravelTollerance * 1000);
-			s_cmPalletConveyor.m_StartBackward(i_rTargetSpeed := i_stSettings.fSpeedGoToInfeed);
-		END_IF
-		
-		IF s_bStaAtInfeedRearPosition THEN
-			s_eTmpLocation := E_Location.INFEED;
-			s_eSeqTransport := E_SeqTransport.STOP;
-		ELSIF s_fbSeqTransportControl.q_tmStepTime > s_tMaxTravelTime THEN
-			s_bErrTravelTimeOut := TRUE;
-			s_sReason := 'Moving to infeed - timeout';
-			s_eSeqTransport := E_SeqTransport.ERROR;
-		END_IF
-	
-	E_SeqTransport.MOVE_TO_CENTERING:
-		IF s_fbSeqTransportControl.q_bStaEntry THEN
-			s_tMaxTravelTime := LREAL_TO_TIME((i_ref_stSettings.fDistanceToCentering / i_ref_stSettings.fSpeedGoToCentering) * i_ref_stSettings.fTravelTollerance * 1000);
-			s_tDoorCheckTime := LREAL_TO_TIME((i_ref_stSettings.fDistanceOuteDoorCheck / i_ref_stSettings.fSpeedGoToCentering) * 1000);
-			s_cmPalletConveyor.m_StartForward(i_rTargetSpeed := i_stSettings.fSpeedGoToCentering);
-		END_IF
-		
-		IF s_bStaAtCenteringPosition THEN
-			s_bDoorCheckTimeDisabled := FALSE;
-			s_eTmpLocation := E_Location.CENTERING;
-			s_eSeqTransport := E_SeqTransport.STOP;
-		
-		ELSIF s_fbSeqTransportControl.q_tmStepTime < s_tDoorCheckTime 
-			AND NOT(s_bStaDoorOpened) THEN
-			s_bWrnOuterDoorNotOpened := TRUE;
-			s_bDoorCheckTimeDisabled := TRUE; //Disable error after first occurance (to prevent invalid retriggering at reties)
-			s_eSeqTransport := E_SeqTransport.ERROR;
-			
-		ELSIF s_fbSeqTransportControl.q_tmStepTime > s_tMaxTravelTime THEN
-			s_bErrTravelTimeOut := TRUE;
-			s_sReason := 'Moving to Centering - timeout';
-			s_eSeqTransport := E_SeqTransport.ERROR;
-
-		//--Not clear it this will work correct due to order of sensor positions
-		//--ELSIF s_bStaAtDockingPosition THEN
-		//--	s_bErrTravelTimeOut := TRUE;
-		//--	s_sReason := 'Moving to Centering - too far (docking)';
-		//--	s_eSeqTransport := E_SeqTransport.ERROR;
-		
-		END_IF
-	
-	E_SeqTransport.MOVE_TO_DOCKING:
-		IF s_fbSeqTransportControl.q_bStaEntry THEN
-			s_tMaxTravelTime := LREAL_TO_TIME((i_ref_stSettings.fDistanceToDocking / i_ref_stSettings.fSpeedGoToDocking) * i_ref_stSettings.fTravelTollerance * 1000);
-			s_cmPalletConveyor.m_StartForward(i_rTargetSpeed := i_stSettings.fSpeedGoToDocking);
-		END_IF
-		
-		IF s_bStaAtDockingPosition THEN
-			s_eTmpLocation := E_Location.DOCKING;
-			s_eSeqTransport := E_SeqTransport.STOP;
-		ELSIF s_fbSeqTransportControl.q_tmStepTime > s_tMaxTravelTime THEN
-			s_bErrTravelTimeOut := TRUE;
-			s_sReason := 'Moving to docking - timeout';
-			s_eSeqTransport := E_SeqTransport.ERROR;		
-		END_IF
-		
-	E_SeqTransport.STOP:
-		IF s_fbSeqTransportControl.q_bStaEntry THEN
-			s_cmPalletConveyor.m_Stop();
-		END_IF
-		
-		IF s_cmPalletConveyor.p_bStaMotorStopped THEN
-			s_eSeqTransport := E_SeqTransport.READY;
-		END_IF
-		
-	E_SeqTransport.ERROR:
-		s_cmPalletConveyor.m_Stop();
-*)		
 END_CASE
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="m_CmdCenteringTB" Id="{5f07294c-c083-4786-a1a2-586c95e439f7}">
-      <Declaration><![CDATA[METHOD PUBLIC m_CmdCenteringTB : BOOL
-VAR_INPUT
-	i_refReason : REFERENCE TO STRING;
-END_VAR
-VAR_OUTPUT
-	o_sReason : STRING;
-END_VAR
+    <Method Name="_m_StopLiftAndTransport" Id="{51cd2b95-af32-4ec5-bc42-92dbd4c31be4}">
+      <Declaration><![CDATA[METHOD PRIVATE _m_StopLiftAndTransport : BOOL
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
-	RETURN;
-END_IF
-
-//--IF NOT(s_bIlckCenteringToCenter) THEN
-//--	s_bReqCenteringTB := TRUE;
-//--	m_CenteringTB := TRUE;
-//--ELSE
-//--	m_CenteringTB := FALSE;	
-//--END_IF
-
-IF s_bIlckCenteringToCenter THEN
-	i_refReason := 'Command Centering: Interlocked';
-	m_CmdCenteringTB := FALSE;
-ELSE
-	m_CmdCenteringTB := TRUE;	
-END_IF
+s_cmLift.m_MC_Stop(
+	i_bExecute := TRUE,
+	i_fDeceleration := i_ref_stSettings.stLiftSpeedProfilePositioning.fDeceleration,
+	i_fJerk := i_ref_stSettings.stLiftSpeedProfilePositioning.fJerk);
+		
+s_cmTransport.m_MC_Stop(
+	i_bExecute := TRUE,
+	i_fDeceleration := i_ref_stSettings.stTransportSpeedProfilePositioning.fDeceleration,
+	i_fJerk := i_ref_stSettings.stTransportSpeedProfilePositioning.fJerk);
+		
+_m_StopLiftAndTransport := 
+	s_cmLift.p_bStandstill
+	AND s_cmTransport.p_bStandstill;
 ]]></ST>
-      </Implementation>
-    </Method>
-    <Method Name="m_CmdTB_ToCenter" Id="{3a534c15-c636-468b-8b82-6fd59e761d1a}">
-      <Declaration><![CDATA[METHOD PUBLIC m_CmdTB_ToCenter : BOOL
-VAR_OUTPUT
-	o_sReason : STRING;
-END_VAR
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
-	RETURN;
-END_IF
-
-//--IF NOT(s_bIlckConveyorForward) 
-//--	AND NOT(s_bStaAtCenteringPosition)
-//--	THEN
-//--	s_bReqTB_ToCenter := TRUE;
-//--	m_TB_ToCenter := TRUE;
-//--ELSE
-//--	m_TB_ToCenter := FALSE;	
-//--END_IF
-
-////////
-
-IF s_bIlckConveyorForward THEN
-	o_sReason := 'Command To Center: Interlocked';
-	m_CmdTB_ToCenter := FALSE;
-ELSIF s_bStaAtCenteringPosition THEN
- 	o_sReason := 'Already at center position';
-	m_CmdTB_ToCenter := FALSE;
-ELSIF NOT(s_bStaDoorOpened) THEN
-	o_sReason := 'Door not opened';
-	s_bWrnOuterDoorNotOpened := TRUE; // kan mogelijk vervallen wanneer er toch gewerkt gaat worden met reasons.
-	m_CmdTB_ToCenter := FALSE;
-ELSE
-	m_CmdTB_ToCenter := TRUE;	
-END_IF
-]]></ST>
-      </Implementation>
-    </Method>
-    <Method Name="m_CmdTB_ToDocking" Id="{fddfe49e-6281-47a3-8534-8abf984608e2}">
-      <Declaration><![CDATA[METHOD PUBLIC m_CmdTB_ToDocking : BOOL
-VAR_OUTPUT
-	o_sReason : STRING;
-END_VAR
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
-	RETURN;
-END_IF
-
-//--IF NOT(s_bIlckConveyorForward) THEN
-//--	s_bReqTB_ToDocking := TRUE;
-//--	m_TB_ToDocking := TRUE;
-//--ELSE
-//--	m_TB_ToDocking := FALSE;	
-//--END_IF
-
-IF s_bStaAtDockingPosition THEN
-	o_sReason := 'Command to Docking: Interlocked';
-	m_CmdTB_ToDocking := FALSE;
-ELSE
-	m_CmdTB_ToDocking := TRUE;	
-END_IF
-]]></ST>
-      </Implementation>
-    </Method>
-    <Method Name="m_CmdTB_ToInfeed" Id="{05a177ec-65c8-4b07-91b0-bc7997926449}">
-      <Declaration><![CDATA[METHOD PUBLIC m_CmdTB_ToInfeed : BOOL
-VAR_OUTPUT
-	o_sReason : STRING;
-END_VAR
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
-	RETURN;
-END_IF
-
-//--IF NOT(s_bIlckConveyorBackward) 
-//--	AND NOT(s_bStaAtInfeedRearPosition)
-//--	THEN
-//--	s_bReqTB_ToInfeed := TRUE;
-//--	m_TB_ToInfeed := TRUE;
-//--ELSE
-//--	m_TB_ToInfeed := FALSE;	
-//--END_IF
-
-IF s_bIlckConveyorBackward THEN
-	o_sReason := 'Command to Infeed: Interlocked';
-	m_CmdTB_ToInfeed := FALSE;
-ELSE
-	m_CmdTB_ToInfeed := TRUE;	
-END_IF]]></ST>
       </Implementation>
     </Method>
     <Method Name="m_Main" Id="{7d708d4c-1fee-4511-a8d0-db3dbe3fd7e6}" FolderPath="Base\">
@@ -1062,16 +1070,19 @@ END_IF
 //MAINTENANCE-mode ////////////////////////////////////////////////////////////////////////////////
 
 //Stopping control modules
-IF (i_eCtrlMode = E_CtrlMode.MAINTENANCE) AND (i_eCtrlState = E_CtrlState.STOPPING) THEN 
-	s_cmLift.m_MC_Stop(
-		i_bExecute := TRUE,
-		i_fDeceleration := i_ref_stSettings.stLiftSpeedProfilePositioning.fDeceleration,
-		i_fJerk := i_ref_stSettings.stLiftSpeedProfilePositioning.fJerk);
+IF (i_eCtrlMode = E_CtrlMode.MAINTENANCE) AND (i_eCtrlState = E_CtrlState.STOPPING) THEN
+	//Stop both axes
+	_m_StopLiftAndTransport();
+ 
+//--	s_cmLift.m_MC_Stop(
+//--		i_bExecute := TRUE,
+//--		i_fDeceleration := i_ref_stSettings.stLiftSpeedProfilePositioning.fDeceleration,
+//--		i_fJerk := i_ref_stSettings.stLiftSpeedProfilePositioning.fJerk);
 		
-	s_cmTransport.m_MC_Stop(
-		i_bExecute := TRUE,
-		i_fDeceleration := i_ref_stSettings.stTransportSpeedProfilePositioning.fDeceleration,
-		i_fJerk := i_ref_stSettings.stTransportSpeedProfilePositioning.fJerk);
+//--	s_cmTransport.m_MC_Stop(
+//--		i_bExecute := TRUE,
+//--		i_fDeceleration := i_ref_stSettings.stTransportSpeedProfilePositioning.fDeceleration,
+//--		i_fJerk := i_ref_stSettings.stTransportSpeedProfilePositioning.fJerk);
 END_IF
 
 //IO-mode /////////////////////////////////////////////////////////////////////////////////////////
@@ -1085,9 +1096,9 @@ m_Main := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="m_ReqCenteringTB" Id="{415ce6ea-afb8-4118-a1fc-ea58b530d7b6}">
+    <Method Name="m_ReqGoToIdle" Id="{9d30bbef-bcd6-4fc2-8d93-9b2201ca737f}">
       <Declaration><![CDATA[{attribute 'TcRpcEnable'}
-METHOD PUBLIC m_ReqCenteringTB : BOOL
+METHOD PUBLIC m_ReqGoToIdle : BOOL
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
@@ -1095,18 +1106,15 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-IF NOT i_bReqEnable THEN 
-	RETURN;
-END_IF
+s_bReqGoToIdle := TRUE;
 
-s_bReqCenteringTB := TRUE;
-
-m_ReqCenteringTB := TRUE;]]></ST>
+m_ReqGoToIdle := TRUE;
+]]></ST>
       </Implementation>
     </Method>
-    <Method Name="m_ReqTB_ToCenter" Id="{9d30bbef-bcd6-4fc2-8d93-9b2201ca737f}">
+    <Method Name="m_ReqPickTrolleyFromTB" Id="{bc26af41-4ec1-4049-ae2f-a8f4c7a26c9b}">
       <Declaration><![CDATA[{attribute 'TcRpcEnable'}
-METHOD PUBLIC m_ReqTB_ToCenter : BOOL
+METHOD PUBLIC m_ReqPickTrolleyFromTB : BOOL
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
@@ -1114,14 +1122,15 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-s_bReqTB_ToCenter := TRUE;
+s_bReqPickTrolleyFromTB := TRUE;
 
-m_ReqTB_ToCenter := TRUE;]]></ST>
+m_ReqPickTrolleyFromTB := TRUE;
+]]></ST>
       </Implementation>
     </Method>
-    <Method Name="m_ReqTB_ToDocking" Id="{bc26af41-4ec1-4049-ae2f-a8f4c7a26c9b}">
+    <Method Name="m_ReqPlaceTrolleyInTB" Id="{fa516528-012b-4031-8e18-317ece30b039}">
       <Declaration><![CDATA[{attribute 'TcRpcEnable'}
-METHOD PUBLIC m_ReqTB_ToDocking : BOOL
+METHOD PUBLIC m_ReqPlaceTrolleyInTB : BOOL
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
@@ -1129,71 +1138,49 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-s_bReqTB_ToDocking := TRUE;
+s_bReqPlaceTrolleyInTB := TRUE;
 
-m_ReqTB_ToDocking := TRUE;]]></ST>
+m_ReqPlaceTrolleyInTB := TRUE;
+]]></ST>
       </Implementation>
     </Method>
-    <Method Name="m_ReqTB_ToInfeed" Id="{fa516528-012b-4031-8e18-317ece30b039}">
-      <Declaration><![CDATA[{attribute 'TcRpcEnable'}
-METHOD PUBLIC m_ReqTB_ToInfeed : BOOL
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
-	RETURN;
-END_IF
-
-s_bReqTB_ToInfeed := TRUE;
-
-m_ReqTB_ToInfeed := TRUE;]]></ST>
-      </Implementation>
-    </Method>
-    <Property Name="p_bStaTB_AtCentering" Id="{050383f4-1821-4a98-ab50-f2e654340431}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaTB_AtCentering : BOOL]]></Declaration>
+    <Property Name="p_bStaAtIdlePosition" Id="{050383f4-1821-4a98-ab50-f2e654340431}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaAtIdlePosition : BOOL]]></Declaration>
       <Get Name="Get" Id="{03f3f379-9c7e-473c-8407-742758c9f4b6}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaTB_AtCentering := s_bStaTB_AtCentering; 
+p_bStaAtIdlePosition := s_bStaAtIdlePosition; 
 ]]></ST>
         </Implementation>
       </Get>
     </Property>
-    <Property Name="p_bStaTB_AtDocking" Id="{630d4760-3c9e-490a-b1db-ceb84ce3b93d}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaTB_AtDocking : BOOL]]></Declaration>
+    <Property Name="p_bStaTrolleyPickedFromTB" Id="{630d4760-3c9e-490a-b1db-ceb84ce3b93d}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaTrolleyPickedFromTB : BOOL]]></Declaration>
       <Get Name="Get" Id="{ac0f1cfe-6ddb-4648-8ead-590b388c0171}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaTB_AtDocking := s_bStaTB_AtDocking; 
+p_bStaTrolleyPickedFromTB := s_bStaTrolleyPickedFromTB; 
 ]]></ST>
         </Implementation>
       </Get>
     </Property>
-    <Property Name="p_bStaTB_AtInfeed" Id="{ccba55b7-671b-48a2-af2d-7bdd569222c9}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaTB_AtInfeed : BOOL]]></Declaration>
+    <Property Name="p_bStaTrolleyPlacedInTB" Id="{ccba55b7-671b-48a2-af2d-7bdd569222c9}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaTrolleyPlacedInTB : BOOL]]></Declaration>
       <Get Name="Get" Id="{c55ed7dc-3eae-49e0-bba0-c67b4ed5fb10}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaTB_AtInfeed := s_bStaTB_AtInfeed;
-]]></ST>
-        </Implementation>
-      </Get>
-    </Property>
-    <Property Name="p_bStaTB_CenteringDone" Id="{92f12f64-9c7b-449f-90f0-528b8c0b82e0}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaTB_CenteringDone : BOOL]]></Declaration>
-      <Get Name="Get" Id="{f8e455bd-3d78-46ed-aec1-a530ae8bd329}">
-        <Declaration><![CDATA[]]></Declaration>
-        <Implementation>
-          <ST><![CDATA[
-p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
+p_bStaTrolleyPlacedInTB := s_bStaTrolleyPlacedInTB;
 ]]></ST>
         </Implementation>
       </Get>
     </Property>
     <LineIds Name="EM_LiftingTransport">
+      <LineId Id="898" Count="0" />
+      <LineId Id="894" Count="0" />
+      <LineId Id="900" Count="0" />
       <LineId Id="221" Count="0" />
       <LineId Id="9" Count="0" />
       <LineId Id="222" Count="0" />
@@ -1227,6 +1214,30 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
     </LineIds>
     <LineIds Name="EM_LiftingTransport._m_AutomaticControl">
       <LineId Id="473" Count="3" />
+    </LineIds>
+    <LineIds Name="EM_LiftingTransport._m_CmdGoToIdle">
+      <LineId Id="145" Count="0" />
+      <LineId Id="134" Count="2" />
+      <LineId Id="155" Count="1" />
+      <LineId Id="137" Count="2" />
+      <LineId Id="147" Count="1" />
+      <LineId Id="150" Count="1" />
+      <LineId Id="153" Count="1" />
+      <LineId Id="141" Count="3" />
+      <LineId Id="100" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_LiftingTransport._m_CmdPickTrolleyFromTB">
+      <LineId Id="180" Count="17" />
+      <LineId Id="77" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_LiftingTransport._m_CmdPlaceTrolleyInTB">
+      <LineId Id="159" Count="17" />
+      <LineId Id="100" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_LiftingTransport._m_ConvertLiftToSpindlePosition">
+      <LineId Id="58" Count="9" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="72" Count="0" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport._m_Devices">
       <LineId Id="41" Count="0" />
@@ -1304,9 +1315,6 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="404" Count="2" />
       <LineId Id="403" Count="0" />
       <LineId Id="453" Count="0" />
-      <LineId Id="534" Count="0" />
-      <LineId Id="526" Count="0" />
-      <LineId Id="525" Count="0" />
       <LineId Id="414" Count="0" />
       <LineId Id="424" Count="0" />
       <LineId Id="538" Count="2" />
@@ -1357,15 +1365,20 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="5" Count="0" />
       <LineId Id="218" Count="0" />
     </LineIds>
-    <LineIds Name="EM_LiftingTransport._m_ManualControl">
-      <LineId Id="397" Count="1" />
-      <LineId Id="403" Count="0" />
-    </LineIds>
     <LineIds Name="EM_LiftingTransport._m_MoveAbsolute">
       <LineId Id="11" Count="0" />
       <LineId Id="5" Count="0" />
       <LineId Id="46" Count="0" />
       <LineId Id="12" Count="1" />
+      <LineId Id="87" Count="1" />
+      <LineId Id="90" Count="1" />
+      <LineId Id="72" Count="1" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="79" Count="2" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="66" Count="1" />
+      <LineId Id="76" Count="2" />
+      <LineId Id="69" Count="0" />
       <LineId Id="23" Count="0" />
       <LineId Id="31" Count="14" />
       <LineId Id="29" Count="1" />
@@ -1373,11 +1386,16 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="55" Count="0" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport._m_Outputs">
-      <LineId Id="20" Count="0" />
-      <LineId Id="6" Count="2" />
-      <LineId Id="22" Count="1" />
-      <LineId Id="16" Count="0" />
-      <LineId Id="5" Count="0" />
+      <LineId Id="424" Count="0" />
+      <LineId Id="377" Count="11" />
+      <LineId Id="412" Count="0" />
+      <LineId Id="389" Count="2" />
+      <LineId Id="411" Count="0" />
+      <LineId Id="413" Count="0" />
+      <LineId Id="421" Count="0" />
+      <LineId Id="418" Count="0" />
+      <LineId Id="414" Count="0" />
+      <LineId Id="393" Count="3" />
       <LineId Id="25" Count="0" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport._m_Params">
@@ -1392,199 +1410,62 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="298" Count="0" />
       <LineId Id="296" Count="0" />
       <LineId Id="310" Count="1" />
+      <LineId Id="315" Count="1" />
       <LineId Id="301" Count="0" />
       <LineId Id="282" Count="0" />
       <LineId Id="292" Count="0" />
     </LineIds>
+    <LineIds Name="EM_LiftingTransport._m_PowerAxes">
+      <LineId Id="6" Count="12" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="21" Count="0" />
+    </LineIds>
     <LineIds Name="EM_LiftingTransport._m_SeqLiftingTransport">
-      <LineId Id="1623" Count="0" />
-      <LineId Id="1448" Count="17" />
-      <LineId Id="1762" Count="0" />
-      <LineId Id="1467" Count="2" />
-      <LineId Id="1605" Count="1" />
-      <LineId Id="1768" Count="1" />
-      <LineId Id="1470" Count="13" />
-      <LineId Id="1750" Count="0" />
-      <LineId Id="1810" Count="4" />
-      <LineId Id="1808" Count="0" />
-      <LineId Id="1815" Count="0" />
-      <LineId Id="1817" Count="4" />
-      <LineId Id="1816" Count="0" />
-      <LineId Id="1809" Count="0" />
-      <LineId Id="1751" Count="0" />
-      <LineId Id="1754" Count="0" />
-      <LineId Id="1752" Count="1" />
-      <LineId Id="1484" Count="0" />
-      <LineId Id="1638" Count="6" />
-      <LineId Id="1636" Count="0" />
-      <LineId Id="1645" Count="0" />
-      <LineId Id="1652" Count="1" />
-      <LineId Id="1646" Count="0" />
-      <LineId Id="1650" Count="0" />
-      <LineId Id="1649" Count="0" />
-      <LineId Id="1637" Count="0" />
-      <LineId Id="1648" Count="0" />
-      <LineId Id="1647" Count="0" />
-      <LineId Id="1628" Count="0" />
-      <LineId Id="1654" Count="13" />
-      <LineId Id="1627" Count="0" />
-      <LineId Id="1625" Count="0" />
-      <LineId Id="1668" Count="0" />
-      <LineId Id="1673" Count="0" />
-      <LineId Id="1694" Count="0" />
-      <LineId Id="1680" Count="0" />
-      <LineId Id="1728" Count="2" />
-      <LineId Id="1725" Count="0" />
-      <LineId Id="1681" Count="0" />
-      <LineId Id="1756" Count="1" />
-      <LineId Id="1736" Count="0" />
-      <LineId Id="1755" Count="0" />
-      <LineId Id="1682" Count="0" />
-      <LineId Id="1759" Count="1" />
-      <LineId Id="1737" Count="0" />
-      <LineId Id="1758" Count="0" />
-      <LineId Id="1683" Count="0" />
-      <LineId Id="1786" Count="1" />
-      <LineId Id="1784" Count="1" />
-      <LineId Id="1678" Count="0" />
-      <LineId Id="1788" Count="1" />
-      <LineId Id="1738" Count="0" />
-      <LineId Id="1696" Count="0" />
-      <LineId Id="1695" Count="0" />
-      <LineId Id="1684" Count="0" />
-      <LineId Id="1775" Count="1" />
-      <LineId Id="1739" Count="0" />
-      <LineId Id="1777" Count="0" />
-      <LineId Id="1685" Count="0" />
-      <LineId Id="1790" Count="1" />
-      <LineId Id="1740" Count="0" />
-      <LineId Id="1792" Count="0" />
-      <LineId Id="1670" Count="0" />
-      <LineId Id="1793" Count="1" />
-      <LineId Id="1741" Count="0" />
-      <LineId Id="1698" Count="0" />
-      <LineId Id="1671" Count="0" />
-      <LineId Id="1688" Count="0" />
-      <LineId Id="1795" Count="1" />
-      <LineId Id="1742" Count="0" />
-      <LineId Id="1797" Count="0" />
-      <LineId Id="1689" Count="0" />
-      <LineId Id="1798" Count="1" />
-      <LineId Id="1743" Count="0" />
-      <LineId Id="1800" Count="0" />
-      <LineId Id="1686" Count="0" />
-      <LineId Id="1801" Count="1" />
-      <LineId Id="1744" Count="0" />
-      <LineId Id="1687" Count="0" />
-      <LineId Id="1700" Count="0" />
-      <LineId Id="1691" Count="0" />
-      <LineId Id="1779" Count="1" />
-      <LineId Id="1745" Count="0" />
-      <LineId Id="1778" Count="0" />
-      <LineId Id="1692" Count="0" />
-      <LineId Id="1782" Count="1" />
-      <LineId Id="1746" Count="0" />
-      <LineId Id="1781" Count="0" />
-      <LineId Id="1693" Count="0" />
-      <LineId Id="1803" Count="1" />
-      <LineId Id="1747" Count="0" />
-      <LineId Id="1805" Count="0" />
-      <LineId Id="1690" Count="0" />
-      <LineId Id="1806" Count="1" />
-      <LineId Id="1748" Count="0" />
-      <LineId Id="1669" Count="0" />
-      <LineId Id="1485" Count="0" />
-      <LineId Id="1599" Count="0" />
-      <LineId Id="1601" Count="0" />
-      <LineId Id="1611" Count="0" />
-      <LineId Id="1604" Count="0" />
-      <LineId Id="1603" Count="0" />
-      <LineId Id="1615" Count="0" />
-      <LineId Id="1613" Count="0" />
-      <LineId Id="1486" Count="7" />
-      <LineId Id="1617" Count="0" />
-      <LineId Id="1616" Count="0" />
-      <LineId Id="1494" Count="10" />
-      <LineId Id="1618" Count="1" />
-      <LineId Id="1505" Count="16" />
-      <LineId Id="1621" Count="0" />
-      <LineId Id="1620" Count="0" />
-      <LineId Id="1522" Count="11" />
-      <LineId Id="1607" Count="0" />
-      <LineId Id="1534" Count="14" />
-      <LineId Id="1608" Count="1" />
-      <LineId Id="1550" Count="27" />
-      <LineId Id="1610" Count="0" />
-      <LineId Id="1578" Count="19" />
+      <LineId Id="2130" Count="0" />
+      <LineId Id="1886" Count="90" />
+      <LineId Id="1987" Count="0" />
+      <LineId Id="2108" Count="0" />
+      <LineId Id="1989" Count="0" />
+      <LineId Id="2131" Count="0" />
+      <LineId Id="1990" Count="0" />
+      <LineId Id="2132" Count="0" />
+      <LineId Id="2103" Count="0" />
+      <LineId Id="2105" Count="1" />
+      <LineId Id="2113" Count="0" />
+      <LineId Id="2115" Count="0" />
+      <LineId Id="2117" Count="0" />
+      <LineId Id="2133" Count="0" />
+      <LineId Id="2118" Count="0" />
+      <LineId Id="2134" Count="0" />
+      <LineId Id="2119" Count="1" />
+      <LineId Id="2114" Count="0" />
+      <LineId Id="2122" Count="0" />
+      <LineId Id="2124" Count="0" />
+      <LineId Id="2126" Count="0" />
+      <LineId Id="2135" Count="0" />
+      <LineId Id="2127" Count="0" />
+      <LineId Id="2136" Count="0" />
+      <LineId Id="2128" Count="1" />
+      <LineId Id="2123" Count="0" />
+      <LineId Id="1994" Count="0" />
+      <LineId Id="2011" Count="2" />
+      <LineId Id="2148" Count="0" />
+      <LineId Id="2014" Count="75" />
+      <LineId Id="2137" Count="0" />
+      <LineId Id="2140" Count="2" />
+      <LineId Id="2138" Count="0" />
+      <LineId Id="2144" Count="3" />
+      <LineId Id="2143" Count="0" />
+      <LineId Id="2139" Count="0" />
+      <LineId Id="2090" Count="12" />
       <LineId Id="89" Count="0" />
     </LineIds>
-    <LineIds Name="EM_LiftingTransport.m_CmdCenteringTB">
-      <LineId Id="34" Count="0" />
-      <LineId Id="26" Count="2" />
-      <LineId Id="71" Count="0" />
-      <LineId Id="38" Count="0" />
-      <LineId Id="42" Count="0" />
-      <LineId Id="81" Count="0" />
-      <LineId Id="79" Count="1" />
-      <LineId Id="74" Count="0" />
-      <LineId Id="87" Count="3" />
-      <LineId Id="98" Count="1" />
-      <LineId Id="77" Count="0" />
-      <LineId Id="100" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_LiftingTransport.m_CmdTB_ToCenter">
-      <LineId Id="34" Count="0" />
-      <LineId Id="26" Count="2" />
-      <LineId Id="71" Count="0" />
-      <LineId Id="38" Count="0" />
-      <LineId Id="83" Count="1" />
-      <LineId Id="42" Count="0" />
-      <LineId Id="81" Count="0" />
-      <LineId Id="79" Count="1" />
-      <LineId Id="74" Count="0" />
-      <LineId Id="86" Count="0" />
-      <LineId Id="85" Count="0" />
-      <LineId Id="100" Count="1" />
-      <LineId Id="103" Count="0" />
-      <LineId Id="110" Count="0" />
-      <LineId Id="105" Count="1" />
-      <LineId Id="111" Count="0" />
-      <LineId Id="107" Count="1" />
-      <LineId Id="114" Count="0" />
-      <LineId Id="112" Count="0" />
-      <LineId Id="109" Count="0" />
-      <LineId Id="113" Count="0" />
-      <LineId Id="104" Count="0" />
-      <LineId Id="77" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_LiftingTransport.m_CmdTB_ToDocking">
-      <LineId Id="34" Count="0" />
-      <LineId Id="26" Count="2" />
-      <LineId Id="71" Count="0" />
-      <LineId Id="38" Count="0" />
-      <LineId Id="42" Count="0" />
-      <LineId Id="81" Count="0" />
-      <LineId Id="79" Count="1" />
-      <LineId Id="74" Count="0" />
-      <LineId Id="99" Count="0" />
-      <LineId Id="84" Count="2" />
-      <LineId Id="94" Count="1" />
-      <LineId Id="77" Count="0" />
-      <LineId Id="100" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_LiftingTransport.m_CmdTB_ToInfeed">
-      <LineId Id="34" Count="0" />
-      <LineId Id="26" Count="2" />
-      <LineId Id="71" Count="0" />
-      <LineId Id="38" Count="0" />
-      <LineId Id="83" Count="1" />
-      <LineId Id="42" Count="0" />
-      <LineId Id="81" Count="0" />
-      <LineId Id="79" Count="1" />
-      <LineId Id="74" Count="0" />
-      <LineId Id="85" Count="3" />
-      <LineId Id="96" Count="1" />
-      <LineId Id="77" Count="0" />
+    <LineIds Name="EM_LiftingTransport._m_StopLiftAndTransport">
+      <LineId Id="6" Count="8" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="15" Count="4" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport.m_Main">
       <LineId Id="2905" Count="0" />
@@ -1619,7 +1500,11 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="3016" Count="0" />
       <LineId Id="3009" Count="0" />
       <LineId Id="2986" Count="3" />
-      <LineId Id="2991" Count="6" />
+      <LineId Id="2991" Count="5" />
+      <LineId Id="3035" Count="0" />
+      <LineId Id="3034" Count="0" />
+      <LineId Id="3033" Count="0" />
+      <LineId Id="2997" Count="0" />
       <LineId Id="3024" Count="3" />
       <LineId Id="3029" Count="2" />
       <LineId Id="3028" Count="0" />
@@ -1628,57 +1513,36 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="2888" Count="1" />
       <LineId Id="179" Count="0" />
     </LineIds>
-    <LineIds Name="EM_LiftingTransport.m_ReqCenteringTB">
-      <LineId Id="34" Count="0" />
-      <LineId Id="26" Count="2" />
-      <LineId Id="71" Count="0" />
-      <LineId Id="104" Count="3" />
-      <LineId Id="77" Count="0" />
-      <LineId Id="103" Count="0" />
-      <LineId Id="102" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_LiftingTransport.m_ReqTB_ToCenter">
-      <LineId Id="34" Count="0" />
-      <LineId Id="26" Count="2" />
-      <LineId Id="71" Count="0" />
-      <LineId Id="77" Count="0" />
-      <LineId Id="100" Count="0" />
+    <LineIds Name="EM_LiftingTransport.m_ReqGoToIdle">
+      <LineId Id="111" Count="0" />
+      <LineId Id="105" Count="5" />
       <LineId Id="99" Count="0" />
+      <LineId Id="112" Count="0" />
     </LineIds>
-    <LineIds Name="EM_LiftingTransport.m_ReqTB_ToDocking">
-      <LineId Id="34" Count="0" />
-      <LineId Id="26" Count="2" />
-      <LineId Id="71" Count="0" />
-      <LineId Id="77" Count="0" />
-      <LineId Id="100" Count="0" />
+    <LineIds Name="EM_LiftingTransport.m_ReqPickTrolleyFromTB">
+      <LineId Id="111" Count="6" />
       <LineId Id="99" Count="0" />
+      <LineId Id="118" Count="0" />
     </LineIds>
-    <LineIds Name="EM_LiftingTransport.m_ReqTB_ToInfeed">
-      <LineId Id="34" Count="0" />
-      <LineId Id="26" Count="2" />
-      <LineId Id="71" Count="0" />
-      <LineId Id="77" Count="0" />
-      <LineId Id="100" Count="0" />
+    <LineIds Name="EM_LiftingTransport.m_ReqPlaceTrolleyInTB">
+      <LineId Id="115" Count="4" />
+      <LineId Id="109" Count="1" />
       <LineId Id="99" Count="0" />
+      <LineId Id="120" Count="0" />
     </LineIds>
-    <LineIds Name="EM_LiftingTransport.p_bStaTB_AtCentering.Get">
+    <LineIds Name="EM_LiftingTransport.p_bStaAtIdlePosition.Get">
       <LineId Id="5" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="6" Count="0" />
     </LineIds>
-    <LineIds Name="EM_LiftingTransport.p_bStaTB_AtDocking.Get">
+    <LineIds Name="EM_LiftingTransport.p_bStaTrolleyPickedFromTB.Get">
       <LineId Id="5" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="6" Count="0" />
     </LineIds>
-    <LineIds Name="EM_LiftingTransport.p_bStaTB_AtInfeed.Get">
+    <LineIds Name="EM_LiftingTransport.p_bStaTrolleyPlacedInTB.Get">
       <LineId Id="5" Count="0" />
       <LineId Id="2" Count="0" />
-      <LineId Id="6" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_LiftingTransport.p_bStaTB_CenteringDone.Get">
-      <LineId Id="8" Count="0" />
-      <LineId Id="7" Count="0" />
       <LineId Id="6" Count="0" />
     </LineIds>
   </POU>

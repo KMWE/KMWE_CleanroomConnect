@@ -4,8 +4,13 @@
     <Declaration><![CDATA[FUNCTION_BLOCK CM_AX5000 EXTENDS CM_Base IMPLEMENTS I_AX5000
 VAR_INPUT
 	i_refAxis : REFERENCE TO Tc2_MC2.AXIS_REF;
+	i_mcHomingMode : Tc2_MC2.MC_HomingMode := Tc2_MC2.MC_HomingMode.MC_Direct;
 	i_bIclkForward : BOOL := TRUE; //TRUE = interlocked
 	i_bIclkBackward : BOOL := TRUE; //TRUE = interlocked
+	
+	i_ref_setting : REFERENCE TO ST_SpeedProfile;
+	
+	i_ref_eCtrlState : REFERENCE TO E_CtrlState;
 END_VAR
 
 VAR
@@ -19,6 +24,9 @@ VAR
 	fbStop : Tc2_MC2.MC_Stop;
 	fbWriteParamter : Tc2_MC2.MC_WriteParameter;
 
+	s_bSetPoweOn : BOOL;
+	s_fSetTargetPosition : LREAL;
+	
 	// Inputs
 	I_bDetReferenceSwitch AT %I* : BOOL; //Reference-/home switch
 	I_bDetLimitSwitchPositive AT %I* : BOOL; //Limit switch positive-/CW- direction
@@ -33,7 +41,6 @@ VAR
 	s_bInVelocity : BOOL; 
 	s_bError : BOOL; 
 	s_nErrorID : UDINT;
-	
 	
 	// Requests
 	{warning '#TODO: Chcek / update during develiping'}
@@ -50,10 +57,23 @@ VAR
 	s_bCmdReleaseBrake : BOOL;
 		
 	// States
-	s_bStaReadyForOperation: BOOL;
-	s_bStaDriveError: BOOL;
+	s_bStaReferenceSwitch : BOOL;
+	s_bStaLimitSwitchPositive : BOOL;
+	s_bStaLimitSwitchNegative : BOOL;
+	
+	s_bStaEnabledControl : BOOL;
+	s_bStaEnabledForward : BOOL;
+	s_bStaEnabledBackward : BOOL;
+	s_bStaReady : BOOL;
+	s_bStaHomed : BOOL;
+	s_bStaStandstill : BOOL;
+	s_bStaMoving : BOOL;
+	s_bStaAtPosition : BOOL;
+	s_bStaDriveError : BOOL;
 	s_bStaWarning : BOOL;
 	
+	s_bIclkForward : BOOL;
+	s_bIclkBackward : BOOL;
 	s_sInterlockedReasonForward : STRING; //External interlocked reason for clarifying reason
 	s_sInterlockedReasonBackward : STRING; //External interlocked reason for clarifying reason
 	
@@ -74,19 +94,23 @@ VAR
 	s_wrnMotorBackwardInterlocked : BOOL;
 	
 	//Hmi
-	s_fbHmiBtnManualForward		: FB_HmiBtn;
-	s_fbHmiBtnManualBackward	: FB_HmiBtn;
-	s_fbHmiBtnManualStop		: FB_HmiBtn;
-	s_fbHmiBtnManualReset		: FB_HmiBtn;
+	s_fbHmiBtnHome : FB_HmiBtn;
+	s_fbHmiBtnJogPos : FB_HmiBtn;
+	s_fbHmiBtnJogNeg : FB_HmiBtn;
+	s_fbHmiBtnMoveAbs : FB_HmiBtn;
+	s_fbHmiBtnPower	: FB_HmiBtn;
+	s_fbHmiBtnReset	: FB_HmiBtn;
+	s_fbHmiBtnStop: FB_HmiBtn;
 	
-	s_fbHmiLedMotorStopped		: FB_HmiLed;
-	s_fbHmiLedDriveError		: FB_HmiLed;
-	
-	//Sequence
-	eSeqMOVITRAC_B_WithBrake : E_SeqMOVITRAC_B_WithBrake;
-	seqTimer : TON;
-	seqPreStep : E_SeqMOVITRAC_B_WithBrake;
-	s_sActStep : STRING;
+	s_fbHmiLedEnabledControl : FB_HmiLed;
+	s_fbHmiLedEnabledForward : FB_HmiLed;
+	s_fbHmiLedEnabledBackward : FB_HmiLed;
+	s_fbHmiLedReady : FB_HmiLed;
+	s_fbHmiLedHomed : FB_HmiLed;
+	s_fbHmiLedStandstill : FB_HmiLed;
+	s_fbHmiLedMoving : FB_HmiLed;
+	s_fbHmiLedAtPosition : FB_HmiLed;
+	s_fbHmiLedDriveError : FB_HmiLed;
 	
 END_VAR
 ]]></Declaration>
@@ -98,6 +122,344 @@ SUPER^();
     </Implementation>
     <Folder Name="Methods" Id="{c7dc02dc-f2cb-44e5-89eb-2e4085b6a909}" />
     <Folder Name="Properties" Id="{c3e008a7-9dfe-49e0-9cc5-18c79327535a}" />
+    <Method Name="_m_Alarms" Id="{c522f959-6f84-4a96-b11e-07b34d6dcd1a}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Alarms : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Alarms() THEN
+	RETURN;
+END_IF
+
+// Set error bits
+s_errDriveError := i_bReqEnable AND s_bStaDriveError;// AND NOT(i_bCmdReset);
+
+// Interlock warnings
+IF s_bIclkForward AND NOT(s_bStaMotorStopped) THEN	
+	s_wrnMotorForwardInterlocked := TRUE;
+	m_Stop();
+ELSIF NOT(s_bIclkForward) OR i_bCmdReset THEN
+	s_wrnMotorForwardInterlocked := FALSE;
+END_IF
+
+IF s_bIclkBackward AND NOT(s_bStaMotorStopped) THEN
+	s_wrnMotorBackwardInterlocked := TRUE;
+	m_Stop();
+ELSIF NOT(s_bIclkBackward) OR i_bCmdReset THEN
+	s_wrnMotorBackwardInterlocked := FALSE;
+END_IF
+
+// Alarm Handlers
+s_fbAlarmHandlerDriveError(
+	i_bStaActive := s_errDriveError,
+	i_eAlarmLevel := E_AlarmLevel.Alarm,
+	i_sAlarmText := CONCAT(i_sCmName, ': Drive - has error (check drive).'));
+	
+s_fbAlarmHandlerApplyingBrakeNotAllowed(
+	i_bStaActive := s_wrnApplyingBrakeNotAllowed,
+	i_eAlarmLevel := E_AlarmLevel.Warning,
+	i_sAlarmText := CONCAT(i_sCmName, ': Brake - not allowed to be applied (motor not stopped).'));
+	
+s_wrnApplyingBrakeNotAllowed R= s_bStaMotorStopped;
+	
+s_fbAlarmHandlerStartMotorNotAllowed(
+	i_bStaActive := s_wrnStartMotorNotAllowed,
+	i_eAlarmLevel := E_AlarmLevel.Warning,
+	i_sAlarmText := CONCAT(i_sCmName, ': Motor - not allowed to start (brake not released).'));
+	
+s_wrnStartMotorNotAllowed R= s_bStaBrakeReleased;
+	
+s_fbAlarmHandlerMotorForwardInterlocked(
+	i_bStaActive := s_wrnMotorForwardInterlocked,
+	i_eAlarmLevel := E_AlarmLevel.Warning,
+	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move forward, Reason: ',CONCAT(s_sInterlockedReasonForward, '.'))));
+	//--i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move forward, Reason: ',CONCAT(i_fbInterlockConvFwd.p_sReason, '.'))));
+	
+s_fbAlarmHandlerMotorBackwardInterlocked(
+	i_bStaActive := s_wrnMotorBackwardInterlocked,
+	i_eAlarmLevel := E_AlarmLevel.Warning,
+	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move backward, Reason: ',CONCAT(s_sInterlockedReasonBackward, '.'))));
+	//--i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move backward, Reason: ',CONCAT(i_fbInterlockConvBwd.p_sReason, '.'))));
+	
+// Alarm collector	
+s_bStaError := 
+	s_fbAlarmHandlerDriveError.q_bStaActive;
+
+// Warning collector
+s_bStaWarning := 
+	s_fbAlarmHandlerApplyingBrakeNotAllowed.q_bStaActive
+	OR s_fbAlarmHandlerStartMotorNotAllowed.q_bStaActive
+	OR s_fbAlarmHandlerMotorForwardInterlocked.q_bStaActive
+	OR s_fbAlarmHandlerMotorBackwardInterlocked.q_bStaActive;	
+	
+_m_Alarms := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Devices" Id="{9e243b00-6ff1-489e-8f7b-4b8502bb7008}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Devices : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Devices() THEN
+	RETURN;
+END_IF
+
+s_bStaReady := i_refAxis.NcToPlc.StateDWord.0;
+s_bStaHomed := i_refAxis.NcToPlc.StateDWord.1;
+s_bStaStandstill := i_refAxis.NcToPlc.StateDWord.2;
+s_bStaMoving := NOT(i_refAxis.NcToPlc.StateDWord.2);
+s_bStaAtPosition := i_refAxis.NcToPlc.StateDWord.4;
+s_bStaDriveError := i_refAxis.NcToPlc.StateDWord.31;
+
+_m_Devices := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Hmi" Id="{d347e6d1-38a6-4faa-8926-d4b86b27fe7e}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Hmi : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Hmi() THEN
+	RETURN;
+END_IF
+
+//Buttons
+s_fbHmiBtnHome();
+s_fbHmiBtnJogPos();
+s_fbHmiBtnJogNeg();
+s_fbHmiBtnMoveAbs();
+s_fbHmiBtnPower();
+s_fbHmiBtnReset();
+s_fbHmiBtnStop();
+
+//Leds
+s_fbHmiLedEnabledControl(i_bStaLed := s_bStaEnabledControl);
+s_fbHmiLedEnabledForward(i_bStaLed := s_bStaEnabledForward);
+s_fbHmiLedEnabledBackward(i_bStaLed := s_bStaEnabledBackward);
+s_fbHmiLedReady(i_bStaLed := s_bStaReady);
+s_fbHmiLedHomed(i_bStaLed := s_bStaHomed);
+s_fbHmiLedStandstill(i_bStaLed := s_bStaStandstill);
+s_fbHmiLedMoving(i_bStaLed := s_bStaMoving);
+s_fbHmiLedAtPosition(i_bStaLed := s_bStaAtPosition);
+s_fbHmiLedDriveError(i_bStaLed := s_bStaDriveError);
+
+IF __ISVALIDREF(i_ref_eCtrlState) THEN
+	//MAINTENANCE-mode is running
+	IF (i_eCtrlMode = E_CtrlMode.MAINTENANCE) AND (i_ref_eCtrlState = E_CtrlState.RUNNING) THEN
+		s_fbHmiBtnHome.p_bStaVisible := TRUE;
+		s_fbHmiBtnHome.p_bStaEnabled := i_bReqEnable AND s_bStaEnabledControl AND s_bStaStandstill;	
+
+		s_fbHmiBtnJogPos.p_bStaVisible := TRUE;
+		s_fbHmiBtnJogPos.p_bStaEnabled := i_bReqEnable AND s_bStaEnabledControl AND s_bStaEnabledForward AND NOT(i_bIclkForward);
+		
+		s_fbHmiBtnJogNeg.p_bStaVisible := TRUE;
+		s_fbHmiBtnJogNeg.p_bStaEnabled := i_bReqEnable AND s_bStaEnabledControl AND s_bStaEnabledBackward AND NOT(i_bIclkBackward);
+	
+		s_fbHmiBtnMoveAbs.p_bStaVisible := TRUE;
+		s_fbHmiBtnMoveAbs.p_bStaEnabled := i_bReqEnable AND s_bStaEnabledControl AND s_bStaEnabledForward AND s_bStaEnabledBackward AND s_bStaStandstill AND s_bStaHomed;
+		
+		s_fbHmiBtnPower.p_bStaVisible := TRUE;
+		s_fbHmiBtnPower.p_bStaEnabled := TRUE;
+		
+		s_fbHmiBtnReset.p_bStaVisible := TRUE;
+		s_fbHmiBtnReset.p_bStaEnabled := TRUE;
+		
+		s_fbHmiBtnStop.p_bStaVisible := TRUE;
+		s_fbHmiBtnStop.p_bStaEnabled := TRUE;
+		
+		//Actions
+		m_MC_Home(
+			i_bExecute := s_fbHmiBtnHome.p_osrBtnPress,
+			i_fPosition := 0.0,
+			i_eHomingMode := i_mcHomingMode,
+			i_eBufferMode := Tc2_MC2.MC_BufferMode.MC_Aborting);
+		
+		m_MC_Jog(
+			i_bExecute := s_fbHmiBtnJogPos.p_bStaBtn OR s_fbHmiBtnJogNeg.p_bStaBtn,
+			i_bJogForward := s_fbHmiBtnJogPos.p_bStaBtn,
+			i_bJogBackward := s_fbHmiBtnJogNeg.p_bStaBtn,
+			i_eJogMode := Tc2_MC2.MC_JOGMODE_CONTINOUS,
+			i_fPosition := 0.0,
+			i_fVelocity := i_ref_setting.fVelocity,
+			i_fAcceleration := i_ref_setting.fAcceleration,
+			i_fDeceleration := i_ref_setting.fDeceleration,
+			i_fJerk := i_ref_setting.fJerk);
+		
+		m_MC_MoveAbsolute(
+			i_bExecute := s_fbHmiBtnMoveAbs.p_osrBtnPress,
+			i_fPosition := s_fSetTargetPosition,
+			i_fVelocity := i_ref_setting.fVelocity,
+			i_fAcceleration := i_ref_setting.fAcceleration,
+			i_fDeceleration := i_ref_setting.fDeceleration,
+			i_fJerk := i_ref_setting.fJerk,
+			i_eBufferMode := TC2_MC2.MC_BufferMode.MC_Aborting);
+	
+			IF s_fbHmiBtnPower.p_osrBtnPress THEN 
+				s_bSetPoweOn := NOT(s_bSetPoweOn);
+			END_IF
+				
+		m_MC_Power(
+			i_bEnable := s_bSetPoweOn,
+			i_bEnablePositive := I_bDetLimitSwitchPositive,
+			i_bEnableNegative := I_bDetLimitSwitchPositive,
+			i_fOverride	:= 100.0,
+			i_eBufferMode := TC2_MC2.MC_BufferMode.MC_Aborting);
+			
+		m_MC_Reset(
+			i_bExecute := s_fbHmiBtnReset.p_osrBtnPress);	
+	
+		m_MC_Stop(
+			i_bExecute :=  s_fbHmiBtnStop.p_osrBtnPress,
+			i_fDeceleration := i_ref_setting.fDeceleration,
+			i_fJerk := i_ref_setting.fJerk);
+		
+	//other-mode	
+	ELSE
+		s_fbHmiBtnHome.p_bStaVisible := FALSE;
+		s_fbHmiBtnHome.p_bStaEnabled := FALSE;
+		
+		s_fbHmiBtnJogPos.p_bStaVisible := FALSE;
+		s_fbHmiBtnJogPos.p_bStaEnabled := FALSE;
+		
+		s_fbHmiBtnJogNeg.p_bStaVisible := FALSE;
+		s_fbHmiBtnJogNeg.p_bStaEnabled := FALSE;
+		
+		s_fbHmiBtnMoveAbs.p_bStaVisible := FALSE;
+		s_fbHmiBtnMoveAbs.p_bStaEnabled := FALSE;
+		
+		s_fbHmiBtnPower.p_bStaVisible := FALSE;
+		s_fbHmiBtnPower.p_bStaEnabled := FALSE;
+		
+		s_fbHmiBtnReset.p_bStaVisible := FALSE;
+		s_fbHmiBtnReset.p_bStaEnabled := FALSE;
+		
+		s_fbHmiBtnStop.p_bStaVisible := FALSE;
+		s_fbHmiBtnStop.p_bStaEnabled := FALSE;
+	END_IF
+END_IF
+	
+_m_Hmi := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Init" Id="{04dfb054-6b11-4b5e-a48d-10fd0c5ab89c}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Init : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Init() THEN
+	RETURN;
+END_IF
+
+//Hmi 
+	//Buttons
+	s_fbHmiBtnHome.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnHome.p_bStaVisible := FALSE;
+	s_fbHmiBtnHome.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnHome.p_sBtnText := 'Home';
+	
+	s_fbHmiBtnJogPos.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnJogPos.p_bStaVisible := FALSE;
+	s_fbHmiBtnJogPos.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnJogPos.p_sBtnText := 'Jog Positive';
+	
+	s_fbHmiBtnJogNeg.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnJogNeg.p_bStaVisible := FALSE;
+	s_fbHmiBtnJogNeg.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnJogNeg.p_sBtnText := 'Jog Negative';
+	
+	s_fbHmiBtnMoveAbs.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnMoveAbs.p_bStaVisible := FALSE;
+	s_fbHmiBtnMoveAbs.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnMoveAbs.p_sBtnText := 'Move Absolute';
+	
+	s_fbHmiBtnPower.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnPower.p_bStaVisible := FALSE;
+	s_fbHmiBtnPower.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnPower.p_sBtnText := 'Power/Enable';
+
+	s_fbHmiBtnReset.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnReset.p_bStaVisible := FALSE;
+	s_fbHmiBtnReset.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnReset.p_sBtnText := 'Reset';
+	
+	s_fbHmiBtnReset.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnReset.p_bStaVisible := FALSE;
+	s_fbHmiBtnReset.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnReset.p_sBtnText := 'Reset';
+	
+	s_fbHmiBtnStop.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnStop.p_bStaVisible := FALSE;
+	s_fbHmiBtnStop.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnStop.p_sBtnText := 'Stop';
+	
+	//Leds
+	s_fbHmiLedEnabledControl.p_bStaVisible := FALSE;
+	s_fbHmiLedEnabledControl.p_sToHmiDescriptionLed := 'Enabled Control';
+	
+	s_fbHmiLedEnabledForward.p_bStaVisible := FALSE;
+	s_fbHmiLedEnabledForward.p_sToHmiDescriptionLed := 'Enabled Forward';
+	
+	s_fbHmiLedEnabledBackward.p_bStaVisible := FALSE;
+	s_fbHmiLedEnabledBackward.p_sToHmiDescriptionLed := 'Enabled Backward';
+	
+	s_fbHmiLedReady.p_bStaVisible := FALSE;
+	s_fbHmiLedReady.p_sToHmiDescriptionLed := 'Ready';
+	
+	s_fbHmiLedHomed.p_bStaVisible := FALSE;
+	s_fbHmiLedHomed.p_sToHmiDescriptionLed := 'Homed';
+	
+	s_fbHmiLedStandstill.p_bStaVisible := FALSE;
+	s_fbHmiLedStandstill.p_sToHmiDescriptionLed := 'Standstill';
+	
+	s_fbHmiLedMoving.p_bStaVisible := FALSE;
+	s_fbHmiLedMoving.p_sToHmiDescriptionLed := 'Moving';
+
+	s_fbHmiLedAtPosition.p_bStaVisible := FALSE;
+	s_fbHmiLedAtPosition.p_sToHmiDescriptionLed := 'At Position';
+	
+	s_fbHmiLedDriveError.p_bStaVisible := FALSE;
+	s_fbHmiLedDriveError.p_sToHmiDescriptionLed := 'Drive Error';
+	
+_m_Init := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Inputs" Id="{6f1bac9d-85af-4aa0-99cc-0441d85b988e}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Inputs : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Inputs() THEN
+	RETURN;
+END_IF
+
+s_bStaReferenceSwitch := I_bDetReferenceSwitch;
+s_bStaLimitSwitchPositive := I_bDetLimitSwitchPositive;
+s_bStaLimitSwitchNegative := I_bDetLimitSwitchNegative;
+
+s_bIclkForward := i_bIclkForward;
+s_bIclkBackward := i_bIclkBackward;
+
+_m_Inputs := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Outputs" Id="{705beffa-2023-4b46-ae05-94ae1d9439ab}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Outputs : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Outputs() THEN
+	RETURN;
+END_IF
+
+_m_Outputs := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
     <Method Name="m_MC_Home" Id="{953753d2-b56b-4416-8bfe-ffc202c2c66e}" FolderPath="Methods\">
       <Declaration><![CDATA[METHOD PUBLIC m_MC_Home : BOOL
 VAR_INPUT
@@ -543,6 +905,168 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="47" Count="0" />
       <LineId Id="650" Count="0" />
       <LineId Id="633" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_AX5000._m_Alarms">
+      <LineId Id="28" Count="0" />
+      <LineId Id="19" Count="2" />
+      <LineId Id="103" Count="0" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="169" Count="0" />
+      <LineId Id="155" Count="0" />
+      <LineId Id="170" Count="0" />
+      <LineId Id="157" Count="0" />
+      <LineId Id="159" Count="2" />
+      <LineId Id="158" Count="0" />
+      <LineId Id="163" Count="5" />
+      <LineId Id="162" Count="0" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="34" Count="1" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="122" Count="3" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="133" Count="1" />
+      <LineId Id="129" Count="3" />
+      <LineId Id="121" Count="0" />
+      <LineId Id="136" Count="0" />
+      <LineId Id="135" Count="0" />
+      <LineId Id="143" Count="2" />
+      <LineId Id="140" Count="0" />
+      <LineId Id="186" Count="0" />
+      <LineId Id="183" Count="0" />
+      <LineId Id="148" Count="2" />
+      <LineId Id="180" Count="0" />
+      <LineId Id="184" Count="0" />
+      <LineId Id="147" Count="0" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="110" Count="0" />
+      <LineId Id="172" Count="0" />
+      <LineId Id="174" Count="4" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="29" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_AX5000._m_Devices">
+      <LineId Id="6" Count="3" />
+      <LineId Id="296" Count="0" />
+      <LineId Id="301" Count="4" />
+      <LineId Id="297" Count="0" />
+      <LineId Id="294" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="13" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_AX5000._m_Hmi">
+      <LineId Id="17" Count="3" />
+      <LineId Id="127" Count="0" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="310" Count="6" />
+      <LineId Id="137" Count="1" />
+      <LineId Id="320" Count="7" />
+      <LineId Id="319" Count="0" />
+      <LineId Id="318" Count="0" />
+      <LineId Id="224" Count="1" />
+      <LineId Id="305" Count="0" />
+      <LineId Id="329" Count="0" />
+      <LineId Id="340" Count="0" />
+      <LineId Id="338" Count="0" />
+      <LineId Id="337" Count="0" />
+      <LineId Id="341" Count="3" />
+      <LineId Id="330" Count="0" />
+      <LineId Id="274" Count="0" />
+      <LineId Id="346" Count="0" />
+      <LineId Id="345" Count="0" />
+      <LineId Id="348" Count="0" />
+      <LineId Id="350" Count="0" />
+      <LineId Id="349" Count="0" />
+      <LineId Id="277" Count="0" />
+      <LineId Id="347" Count="0" />
+      <LineId Id="280" Count="2" />
+      <LineId Id="351" Count="1" />
+      <LineId Id="355" Count="0" />
+      <LineId Id="365" Count="1" />
+      <LineId Id="373" Count="1" />
+      <LineId Id="362" Count="0" />
+      <LineId Id="377" Count="8" />
+      <LineId Id="376" Count="0" />
+      <LineId Id="375" Count="0" />
+      <LineId Id="388" Count="2" />
+      <LineId Id="398" Count="2" />
+      <LineId Id="394" Count="0" />
+      <LineId Id="387" Count="0" />
+      <LineId Id="386" Count="0" />
+      <LineId Id="426" Count="0" />
+      <LineId Id="428" Count="0" />
+      <LineId Id="427" Count="0" />
+      <LineId Id="429" Count="0" />
+      <LineId Id="403" Count="4" />
+      <LineId Id="358" Count="0" />
+      <LineId Id="401" Count="1" />
+      <LineId Id="409" Count="0" />
+      <LineId Id="408" Count="0" />
+      <LineId Id="411" Count="3" />
+      <LineId Id="240" Count="2" />
+      <LineId Id="252" Count="15" />
+      <LineId Id="250" Count="0" />
+      <LineId Id="423" Count="2" />
+      <LineId Id="251" Count="0" />
+      <LineId Id="223" Count="0" />
+      <LineId Id="171" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="87" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_AX5000._m_Init">
+      <LineId Id="21" Count="0" />
+      <LineId Id="15" Count="2" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="89" Count="0" />
+      <LineId Id="34" Count="22" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="63" Count="2" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="86" Count="2" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="92" Count="2" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="68" Count="6" />
+      <LineId Id="106" Count="0" />
+      <LineId Id="108" Count="4" />
+      <LineId Id="115" Count="0" />
+      <LineId Id="117" Count="6" />
+      <LineId Id="116" Count="0" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="124" Count="2" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="23" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_AX5000._m_Inputs">
+      <LineId Id="13" Count="0" />
+      <LineId Id="5" Count="2" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="35" Count="1" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="25" Count="2" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="17" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_AX5000._m_Outputs">
+      <LineId Id="29" Count="0" />
+      <LineId Id="7" Count="2" />
+      <LineId Id="212" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="39" Count="0" />
     </LineIds>
     <LineIds Name="CM_AX5000.m_MC_Home">
       <LineId Id="113" Count="0" />

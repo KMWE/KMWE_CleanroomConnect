@@ -8,6 +8,8 @@ VAR_INPUT
 	i_bIclkForward : BOOL := TRUE; //TRUE = interlocked
 	i_bIclkBackward : BOOL := TRUE; //TRUE = interlocked
 	
+//--	i_fSetManualPosition :  
+	
 	i_ref_setting : REFERENCE TO ST_SpeedProfile;
 	
 	i_ref_eCtrlState : REFERENCE TO E_CtrlState;
@@ -205,6 +207,10 @@ IF NOT SUPER^._m_Devices() THEN
 	RETURN;
 END_IF
 
+s_bStaEnabledControl := fbPower.Status;
+s_bStaEnabledForward := s_bStaLimitSwitchPositive;
+s_bStaEnabledBackward := s_bStaLimitSwitchNegative;
+
 s_bStaReady := i_refAxis.NcToPlc.StateDWord.0;
 s_bStaHomed := i_refAxis.NcToPlc.StateDWord.1;
 s_bStaStandstill := i_refAxis.NcToPlc.StateDWord.2;
@@ -218,7 +224,9 @@ _m_Devices := TRUE;
     </Method>
     <Method Name="_m_Hmi" Id="{d347e6d1-38a6-4faa-8926-d4b86b27fe7e}" FolderPath="Methods\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Hmi : BOOL
-]]></Declaration>
+VAR
+	sTcDirection : Tc2_MC2.MC_Direction;
+END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[
 IF NOT SUPER^._m_Hmi() THEN
@@ -276,16 +284,31 @@ IF __ISVALIDREF(i_ref_eCtrlState) THEN
 			i_eHomingMode := i_mcHomingMode,
 			i_eBufferMode := Tc2_MC2.MC_BufferMode.MC_Aborting);
 		
-		m_MC_Jog(
+		IF s_fbHmiBtnJogPos.p_bStaBtn THEN
+			sTcDirection := Tc2_MC2.MC_Direction.MC_Positive_Direction;
+		ELSIF s_fbHmiBtnJogNeg.p_bStaBtn THEN
+			sTcDirection := Tc2_MC2.MC_Direction.MC_Negative_Direction;
+		END_IF
+			
+		m_MC_MoveVelocity(
 			i_bExecute := s_fbHmiBtnJogPos.p_bStaBtn OR s_fbHmiBtnJogNeg.p_bStaBtn,
-			i_bJogForward := s_fbHmiBtnJogPos.p_bStaBtn,
-			i_bJogBackward := s_fbHmiBtnJogNeg.p_bStaBtn,
-			i_eJogMode := Tc2_MC2.MC_JOGMODE_CONTINOUS,
-			i_fPosition := 0.0,
 			i_fVelocity := i_ref_setting.fVelocity,
 			i_fAcceleration := i_ref_setting.fAcceleration,
 			i_fDeceleration := i_ref_setting.fDeceleration,
-			i_fJerk := i_ref_setting.fJerk);
+			i_fJerk := i_ref_setting.fJerk,
+			i_eDirection := Tc2_MC2.MC_Direction.MC_Positive_Direction,
+			i_eBufferMode := Tc2_MC2.MC_BufferMode.MC_Aborting);
+			
+		//--m_MC_Jog(
+		//--	i_bExecute := s_fbHmiBtnJogPos.p_bStaBtn OR s_fbHmiBtnJogNeg.p_bStaBtn,
+		//--	i_bJogForward := s_fbHmiBtnJogPos.p_bStaBtn,
+		//--	i_bJogBackward := s_fbHmiBtnJogNeg.p_bStaBtn,
+		//--	i_eJogMode := Tc2_MC2.MC_JOGMODE_CONTINOUS,
+		//--	i_fPosition := 0.0,
+		//--	i_fVelocity := i_ref_setting.fVelocity,
+		//--	i_fAcceleration := i_ref_setting.fAcceleration,
+		//--	i_fDeceleration := i_ref_setting.fDeceleration,
+		//--	i_fJerk := i_ref_setting.fJerk);
 		
 		m_MC_MoveAbsolute(
 			i_bExecute := s_fbHmiBtnMoveAbs.p_osrBtnPress,
@@ -311,7 +334,7 @@ IF __ISVALIDREF(i_ref_eCtrlState) THEN
 			i_bExecute := s_fbHmiBtnReset.p_osrBtnPress);	
 	
 		m_MC_Stop(
-			i_bExecute :=  s_fbHmiBtnStop.p_osrBtnPress,
+			i_bExecute := s_fbHmiBtnStop.p_osrBtnPress OR s_fbHmiBtnJogPos.p_osfBtnPress OR s_fbHmiBtnJogNeg.p_osfBtnPress,
 			i_fDeceleration := i_ref_setting.fDeceleration,
 			i_fJerk := i_ref_setting.fJerk);
 		
@@ -836,6 +859,26 @@ p_fPosition := i_refAxis.NcToPlc.ActPos;
         </Implementation>
       </Get>
     </Property>
+    <Property Name="p_fSetTargetPosition" Id="{d8bd5c56-1afd-4449-9ff5-408d5b4dc1a6}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_fSetTargetPosition : LREAL
+]]></Declaration>
+      <Get Name="Get" Id="{2f75fc55-e4e2-4d1a-9e2e-5f2488ab159d}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_fSetTargetPosition := s_fSetTargetPosition;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{8e420d50-b498-4fbd-a8d3-bcf62048045f}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+s_fSetTargetPosition := p_fSetTargetPosition;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
     <Property Name="p_fVelocity" Id="{e4d08808-aacd-469e-bccf-b788a2ac516e}" FolderPath="Properties\">
       <Declaration><![CDATA[PROPERTY PUBLIC p_fVelocity : LREAL
 ]]></Declaration>
@@ -953,6 +996,9 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
     </LineIds>
     <LineIds Name="CM_AX5000._m_Devices">
       <LineId Id="6" Count="3" />
+      <LineId Id="307" Count="0" />
+      <LineId Id="309" Count="1" />
+      <LineId Id="308" Count="0" />
       <LineId Id="296" Count="0" />
       <LineId Id="301" Count="4" />
       <LineId Id="297" Count="0" />
@@ -991,6 +1037,14 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="365" Count="1" />
       <LineId Id="373" Count="1" />
       <LineId Id="362" Count="0" />
+      <LineId Id="448" Count="1" />
+      <LineId Id="451" Count="1" />
+      <LineId Id="450" Count="0" />
+      <LineId Id="441" Count="0" />
+      <LineId Id="433" Count="1" />
+      <LineId Id="443" Count="2" />
+      <LineId Id="438" Count="1" />
+      <LineId Id="431" Count="1" />
       <LineId Id="377" Count="8" />
       <LineId Id="376" Count="0" />
       <LineId Id="375" Count="0" />
@@ -1175,6 +1229,14 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="3" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="4" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_AX5000.p_fSetTargetPosition.Get">
+      <LineId Id="3" Count="2" />
+    </LineIds>
+    <LineIds Name="CM_AX5000.p_fSetTargetPosition.Set">
+      <LineId Id="6" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="7" Count="0" />
     </LineIds>
     <LineIds Name="CM_AX5000.p_fVelocity.Get">
       <LineId Id="3" Count="0" />

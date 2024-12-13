@@ -218,6 +218,13 @@ s_bStaMoving := NOT(i_refAxis.NcToPlc.StateDWord.2);
 s_bStaAtPosition := i_refAxis.NcToPlc.StateDWord.4;
 s_bStaDriveError := i_refAxis.NcToPlc.StateDWord.31;
 
+//Stop drive if interlock occur
+
+m_MC_Stop(
+	i_bExecute := (i_bIclkForward AND i_refAxis.NcToPlc.ActVelo > 0.1) OR (i_bIclkBackward AND i_refAxis.NcToPlc.ActVelo < -0.1),
+	i_fDeceleration := i_ref_setting.fDeceleration,
+	i_fJerk := i_ref_setting.fJerk);
+
 _m_Devices := TRUE;
 ]]></ST>
       </Implementation>
@@ -266,7 +273,7 @@ IF __ISVALIDREF(i_ref_eCtrlState) THEN
 		s_fbHmiBtnJogNeg.p_bStaEnabled := i_bReqEnable AND s_bStaEnabledControl AND s_bStaEnabledBackward AND NOT(i_bIclkBackward);
 	
 		s_fbHmiBtnMoveAbs.p_bStaVisible := TRUE;
-		s_fbHmiBtnMoveAbs.p_bStaEnabled := i_bReqEnable AND s_bStaEnabledControl AND s_bStaEnabledForward AND s_bStaEnabledBackward AND s_bStaStandstill AND s_bStaHomed;
+		s_fbHmiBtnMoveAbs.p_bStaEnabled := i_bReqEnable AND s_bStaEnabledControl AND s_bStaEnabledForward AND s_bStaEnabledBackward AND s_bStaStandstill AND s_bStaHomed AND NOT(i_bIclkForward) AND NOT(i_bIclkBackward);
 		
 		s_fbHmiBtnPower.p_bStaVisible := TRUE;
 		s_fbHmiBtnPower.p_bStaEnabled := TRUE;
@@ -296,7 +303,7 @@ IF __ISVALIDREF(i_ref_eCtrlState) THEN
 			i_fAcceleration := i_ref_setting.fAcceleration,
 			i_fDeceleration := i_ref_setting.fDeceleration,
 			i_fJerk := i_ref_setting.fJerk,
-			i_eDirection := Tc2_MC2.MC_Direction.MC_Positive_Direction,
+			i_eDirection := sTcDirection,
 			i_eBufferMode := Tc2_MC2.MC_BufferMode.MC_Aborting);
 			
 		//--m_MC_Jog(
@@ -465,6 +472,24 @@ s_bStaLimitSwitchNegative := I_bDetLimitSwitchNegative;
 
 s_bIclkForward := i_bIclkForward;
 s_bIclkBackward := i_bIclkBackward;
+
+//Local reasons, first
+IF NOT(s_bSetPoweOn) AND (i_eCtrlMode = E_CtrlMode.MAINTENANCE) THEN  
+	s_sInterlockedReasonForward := 'Not powered';
+ELSIF NOT(s_bStaLimitSwitchPositive) THEN  
+	s_sInterlockedReasonForward := 'Limit-switch forward';
+ELSE
+	;// Else, allow external to write
+END_IF
+
+//Local reasons, first
+IF NOT(s_bSetPoweOn) AND (i_eCtrlMode = E_CtrlMode.MAINTENANCE) THEN  
+	s_sInterlockedReasonBackward := 'Not powered';
+ELSIF NOT(s_bStaLimitSwitchNegative) THEN  
+	s_sInterlockedReasonBackward := 'Limit-switch backward';
+ELSE
+	;// Else, allow external to write
+END_IF
 
 _m_Inputs := TRUE;
 ]]></ST>
@@ -692,7 +717,7 @@ END_VAR]]></Declaration>
         <ST><![CDATA[
 fbReset(
 	Axis := i_refAxis,
-	Execute := i_bExecute,
+	Execute := i_bExecute AND NOT(fbReset.Done OR fbReset.Busy OR fbReset.Error),
 	Done => s_bDone,
 	Busy => s_bBusy,
 	Error => s_bError,
@@ -1002,6 +1027,11 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="296" Count="0" />
       <LineId Id="301" Count="4" />
       <LineId Id="297" Count="0" />
+      <LineId Id="326" Count="0" />
+      <LineId Id="325" Count="0" />
+      <LineId Id="312" Count="0" />
+      <LineId Id="322" Count="2" />
+      <LineId Id="321" Count="0" />
       <LineId Id="294" Count="0" />
       <LineId Id="5" Count="0" />
       <LineId Id="13" Count="0" />
@@ -1111,6 +1141,14 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="35" Count="1" />
       <LineId Id="34" Count="0" />
       <LineId Id="25" Count="2" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="56" Count="2" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="68" Count="1" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="86" Count="7" />
+      <LineId Id="40" Count="0" />
       <LineId Id="9" Count="0" />
       <LineId Id="8" Count="0" />
       <LineId Id="17" Count="0" />

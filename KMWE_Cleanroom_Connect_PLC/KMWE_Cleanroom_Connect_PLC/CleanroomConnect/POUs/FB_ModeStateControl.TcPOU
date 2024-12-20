@@ -77,7 +77,7 @@ CASE s_eCtrlMode OF
 		s_eCtrlMode := E_CtrlMode.IDLE;
 END_CASE
 
-IF (s_eCtrlState = E_CtrlState.STOPPED) OR (s_eCtrlState = E_CtrlState.IDLE) THEN
+IF (s_eCtrlState = E_CtrlState.STOPPED) (*OR (s_eCtrlState = E_CtrlState.IDLE)*) THEN
 		IF s_fbHmiBtnModeAutomatic.p_osrBtnPress THEN
 			s_eCtrlMode := E_CtrlMode.AUTOMATIC;
 
@@ -128,7 +128,7 @@ ELSE
 	s_eCtrlState := E_CtrlState.STOPPED;
 END_CASE
 
-IF (s_eCtrlState = E_CtrlState.IDLE) OR (s_eCtrlState = E_CtrlState.STOPPED) THEN
+IF (s_eCtrlState = E_CtrlState.STOPPED (*OR (s_eCtrlState = E_CtrlState.IDLE)*)) THEN
 	s_fbHmiBtnModeAutomatic.p_bStaEnabled := s_eCtrlMode <> E_CtrlMode.AUTOMATIC;
 	s_fbHmiBtnModeManual.p_bStaEnabled := s_eCtrlMode <> E_CtrlMode.MANUAL;
 	s_fbHmiBtnModeMaintenance.p_bStaEnabled := s_eCtrlMode <> E_CtrlMode.MAINTENANCE;

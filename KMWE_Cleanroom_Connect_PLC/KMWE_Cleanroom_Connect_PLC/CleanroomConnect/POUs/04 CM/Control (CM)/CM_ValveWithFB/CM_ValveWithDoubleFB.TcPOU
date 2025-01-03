@@ -23,7 +23,8 @@ END_VAR
 SUPER^();
 ]]></ST>
     </Implementation>
-    <Method Name="_m_Alarms" Id="{325d43c3-5745-4ae0-9bdb-3517c36b11b7}">
+    <Folder Name="Base" Id="{0d749d86-076d-450e-9337-ea262ac42006}" />
+    <Method Name="_m_Alarms" Id="{325d43c3-5745-4ae0-9bdb-3517c36b11b7}" FolderPath="Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Alarms : BOOL
 VAR_INST
 	s_sTempStringOff : STRING(16);
@@ -92,22 +93,18 @@ END_IF
 
 s_fbAlarmHandlerFeedbackOffTimeout(
 	i_bStaActive := i_bReqEnable AND s_errFeedbackOffTimeout, 
-	i_eAlarmLevel := E_AlarmLevel.Alarm,
 	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Feedback ', CONCAT(s_sCfgOffName, CONCAT( ' timeout - ', s_sTempStringOff)))) );
 	
 s_fbAlarmHandlerFeedbackOnTimeout(
 	i_bStaActive := i_bReqEnable AND s_errFeedbackOnTimeout, 
-	i_eAlarmLevel := E_AlarmLevel.Alarm,
 	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Feedback ', CONCAT(s_sCfgOnName, CONCAT( ' timeout - ', s_sTempStringOn)))) );
 
 s_fbAlarmHandlerOffInterlocked(
 	i_bStaActive := s_wrnOffInterlocked, 
-	i_eAlarmLevel := E_AlarmLevel.Warning,
 	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': ', CONCAT(s_sCfgOffName, CONCAT(' interlocked, Reason: ', CONCAT(s_sInterlockedReasonOn, '.'))))));
 	
 s_fbAlarmHandlerOnInterlocked(
 	i_bStaActive := s_wrnOnInterlocked, 
-	i_eAlarmLevel := E_AlarmLevel.Warning,
 	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': ', CONCAT(s_sCfgOnName, CONCAT(' interlocked, Reason: ', CONCAT(s_sInterlockedReasonOn, '.'))))));	
 	
 s_bStaError := 
@@ -122,7 +119,7 @@ _m_Alarms := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Inputs" Id="{575f2f03-5155-4a44-a733-1df6472e24f5}">
+    <Method Name="_m_Inputs" Id="{575f2f03-5155-4a44-a733-1df6472e24f5}" FolderPath="Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Inputs : BOOL
 ]]></Declaration>
       <Implementation>
@@ -189,7 +186,11 @@ s_sCfgFB2Name := p_sCfgFB2Name;
       <LineId Id="14" Count="0" />
     </LineIds>
     <LineIds Name="CM_ValveWithDoubleFB._m_Alarms">
-      <LineId Id="212" Count="87" />
+      <LineId Id="212" Count="60" />
+      <LineId Id="274" Count="3" />
+      <LineId Id="279" Count="3" />
+      <LineId Id="284" Count="3" />
+      <LineId Id="289" Count="10" />
       <LineId Id="29" Count="0" />
     </LineIds>
     <LineIds Name="CM_ValveWithDoubleFB._m_Inputs">

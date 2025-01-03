@@ -122,9 +122,11 @@ SUPER^();
 
 ]]></ST>
     </Implementation>
-    <Folder Name="Methods" Id="{c7dc02dc-f2cb-44e5-89eb-2e4085b6a909}" />
+    <Folder Name="Methods" Id="{c7dc02dc-f2cb-44e5-89eb-2e4085b6a909}">
+      <Folder Name="Base" Id="{1f8bf144-7c2c-4c0f-9741-6defd5a25c8d}" />
+    </Folder>
     <Folder Name="Properties" Id="{c3e008a7-9dfe-49e0-9cc5-18c79327535a}" />
-    <Method Name="_m_Alarms" Id="{c522f959-6f84-4a96-b11e-07b34d6dcd1a}" FolderPath="Methods\">
+    <Method Name="_m_Alarms" Id="{c522f959-6f84-4a96-b11e-07b34d6dcd1a}" FolderPath="Methods\Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Alarms : BOOL
 ]]></Declaration>
       <Implementation>
@@ -137,16 +139,26 @@ END_IF
 s_errDriveError := i_bReqEnable AND s_bStaDriveError;// AND NOT(i_bCmdReset);
 
 // Interlock warnings
-IF s_bIclkForward AND NOT(s_bStaMotorStopped) THEN	
+IF s_bIclkForward AND NOT(s_bStaStandstill) THEN	
 	s_wrnMotorForwardInterlocked := TRUE;
-	m_Stop();
+	
+	m_MC_Stop(
+		i_bExecute := s_fbHmiBtnStop.p_osrBtnPress OR s_fbHmiBtnJogPos.p_osfBtnPress OR s_fbHmiBtnJogNeg.p_osfBtnPress,
+		i_fDeceleration := i_ref_setting. fDeceleration,
+		i_fJerk := i_ref_setting.fJerk);
+	
 ELSIF NOT(s_bIclkForward) OR i_bCmdReset THEN
 	s_wrnMotorForwardInterlocked := FALSE;
 END_IF
 
-IF s_bIclkBackward AND NOT(s_bStaMotorStopped) THEN
+IF s_bIclkBackward AND NOT(s_bStaStandstill) THEN
 	s_wrnMotorBackwardInterlocked := TRUE;
-	m_Stop();
+	
+	m_MC_Stop(
+		i_bExecute := s_fbHmiBtnStop.p_osrBtnPress OR s_fbHmiBtnJogPos.p_osfBtnPress OR s_fbHmiBtnJogNeg.p_osfBtnPress,
+		i_fDeceleration := i_ref_setting. fDeceleration,
+		i_fJerk := i_ref_setting.fJerk);
+		
 ELSIF NOT(s_bIclkBackward) OR i_bCmdReset THEN
 	s_wrnMotorBackwardInterlocked := FALSE;
 END_IF
@@ -154,32 +166,15 @@ END_IF
 // Alarm Handlers
 s_fbAlarmHandlerDriveError(
 	i_bStaActive := s_errDriveError,
-	i_eAlarmLevel := E_AlarmLevel.Alarm,
 	i_sAlarmText := CONCAT(i_sCmName, ': Drive - has error (check drive).'));
-	
-s_fbAlarmHandlerApplyingBrakeNotAllowed(
-	i_bStaActive := s_wrnApplyingBrakeNotAllowed,
-	i_eAlarmLevel := E_AlarmLevel.Warning,
-	i_sAlarmText := CONCAT(i_sCmName, ': Brake - not allowed to be applied (motor not stopped).'));
-	
-s_wrnApplyingBrakeNotAllowed R= s_bStaMotorStopped;
-	
-s_fbAlarmHandlerStartMotorNotAllowed(
-	i_bStaActive := s_wrnStartMotorNotAllowed,
-	i_eAlarmLevel := E_AlarmLevel.Warning,
-	i_sAlarmText := CONCAT(i_sCmName, ': Motor - not allowed to start (brake not released).'));
-	
-s_wrnStartMotorNotAllowed R= s_bStaBrakeReleased;
 	
 s_fbAlarmHandlerMotorForwardInterlocked(
 	i_bStaActive := s_wrnMotorForwardInterlocked,
-	i_eAlarmLevel := E_AlarmLevel.Warning,
 	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move forward, Reason: ',CONCAT(s_sInterlockedReasonForward, '.'))));
 	//--i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move forward, Reason: ',CONCAT(i_fbInterlockConvFwd.p_sReason, '.'))));
 	
 s_fbAlarmHandlerMotorBackwardInterlocked(
 	i_bStaActive := s_wrnMotorBackwardInterlocked,
-	i_eAlarmLevel := E_AlarmLevel.Warning,
 	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move backward, Reason: ',CONCAT(s_sInterlockedReasonBackward, '.'))));
 	//--i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move backward, Reason: ',CONCAT(i_fbInterlockConvBwd.p_sReason, '.'))));
 	
@@ -189,16 +184,14 @@ s_bStaError :=
 
 // Warning collector
 s_bStaWarning := 
-	s_fbAlarmHandlerApplyingBrakeNotAllowed.q_bStaActive
-	OR s_fbAlarmHandlerStartMotorNotAllowed.q_bStaActive
-	OR s_fbAlarmHandlerMotorForwardInterlocked.q_bStaActive
+	s_fbAlarmHandlerMotorForwardInterlocked.q_bStaActive
 	OR s_fbAlarmHandlerMotorBackwardInterlocked.q_bStaActive;	
 	
 _m_Alarms := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Devices" Id="{9e243b00-6ff1-489e-8f7b-4b8502bb7008}" FolderPath="Methods\">
+    <Method Name="_m_Devices" Id="{9e243b00-6ff1-489e-8f7b-4b8502bb7008}" FolderPath="Methods\Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Devices : BOOL
 ]]></Declaration>
       <Implementation>
@@ -229,7 +222,7 @@ _m_Devices := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Hmi" Id="{d347e6d1-38a6-4faa-8926-d4b86b27fe7e}" FolderPath="Methods\">
+    <Method Name="_m_Hmi" Id="{d347e6d1-38a6-4faa-8926-d4b86b27fe7e}" FolderPath="Methods\Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Hmi : BOOL
 VAR
 	sTcDirection : Tc2_MC2.MC_Direction;
@@ -374,7 +367,7 @@ _m_Hmi := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Init" Id="{04dfb054-6b11-4b5e-a48d-10fd0c5ab89c}" FolderPath="Methods\">
+    <Method Name="_m_Init" Id="{04dfb054-6b11-4b5e-a48d-10fd0c5ab89c}" FolderPath="Methods\Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Init : BOOL
 ]]></Declaration>
       <Implementation>
@@ -382,6 +375,15 @@ _m_Hmi := TRUE;
 IF NOT SUPER^._m_Init() THEN
 	RETURN;
 END_IF
+
+//Alarm Config
+// Alarm Handlers
+s_fbAlarmHandlerDriveError.i_eAlarmLevel := E_AlarmLevel.Alarm;
+s_fbAlarmHandlerDriveError.i_sAlarmText := CONCAT(i_sCmName, ': Drive - has error (check drive).');
+	
+s_fbAlarmHandlerMotorForwardInterlocked.i_eAlarmLevel := E_AlarmLevel.Warning;
+	
+s_fbAlarmHandlerMotorBackwardInterlocked.i_eAlarmLevel := E_AlarmLevel.Warning;
 
 //Hmi 
 	//Buttons
@@ -457,7 +459,7 @@ _m_Init := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Inputs" Id="{6f1bac9d-85af-4aa0-99cc-0441d85b988e}" FolderPath="Methods\">
+    <Method Name="_m_Inputs" Id="{6f1bac9d-85af-4aa0-99cc-0441d85b988e}" FolderPath="Methods\Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Inputs : BOOL
 ]]></Declaration>
       <Implementation>
@@ -495,7 +497,7 @@ _m_Inputs := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Outputs" Id="{705beffa-2023-4b46-ae05-94ae1d9439ab}" FolderPath="Methods\">
+    <Method Name="_m_Outputs" Id="{705beffa-2023-4b46-ae05-94ae1d9439ab}" FolderPath="Methods\Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Outputs : BOOL
 ]]></Declaration>
       <Implementation>
@@ -984,28 +986,31 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="155" Count="0" />
       <LineId Id="170" Count="0" />
       <LineId Id="157" Count="0" />
-      <LineId Id="159" Count="2" />
+      <LineId Id="194" Count="0" />
+      <LineId Id="202" Count="0" />
+      <LineId Id="195" Count="1" />
+      <LineId Id="190" Count="0" />
+      <LineId Id="189" Count="0" />
+      <LineId Id="160" Count="1" />
       <LineId Id="158" Count="0" />
-      <LineId Id="163" Count="5" />
+      <LineId Id="163" Count="2" />
+      <LineId Id="200" Count="0" />
+      <LineId Id="197" Count="2" />
+      <LineId Id="166" Count="0" />
+      <LineId Id="201" Count="0" />
+      <LineId Id="167" Count="1" />
       <LineId Id="162" Count="0" />
       <LineId Id="90" Count="0" />
       <LineId Id="45" Count="0" />
       <LineId Id="33" Count="0" />
       <LineId Id="37" Count="0" />
-      <LineId Id="34" Count="1" />
+      <LineId Id="35" Count="0" />
       <LineId Id="93" Count="0" />
-      <LineId Id="122" Count="3" />
-      <LineId Id="128" Count="0" />
-      <LineId Id="133" Count="1" />
-      <LineId Id="129" Count="3" />
-      <LineId Id="121" Count="0" />
-      <LineId Id="136" Count="0" />
-      <LineId Id="135" Count="0" />
-      <LineId Id="143" Count="2" />
+      <LineId Id="143" Count="1" />
       <LineId Id="140" Count="0" />
       <LineId Id="186" Count="0" />
       <LineId Id="183" Count="0" />
-      <LineId Id="148" Count="2" />
+      <LineId Id="148" Count="1" />
       <LineId Id="180" Count="0" />
       <LineId Id="184" Count="0" />
       <LineId Id="147" Count="0" />
@@ -1013,7 +1018,8 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="32" Count="0" />
       <LineId Id="110" Count="0" />
       <LineId Id="172" Count="0" />
-      <LineId Id="174" Count="4" />
+      <LineId Id="174" Count="1" />
+      <LineId Id="177" Count="0" />
       <LineId Id="5" Count="0" />
       <LineId Id="173" Count="0" />
       <LineId Id="10" Count="0" />
@@ -1106,6 +1112,13 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
     <LineIds Name="CM_AX5000._m_Init">
       <LineId Id="21" Count="0" />
       <LineId Id="15" Count="2" />
+      <LineId Id="128" Count="1" />
+      <LineId Id="131" Count="1" />
+      <LineId Id="135" Count="0" />
+      <LineId Id="150" Count="0" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="156" Count="0" />
+      <LineId Id="159" Count="0" />
       <LineId Id="76" Count="0" />
       <LineId Id="28" Count="0" />
       <LineId Id="89" Count="0" />

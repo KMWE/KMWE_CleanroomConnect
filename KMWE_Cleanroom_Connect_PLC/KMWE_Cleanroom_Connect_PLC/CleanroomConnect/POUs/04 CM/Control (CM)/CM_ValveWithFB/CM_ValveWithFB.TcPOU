@@ -87,9 +87,11 @@ END_VAR
 SUPER^();
 ]]></ST>
     </Implementation>
-    <Folder Name="Methods" Id="{ea8d9bb4-734d-4580-8584-865c23a88e42}" />
+    <Folder Name="Methods" Id="{ea8d9bb4-734d-4580-8584-865c23a88e42}">
+      <Folder Name="Base" Id="{b2b0c53e-257b-472d-9cb0-c26ac90c774a}" />
+    </Folder>
     <Folder Name="Properties" Id="{2ec02995-39e7-4e65-96bd-a76cfe9eceab}" />
-    <Method Name="_m_Alarms" Id="{d4d0fc1f-8b79-4ff9-9928-983db865f771}" FolderPath="Methods\">
+    <Method Name="_m_Alarms" Id="{d4d0fc1f-8b79-4ff9-9928-983db865f771}" FolderPath="Methods\Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Alarms : BOOL
 ]]></Declaration>
       <Implementation>
@@ -146,22 +148,18 @@ END_IF
 
 s_fbAlarmHandlerFeedbackOffTimeout(
 	i_bStaActive := i_bReqEnable AND s_errFeedbackOffTimeout, 
-	i_eAlarmLevel := E_AlarmLevel.Alarm,
 	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Feedback ', CONCAT(s_sCfgOffName, ' timeout.'))) );
 	
 s_fbAlarmHandlerFeedbackOnTimeout(
 	i_bStaActive := i_bReqEnable AND s_errFeedbackOnTimeout, 
-	i_eAlarmLevel := E_AlarmLevel.Alarm,
 	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Feedback ', CONCAT(s_sCfgOnName, ' timeout.'))) );
 
 s_fbAlarmHandlerOffInterlocked(
 	i_bStaActive := s_wrnOffInterlocked, 
-	i_eAlarmLevel := E_AlarmLevel.Warning,
 	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': ', CONCAT(s_sCfgOffName, CONCAT(' interlocked, Reason: ', CONCAT(s_sInterlockedReasonOff, '.'))))));
 	
 s_fbAlarmHandlerOnInterlocked(
 	i_bStaActive := s_wrnOnInterlocked, 
-	i_eAlarmLevel := E_AlarmLevel.Warning,
 	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': ', CONCAT(s_sCfgOnName, CONCAT(' interlocked, Reason: ', CONCAT(s_sInterlockedReasonOn, '.'))))));
 
 s_bStaError := 
@@ -176,7 +174,7 @@ _m_Alarms := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Devices" Id="{9853c932-60f5-4fde-8cec-74ce19164cb7}" FolderPath="Methods\">
+    <Method Name="_m_Devices" Id="{9853c932-60f5-4fde-8cec-74ce19164cb7}" FolderPath="Methods\Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Devices : BOOL
 ]]></Declaration>
       <Implementation>
@@ -199,7 +197,7 @@ _m_Devices := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Hmi" Id="{b7e70baf-c92f-407b-8956-5b27f6504914}" FolderPath="Methods\">
+    <Method Name="_m_Hmi" Id="{b7e70baf-c92f-407b-8956-5b27f6504914}" FolderPath="Methods\Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Hmi : BOOL
 ]]></Declaration>
       <Implementation>
@@ -277,7 +275,7 @@ _m_Hmi := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Init" Id="{aff12dd2-27f0-4c74-8ad8-a313b8d8526f}" FolderPath="Methods\">
+    <Method Name="_m_Init" Id="{aff12dd2-27f0-4c74-8ad8-a313b8d8526f}" FolderPath="Methods\Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Init : BOOL
 ]]></Declaration>
       <Implementation>
@@ -285,6 +283,12 @@ _m_Hmi := TRUE;
 IF NOT SUPER^._m_Init() THEN
 	RETURN;
 END_IF
+
+//Alarm config
+s_fbAlarmHandlerFeedbackOffTimeout(i_eAlarmLevel := E_AlarmLevel.Alarm);
+s_fbAlarmHandlerFeedbackOnTimeout(i_eAlarmLevel := E_AlarmLevel.Alarm);
+s_fbAlarmHandlerOffInterlocked(i_eAlarmLevel := E_AlarmLevel.Warning);
+s_fbAlarmHandlerOnInterlocked(i_eAlarmLevel := E_AlarmLevel.Warning);
 
 //Hmi 
 	s_fbHmiBtnManualOff.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
@@ -310,7 +314,7 @@ _m_Init := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Inputs" Id="{6569b657-be7e-423b-b5ee-7fd46f745288}" FolderPath="Methods\">
+    <Method Name="_m_Inputs" Id="{6569b657-be7e-423b-b5ee-7fd46f745288}" FolderPath="Methods\Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Inputs : BOOL
 ]]></Declaration>
       <Implementation>
@@ -326,7 +330,7 @@ _m_Inputs := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Outputs" Id="{96cb9638-dd25-4e5f-a9d1-28835e3be357}" FolderPath="Methods\">
+    <Method Name="_m_Outputs" Id="{96cb9638-dd25-4e5f-a9d1-28835e3be357}" FolderPath="Methods\Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Outputs : BOOL
 VAR_INST
 	s_bCmdOff : BOOL;
@@ -635,15 +639,15 @@ s_sInterlockedReasonOn := p_sInterlockedReasonOn;
       <LineId Id="181" Count="11" />
       <LineId Id="180" Count="0" />
       <LineId Id="157" Count="0" />
-      <LineId Id="45" Count="2" />
+      <LineId Id="45" Count="1" />
       <LineId Id="123" Count="0" />
       <LineId Id="54" Count="0" />
-      <LineId Id="56" Count="2" />
+      <LineId Id="56" Count="1" />
       <LineId Id="124" Count="1" />
-      <LineId Id="127" Count="2" />
+      <LineId Id="127" Count="1" />
       <LineId Id="126" Count="0" />
       <LineId Id="106" Count="0" />
-      <LineId Id="108" Count="2" />
+      <LineId Id="108" Count="1" />
       <LineId Id="178" Count="0" />
       <LineId Id="63" Count="0" />
       <LineId Id="95" Count="0" />
@@ -713,6 +717,11 @@ s_sInterlockedReasonOn := p_sInterlockedReasonOn;
     <LineIds Name="CM_ValveWithFB._m_Init">
       <LineId Id="21" Count="0" />
       <LineId Id="15" Count="2" />
+      <LineId Id="68" Count="1" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="86" Count="0" />
       <LineId Id="26" Count="0" />
       <LineId Id="28" Count="10" />
       <LineId Id="59" Count="4" />

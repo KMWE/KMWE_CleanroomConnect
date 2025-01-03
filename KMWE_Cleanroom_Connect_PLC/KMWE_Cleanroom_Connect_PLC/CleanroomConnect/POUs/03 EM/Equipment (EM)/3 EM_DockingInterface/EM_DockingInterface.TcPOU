@@ -247,20 +247,9 @@ END_IF
 // Set error bits
 
 // Alarm Handlers
-s_fbAlarmHandlerClosingDoorFailed(
-	i_bStaActive := s_bErrClosingDoorFailed, 
-	i_eAlarmLevel := E_AlarmLevel.Alarm, 
-	i_sAlarmText := CONCAT(i_sEmName, ': Closing inner door failed'));
-
-s_fbAlarmHandlerNoBoxPresentAtPreDockingPosition(
-	i_bStaActive := s_bWrnNoBoxPresentAtPreDockingPosition, 
-	i_eAlarmLevel := E_AlarmLevel.Warning, 
-	i_sAlarmText := CONCAT(i_sEmName, ':No box present AT per-docking position'));
-	
-s_fbAlarmHandlerNoBoxPresentAtDockedPosition(
-	i_bStaActive := s_bWrnNoBoxPresentAtDockedPosition, 
-	i_eAlarmLevel := E_AlarmLevel.Warning, 
-	i_sAlarmText := CONCAT(i_sEmName, ':No box present at docked position'));
+s_fbAlarmHandlerClosingDoorFailed(i_bStaActive := s_bErrClosingDoorFailed);
+s_fbAlarmHandlerNoBoxPresentAtPreDockingPosition(i_bStaActive := s_bWrnNoBoxPresentAtPreDockingPosition);
+s_fbAlarmHandlerNoBoxPresentAtDockedPosition(i_bStaActive := s_bWrnNoBoxPresentAtDockedPosition);
 
 // Reset warnings
 IF i_bCmdReset THEN
@@ -846,8 +835,8 @@ s_cmDockingClampsUpper.i_stSettings.tValveOnTimeout := T#10S;
 s_cmDockingClampsUpper.i_stSettings.tValveOffTimeout := T#10S;
 s_cmDockingClampsUpper.p_bCfgBiStableValve := FALSE; // 5/3 monostable, closed middle position
 s_cmDockingClampsUpper.p_bCfgReverseValve := FALSE;
-s_cmDockingClampsUpper.p_sCfgOffName := 'Open';
-s_cmDockingClampsUpper.p_sCfgOnName := 'Close';
+s_cmDockingClampsUpper.p_sCfgOffName := 'Release';
+s_cmDockingClampsUpper.p_sCfgOnName := 'Clamp';
 s_cmDockingClampsUpper.p_sCfgFB1Name := 'Left';
 s_cmDockingClampsUpper.p_sCfgFB2Name := 'Right';
 
@@ -867,8 +856,8 @@ s_cmDockingClampsLower.i_stSettings.tValveOnTimeout := T#10S;
 s_cmDockingClampsLower.i_stSettings.tValveOffTimeout := T#10S;
 s_cmDockingClampsLower.p_bCfgBiStableValve := FALSE; // 5/3 monostable, closed middle position
 s_cmDockingClampsLower.p_bCfgReverseValve := FALSE;
-s_cmDockingClampsLower.p_sCfgOffName := 'Open';
-s_cmDockingClampsLower.p_sCfgOnName := 'Close';
+s_cmDockingClampsLower.p_sCfgOffName := 'Release';
+s_cmDockingClampsLower.p_sCfgOnName := 'Clamp';
 s_cmDockingClampsLower.p_sCfgFB1Name := 'Left';
 s_cmDockingClampsLower.p_sCfgFB2Name := 'Right';
 
@@ -889,7 +878,7 @@ s_cmUnlockingPinUpper.i_stSettings.tValveOffTimeout := T#10S;
 s_cmUnlockingPinUpper.p_bCfgBiStableValve := FALSE; // 5/2 monostable
 s_cmUnlockingPinUpper.p_bCfgReverseValve := FALSE;
 s_cmUnlockingPinUpper.p_sCfgOffName := 'Lock';
-s_cmUnlockingPinUpper.p_sCfgOnName := 'Release';
+s_cmUnlockingPinUpper.p_sCfgOnName := 'Unlock';
 
 s_cmUnlockingPinLower.i_bReqEnable := FALSE;
 s_cmUnlockingPinLower.i_eCtrlMode := E_CtrlMode.IDLE;
@@ -899,7 +888,7 @@ s_cmUnlockingPinLower.i_stSettings.tValveOffTimeout := T#10S;
 s_cmUnlockingPinLower.p_bCfgBiStableValve := FALSE; // 5/2 monostable
 s_cmUnlockingPinLower.p_bCfgReverseValve := FALSE;
 s_cmUnlockingPinLower.p_sCfgOffName := 'Lock';
-s_cmUnlockingPinLower.p_sCfgOnName := 'Release';
+s_cmUnlockingPinLower.p_sCfgOnName := 'Unlock';
 
 s_cmDoorOpener.i_bReqEnable := FALSE;
 s_cmDoorOpener.i_eCtrlMode := E_CtrlMode.IDLE;
@@ -923,7 +912,6 @@ s_cmDoorShutter.p_bCfgReverseValve := FALSE;
 s_cmDoorShutter.p_sCfgOffName := 'Open';
 s_cmDoorShutter.p_sCfgOnName := 'Close';
 	
-
 //Interlocks
 //Docking Clamps
 fbIlckHandlerDockingClampsOpen.i_stInterlockList.arr_Interlocks[1].sReason := 'n/a';
@@ -941,6 +929,15 @@ fbIlckHandlerDoorOpenerOpen.i_stInterlockList.arr_Interlocks[1].sReason := 'Door
 fbIlckHandlerDoorShutterClose.i_stInterlockList.arr_Interlocks[1].sReason := 'Door Opener not (almost)closed';
 fbIlckHandlerDoorShutterOpen.i_stInterlockList.arr_Interlocks[1].sReason := 'n/a';
 
+//Alarm config
+s_fbAlarmHandlerClosingDoorFailed.i_sAlarmText := CONCAT(i_sEmName, ': Closing inner door failed');
+s_fbAlarmHandlerClosingDoorFailed.i_eAlarmLevel := E_AlarmLevel.Alarm;
+
+s_fbAlarmHandlerNoBoxPresentAtPreDockingPosition.i_sAlarmText := CONCAT(i_sEmName, ': No box present AT per-docking position');
+s_fbAlarmHandlerNoBoxPresentAtPreDockingPosition.i_eAlarmLevel := E_AlarmLevel.Warning;
+
+s_fbAlarmHandlerNoBoxPresentAtDockedPosition.i_sAlarmText := CONCAT(i_sEmName, ': No box present at docked position');
+s_fbAlarmHandlerNoBoxPresentAtDockedPosition.i_eAlarmLevel := E_AlarmLevel.Warning;
 
 //---------------------------------//	
 	
@@ -1853,14 +1850,9 @@ p_bStaUnlockingPinsReleased := s_bStaUnlockingPinsReleased;
       <LineId Id="16" Count="1" />
       <LineId Id="21" Count="0" />
       <LineId Id="20" Count="0" />
-      <LineId Id="59" Count="2" />
-      <LineId Id="58" Count="0" />
-      <LineId Id="57" Count="0" />
-      <LineId Id="23" Count="2" />
-      <LineId Id="22" Count="0" />
-      <LineId Id="26" Count="0" />
-      <LineId Id="28" Count="2" />
-      <LineId Id="27" Count="0" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="28" Count="0" />
       <LineId Id="31" Count="0" />
       <LineId Id="11" Count="0" />
       <LineId Id="33" Count="0" />
@@ -2258,7 +2250,7 @@ p_bStaUnlockingPinsReleased := s_bStaUnlockingPinsReleased;
       <LineId Id="500" Count="0" />
       <LineId Id="499" Count="0" />
       <LineId Id="352" Count="0" />
-      <LineId Id="593" Count="1" />
+      <LineId Id="594" Count="0" />
       <LineId Id="596" Count="0" />
       <LineId Id="609" Count="1" />
       <LineId Id="598" Count="0" />
@@ -2271,7 +2263,15 @@ p_bStaUnlockingPinsReleased := s_bStaUnlockingPinsReleased;
       <LineId Id="602" Count="0" />
       <LineId Id="601" Count="0" />
       <LineId Id="606" Count="1" />
-      <LineId Id="595" Count="0" />
+      <LineId Id="635" Count="1" />
+      <LineId Id="642" Count="0" />
+      <LineId Id="649" Count="0" />
+      <LineId Id="648" Count="0" />
+      <LineId Id="647" Count="0" />
+      <LineId Id="650" Count="0" />
+      <LineId Id="652" Count="0" />
+      <LineId Id="638" Count="0" />
+      <LineId Id="651" Count="0" />
       <LineId Id="592" Count="0" />
       <LineId Id="35" Count="3" />
       <LineId Id="580" Count="0" />

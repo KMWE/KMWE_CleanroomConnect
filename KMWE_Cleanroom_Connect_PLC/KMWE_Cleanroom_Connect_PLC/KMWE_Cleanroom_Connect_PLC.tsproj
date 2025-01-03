@@ -2134,7 +2134,7 @@ External Setpoint Generation:
 		</Motion>
 		<Plc>
 			<Project GUID="{13F6CD22-9663-4738-8378-3A901949CB98}" Name="CleanroomConnect" PrjFilePath="CleanroomConnect\CleanroomConnect.plcproj" TmcFilePath="CleanroomConnect\CleanroomConnect.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="CleanroomConnect\CleanroomConnect.tmc" TmcHash="{E292D6F3-2E91-A0BE-F034-ED05E77D52A1}">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="CleanroomConnect\CleanroomConnect.tmc" TmcHash="{6893876A-B84C-2F32-E110-9957DA549F21}">
 					<Name>CleanroomConnect Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1">
@@ -2154,12 +2154,32 @@ External Setpoint Generation:
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>GVL_Modules.g_emUtilities.s_diPowerOk.I_bStaInput</Name>
+							<Name>GVL_Modules.g_emUtilities.s_diPower400VacOk.I_bStaInput</Name>
+							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emUtilities.s_diPower230VacOk.I_bStaInput</Name>
+							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emUtilities.s_diPower230VacServiceOk.I_bStaInput</Name>
+							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emUtilities.s_diPower24VdcOk.I_bStaInput</Name>
 							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>GVL_Modules.g_emUtilities.s_diAirPressureOk.I_bStaInput</Name>
+							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emUtilities.s_diCabinetTemperatureOk.I_bStaInput</Name>
 							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
@@ -2526,19 +2546,9 @@ External Setpoint Generation:
 							<Priority>20</Priority>
 							<CycleTime>10000000</CycleTime>
 						</Context>
-						<Context>
-							<Id NeedCalleeCall="true">1</Id>
-							<Name>VISU_TASK</Name>
-							<ManualConfig>
-								<OTCID>#x02010050</OTCID>
-							</ManualConfig>
-							<Priority>30</Priority>
-							<CycleTime>200000000</CycleTime>
-						</Context>
 					</Contexts>
 					<TaskPouOids>
 						<TaskPouOid Prio="20" OTCID="#x08502001"/>
-						<TaskPouOid Prio="30" OTCID="#x08502002"/>
 					</TaskPouOids>
 				</Instance>
 			</Project>
@@ -4496,7 +4506,7 @@ External Setpoint Generation:
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.I_bStaMotorIsRunning" VarB="PlcTask Outputs^MAIN.sim_MOVITRAC_B.Q_bStaMotorIsRunning"/>
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.I_bStaReadyForOperation" VarB="PlcTask Outputs^MAIN.sim_MOVITRAC_B.Q_bStaReadyForOperation"/>
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diAirPressureOk.I_bStaInput" VarB="PlcTask Outputs^MAIN.simAirPressureOK"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diPowerOk.I_bStaInput" VarB="PlcTask Outputs^MAIN.simPowerOK"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diPower400VacOk.I_bStaInput" VarB="PlcTask Outputs^MAIN.simPowerOK"/>
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diSafetyOk.I_bStaInput" VarB="PlcTask Outputs^MAIN.simSafetyOK"/>
 				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsLower.Q_bCmdOff" VarB="PlcTask Inputs^MAIN.simDockingClampLower.I_bCmdValveOff"/>
 				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsLower.Q_bCmdOn" VarB="PlcTask Inputs^MAIN.simDockingClampLower.I_bCmdValveOn"/>

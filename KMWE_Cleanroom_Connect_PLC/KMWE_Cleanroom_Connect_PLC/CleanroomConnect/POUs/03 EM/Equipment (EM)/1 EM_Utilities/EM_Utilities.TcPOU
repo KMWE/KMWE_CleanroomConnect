@@ -5,8 +5,12 @@
 VAR
 	//Control modules
 	s_diSafetyOk : FB_DigInput;
-	s_diPowerOk : FB_DigInput;
+	s_diPower400VacOk : FB_DigInput;
+	s_diPower230VacOk : FB_DigInput;
+	s_diPower230VacServiceOk : FB_DigInput;
+	s_diPower24VdcOk : FB_DigInput;
 	s_diAirPressureOk : FB_DigInput;
+	s_diCabinetTemperatureOk : FB_DigInput;
 
 	s_doBeaconLedGreen : FB_DigOutput;
 	s_doBeaconLedYellow : FB_DigOutput;
@@ -18,8 +22,12 @@ VAR
 		
 	//States
 	s_bStaSafetyOk : BOOL := FALSE;
-	s_bStsPowerOk : BOOL := FALSE;
+	s_bStsPower400VacOk : BOOL := FALSE;
+	s_bStsPower230VacOk : BOOL := FALSE;
+	s_bStsPower230VacServiceOk : BOOL := FALSE;
+	s_bStsPower24VdcOk : BOOL := FALSE;
 	s_bStaAirPressureOk : BOOL := FALSE;
+	s_bStaCabinetTemperatureOk : BOOL := FALSE;
 	
 	//s_bStaError
 	s_bStaWarning : BOOL;
@@ -30,17 +38,31 @@ VAR
 	
 	//Alarms
 	s_fbAlarmHandlerSafetyNotOk : FB_AlarmHandler;
-	s_fbAlarmHandlerPowerNotOk : FB_AlarmHandler;
+	s_fbAlarmHandlerPower400VacNotOk : FB_AlarmHandler;
+	s_fbAlarmHandlerPower230VacNotOk : FB_AlarmHandler;
+	s_fbAlarmHandlerPower230VacServiceNotOk : FB_AlarmHandler;
+	s_fbAlarmHandlerPower24VdcNotOk : FB_AlarmHandler;
 	s_fbAlarmHandlerAirPressureNotOk : FB_AlarmHandler;
+	s_fbAlarmHandlerCabinetTemperatureNotOk : FB_AlarmHandler;
 	
 	s_bErrSafetyNotOk : BOOL;
-	s_bErrPowerOk : BOOL;
+	s_bErrPower400VacOk : BOOL;
+	s_bErrPower230VacOk : BOOL;
+	s_bWrnPower230VacServiceOk : BOOL;
+	s_bErrPower24VdcOk : BOOL;
 	s_bErrAirPressureNotOk : BOOL;
+	s_bErrCabinetTemperatureNotOk : BOOL;
 	
 	//Hmi
 	s_fbHmiLedSafetyOk : FB_HmiLed;
-	s_fbHmiLedPowerOk : FB_HmiLed;
+	s_fbHmiLedPower400VacOk : FB_HmiLed;
+	s_fbHmiLedPower230VacOk : FB_HmiLed;
+	s_fbHmiLedPower230VacServiceOk : FB_HmiLed;
+	s_fbHmiLedPower24VdcOk : FB_HmiLed;
+	
 	s_fbHmiLedAirPressureOk : FB_HmiLed;
+	s_fbHmiLedCabinetTemperatureOk : FB_HmiLed;
+	
 	s_fbHmiLedBeaconGreen : FB_HmiLed;
 	s_fbHmiLedBeaconYellow : FB_HmiLed;
 	s_fbHmiLedBeaconRed : FB_HmiLed;
@@ -73,36 +95,43 @@ END_IF
 
 //Set error bits
 s_bErrSafetyNotOk S= NOT(s_bStaSafetyOk);
-s_bErrPowerOk S= NOT(s_bStsPowerOk);
+s_bErrPower400VacOk S= NOT(s_bStsPower400VacOk);
+s_bErrPower230VacOk S= NOT(s_bStsPower230VacOk);
+s_bWrnPower230VacServiceOk S= NOT(s_bStsPower230VacServiceOk);
+s_bErrPower24VdcOk S= NOT(s_bStsPower24VdcOk);
 s_bErrAirPressureNotOk S= NOT(s_bStaAirPressureOk);
+s_bErrCabinetTemperatureNotOk S= NOT(s_bStaCabinetTemperatureOk);
 
-// Alarm Handlers
-s_fbAlarmHandlerSafetyNotOk(
-	i_bStaActive := s_bErrSafetyNotOk,
-	i_eAlarmLevel := E_AlarmLevel.Alarm, 
-	i_sAlarmText := CONCAT(i_sEmName, ' - Safety not OK'));
-	
-s_fbAlarmHandlerPowerNotOk(
-	i_bStaActive := s_bErrPowerOk, 
-	i_eAlarmLevel := E_AlarmLevel.Alarm, 
-	i_sAlarmText := CONCAT(i_sEmName, ' - Power supply not OK'));
-	
-s_fbAlarmHandlerAirPressureNotOk(
-	i_bStaActive := s_bErrAirPressureNotOk, 
-	i_eAlarmLevel := E_AlarmLevel.Alarm, 
-	i_sAlarmText := CONCAT(i_sEmName, ' - Air pressure not OK'));
+// Alarm Handlers ( config --> init() )
+s_fbAlarmHandlerSafetyNotOk(i_bStaActive := s_bErrSafetyNotOk);
+s_fbAlarmHandlerPower400VacNotOk(i_bStaActive := s_bErrPower400VacOk);
+s_fbAlarmHandlerPower230VacNotOk(i_bStaActive := s_bErrPower230VacOk);
+s_fbAlarmHandlerPower230VacServiceNotOk(i_bStaActive := s_bWrnPower230VacServiceOk);
+s_fbAlarmHandlerPower24VdcNotOk(i_bStaActive := s_bErrPower24VdcOk);
+s_fbAlarmHandlerAirPressureNotOk(i_bStaActive := s_bErrAirPressureNotOk);
+s_fbAlarmHandlerCabinetTemperatureNotOk(i_bStaActive := s_bErrCabinetTemperatureNotOk);
 	
 // Reset Errors
 s_bErrSafetyNotOk R= i_bCmdReset AND s_bStaSafetyOk;
-s_bErrPowerOk R= i_bCmdReset AND s_bStsPowerOk;
+s_bErrPower400VacOk R= i_bCmdReset AND s_bStsPower400VacOk;
+s_bErrPower230VacOk R= i_bCmdReset AND s_bStsPower230VacOk;
+s_bWrnPower230VacServiceOk R= i_bCmdReset AND s_bStsPower230VacServiceOk;
+s_bErrPower24VdcOk R= i_bCmdReset AND s_bStsPower24VdcOk;
+
 s_bErrAirPressureNotOk R= i_bCmdReset AND s_bStaAirPressureOk;
+
+s_bErrCabinetTemperatureNotOk R= i_bCmdReset AND s_bStaCabinetTemperatureOk;
 
 s_bStaError := 
 	s_fbAlarmHandlerSafetyNotOk.q_bStaActive
-	OR s_fbAlarmHandlerPowerNotOk.q_bStaActive
-	OR s_fbAlarmHandlerAirPressureNotOk.q_bStaActive;	
+	OR s_fbAlarmHandlerPower400VacNotOk.q_bStaActive
+	OR s_fbAlarmHandlerPower230VacNotOk.q_bStaActive
+	//OR s_fbAlarmHandlerPower230VacServiceNotOk.q_bStaActive
+	OR s_fbAlarmHandlerPower24VdcNotOk.q_bStaActive
+	OR s_fbAlarmHandlerAirPressureNotOk.q_bStaActive
+	OR s_fbAlarmHandlerCabinetTemperatureNotOk.q_bStaActive;
 	
-s_bStaWarning := FALSE;	
+s_bStaWarning := s_fbAlarmHandlerPower230VacServiceNotOk.q_bStaActive;	
 	
 _m_Alarms := TRUE;
 ]]></ST>
@@ -119,8 +148,12 @@ END_IF
 
 //Control module
 s_diSafetyOk();
-s_diPowerOk();
+s_diPower400VacOk();
+s_diPower230VacOk();
+s_diPower230VacServiceOk();
+s_diPower24VdcOk();
 s_diAirPressureOk();
+s_diCabinetTemperatureOk();
 
 s_doBeaconLedGreen();
 s_doBeaconLedYellow();
@@ -144,8 +177,13 @@ END_IF
 
 //Hmi Leds
 s_fbHmiLedSafetyOk(i_bStaLed := s_bStaSafetyOk);
-s_fbHmiLedPowerOk(i_bStaLed := s_bStsPowerOk);
+s_fbHmiLedPower400VacOk(i_bStaLed := s_bStsPower400VacOk);
+s_fbHmiLedPower230VacOk(i_bStaLed := s_bStsPower230VacOk);
+s_fbHmiLedPower230VacServiceOk(i_bStaLed := s_bStsPower230VacServiceOk);
+s_fbHmiLedPower24VdcOk(i_bStaLed := s_bStsPower24VdcOk);
 s_fbHmiLedAirPressureOk(i_bStaLed := s_bStaAirPressureOk);
+s_fbHmiLedCabinetTemperatureOk(i_bStaLed := s_bStaCabinetTemperatureOk);
+
 s_fbHmiLedBeaconGreen(i_bStaLed := s_bExtRunning);
 s_fbHmiLedBeaconYellow(i_bStaLed := s_bExtWarning);
 s_fbHmiLedBeaconRed(i_bStaLed := s_bExtError);
@@ -164,8 +202,12 @@ END_IF
 
 //Control Modules
 s_diSafetyOk.i_stSettings.tmInputDelay := T#1S;
-s_diPowerOk.i_stSettings.tmInputDelay := T#1S;
+s_diPower400VacOk.i_stSettings.tmInputDelay := T#1S;
+s_diPower230VacOk.i_stSettings.tmInputDelay := T#1S;
+s_diPower230VacServiceOk.i_stSettings.tmInputDelay := T#1S;
+s_diPower24VdcOk.i_stSettings.tmInputDelay := T#1S;
 s_diAirPressureOk.i_stSettings.tmInputDelay := T#1S;
+s_diCabinetTemperatureOk.i_stSettings.tmInputDelay := T#600S;
 
 s_doBeaconLedGreen.i_stSettings.bCfgDelay := FALSE;
 s_doBeaconLedGreen.i_stSettings.tmOutputDelay := T#0S;
@@ -177,15 +219,50 @@ s_doBeaconLedRed.i_stSettings.tmOutputDelay := T#0S;
 //---------------------------------//	
 	
 //----------------------------------//	
+
+//Alarm config
+s_fbAlarmHandlerSafetyNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Safety not OK');
+s_fbAlarmHandlerSafetyNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
+
+s_fbAlarmHandlerPower400VacNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Power supply 400Vac not OK');
+s_fbAlarmHandlerSafetyNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
+
+s_fbAlarmHandlerPower230VacNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Power supply 230Vac not OK');
+s_fbAlarmHandlerSafetyNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
+
+s_fbAlarmHandlerPower230VacServiceNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Power supply 230Vac service not OK');
+s_fbAlarmHandlerSafetyNotOk.i_eAlarmLevel := E_AlarmLevel.Warning;
+
+s_fbAlarmHandlerPower24VdcNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Power supply 24Vdc not OK');
+s_fbAlarmHandlerSafetyNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
+
+s_fbAlarmHandlerAirPressureNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Air pressure not OK');
+s_fbAlarmHandlerSafetyNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
+
+s_fbAlarmHandlerCabinetTemperatureNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Cabinet temperature not OK');
+s_fbAlarmHandlerSafetyNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
+
 //Hmi 
 s_fbHmiLedSafetyOk.p_bStaVisible := FALSE;
 s_fbHmiLedSafetyOk.p_sToHmiDescriptionLed := 'Safety Ok';
 
-s_fbHmiLedPowerOk.p_bStaVisible := FALSE;
-s_fbHmiLedPowerOk.p_sToHmiDescriptionLed := 'Power Ok';
+s_fbHmiLedPower400VacOk.p_bStaVisible := FALSE;
+s_fbHmiLedPower400VacOk.p_sToHmiDescriptionLed := 'Power 400Vac Ok';
+
+s_fbHmiLedPower230VacOk.p_bStaVisible := FALSE;
+s_fbHmiLedPower230VacOk.p_sToHmiDescriptionLed := 'Power 230Vac Ok';
+
+s_fbHmiLedPower230VacServiceOk.p_bStaVisible := FALSE;
+s_fbHmiLedPower230VacServiceOk.p_sToHmiDescriptionLed := 'Power 230Vac Service Ok';
+
+s_fbHmiLedPower24VdcOk.p_bStaVisible := FALSE;
+s_fbHmiLedPower24VdcOk.p_sToHmiDescriptionLed := 'Power 24Vdc Ok';
 
 s_fbHmiLedAirPressureOk.p_bStaVisible := FALSE;
 s_fbHmiLedAirPressureOk.p_sToHmiDescriptionLed := 'Air pressure Ok';
+
+s_fbHmiLedCabinetTemperatureOk.p_bStaVisible := FALSE;
+s_fbHmiLedCabinetTemperatureOk.p_sToHmiDescriptionLed := 'Cabinet temperature Ok';
 
 s_fbHmiLedBeaconGreen.p_bStaVisible := FALSE;
 s_fbHmiLedBeaconGreen.p_sToHmiDescriptionLed := 'Beacon green led';
@@ -210,8 +287,12 @@ IF NOT SUPER^._m_Inputs() THEN
 END_IF
 
 s_bStaSafetyOk := s_diSafetyOk.p_bStaInputDelayed AND s_diSafetyOk.p_bStaInput; //on-delay only
-s_bStsPowerOk := s_diPowerOk.p_bStaInputDelayed AND s_diPowerOk.p_bStaInput; //on-delay only
+s_bStsPower400VacOk := s_diPower400VacOk.p_bStaInputDelayed AND s_diPower400VacOk.p_bStaInput; //on-delay only
+s_bStsPower230VacOk := s_diPower230VacOk.p_bStaInputDelayed AND s_diPower230VacOk.p_bStaInput; //on-delay only
+s_bStsPower230VacServiceOk := s_diPower230VacServiceOk.p_bStaInputDelayed AND s_diPower230VacServiceOk.p_bStaInput; //on-delay only
+s_bStsPower24VdcOk := s_diPower24VdcOk.p_bStaInputDelayed AND s_diPower24VdcOk.p_bStaInput; //on-delay only
 s_bStaAirPressureOk := s_diAirPressureOk.p_bStaInputDelayed AND s_diAirPressureOk.p_bStaInput; //on-delay only
+s_bStaCabinetTemperatureOk := s_diCabinetTemperatureOk.p_bStaInputDelayed OR s_diCabinetTemperatureOk.p_bStaInput; //off-delay only
 
 _m_Inputs := TRUE;
 ]]></ST>
@@ -343,6 +424,17 @@ p_bStaAirPressureOk := s_bStaAirPressureOk;
         </Implementation>
       </Get>
     </Property>
+    <Property Name="p_bStaCabinetTemperatureOk" Id="{80fd165e-a940-4d5d-899f-027c185da331}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaCabinetTemperatureOk : BOOL]]></Declaration>
+      <Get Name="Get" Id="{4d1c5c46-3465-46a4-9268-9816d243c519}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaCabinetTemperatureOk := s_bStaCabinetTemperatureOk;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
     <Property Name="p_bStaSafetyOk" Id="{7ea03187-b7ec-46c2-a694-807e2d1d70bb}">
       <Declaration><![CDATA[PROPERTY PUBLIC p_bStaSafetyOk : BOOL]]></Declaration>
       <Get Name="Get" Id="{7f5e3440-eaae-47cd-8f92-6961cd1007ef}">
@@ -360,7 +452,11 @@ p_bStaSafetyOk := s_bStaSafetyOk;
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStsPowerOk := s_bStsPowerOk;
+p_bStsPowerOk := 
+	s_bStsPower400VacOk
+	AND s_bStsPower230VacOk
+	//AND s_bStsPower230VacServiceOk
+	AND s_bStsPower24VdcOk;
 ]]></ST>
         </Implementation>
       </Get>
@@ -376,22 +472,33 @@ p_bStsPowerOk := s_bStsPowerOk;
       <LineId Id="7" Count="0" />
       <LineId Id="81" Count="1" />
       <LineId Id="84" Count="1" />
+      <LineId Id="93" Count="1" />
+      <LineId Id="97" Count="0" />
       <LineId Id="83" Count="0" />
+      <LineId Id="116" Count="0" />
       <LineId Id="34" Count="0" />
-      <LineId Id="45" Count="4" />
-      <LineId Id="65" Count="0" />
-      <LineId Id="67" Count="2" />
-      <LineId Id="66" Count="0" />
-      <LineId Id="70" Count="0" />
-      <LineId Id="72" Count="2" />
-      <LineId Id="71" Count="0" />
-      <LineId Id="50" Count="0" />
+      <LineId Id="45" Count="1" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="100" Count="0" />
+      <LineId Id="105" Count="0" />
+      <LineId Id="110" Count="0" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="124" Count="0" />
+      <LineId Id="122" Count="0" />
       <LineId Id="56" Count="0" />
       <LineId Id="58" Count="1" />
+      <LineId Id="90" Count="1" />
+      <LineId Id="88" Count="0" />
+      <LineId Id="87" Count="0" />
       <LineId Id="77" Count="0" />
+      <LineId Id="118" Count="0" />
+      <LineId Id="117" Count="0" />
       <LineId Id="61" Count="1" />
       <LineId Id="44" Count="0" />
-      <LineId Id="75" Count="1" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="113" Count="2" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="127" Count="0" />
       <LineId Id="32" Count="0" />
       <LineId Id="78" Count="1" />
       <LineId Id="10" Count="0" />
@@ -399,7 +506,11 @@ p_bStsPowerOk := s_bStsPowerOk;
     </LineIds>
     <LineIds Name="EM_Utilities._m_Devices">
       <LineId Id="255" Count="0" />
-      <LineId Id="234" Count="7" />
+      <LineId Id="234" Count="6" />
+      <LineId Id="264" Count="1" />
+      <LineId Id="262" Count="0" />
+      <LineId Id="241" Count="0" />
+      <LineId Id="266" Count="0" />
       <LineId Id="257" Count="2" />
       <LineId Id="242" Count="0" />
       <LineId Id="260" Count="0" />
@@ -414,7 +525,13 @@ p_bStsPowerOk := s_bStsPowerOk;
       <LineId Id="264" Count="0" />
       <LineId Id="248" Count="0" />
       <LineId Id="239" Count="0" />
-      <LineId Id="256" Count="4" />
+      <LineId Id="256" Count="1" />
+      <LineId Id="270" Count="1" />
+      <LineId Id="268" Count="0" />
+      <LineId Id="258" Count="0" />
+      <LineId Id="273" Count="0" />
+      <LineId Id="272" Count="0" />
+      <LineId Id="259" Count="1" />
       <LineId Id="253" Count="0" />
       <LineId Id="210" Count="0" />
       <LineId Id="6" Count="0" />
@@ -424,20 +541,55 @@ p_bStsPowerOk := s_bStsPowerOk;
       <LineId Id="5" Count="3" />
       <LineId Id="10" Count="0" />
       <LineId Id="326" Count="1" />
+      <LineId Id="373" Count="2" />
       <LineId Id="329" Count="0" />
+      <LineId Id="385" Count="0" />
       <LineId Id="364" Count="2" />
       <LineId Id="368" Count="0" />
       <LineId Id="367" Count="0" />
       <LineId Id="370" Count="0" />
       <LineId Id="369" Count="0" />
       <LineId Id="362" Count="0" />
-      <LineId Id="35" Count="3" />
+      <LineId Id="35" Count="2" />
+      <LineId Id="391" Count="1" />
+      <LineId Id="399" Count="0" />
+      <LineId Id="426" Count="0" />
+      <LineId Id="438" Count="0" />
+      <LineId Id="404" Count="0" />
+      <LineId Id="428" Count="0" />
+      <LineId Id="439" Count="0" />
+      <LineId Id="409" Count="0" />
+      <LineId Id="430" Count="0" />
+      <LineId Id="440" Count="0" />
+      <LineId Id="414" Count="0" />
+      <LineId Id="432" Count="0" />
+      <LineId Id="441" Count="0" />
+      <LineId Id="419" Count="0" />
+      <LineId Id="434" Count="0" />
+      <LineId Id="442" Count="0" />
+      <LineId Id="424" Count="0" />
+      <LineId Id="435" Count="0" />
+      <LineId Id="443" Count="0" />
+      <LineId Id="394" Count="0" />
+      <LineId Id="437" Count="0" />
+      <LineId Id="390" Count="0" />
+      <LineId Id="38" Count="0" />
       <LineId Id="354" Count="0" />
       <LineId Id="344" Count="1" />
       <LineId Id="355" Count="0" />
-      <LineId Id="346" Count="1" />
+      <LineId Id="346" Count="0" />
+      <LineId Id="377" Count="1" />
+      <LineId Id="376" Count="0" />
+      <LineId Id="380" Count="1" />
+      <LineId Id="379" Count="0" />
+      <LineId Id="383" Count="1" />
+      <LineId Id="382" Count="0" />
+      <LineId Id="347" Count="0" />
       <LineId Id="356" Count="0" />
-      <LineId Id="348" Count="1" />
+      <LineId Id="348" Count="0" />
+      <LineId Id="388" Count="1" />
+      <LineId Id="386" Count="0" />
+      <LineId Id="349" Count="0" />
       <LineId Id="357" Count="0" />
       <LineId Id="350" Count="1" />
       <LineId Id="358" Count="0" />
@@ -453,7 +605,11 @@ p_bStsPowerOk := s_bStsPowerOk;
       <LineId Id="6" Count="2" />
       <LineId Id="56" Count="0" />
       <LineId Id="77" Count="0" />
-      <LineId Id="79" Count="1" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="86" Count="1" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="88" Count="0" />
       <LineId Id="83" Count="0" />
       <LineId Id="5" Count="0" />
       <LineId Id="81" Count="0" />
@@ -534,12 +690,20 @@ p_bStsPowerOk := s_bStsPowerOk;
       <LineId Id="2" Count="0" />
       <LineId Id="6" Count="0" />
     </LineIds>
+    <LineIds Name="EM_Utilities.p_bStaCabinetTemperatureOk.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
     <LineIds Name="EM_Utilities.p_bStaSafetyOk.Get">
       <LineId Id="5" Count="1" />
       <LineId Id="2" Count="0" />
     </LineIds>
     <LineIds Name="EM_Utilities.p_bStsPowerOk.Get">
       <LineId Id="5" Count="1" />
+      <LineId Id="8" Count="1" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="10" Count="0" />
       <LineId Id="2" Count="0" />
     </LineIds>
   </POU>

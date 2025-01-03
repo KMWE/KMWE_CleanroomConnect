@@ -169,16 +169,12 @@ IF NOT SUPER^._m_Alarms() THEN
 	RETURN;
 END_IF
 
-// Alarm Handlers
+// Alarm Handlers ( config --> init() )
 s_fbAlarmHandlerTravelTimeOut(
 	i_bStaActive := s_bErrTravelTimeOut, 
-	i_eAlarmLevel := E_AlarmLevel.Alarm, 
 	i_sAlarmText := CONCAT(i_sEmName, CONCAT( ': Travel error: ', s_sReason)));
 	
-s_fbAlarmHandlerOuterDoorNotOpened(
-	i_bStaActive := s_bWrnOuterDoorNotOpened, 
-	i_eAlarmLevel := E_AlarmLevel.Warning, 
-	i_sAlarmText := CONCAT(i_sEmName, ': Outer-door open not detected'));
+s_fbAlarmHandlerOuterDoorNotOpened(i_bStaActive := s_bWrnOuterDoorNotOpened);
 
 // Reset warnings
 IF i_bCmdReset THEN
@@ -433,6 +429,11 @@ fbIlckHandlerCenteringIdle.i_stInterlockList.arr_Interlocks[0].sReason := 'n/a';
 
 fbIlckHandlerCenteringCenter.i_stInterlockList.arr_Interlocks[0].sReason := 'Conveyor not stopped';
 
+//Alarm config
+s_fbAlarmHandlerTravelTimeOut.i_eAlarmLevel := E_AlarmLevel.Warning;
+
+s_fbAlarmHandlerOuterDoorNotOpened.i_sAlarmText := CONCAT(i_sEmName, ': Outer-door open not detected');
+s_fbAlarmHandlerOuterDoorNotOpened.i_eAlarmLevel := E_AlarmLevel.Warning;
 //---------------------------------//	
 	
 //----------------------------------//	
@@ -1217,11 +1218,10 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="7" Count="0" />
       <LineId Id="16" Count="0" />
       <LineId Id="20" Count="0" />
-      <LineId Id="45" Count="2" />
+      <LineId Id="45" Count="1" />
       <LineId Id="44" Count="0" />
       <LineId Id="48" Count="0" />
-      <LineId Id="50" Count="2" />
-      <LineId Id="49" Count="0" />
+      <LineId Id="50" Count="0" />
       <LineId Id="42" Count="0" />
       <LineId Id="11" Count="0" />
       <LineId Id="33" Count="0" />
@@ -1355,6 +1355,10 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="493" Count="0" />
       <LineId Id="496" Count="0" />
       <LineId Id="495" Count="0" />
+      <LineId Id="502" Count="0" />
+      <LineId Id="504" Count="0" />
+      <LineId Id="508" Count="1" />
+      <LineId Id="505" Count="0" />
       <LineId Id="326" Count="0" />
       <LineId Id="35" Count="3" />
       <LineId Id="396" Count="2" />

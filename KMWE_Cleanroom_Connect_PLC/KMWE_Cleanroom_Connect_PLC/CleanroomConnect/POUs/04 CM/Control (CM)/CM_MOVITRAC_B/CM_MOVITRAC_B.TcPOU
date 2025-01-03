@@ -110,9 +110,11 @@ END_VAR
 SUPER^();
 ]]></ST>
     </Implementation>
-    <Folder Name="Methods" Id="{11b83f51-5f87-456d-a35a-77d461c1ecc9}" />
+    <Folder Name="Methods" Id="{11b83f51-5f87-456d-a35a-77d461c1ecc9}">
+      <Folder Name="Base" Id="{c371113a-7dbc-4a7b-af62-ea2326c80b07}" />
+    </Folder>
     <Folder Name="Properties" Id="{da903959-0eba-44a7-a4b8-91c25055de14}" />
-    <Method Name="_m_Alarms" Id="{7df04d62-5845-4a1e-8448-72d9b9d8341e}" FolderPath="Methods\">
+    <Method Name="_m_Alarms" Id="{7df04d62-5845-4a1e-8448-72d9b9d8341e}" FolderPath="Methods\Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Alarms : BOOL
 ]]></Declaration>
       <Implementation>
@@ -139,37 +141,22 @@ ELSIF NOT(s_bIclkBackward) OR i_bCmdReset THEN
 	s_wrnMotorBackwardInterlocked := FALSE;
 END_IF
 
-// Alarm Handlers
-s_fbAlarmHandlerDriveError(
-	i_bStaActive := s_errDriveError,
-	i_eAlarmLevel := E_AlarmLevel.Alarm,
-	i_sAlarmText := CONCAT(i_sCmName, ': Drive - has error (check drive).'));
-	
-s_fbAlarmHandlerApplyingBrakeNotAllowed(
-	i_bStaActive := s_wrnApplyingBrakeNotAllowed,
-	i_eAlarmLevel := E_AlarmLevel.Warning,
-	i_sAlarmText := CONCAT(i_sCmName, ': Brake - not allowed to be applied (motor not stopped).'));
-	
+// Alarm Handlers ( config --> init() )
+s_fbAlarmHandlerDriveError(i_bStaActive := s_errDriveError);
+
+s_fbAlarmHandlerApplyingBrakeNotAllowed(i_bStaActive := s_wrnApplyingBrakeNotAllowed);
 s_wrnApplyingBrakeNotAllowed R= s_bStaMotorStopped;
 	
-s_fbAlarmHandlerStartMotorNotAllowed(
-	i_bStaActive := s_wrnStartMotorNotAllowed,
-	i_eAlarmLevel := E_AlarmLevel.Warning,
-	i_sAlarmText := CONCAT(i_sCmName, ': Motor - not allowed to start (brake not released).'));
-	
+s_fbAlarmHandlerStartMotorNotAllowed(i_bStaActive := s_wrnStartMotorNotAllowed);
 s_wrnStartMotorNotAllowed R= s_bStaBrakeReleased;
 	
 s_fbAlarmHandlerMotorForwardInterlocked(
 	i_bStaActive := s_wrnMotorForwardInterlocked,
-	i_eAlarmLevel := E_AlarmLevel.Warning,
 	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move forward, Reason: ',CONCAT(s_sInterlockedReasonForward, '.'))));
-	//--i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move forward, Reason: ',CONCAT(i_fbInterlockConvFwd.p_sReason, '.'))));
 	
 s_fbAlarmHandlerMotorBackwardInterlocked(
 	i_bStaActive := s_wrnMotorBackwardInterlocked,
-	i_eAlarmLevel := E_AlarmLevel.Warning,
 	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move backward, Reason: ',CONCAT(s_sInterlockedReasonBackward, '.'))));
-	//--i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move backward, Reason: ',CONCAT(i_fbInterlockConvBwd.p_sReason, '.'))));
 	
 // Alarm collector	
 s_bStaError := 
@@ -186,7 +173,7 @@ _m_Alarms := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Devices" Id="{5370e1e6-83cf-430a-947c-f21bd2f1ec4b}" FolderPath="Methods\">
+    <Method Name="_m_Devices" Id="{5370e1e6-83cf-430a-947c-f21bd2f1ec4b}" FolderPath="Methods\Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Devices : BOOL
 ]]></Declaration>
       <Implementation>
@@ -333,7 +320,7 @@ _m_Devices := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Hmi" Id="{8b0bfc2b-cd59-45fd-861e-58a9388af400}" FolderPath="Methods\">
+    <Method Name="_m_Hmi" Id="{8b0bfc2b-cd59-45fd-861e-58a9388af400}" FolderPath="Methods\Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Hmi : BOOL
 ]]></Declaration>
       <Implementation>
@@ -487,7 +474,7 @@ _m_Hmi := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Init" Id="{10fb3c9f-1aaa-45dc-b899-79bd4e709ce6}" FolderPath="Methods\">
+    <Method Name="_m_Init" Id="{10fb3c9f-1aaa-45dc-b899-79bd4e709ce6}" FolderPath="Methods\Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Init : BOOL
 ]]></Declaration>
       <Implementation>
@@ -499,6 +486,20 @@ END_IF
 {warning '#TODO: Not sure if this control module needs initialzation'}
 //--s_DOValve.i_stSettings.bCfgDelay 		:= FALSE;
 //--s_DOValve.i_stSettings.tmOutputDelay 	:= T#0S;
+
+//Alarm config
+s_fbAlarmHandlerDriveError.i_sAlarmText := CONCAT(i_sCmName, ': Drive - has error (check drive).');
+s_fbAlarmHandlerDriveError.i_eAlarmLevel := E_AlarmLevel.Alarm;
+	
+s_fbAlarmHandlerApplyingBrakeNotAllowed.i_sAlarmText := CONCAT(i_sCmName, ': Brake - not allowed to be applied (motor not stopped).');
+s_fbAlarmHandlerApplyingBrakeNotAllowed.i_eAlarmLevel := E_AlarmLevel.Warning;
+	
+s_fbAlarmHandlerStartMotorNotAllowed.i_sAlarmText := CONCAT(i_sCmName, ': Motor - not allowed to start (brake not released).');
+s_fbAlarmHandlerStartMotorNotAllowed.i_eAlarmLevel := E_AlarmLevel.Warning;
+	
+s_fbAlarmHandlerMotorForwardInterlocked.i_eAlarmLevel := E_AlarmLevel.Warning;
+	
+s_fbAlarmHandlerMotorBackwardInterlocked.i_eAlarmLevel := E_AlarmLevel.Warning;
 
 //Hmi 
 	s_fbHmiBtnManualReleaseBrake.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
@@ -544,7 +545,7 @@ _m_Init := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Inputs" Id="{e38cdb59-a84f-476e-9954-e5b28d6d08e3}" FolderPath="Methods\">
+    <Method Name="_m_Inputs" Id="{e38cdb59-a84f-476e-9954-e5b28d6d08e3}" FolderPath="Methods\Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Inputs : BOOL
 ]]></Declaration>
       <Implementation>
@@ -567,7 +568,7 @@ _m_Inputs := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Outputs" Id="{ba15960a-e792-4086-9871-b1105c2a6ed2}" FolderPath="Methods\">
+    <Method Name="_m_Outputs" Id="{ba15960a-e792-4086-9871-b1105c2a6ed2}" FolderPath="Methods\Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Outputs : BOOL
 ]]></Declaration>
       <Implementation>
@@ -864,26 +865,20 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="158" Count="0" />
       <LineId Id="163" Count="5" />
       <LineId Id="162" Count="0" />
+      <LineId Id="188" Count="0" />
       <LineId Id="90" Count="0" />
-      <LineId Id="45" Count="0" />
-      <LineId Id="33" Count="0" />
-      <LineId Id="37" Count="0" />
-      <LineId Id="34" Count="1" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="190" Count="0" />
       <LineId Id="93" Count="0" />
-      <LineId Id="122" Count="3" />
-      <LineId Id="128" Count="0" />
       <LineId Id="133" Count="1" />
-      <LineId Id="129" Count="3" />
-      <LineId Id="121" Count="0" />
+      <LineId Id="129" Count="0" />
       <LineId Id="136" Count="0" />
       <LineId Id="135" Count="0" />
-      <LineId Id="143" Count="2" />
+      <LineId Id="143" Count="1" />
       <LineId Id="140" Count="0" />
-      <LineId Id="186" Count="0" />
       <LineId Id="183" Count="0" />
-      <LineId Id="148" Count="2" />
+      <LineId Id="148" Count="1" />
       <LineId Id="180" Count="0" />
-      <LineId Id="184" Count="0" />
       <LineId Id="147" Count="0" />
       <LineId Id="60" Count="0" />
       <LineId Id="32" Count="0" />
@@ -1051,6 +1046,16 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="60" Count="0" />
       <LineId Id="59" Count="0" />
       <LineId Id="58" Count="0" />
+      <LineId Id="107" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="82" Count="2" />
+      <LineId Id="87" Count="0" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="96" Count="1" />
+      <LineId Id="102" Count="1" />
       <LineId Id="57" Count="0" />
       <LineId Id="28" Count="0" />
       <LineId Id="34" Count="22" />

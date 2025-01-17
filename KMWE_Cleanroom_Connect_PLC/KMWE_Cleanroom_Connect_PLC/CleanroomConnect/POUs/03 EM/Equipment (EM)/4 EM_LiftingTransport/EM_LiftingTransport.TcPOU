@@ -5,7 +5,7 @@
 
 VAR CONSTANT
 	c_fHEIGHT_OFFSET : LREAL := 100.0; //[mm]
-	c_fSPINDLE_OFFSET : LREAL := 50.0; //[mm]
+	c_fSPINDLE_OFFSET : LREAL := 0.0; //[mm]
 	c_fLEG_LENGTH : LREAL := 1000.0; //[mm]
 END_VAR
 
@@ -24,6 +24,12 @@ VAR_INPUT
 	i_eCtrlState		: E_CtrlState;
 	
 	s_arr_bTest : ARRAY[0..15] OF BOOL; 
+	
+	fSetLiftHeight : LREAL;
+	fSetSpindPos : LREAL;
+	
+	fActSpindPos : LREAL;
+	fActLiftHeight : LREAL;
 END_VAR
 
 VAR_OUTPUT
@@ -41,11 +47,11 @@ VAR
 
 //------------------------------------------//
 	//Control Modules (Devices)
-	axisLift : AXIS_REF; //??AXIS_REF; TC2_MC2.AXIS_REF;
-	s_cmLift : CM_AX5000; // Including 2 limit switched and 1 reference switch
+//++	axisLift : AXIS_REF; //??AXIS_REF; TC2_MC2.AXIS_REF;
+//++	s_cmLift : CM_AX5000; // Including 2 limit switched and 1 reference switch
 
-	axisTransport : AXIS_REF; //??AXIS_REF TC2_MC2.AXIS_REF;
-	s_cmTransport : CM_AX5000; // Including 2 limit switched and 1 reference switch
+//++	axisTransport : AXIS_REF; //??AXIS_REF TC2_MC2.AXIS_REF;
+//++	s_cmTransport : CM_AX5000; // Including 2 limit switched and 1 reference switch
 	
 //------------------------------------------//
 
@@ -162,7 +168,10 @@ VAR
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[	
+      <ST><![CDATA[fSetSpindPos := _m_ConvLiftHeightToSpindPos(fSetLiftHeight);
+
+fActLiftHeight := _m_ConvSpindPosToLiftHeight(fSetSpindPos);
+	
 SUPER^();
 ]]></ST>
     </Implementation>
@@ -302,8 +311,9 @@ END_IF
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_ConvertLiftToSpindlePosition" Id="{8617e5f7-c58b-4537-8cd1-e74ba22bdca2}">
-      <Declaration><![CDATA[METHOD PRIVATE _m_ConvertLiftToSpindlePosition : LREAL
+    <Method Name="_m_ConvLiftHeightToSpindPos" Id="{8617e5f7-c58b-4537-8cd1-e74ba22bdca2}">
+      <Declaration><![CDATA[///Convert Lift Height To Spindle Position
+METHOD PRIVATE _m_ConvLiftHeightToSpindPos : LREAL
 VAR_INPUT
 	i_fSetLiftHeight : LREAL; //[mm]
 	
@@ -314,17 +324,44 @@ VAR
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[//Calculate actual lift height, as function of spindle position
+        <ST><![CDATA[// Calculate spindle position as function of lift height setpoint
 // a^2 + b^2 = c^2
 // 	a = s_fScissorHeight
 // 	b = s_fScissorBase
-// 	c = c_fHEIGHT_OFFSET
+// 	c = c_fLEG_LENGTH
 
 //Calculate Lift Target
 //	b = SQRT( c^2 - a^2 )
 s_fScissorHeight := i_fSetLiftHeight - c_fHEIGHT_OFFSET;
 s_fScissorBase := SQRT(EXPT(c_fLEG_LENGTH, 2) - EXPT(s_fScissorHeight, 2));
-_m_ConvertLiftToSpindlePosition := c_fLEG_LENGTH - (s_fScissorBase - c_fSPINDLE_OFFSET);
+_m_ConvLiftHeightToSpindPos := c_fLEG_LENGTH - (s_fScissorBase - c_fSPINDLE_OFFSET);
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_ConvSpindPosToLiftHeight" Id="{b4c945b7-7c49-44aa-94eb-77b098eae95c}">
+      <Declaration><![CDATA[///Convert Spindle Position To Lift Height
+METHOD PRIVATE _m_ConvSpindPosToLiftHeight : LREAL
+VAR_INPUT
+	i_fActSpindPos : LREAL; //[mm]
+	
+END_VAR
+VAR
+	s_fScissorHeight : LREAL;
+	s_fScissorBase : LREAL; //[mm]
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// Calculate lift height as function of spindle position
+// a^2 + b^2 = c^2
+// 	a = s_fScissorHeight
+// 	b = s_fScissorBase
+// 	c = c_fLEG_LENGTH
+
+//Calculate Lift Target
+//	b = SQRT( c^2 - a^2 )
+s_fScissorBase := c_fLEG_LENGTH - (i_fActSpindPos - c_fSPINDLE_OFFSET);
+s_fScissorHeight := SQRT(EXPT(c_fLEG_LENGTH, 2) - EXPT(s_fScissorBase, 2));
+_m_ConvSpindPosToLiftHeight := s_fScissorHeight + c_fHEIGHT_OFFSET;
 ]]></ST>
       </Implementation>
     </Method>
@@ -1535,8 +1572,7 @@ p_fActTransportPosition := s_fActTransportPosition;
       </Get>
     </Property>
     <LineIds Name="EM_LiftingTransport">
-      <LineId Id="221" Count="0" />
-      <LineId Id="9" Count="0" />
+      <LineId Id="887" Count="4" />
       <LineId Id="222" Count="0" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport._m_Alarms">
@@ -1589,9 +1625,16 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="159" Count="17" />
       <LineId Id="100" Count="0" />
     </LineIds>
-    <LineIds Name="EM_LiftingTransport._m_ConvertLiftToSpindlePosition">
-      <LineId Id="58" Count="9" />
-      <LineId Id="5" Count="0" />
+    <LineIds Name="EM_LiftingTransport._m_ConvLiftHeightToSpindPos">
+      <LineId Id="103" Count="0" />
+      <LineId Id="92" Count="9" />
+      <LineId Id="72" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_LiftingTransport._m_ConvSpindPosToLiftHeight">
+      <LineId Id="124" Count="7" />
+      <LineId Id="138" Count="0" />
+      <LineId Id="140" Count="0" />
+      <LineId Id="139" Count="0" />
       <LineId Id="72" Count="0" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport._m_Devices">

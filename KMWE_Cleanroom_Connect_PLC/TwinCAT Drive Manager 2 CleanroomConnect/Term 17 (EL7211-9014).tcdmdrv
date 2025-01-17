@@ -764,7 +764,7 @@
         </Element>
       </StatusBar>
     </EL72xxDriveTool>
-    <TcDMDrive>
+    <TcDMDrive Disabled="true">
       <SortId>0</SortId>
       <DriveModuleType>4</DriveModuleType>
       <TcLink>
@@ -1420,7 +1420,7 @@
     </TcDMDrive>
   </Xml>
   <BoxDef>
-    <FieldbusAddress>1009</FieldbusAddress>
+    <FieldbusAddress>0</FieldbusAddress>
     <AmsAddress>
       <AmsPort>0</AmsPort>
       <AmsPortTimeout>5</AmsPortTimeout>
@@ -1430,8 +1430,8 @@
     <Slave>
       <Info>
         <Name><![CDATA[Term 17 (EL7211-9014)]]></Name>
-        <PhysAddr>1009</PhysAddr>
-        <AutoIncAddr>65528</AutoIncAddr>
+        <PhysAddr>0</PhysAddr>
+        <AutoIncAddr>1</AutoIncAddr>
         <Physics>KK</Physics>
         <VendorId>2</VendorId>
         <ProductCode>472592466</ProductCode>
@@ -1441,12 +1441,12 @@
       </Info>
       <ProcessData>
         <Send>
-          <BitStart>648</BitStart>
-          <BitLength>48</BitLength>
+          <BitStart>568</BitStart>
+          <BitLength>112</BitLength>
         </Send>
         <Recv>
-          <BitStart>648</BitStart>
-          <BitLength>48</BitLength>
+          <BitStart>568</BitStart>
+          <BitLength>80</BitLength>
         </Recv>
         <Sm2>
           <Type>Outputs</Type>
@@ -1456,6 +1456,9 @@
           <Enable>1</Enable>
           <Pdo>5632</Pdo>
           <Pdo>5633</Pdo>
+          <Pdo>5634</Pdo>
+          <Pdo>5635</Pdo>
+          <Pdo>5638</Pdo>
         </Sm2>
         <Sm3>
           <Type>Inputs</Type>
@@ -1465,6 +1468,7 @@
           <Enable>1</Enable>
           <Pdo>6656</Pdo>
           <Pdo>6657</Pdo>
+          <Pdo>6662</Pdo>
         </Sm3>
         <TxPdo Fixed="true" Sm="3">
           <Index>#x1a00</Index>
@@ -1480,7 +1484,7 @@
                 <AmsPort>11</AmsPort>
               </AmsAddress>
               <IndexGroup>50593808</IndexGroup>
-              <IndexOffset>-2147483567</IndexOffset>
+              <IndexOffset>-2147483648</IndexOffset>
               <Length>4</Length>
             </AdsInfo>
           </Entry>
@@ -1513,7 +1517,7 @@ Bit 14 - 15 : reserved</Comment>
                 <AmsPort>11</AmsPort>
               </AmsAddress>
               <IndexGroup>50593808</IndexGroup>
-              <IndexOffset>-2147483563</IndexOffset>
+              <IndexOffset>-2147483648</IndexOffset>
               <Length>2</Length>
             </AdsInfo>
           </Entry>
@@ -1562,7 +1566,7 @@ Bit 14 - 15 : reserved</Comment>
             <DataType>UINT</DataType>
           </Entry>
         </TxPdo>
-        <TxPdo Fixed="true">
+        <TxPdo Fixed="true" Sm="3">
           <Index>#x1a06</Index>
           <Name>DRV Following error actual value</Name>
           <Entry>
@@ -1571,6 +1575,14 @@ Bit 14 - 15 : reserved</Comment>
             <BitLen>32</BitLen>
             <Name>Following error actual value</Name>
             <DataType>DINT</DataType>
+            <AdsInfo>
+              <AmsAddress>
+                <AmsPort>11</AmsPort>
+              </AmsAddress>
+              <IndexGroup>50593808</IndexGroup>
+              <IndexOffset>-2147483648</IndexOffset>
+              <Length>4</Length>
+            </AdsInfo>
           </Entry>
         </TxPdo>
         <TxPdo Fixed="true">
@@ -2300,7 +2312,7 @@ Bit 8 - 15 : reserved</Comment>
                 <AmsPort>11</AmsPort>
               </AmsAddress>
               <IndexGroup>50593808</IndexGroup>
-              <IndexOffset>-2130706351</IndexOffset>
+              <IndexOffset>-2130706432</IndexOffset>
               <Length>2</Length>
             </AdsInfo>
           </Entry>
@@ -2319,12 +2331,12 @@ Bit 8 - 15 : reserved</Comment>
                 <AmsPort>11</AmsPort>
               </AmsAddress>
               <IndexGroup>50593808</IndexGroup>
-              <IndexOffset>-2130706349</IndexOffset>
+              <IndexOffset>-2130706432</IndexOffset>
               <Length>4</Length>
             </AdsInfo>
           </Entry>
         </RxPdo>
-        <RxPdo Fixed="true">
+        <RxPdo Fixed="true" Sm="2">
           <Index>#x1602</Index>
           <Name>DRV Target torque</Name>
           <Entry>
@@ -2333,9 +2345,17 @@ Bit 8 - 15 : reserved</Comment>
             <BitLen>16</BitLen>
             <Name>Target torque</Name>
             <DataType>INT</DataType>
+            <AdsInfo>
+              <AmsAddress>
+                <AmsPort>11</AmsPort>
+              </AmsAddress>
+              <IndexGroup>50593808</IndexGroup>
+              <IndexOffset>-2130706432</IndexOffset>
+              <Length>2</Length>
+            </AdsInfo>
           </Entry>
         </RxPdo>
-        <RxPdo Fixed="true">
+        <RxPdo Fixed="true" Sm="2">
           <Index>#x1603</Index>
           <Name>DRV Commutation angle</Name>
           <Entry>
@@ -2344,6 +2364,14 @@ Bit 8 - 15 : reserved</Comment>
             <BitLen>16</BitLen>
             <Name>Commutation angle</Name>
             <DataType>UINT</DataType>
+            <AdsInfo>
+              <AmsAddress>
+                <AmsPort>11</AmsPort>
+              </AmsAddress>
+              <IndexGroup>50593808</IndexGroup>
+              <IndexOffset>-2130706432</IndexOffset>
+              <Length>2</Length>
+            </AdsInfo>
           </Entry>
         </RxPdo>
         <RxPdo Fixed="true">
@@ -2368,7 +2396,7 @@ Bit 8 - 15 : reserved</Comment>
             <DataType>INT</DataType>
           </Entry>
         </RxPdo>
-        <RxPdo Fixed="true">
+        <RxPdo Fixed="true" Sm="2">
           <Index>#x1606</Index>
           <Name>DRV Target position</Name>
           <Entry>
@@ -2377,6 +2405,14 @@ Bit 8 - 15 : reserved</Comment>
             <BitLen>32</BitLen>
             <Name>Target position</Name>
             <DataType>UDINT</DataType>
+            <AdsInfo>
+              <AmsAddress>
+                <AmsPort>11</AmsPort>
+              </AmsAddress>
+              <IndexGroup>50593808</IndexGroup>
+              <IndexOffset>-2130706432</IndexOffset>
+              <Length>4</Length>
+            </AdsInfo>
           </Entry>
         </RxPdo>
         <RxPdo Fixed="true">
@@ -2768,7 +2804,7 @@ Bit 8 - 15 : reserved</Comment>
               <Pdo ChannelNo="1">#x1a01</Pdo>
             </Sm>
           </AlternativeSmMapping>
-          <AlternativeSmMapping Default="1" Selected="true">
+          <AlternativeSmMapping Default="1">
             <Name>Cyclic synchronous velocity mode (CSV)</Name>
             <Sm No="2">
               <Pdo ChannelNo="1">#x1600</Pdo>
@@ -2819,7 +2855,7 @@ Bit 8 - 15 : reserved</Comment>
         <Recv StatusChange="true">
           <Start>4224</Start>
           <Length>128</Length>
-          <StatusBitAddr>3</StatusBitAddr>
+          <StatusBitAddr>2</StatusBitAddr>
         </Recv>
         <Timeout>
           <ReturningRequest>100</ReturningRequest>
@@ -2846,7 +2882,7 @@ Bit 8 - 15 : reserved</Comment>
               <Ccs>1</Ccs>
               <Index>7186</Index>
               <SubIndex>0</SubIndex>
-              <Data>020000160116</Data>
+              <Data>050000160116021603160616</Data>
             </InitCmd>
             <InitCmd Fixed="true" CompleteAccess="true">
               <Transition>PS</Transition>
@@ -2855,7 +2891,7 @@ Bit 8 - 15 : reserved</Comment>
               <Ccs>1</Ccs>
               <Index>7187</Index>
               <SubIndex>0</SubIndex>
-              <Data>0200001a011a</Data>
+              <Data>0300001a011a061a</Data>
             </InitCmd>
             <InitCmd>
               <Transition>IP</Transition>
@@ -3098,6 +3134,15 @@ Bit 8 - 15 : reserved</Comment>
               <SubIndex>1</SubIndex>
               <Data>00</Data>
             </InitCmd>
+            <InitCmd>
+              <Transition>PS</Transition>
+              <Comment><![CDATA[DRV Outputs / Modes of operation]]></Comment>
+              <Timeout>0</Timeout>
+              <Ccs>1</Ccs>
+              <Index>28688</Index>
+              <SubIndex>3</SubIndex>
+              <Data>08</Data>
+            </InitCmd>
           </InitCmds>
           <CanOpenType>39</CanOpenType>
           <Profile>
@@ -3127,7 +3172,7 @@ Bit 8 - 15 : reserved</Comment>
           <Comment><![CDATA[set device state to INIT]]></Comment>
           <Requires>cycle</Requires>
           <Cmd>2</Cmd>
-          <Adp>65528</Adp>
+          <Adp>1</Adp>
           <Ado>288</Ado>
           <Data>1100</Data>
           <Retries>3</Retries>
@@ -3139,7 +3184,7 @@ Bit 8 - 15 : reserved</Comment>
           <Comment><![CDATA[clear DC activation]]></Comment>
           <Requires>cycle</Requires>
           <Cmd>2</Cmd>
-          <Adp>65528</Adp>
+          <Adp>1</Adp>
           <Ado>2432</Ado>
           <Data>0000</Data>
           <Retries>3</Retries>
@@ -3151,7 +3196,7 @@ Bit 8 - 15 : reserved</Comment>
           <Comment><![CDATA[check device state for INIT]]></Comment>
           <Requires>cycle</Requires>
           <Cmd>1</Cmd>
-          <Adp>65528</Adp>
+          <Adp>1</Adp>
           <Ado>304</Ado>
           <Data>0000</Data>
           <Retries>3</Retries>
@@ -3166,7 +3211,7 @@ Bit 8 - 15 : reserved</Comment>
           <Comment><![CDATA[check device state for INIT]]></Comment>
           <Requires>cycle</Requires>
           <Cmd>1</Cmd>
-          <Adp>65528</Adp>
+          <Adp>1</Adp>
           <Ado>304</Ado>
           <Data>0000</Data>
           <Retries>3</Retries>
@@ -3182,7 +3227,7 @@ Bit 8 - 15 : reserved</Comment>
           <Comment><![CDATA[set device state to INIT]]></Comment>
           <Requires>cycle</Requires>
           <Cmd>2</Cmd>
-          <Adp>65528</Adp>
+          <Adp>1</Adp>
           <Ado>288</Ado>
           <Data>1100</Data>
           <Cnt>1</Cnt>
@@ -3195,7 +3240,7 @@ Bit 8 - 15 : reserved</Comment>
           <Comment><![CDATA[check device state for INIT]]></Comment>
           <Requires>cycle</Requires>
           <Cmd>1</Cmd>
-          <Adp>65528</Adp>
+          <Adp>1</Adp>
           <Ado>304</Ado>
           <Data>0000</Data>
           <Cnt>1</Cnt>
@@ -3211,7 +3256,7 @@ Bit 8 - 15 : reserved</Comment>
           <Comment><![CDATA[assign EEPROM to ECAT]]></Comment>
           <Requires>cycle</Requires>
           <Cmd>2</Cmd>
-          <Adp>65528</Adp>
+          <Adp>1</Adp>
           <Ado>1280</Ado>
           <Data>00</Data>
           <Cnt>1</Cnt>
@@ -3221,7 +3266,7 @@ Bit 8 - 15 : reserved</Comment>
           <Transition>IP</Transition>
           <Comment><![CDATA[check vendor id]]></Comment>
           <Cmd>2</Cmd>
-          <Adp>65528</Adp>
+          <Adp>1</Adp>
           <Ado>1282</Ado>
           <Data>000108000000</Data>
           <Cnt>1</Cnt>
@@ -3232,7 +3277,7 @@ Bit 8 - 15 : reserved</Comment>
           <Comment><![CDATA[check vendor id]]></Comment>
           <Requires>cycle</Requires>
           <Cmd>1</Cmd>
-          <Adp>65528</Adp>
+          <Adp>1</Adp>
           <Ado>1288</Ado>
           <Data>00000000</Data>
           <Cnt>1</Cnt>
@@ -3246,7 +3291,7 @@ Bit 8 - 15 : reserved</Comment>
           <Transition>IP</Transition>
           <Comment><![CDATA[check product code]]></Comment>
           <Cmd>2</Cmd>
-          <Adp>65528</Adp>
+          <Adp>1</Adp>
           <Ado>1282</Ado>
           <Data>00010a000000</Data>
           <Cnt>1</Cnt>
@@ -3257,7 +3302,7 @@ Bit 8 - 15 : reserved</Comment>
           <Comment><![CDATA[check product code]]></Comment>
           <Requires>cycle</Requires>
           <Cmd>1</Cmd>
-          <Adp>65528</Adp>
+          <Adp>1</Adp>
           <Ado>1288</Ado>
           <Data>00000000</Data>
           <Cnt>1</Cnt>
@@ -3271,7 +3316,7 @@ Bit 8 - 15 : reserved</Comment>
           <Transition>IP</Transition>
           <Comment><![CDATA[check revision number (lo word)]]></Comment>
           <Cmd>2</Cmd>
-          <Adp>65528</Adp>
+          <Adp>1</Adp>
           <Ado>1282</Ado>
           <Data>00010c000000</Data>
           <Cnt>1</Cnt>
@@ -3282,7 +3327,7 @@ Bit 8 - 15 : reserved</Comment>
           <Comment><![CDATA[check revision number (lo word)]]></Comment>
           <Requires>cycle</Requires>
           <Cmd>1</Cmd>
-          <Adp>65528</Adp>
+          <Adp>1</Adp>
           <Ado>1288</Ado>
           <Data>0000</Data>
           <Cnt>1</Cnt>
@@ -3298,9 +3343,9 @@ Bit 8 - 15 : reserved</Comment>
           <Comment><![CDATA[set physical address]]></Comment>
           <Requires>cycle</Requires>
           <Cmd>2</Cmd>
-          <Adp>65528</Adp>
+          <Adp>1</Adp>
           <Ado>16</Ado>
-          <Data>f103</Data>
+          <Data>0000</Data>
           <Cnt>1</Cnt>
           <Retries>3</Retries>
         </InitCmd>
@@ -3312,7 +3357,7 @@ Bit 8 - 15 : reserved</Comment>
           <Transition>OI</Transition>
           <Comment><![CDATA[clear sm 0/1 (mailbox out/in)]]></Comment>
           <Cmd>5</Cmd>
-          <Adp>1009</Adp>
+          <Adp>0</Adp>
           <Ado>2048</Ado>
           <Data>00000000000000000000000000000000</Data>
           <Retries>3</Retries>
@@ -3321,7 +3366,7 @@ Bit 8 - 15 : reserved</Comment>
           <Transition>BI</Transition>
           <Comment><![CDATA[clear sm 0/1 (mailbox out/in)]]></Comment>
           <Cmd>2</Cmd>
-          <Adp>65528</Adp>
+          <Adp>1</Adp>
           <Ado>2048</Ado>
           <Data>00000000000000000000000000000000</Data>
           <Retries>3</Retries>
@@ -3330,7 +3375,7 @@ Bit 8 - 15 : reserved</Comment>
           <Transition>IP</Transition>
           <Comment><![CDATA[set sm 0 (mailbox out)]]></Comment>
           <Cmd>5</Cmd>
-          <Adp>1009</Adp>
+          <Adp>0</Adp>
           <Ado>2048</Ado>
           <Data>0010800026000100</Data>
           <Cnt>1</Cnt>
@@ -3340,7 +3385,7 @@ Bit 8 - 15 : reserved</Comment>
           <Transition>IP</Transition>
           <Comment><![CDATA[set sm 1 (mailbox in)]]></Comment>
           <Cmd>5</Cmd>
-          <Adp>1009</Adp>
+          <Adp>0</Adp>
           <Ado>2056</Ado>
           <Data>8010800022000100</Data>
           <Cnt>1</Cnt>
@@ -3350,7 +3395,7 @@ Bit 8 - 15 : reserved</Comment>
           <Transition>IB</Transition>
           <Comment><![CDATA[set sm 0 (bootstrap out)]]></Comment>
           <Cmd>5</Cmd>
-          <Adp>1009</Adp>
+          <Adp>0</Adp>
           <Ado>2048</Ado>
           <Data>0010f40026000100</Data>
           <Cnt>1</Cnt>
@@ -3360,7 +3405,7 @@ Bit 8 - 15 : reserved</Comment>
           <Transition>IB</Transition>
           <Comment><![CDATA[set sm 1 (bootstrap in)]]></Comment>
           <Cmd>5</Cmd>
-          <Adp>1009</Adp>
+          <Adp>0</Adp>
           <Ado>2056</Ado>
           <Data>f410f40022000100</Data>
           <Cnt>1</Cnt>
@@ -3371,7 +3416,7 @@ Bit 8 - 15 : reserved</Comment>
           <Comment><![CDATA[set DC cycle time]]></Comment>
           <Requires>cycle</Requires>
           <Cmd>5</Cmd>
-          <Adp>1009</Adp>
+          <Adp>0</Adp>
           <Ado>2464</Ado>
           <Data>80841e00e8030000</Data>
           <Cnt>1</Cnt>
@@ -3382,7 +3427,7 @@ Bit 8 - 15 : reserved</Comment>
           <Comment><![CDATA[set DC start time]]></Comment>
           <Requires>cycle</Requires>
           <Cmd>5</Cmd>
-          <Adp>1009</Adp>
+          <Adp>0</Adp>
           <Ado>2448</Ado>
           <Data>3075000000000000</Data>
           <Cnt>1</Cnt>
@@ -3393,7 +3438,7 @@ Bit 8 - 15 : reserved</Comment>
           <Comment><![CDATA[set DC activation]]></Comment>
           <Requires>cycle</Requires>
           <Cmd>5</Cmd>
-          <Adp>1009</Adp>
+          <Adp>0</Adp>
           <Ado>2432</Ado>
           <Data>0007</Data>
           <Cnt>1</Cnt>
@@ -3404,7 +3449,7 @@ Bit 8 - 15 : reserved</Comment>
           <Comment><![CDATA[set DC latch cfg]]></Comment>
           <Requires>cycle</Requires>
           <Cmd>5</Cmd>
-          <Adp>1009</Adp>
+          <Adp>0</Adp>
           <Ado>2472</Ado>
           <Data>0000</Data>
           <Retries>3</Retries>
@@ -3415,7 +3460,7 @@ Bit 8 - 15 : reserved</Comment>
           <Comment><![CDATA[clear DC activation]]></Comment>
           <Requires>cycle</Requires>
           <Cmd>5</Cmd>
-          <Adp>1009</Adp>
+          <Adp>0</Adp>
           <Ado>2432</Ado>
           <Data>0000</Data>
           <Retries>3</Retries>
@@ -3426,7 +3471,7 @@ Bit 8 - 15 : reserved</Comment>
           <Comment><![CDATA[set device state to PREOP]]></Comment>
           <Requires>cycle</Requires>
           <Cmd>5</Cmd>
-          <Adp>1009</Adp>
+          <Adp>0</Adp>
           <Ado>288</Ado>
           <Data>1200</Data>
           <Retries>300</Retries>
@@ -3440,7 +3485,7 @@ Bit 8 - 15 : reserved</Comment>
           <Transition>OI</Transition>
           <Comment><![CDATA[clear sms]]></Comment>
           <Cmd>5</Cmd>
-          <Adp>1009</Adp>
+          <Adp>0</Adp>
           <Ado>2064</Ado>
           <Data>00000000000000000000000000000000</Data>
           <Retries>3</Retries>
@@ -3449,9 +3494,9 @@ Bit 8 - 15 : reserved</Comment>
           <Transition>PS</Transition>
           <Comment><![CDATA[set sm 2 (outputs)]]></Comment>
           <Cmd>5</Cmd>
-          <Adp>1009</Adp>
+          <Adp>0</Adp>
           <Ado>2064</Ado>
-          <Data>0011060024000100</Data>
+          <Data>00110e0024000100</Data>
           <Cnt>1</Cnt>
           <Retries>3</Retries>
         </InitCmd>
@@ -3459,9 +3504,9 @@ Bit 8 - 15 : reserved</Comment>
           <Transition>PS</Transition>
           <Comment><![CDATA[set sm 3 (inputs)]]></Comment>
           <Cmd>5</Cmd>
-          <Adp>1009</Adp>
+          <Adp>0</Adp>
           <Ado>2072</Ado>
-          <Data>8011060020000100</Data>
+          <Data>80110a0020000100</Data>
           <Cnt>1</Cnt>
           <Retries>3</Retries>
         </InitCmd>
@@ -3469,9 +3514,9 @@ Bit 8 - 15 : reserved</Comment>
           <Transition>PS</Transition>
           <Comment><![CDATA[set fmmu 0 (outputs)]]></Comment>
           <Cmd>5</Cmd>
-          <Adp>1009</Adp>
+          <Adp>0</Adp>
           <Ado>1536</Ado>
-          <Data>0a000001060000070011000201000000</Data>
+          <Data>00000000000000000011000201000000</Data>
           <Cnt>1</Cnt>
           <Retries>3</Retries>
         </InitCmd>
@@ -3479,9 +3524,9 @@ Bit 8 - 15 : reserved</Comment>
           <Transition>PS</Transition>
           <Comment><![CDATA[set fmmu 1 (inputs)]]></Comment>
           <Cmd>5</Cmd>
-          <Adp>1009</Adp>
+          <Adp>0</Adp>
           <Ado>1552</Ado>
-          <Data>0a000001060000078011000101000000</Data>
+          <Data>00000000000000008011000101000000</Data>
           <Cnt>1</Cnt>
           <Retries>3</Retries>
         </InitCmd>
@@ -3490,9 +3535,9 @@ Bit 8 - 15 : reserved</Comment>
           <Transition>IB</Transition>
           <Comment><![CDATA[set fmmu 2 (mailbox state)]]></Comment>
           <Cmd>5</Cmd>
-          <Adp>1009</Adp>
+          <Adp>0</Adp>
           <Ado>1568</Ado>
-          <Data>00000009010003030d08000101000000</Data>
+          <Data>00000000000000000d08000101000000</Data>
           <Cnt>1</Cnt>
           <Retries>3</Retries>
         </InitCmd>
@@ -3501,7 +3546,7 @@ Bit 8 - 15 : reserved</Comment>
           <Comment><![CDATA[set device state to SAFEOP]]></Comment>
           <Requires>cycle</Requires>
           <Cmd>5</Cmd>
-          <Adp>1009</Adp>
+          <Adp>0</Adp>
           <Ado>288</Ado>
           <Data>0400</Data>
           <Retries>3</Retries>
@@ -3514,7 +3559,7 @@ Bit 8 - 15 : reserved</Comment>
           <Transition>OI</Transition>
           <Comment><![CDATA[clear fmmu 0]]></Comment>
           <Cmd>5</Cmd>
-          <Adp>1009</Adp>
+          <Adp>0</Adp>
           <Ado>1536</Ado>
           <Data>00000000000000000000000000000000</Data>
           <Retries>3</Retries>
@@ -3526,7 +3571,7 @@ Bit 8 - 15 : reserved</Comment>
           <Transition>OI</Transition>
           <Comment><![CDATA[clear fmmu 1]]></Comment>
           <Cmd>5</Cmd>
-          <Adp>1009</Adp>
+          <Adp>0</Adp>
           <Ado>1552</Ado>
           <Data>00000000000000000000000000000000</Data>
           <Retries>3</Retries>
@@ -3538,7 +3583,7 @@ Bit 8 - 15 : reserved</Comment>
           <Transition>OI</Transition>
           <Comment><![CDATA[clear fmmu 2]]></Comment>
           <Cmd>5</Cmd>
-          <Adp>1009</Adp>
+          <Adp>0</Adp>
           <Ado>1568</Ado>
           <Data>00000000000000000000000000000000</Data>
           <Retries>3</Retries>
@@ -3549,7 +3594,7 @@ Bit 8 - 15 : reserved</Comment>
           <Comment><![CDATA[clear DC activation]]></Comment>
           <Requires>cycle</Requires>
           <Cmd>5</Cmd>
-          <Adp>1009</Adp>
+          <Adp>0</Adp>
           <Ado>2432</Ado>
           <Data>0000</Data>
           <Retries>3</Retries>
@@ -3560,7 +3605,7 @@ Bit 8 - 15 : reserved</Comment>
           <Comment><![CDATA[check device state for PREOP]]></Comment>
           <Requires>cycle</Requires>
           <Cmd>4</Cmd>
-          <Adp>1009</Adp>
+          <Adp>0</Adp>
           <Ado>304</Ado>
           <Data>000000000000</Data>
           <Retries>3</Retries>
@@ -3576,7 +3621,7 @@ Bit 8 - 15 : reserved</Comment>
           <Comment><![CDATA[assign EEPROM to PDI]]></Comment>
           <Requires>cycle</Requires>
           <Cmd>5</Cmd>
-          <Adp>1009</Adp>
+          <Adp>0</Adp>
           <Ado>1280</Ado>
           <Data>01</Data>
           <Cnt>1</Cnt>
@@ -3587,7 +3632,7 @@ Bit 8 - 15 : reserved</Comment>
           <Comment><![CDATA[assign EEPROM back to ECAT]]></Comment>
           <Requires>cycle</Requires>
           <Cmd>2</Cmd>
-          <Adp>65528</Adp>
+          <Adp>1</Adp>
           <Ado>1280</Ado>
           <Data>00</Data>
           <Retries>3</Retries>
@@ -3597,7 +3642,7 @@ Bit 8 - 15 : reserved</Comment>
           <Comment><![CDATA[set device state to PREOP]]></Comment>
           <Requires>cycle</Requires>
           <Cmd>5</Cmd>
-          <Adp>1009</Adp>
+          <Adp>0</Adp>
           <Ado>288</Ado>
           <Data>1200</Data>
           <Cnt>1</Cnt>
@@ -3609,7 +3654,7 @@ Bit 8 - 15 : reserved</Comment>
           <Comment><![CDATA[check device state for PREOP]]></Comment>
           <Requires>cycle</Requires>
           <Cmd>4</Cmd>
-          <Adp>1009</Adp>
+          <Adp>0</Adp>
           <Ado>304</Ado>
           <Data>000000000000</Data>
           <Cnt>1</Cnt>
@@ -3626,7 +3671,7 @@ Bit 8 - 15 : reserved</Comment>
           <Comment><![CDATA[assign EEPROM back to ECAT]]></Comment>
           <Requires>cycle</Requires>
           <Cmd>2</Cmd>
-          <Adp>65528</Adp>
+          <Adp>1</Adp>
           <Ado>1280</Ado>
           <Data>00</Data>
           <Retries>3</Retries>
@@ -3636,7 +3681,7 @@ Bit 8 - 15 : reserved</Comment>
           <Comment><![CDATA[set device state to BOOT]]></Comment>
           <Requires>cycle</Requires>
           <Cmd>5</Cmd>
-          <Adp>1009</Adp>
+          <Adp>0</Adp>
           <Ado>288</Ado>
           <Data>1300</Data>
           <Cnt>1</Cnt>
@@ -3648,7 +3693,7 @@ Bit 8 - 15 : reserved</Comment>
           <Comment><![CDATA[check device state for BOOT]]></Comment>
           <Requires>cycle</Requires>
           <Cmd>4</Cmd>
-          <Adp>1009</Adp>
+          <Adp>0</Adp>
           <Ado>304</Ado>
           <Data>000000000000</Data>
           <Cnt>1</Cnt>
@@ -3664,7 +3709,7 @@ Bit 8 - 15 : reserved</Comment>
           <Comment><![CDATA[set device state to SAFEOP]]></Comment>
           <Requires>cycle</Requires>
           <Cmd>5</Cmd>
-          <Adp>1009</Adp>
+          <Adp>0</Adp>
           <Ado>288</Ado>
           <Data>0400</Data>
           <Cnt>1</Cnt>
@@ -3676,7 +3721,7 @@ Bit 8 - 15 : reserved</Comment>
           <Comment><![CDATA[check device state for SAFEOP]]></Comment>
           <Requires>cycle</Requires>
           <Cmd>4</Cmd>
-          <Adp>1009</Adp>
+          <Adp>0</Adp>
           <Ado>304</Ado>
           <Data>000000000000</Data>
           <Cnt>1</Cnt>
@@ -3692,7 +3737,7 @@ Bit 8 - 15 : reserved</Comment>
           <Comment><![CDATA[check device state for SAFEOP]]></Comment>
           <Requires>cycle</Requires>
           <Cmd>4</Cmd>
-          <Adp>1009</Adp>
+          <Adp>0</Adp>
           <Ado>304</Ado>
           <Data>000000000000</Data>
           <Retries>3</Retries>
@@ -3707,7 +3752,7 @@ Bit 8 - 15 : reserved</Comment>
           <Comment><![CDATA[set device state to OP]]></Comment>
           <Requires>cycle</Requires>
           <Cmd>5</Cmd>
-          <Adp>1009</Adp>
+          <Adp>0</Adp>
           <Ado>288</Ado>
           <Data>0800</Data>
           <Cnt>1</Cnt>
@@ -3719,7 +3764,7 @@ Bit 8 - 15 : reserved</Comment>
           <Comment><![CDATA[check device state for OP]]></Comment>
           <Requires>cycle</Requires>
           <Cmd>4</Cmd>
-          <Adp>1009</Adp>
+          <Adp>0</Adp>
           <Ado>304</Ado>
           <Data>000000000000</Data>
           <Cnt>1</Cnt>
@@ -3733,7 +3778,7 @@ Bit 8 - 15 : reserved</Comment>
       </InitCmds>
       <PreviousPort Selected="true">
         <Port>B</Port>
-        <PhysAddr>1008</PhysAddr>
+        <PhysAddr>0</PhysAddr>
       </PreviousPort>
       <DC>
         <PotentialReferenceClock>false</PotentialReferenceClock>
@@ -3804,7 +3849,7 @@ Bit 8 - 15 : reserved</Comment>
     </Slave>
     <AmsAddress>
       <AmsNetId>10.130.4.120.2.1</AmsNetId>
-      <AmsPort>1009</AmsPort>
+      <AmsPort>0</AmsPort>
     </AmsAddress>
     <LinkedAxis>TINC^NC-Task 1 SAF^Axes^TransportUnit</LinkedAxis>
   </EtherCAT>

@@ -5,6 +5,7 @@
 VAR
 	//EM Pallet Transport
 	sim_MOVITRAC_B : SIM_MOVITRAC_B;
+	sim_MOVITRAC_B2 : SIM_MOVITRAC_B2;
 	simCentering : SIM_ValveWithDoubleFB;	
 
 	//EM Docking Interface
@@ -27,6 +28,19 @@ VAR
 	simPowerOK AT %Q* : BOOL;
 	simAirPressureOK AT %Q* : BOOL;
 	
+	{attribute 'TcLinkTo' := 'TIPC^CleanroomConnect^CleanroomConnect Instance^PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdReset'}
+	I_bCmdReset AT %I* : BOOL;
+	{attribute 'TcLinkTo' := 'TIPC^CleanroomConnect^CleanroomConnect Instance^PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdEnable'}
+	I_bCmdEnable AT %I* : BOOL;
+	{attribute 'TcLinkTo' := 'TIPC^CleanroomConnect^CleanroomConnect Instance^PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdStartCW'}
+	I_bCmdStartCW AT %I* : BOOL;
+	{attribute 'TcLinkTo' := 'TIPC^CleanroomConnect^CleanroomConnect Instance^PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdStartCCW'}
+	I_bCmdStartCCW AT %I* : BOOL;
+	{attribute 'TcLinkTo' := 'TIPC^CleanroomConnect^CleanroomConnect Instance^PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.I_bStaReadyForOperation'}
+	Q_bStaReadyForOperation AT %Q* : BOOL;
+	{attribute 'TcLinkTo' := 'TIPC^CleanroomConnect^CleanroomConnect Instance^PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.I_bStaMotorIsRunning'}
+	Q_bStaMotorIsRunning AT %Q* : BOOL;
+	
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -44,6 +58,15 @@ END_IF
 
 //EM Pallet Conveyor
 sim_MOVITRAC_B();
+
+sim_MOVITRAC_B2(
+	i_ref_I_bCmdReset := I_bCmdReset, 
+	i_ref_I_bCmdEnable := I_bCmdEnable, 
+	i_ref_I_bCmdStartCW := I_bCmdStartCW, 
+	i_ref_I_bCmdStartCCW := I_bCmdStartCCW, 
+	i_ref_Q_bStaReadyForOperation := Q_bStaReadyForOperation, 
+	i_ref_Q_bStaMotorIsRunning := Q_bStaMotorIsRunning);
+
 simCentering();
 
 //EM Docking Interface
@@ -73,6 +96,10 @@ simDoorOpenerAlmostClosed := tonDoorOpenerAlmosClosed.Q;
       <LineId Id="143" Count="0" />
       <LineId Id="38" Count="1" />
       <LineId Id="80" Count="0" />
+      <LineId Id="209" Count="0" />
+      <LineId Id="196" Count="5" />
+      <LineId Id="193" Count="0" />
+      <LineId Id="192" Count="0" />
       <LineId Id="40" Count="0" />
       <LineId Id="58" Count="0" />
       <LineId Id="13" Count="0" />

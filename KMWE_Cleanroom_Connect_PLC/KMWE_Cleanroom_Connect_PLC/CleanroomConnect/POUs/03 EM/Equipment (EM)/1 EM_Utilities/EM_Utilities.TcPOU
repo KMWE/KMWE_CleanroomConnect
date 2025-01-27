@@ -7,8 +7,8 @@ VAR
 	s_diSafetyOk : FB_DigInput;
 	s_diPower400VacOk : FB_DigInput;
 	s_diPower230VacOk : FB_DigInput;
-	s_diPower230VacServiceOk : FB_DigInput;
-	s_diPower24VdcOk : FB_DigInput;
+	s_diPower230VacSocketsOk : FB_DigInput;
+	s_diPowerPotentialGroup24VdcOk : FB_DigInput;
 	s_diAirPressureOk : FB_DigInput;
 	s_diCabinetTemperatureOk : FB_DigInput;
 
@@ -24,8 +24,8 @@ VAR
 	s_bStaSafetyOk : BOOL := FALSE;
 	s_bStsPower400VacOk : BOOL := FALSE;
 	s_bStsPower230VacOk : BOOL := FALSE;
-	s_bStsPower230VacServiceOk : BOOL := FALSE;
-	s_bStsPower24VdcOk : BOOL := FALSE;
+	s_bStsPower230VacSocketsOk : BOOL := FALSE;
+	s_bStsPowerPotentialGroup24VdcOk : BOOL := FALSE;
 	s_bStaAirPressureOk : BOOL := FALSE;
 	s_bStaCabinetTemperatureOk : BOOL := FALSE;
 	
@@ -40,16 +40,16 @@ VAR
 	s_fbAlarmHandlerSafetyNotOk : FB_AlarmHandler;
 	s_fbAlarmHandlerPower400VacNotOk : FB_AlarmHandler;
 	s_fbAlarmHandlerPower230VacNotOk : FB_AlarmHandler;
-	s_fbAlarmHandlerPower230VacServiceNotOk : FB_AlarmHandler;
-	s_fbAlarmHandlerPower24VdcNotOk : FB_AlarmHandler;
+	s_fbAlarmHandlerPower230VacSocketsNotOk : FB_AlarmHandler;
+	s_fbAlarmHandlerPowerPotentialGroup24VdcNotOk : FB_AlarmHandler;
 	s_fbAlarmHandlerAirPressureNotOk : FB_AlarmHandler;
 	s_fbAlarmHandlerCabinetTemperatureNotOk : FB_AlarmHandler;
 	
 	s_bErrSafetyNotOk : BOOL;
 	s_bErrPower400VacOk : BOOL;
 	s_bErrPower230VacOk : BOOL;
-	s_bWrnPower230VacServiceOk : BOOL;
-	s_bErrPower24VdcOk : BOOL;
+	s_bWrnPower230VacSocketsOk : BOOL;
+	s_bErrPowerPotentialGroup24VdcOk : BOOL;
 	s_bErrAirPressureNotOk : BOOL;
 	s_bErrCabinetTemperatureNotOk : BOOL;
 	
@@ -57,8 +57,8 @@ VAR
 	s_fbHmiLedSafetyOk : FB_HmiLed;
 	s_fbHmiLedPower400VacOk : FB_HmiLed;
 	s_fbHmiLedPower230VacOk : FB_HmiLed;
-	s_fbHmiLedPower230VacServiceOk : FB_HmiLed;
-	s_fbHmiLedPower24VdcOk : FB_HmiLed;
+	s_fbHmiLedPower230VacSocketsOk : FB_HmiLed;
+	s_fbHmiLedPowerPotentialGroup24VdcOk : FB_HmiLed;
 	
 	s_fbHmiLedAirPressureOk : FB_HmiLed;
 	s_fbHmiLedCabinetTemperatureOk : FB_HmiLed;
@@ -97,8 +97,9 @@ END_IF
 s_bErrSafetyNotOk S= NOT(s_bStaSafetyOk);
 s_bErrPower400VacOk S= NOT(s_bStsPower400VacOk);
 s_bErrPower230VacOk S= NOT(s_bStsPower230VacOk);
-s_bWrnPower230VacServiceOk S= NOT(s_bStsPower230VacServiceOk);
-s_bErrPower24VdcOk S= NOT(s_bStsPower24VdcOk);
+s_bWrnPower230VacSocketsOk S= NOT(s_bStsPower230VacSocketsOk);
+//--s_bErrPower24VdcOk S= NOT(s_bStsPower24VdcOk);
+s_bErrPowerPotentialGroup24VdcOk S= NOT(s_bStsPowerPotentialGroup24VdcOk);
 s_bErrAirPressureNotOk S= NOT(s_bStaAirPressureOk);
 s_bErrCabinetTemperatureNotOk S= NOT(s_bStaCabinetTemperatureOk);
 
@@ -106,8 +107,9 @@ s_bErrCabinetTemperatureNotOk S= NOT(s_bStaCabinetTemperatureOk);
 s_fbAlarmHandlerSafetyNotOk(i_bStaActive := s_bErrSafetyNotOk);
 s_fbAlarmHandlerPower400VacNotOk(i_bStaActive := s_bErrPower400VacOk);
 s_fbAlarmHandlerPower230VacNotOk(i_bStaActive := s_bErrPower230VacOk);
-s_fbAlarmHandlerPower230VacServiceNotOk(i_bStaActive := s_bWrnPower230VacServiceOk);
-s_fbAlarmHandlerPower24VdcNotOk(i_bStaActive := s_bErrPower24VdcOk);
+s_fbAlarmHandlerPower230VacSocketsNotOk(i_bStaActive := s_bWrnPower230VacSocketsOk);
+//--s_fbAlarmHandlerPower24VdcNotOk(i_bStaActive := s_bErrPower24VdcOk);
+s_fbAlarmHandlerPowerPotentialGroup24VdcNotOk(i_bStaActive := s_bErrPowerPotentialGroup24VdcOk);
 s_fbAlarmHandlerAirPressureNotOk(i_bStaActive := s_bErrAirPressureNotOk);
 s_fbAlarmHandlerCabinetTemperatureNotOk(i_bStaActive := s_bErrCabinetTemperatureNotOk);
 	
@@ -115,8 +117,9 @@ s_fbAlarmHandlerCabinetTemperatureNotOk(i_bStaActive := s_bErrCabinetTemperature
 s_bErrSafetyNotOk R= i_bCmdReset AND s_bStaSafetyOk;
 s_bErrPower400VacOk R= i_bCmdReset AND s_bStsPower400VacOk;
 s_bErrPower230VacOk R= i_bCmdReset AND s_bStsPower230VacOk;
-s_bWrnPower230VacServiceOk R= i_bCmdReset AND s_bStsPower230VacServiceOk;
-s_bErrPower24VdcOk R= i_bCmdReset AND s_bStsPower24VdcOk;
+s_bWrnPower230VacSocketsOk R= i_bCmdReset AND s_bStsPower230VacSocketsOk;
+//--s_bErrPower24VdcOk R= i_bCmdReset AND s_bStsPower24VdcOk;
+s_bErrPowerPotentialGroup24VdcOk R= i_bCmdReset AND s_bStsPowerPotentialGroup24VdcOk;
 
 s_bErrAirPressureNotOk R= i_bCmdReset AND s_bStaAirPressureOk;
 
@@ -126,12 +129,13 @@ s_bStaError :=
 	s_fbAlarmHandlerSafetyNotOk.q_bStaActive
 	OR s_fbAlarmHandlerPower400VacNotOk.q_bStaActive
 	OR s_fbAlarmHandlerPower230VacNotOk.q_bStaActive
-	//OR s_fbAlarmHandlerPower230VacServiceNotOk.q_bStaActive
-	OR s_fbAlarmHandlerPower24VdcNotOk.q_bStaActive
+	OR s_fbAlarmHandlerPower230VacSocketsNotOk.q_bStaActive
+	//--OR s_fbAlarmHandlerPower24VdcNotOk.q_bStaActive
+	OR s_fbAlarmHandlerPowerPotentialGroup24VdcNotOk.q_bStaActive
 	OR s_fbAlarmHandlerAirPressureNotOk.q_bStaActive
 	OR s_fbAlarmHandlerCabinetTemperatureNotOk.q_bStaActive;
 	
-s_bStaWarning := s_fbAlarmHandlerPower230VacServiceNotOk.q_bStaActive;	
+s_bStaWarning := FALSE;	
 	
 _m_Alarms := TRUE;
 ]]></ST>
@@ -150,8 +154,9 @@ END_IF
 s_diSafetyOk();
 s_diPower400VacOk();
 s_diPower230VacOk();
-s_diPower230VacServiceOk();
-s_diPower24VdcOk();
+s_diPower230VacSocketsOk();
+//--s_diPower24VdcOk();
+s_diPowerPotentialGroup24VdcOk();
 s_diAirPressureOk();
 s_diCabinetTemperatureOk();
 
@@ -179,8 +184,9 @@ END_IF
 s_fbHmiLedSafetyOk(i_bStaLed := s_bStaSafetyOk);
 s_fbHmiLedPower400VacOk(i_bStaLed := s_bStsPower400VacOk);
 s_fbHmiLedPower230VacOk(i_bStaLed := s_bStsPower230VacOk);
-s_fbHmiLedPower230VacServiceOk(i_bStaLed := s_bStsPower230VacServiceOk);
-s_fbHmiLedPower24VdcOk(i_bStaLed := s_bStsPower24VdcOk);
+s_fbHmiLedPower230VacSocketsOk(i_bStaLed := s_bStsPower230VacSocketsOk);
+//--s_fbHmiLedPower24VdcOk(i_bStaLed := s_bStsPower24VdcOk);
+s_fbHmiLedPowerPotentialGroup24VdcOk(i_bStaLed := s_bStsPowerPotentialGroup24VdcOk);
 s_fbHmiLedAirPressureOk(i_bStaLed := s_bStaAirPressureOk);
 s_fbHmiLedCabinetTemperatureOk(i_bStaLed := s_bStaCabinetTemperatureOk);
 
@@ -204,8 +210,9 @@ END_IF
 s_diSafetyOk.i_stSettings.tmInputDelay := T#1S;
 s_diPower400VacOk.i_stSettings.tmInputDelay := T#1S;
 s_diPower230VacOk.i_stSettings.tmInputDelay := T#1S;
-s_diPower230VacServiceOk.i_stSettings.tmInputDelay := T#1S;
-s_diPower24VdcOk.i_stSettings.tmInputDelay := T#1S;
+s_diPower230VacSocketsOk.i_stSettings.tmInputDelay := T#1S;
+//--s_diPower24VdcOk.i_stSettings.tmInputDelay := T#1S;
+s_diPowerPotentialGroup24VdcOk.i_stSettings.tmInputDelay := T#1S;
 s_diAirPressureOk.i_stSettings.tmInputDelay := T#1S;
 s_diCabinetTemperatureOk.i_stSettings.tmInputDelay := T#600S;
 
@@ -225,22 +232,25 @@ s_fbAlarmHandlerSafetyNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Safety not OK'
 s_fbAlarmHandlerSafetyNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
 
 s_fbAlarmHandlerPower400VacNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Power supply 400Vac not OK');
-s_fbAlarmHandlerSafetyNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
+s_fbAlarmHandlerPower400VacNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
 
 s_fbAlarmHandlerPower230VacNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Power supply 230Vac not OK');
-s_fbAlarmHandlerSafetyNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
+s_fbAlarmHandlerPower230VacNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
 
-s_fbAlarmHandlerPower230VacServiceNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Power supply 230Vac service not OK');
-s_fbAlarmHandlerSafetyNotOk.i_eAlarmLevel := E_AlarmLevel.Warning;
+s_fbAlarmHandlerPower230VacSocketsNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Power supply 230Vac sockets not OK');
+s_fbAlarmHandlerPower230VacSocketsNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
 
-s_fbAlarmHandlerPower24VdcNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Power supply 24Vdc not OK');
-s_fbAlarmHandlerSafetyNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
+//--s_fbAlarmHandlerPower24VdcNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Power supply 24Vdc not OK');
+//--s_fbAlarmHandlerPower24VdcNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
+
+s_fbAlarmHandlerPowerPotentialGroup24VdcNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Power potential group 24Vdc not OK');
+s_fbAlarmHandlerPowerPotentialGroup24VdcNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
 
 s_fbAlarmHandlerAirPressureNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Air pressure not OK');
-s_fbAlarmHandlerSafetyNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
+s_fbAlarmHandlerAirPressureNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
 
 s_fbAlarmHandlerCabinetTemperatureNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Cabinet temperature not OK');
-s_fbAlarmHandlerSafetyNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
+s_fbAlarmHandlerCabinetTemperatureNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
 
 //Hmi 
 s_fbHmiLedSafetyOk.p_bStaVisible := FALSE;
@@ -252,11 +262,14 @@ s_fbHmiLedPower400VacOk.p_sToHmiDescriptionLed := 'Power 400Vac Ok';
 s_fbHmiLedPower230VacOk.p_bStaVisible := FALSE;
 s_fbHmiLedPower230VacOk.p_sToHmiDescriptionLed := 'Power 230Vac Ok';
 
-s_fbHmiLedPower230VacServiceOk.p_bStaVisible := FALSE;
-s_fbHmiLedPower230VacServiceOk.p_sToHmiDescriptionLed := 'Power 230Vac Service Ok';
+s_fbHmiLedPower230VacSocketsOk.p_bStaVisible := FALSE;
+s_fbHmiLedPower230VacSocketsOk.p_sToHmiDescriptionLed := 'Power 230Vac Service Ok';
 
-s_fbHmiLedPower24VdcOk.p_bStaVisible := FALSE;
-s_fbHmiLedPower24VdcOk.p_sToHmiDescriptionLed := 'Power 24Vdc Ok';
+//--s_fbHmiLedPower24VdcOk.p_bStaVisible := FALSE;
+//--s_fbHmiLedPower24VdcOk.p_sToHmiDescriptionLed := 'Power 24Vdc Ok';
+
+s_fbHmiLedPowerPotentialGroup24VdcOk.p_bStaVisible := FALSE;
+s_fbHmiLedPowerPotentialGroup24VdcOk.p_sToHmiDescriptionLed := 'Power Potentialgroup Ok';
 
 s_fbHmiLedAirPressureOk.p_bStaVisible := FALSE;
 s_fbHmiLedAirPressureOk.p_sToHmiDescriptionLed := 'Air pressure Ok';
@@ -289,8 +302,9 @@ END_IF
 s_bStaSafetyOk := s_diSafetyOk.p_bStaInputDelayed AND s_diSafetyOk.p_bStaInput; //on-delay only
 s_bStsPower400VacOk := s_diPower400VacOk.p_bStaInputDelayed AND s_diPower400VacOk.p_bStaInput; //on-delay only
 s_bStsPower230VacOk := s_diPower230VacOk.p_bStaInputDelayed AND s_diPower230VacOk.p_bStaInput; //on-delay only
-s_bStsPower230VacServiceOk := s_diPower230VacServiceOk.p_bStaInputDelayed AND s_diPower230VacServiceOk.p_bStaInput; //on-delay only
-s_bStsPower24VdcOk := s_diPower24VdcOk.p_bStaInputDelayed AND s_diPower24VdcOk.p_bStaInput; //on-delay only
+s_bStsPower230VacSocketsOk := s_diPower230VacSocketsOk.p_bStaInputDelayed AND s_diPower230VacSocketsOk.p_bStaInput; //on-delay only
+//--s_bStsPower24VdcOk := s_diPower24VdcOk.p_bStaInputDelayed AND s_diPower24VdcOk.p_bStaInput; //on-delay only
+s_bStsPowerPotentialGroup24VdcOk := s_diPowerPotentialGroup24VdcOk.p_bStaInputDelayed AND s_diPowerPotentialGroup24VdcOk.p_bStaInput; //on-delay only
 s_bStaAirPressureOk := s_diAirPressureOk.p_bStaInputDelayed AND s_diAirPressureOk.p_bStaInput; //on-delay only
 s_bStaCabinetTemperatureOk := s_diCabinetTemperatureOk.p_bStaInputDelayed OR s_diCabinetTemperatureOk.p_bStaInput; //off-delay only
 
@@ -455,8 +469,8 @@ p_bStaSafetyOk := s_bStaSafetyOk;
 p_bStsPowerOk := 
 	s_bStsPower400VacOk
 	AND s_bStsPower230VacOk
-	//AND s_bStsPower230VacServiceOk
-	AND s_bStsPower24VdcOk;
+	AND s_bStsPower230VacSocketsOk
+	AND s_bStsPowerPotentialGroup24VdcOk;
 ]]></ST>
         </Implementation>
       </Get>
@@ -474,6 +488,7 @@ p_bStsPowerOk :=
       <LineId Id="84" Count="1" />
       <LineId Id="93" Count="1" />
       <LineId Id="97" Count="0" />
+      <LineId Id="129" Count="0" />
       <LineId Id="83" Count="0" />
       <LineId Id="116" Count="0" />
       <LineId Id="34" Count="0" />
@@ -482,6 +497,7 @@ p_bStsPowerOk :=
       <LineId Id="100" Count="0" />
       <LineId Id="105" Count="0" />
       <LineId Id="110" Count="0" />
+      <LineId Id="131" Count="0" />
       <LineId Id="72" Count="0" />
       <LineId Id="124" Count="0" />
       <LineId Id="122" Count="0" />
@@ -489,6 +505,7 @@ p_bStsPowerOk :=
       <LineId Id="58" Count="1" />
       <LineId Id="90" Count="1" />
       <LineId Id="88" Count="0" />
+      <LineId Id="130" Count="0" />
       <LineId Id="87" Count="0" />
       <LineId Id="77" Count="0" />
       <LineId Id="118" Count="0" />
@@ -497,6 +514,7 @@ p_bStsPowerOk :=
       <LineId Id="44" Count="0" />
       <LineId Id="75" Count="0" />
       <LineId Id="113" Count="2" />
+      <LineId Id="132" Count="0" />
       <LineId Id="76" Count="0" />
       <LineId Id="127" Count="0" />
       <LineId Id="32" Count="0" />
@@ -509,6 +527,7 @@ p_bStsPowerOk :=
       <LineId Id="234" Count="6" />
       <LineId Id="264" Count="1" />
       <LineId Id="262" Count="0" />
+      <LineId Id="268" Count="0" />
       <LineId Id="241" Count="0" />
       <LineId Id="266" Count="0" />
       <LineId Id="257" Count="2" />
@@ -528,6 +547,7 @@ p_bStsPowerOk :=
       <LineId Id="256" Count="1" />
       <LineId Id="270" Count="1" />
       <LineId Id="268" Count="0" />
+      <LineId Id="275" Count="0" />
       <LineId Id="258" Count="0" />
       <LineId Id="273" Count="0" />
       <LineId Id="272" Count="0" />
@@ -542,6 +562,7 @@ p_bStsPowerOk :=
       <LineId Id="10" Count="0" />
       <LineId Id="326" Count="1" />
       <LineId Id="373" Count="2" />
+      <LineId Id="445" Count="0" />
       <LineId Id="329" Count="0" />
       <LineId Id="385" Count="0" />
       <LineId Id="364" Count="2" />
@@ -566,6 +587,8 @@ p_bStsPowerOk :=
       <LineId Id="441" Count="0" />
       <LineId Id="419" Count="0" />
       <LineId Id="434" Count="0" />
+      <LineId Id="450" Count="1" />
+      <LineId Id="449" Count="0" />
       <LineId Id="442" Count="0" />
       <LineId Id="424" Count="0" />
       <LineId Id="435" Count="0" />
@@ -584,6 +607,9 @@ p_bStsPowerOk :=
       <LineId Id="379" Count="0" />
       <LineId Id="383" Count="1" />
       <LineId Id="382" Count="0" />
+      <LineId Id="446" Count="0" />
+      <LineId Id="448" Count="0" />
+      <LineId Id="447" Count="0" />
       <LineId Id="347" Count="0" />
       <LineId Id="356" Count="0" />
       <LineId Id="348" Count="0" />
@@ -608,6 +634,7 @@ p_bStsPowerOk :=
       <LineId Id="79" Count="0" />
       <LineId Id="86" Count="1" />
       <LineId Id="85" Count="0" />
+      <LineId Id="90" Count="0" />
       <LineId Id="80" Count="0" />
       <LineId Id="88" Count="0" />
       <LineId Id="83" Count="0" />
@@ -703,7 +730,7 @@ p_bStsPowerOk :=
       <LineId Id="5" Count="1" />
       <LineId Id="8" Count="1" />
       <LineId Id="11" Count="0" />
-      <LineId Id="10" Count="0" />
+      <LineId Id="13" Count="0" />
       <LineId Id="2" Count="0" />
     </LineIds>
   </POU>

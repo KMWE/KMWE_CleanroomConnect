@@ -5,7 +5,7 @@
 VAR
 	//EM Pallet Transport
 	sim_MOVITRAC_B : SIM_MOVITRAC_B;
-	sim_MOVITRAC_B2 : SIM_MOVITRAC_B2;
+	//--sim_MOVITRAC_B2 : SIM_MOVITRAC_B2;
 	simCentering : SIM_ValveWithDoubleFB;	
 
 	//EM Docking Interface
@@ -25,10 +25,16 @@ VAR
 	
 	bInitDone : BOOL;
 	simSafetyOK AT %Q* : BOOL;
-	simPowerOK AT %Q* : BOOL;
+	simPower400VacOK AT %Q* : BOOL;
+	simPower230VacOK AT %Q* : BOOL;
+	simPower230VacSocketsOK AT %Q* : BOOL;
+	simPowerPotentialGroupOK AT %Q* : BOOL;
 	simAirPressureOK AT %Q* : BOOL;
+	simCabinetTemperatureOK AT %Q* : BOOL;
 	
-	{attribute 'TcLinkTo' := 'TIPC^CleanroomConnect^CleanroomConnect Instance^PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdReset'}
+	
+////{attribute 'TcLinkTo' := 'TIID^Device 1 (EtherCAT)^Term 1 (EK1100)^Term 2 (EL1004)^Channel 2^Input'}
+(*	{attribute 'TcLinkTo' := 'TIPC^CleanroomConnect^CleanroomConnect Instance^PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdReset'}
 	I_bCmdReset AT %I* : BOOL;
 	{attribute 'TcLinkTo' := 'TIPC^CleanroomConnect^CleanroomConnect Instance^PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdEnable'}
 	I_bCmdEnable AT %I* : BOOL;
@@ -40,15 +46,18 @@ VAR
 	Q_bStaReadyForOperation AT %Q* : BOOL;
 	{attribute 'TcLinkTo' := 'TIPC^CleanroomConnect^CleanroomConnect Instance^PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.I_bStaMotorIsRunning'}
 	Q_bStaMotorIsRunning AT %Q* : BOOL;
-	
+*)	
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[
-IF NOT(bInitDone) THEN
+      <ST><![CDATA[IF NOT(bInitDone) THEN
 	simSafetyOK := TRUE;
-	simPowerOK := TRUE;
+	simPower400VacOK := TRUE;
+	simPower230VacOK := TRUE;
+	simPower230VacSocketsOK := TRUE;
+	simPowerPotentialGroupOK := TRUE;
 	simAirPressureOK := TRUE;
+	simCabinetTemperatureOK := TRUE;
 	
 	simDoorShutter.mForceOff();
 	simDoorOpener.mForceOff();
@@ -58,7 +67,7 @@ END_IF
 
 //EM Pallet Conveyor
 sim_MOVITRAC_B();
-
+(*
 sim_MOVITRAC_B2(
 	i_ref_I_bCmdReset := I_bCmdReset, 
 	i_ref_I_bCmdEnable := I_bCmdEnable, 
@@ -66,7 +75,7 @@ sim_MOVITRAC_B2(
 	i_ref_I_bCmdStartCCW := I_bCmdStartCCW, 
 	i_ref_Q_bStaReadyForOperation := Q_bStaReadyForOperation, 
 	i_ref_Q_bStaMotorIsRunning := Q_bStaMotorIsRunning);
-
+*)
 simCentering();
 
 //EM Docking Interface
@@ -86,32 +95,12 @@ simDoorOpenerAlmostClosed := tonDoorOpenerAlmosClosed.Q;
 //simLiftHomed := FALSE;]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
-      <LineId Id="140" Count="1" />
-      <LineId Id="145" Count="0" />
-      <LineId Id="147" Count="1" />
-      <LineId Id="155" Count="0" />
-      <LineId Id="157" Count="1" />
-      <LineId Id="156" Count="0" />
-      <LineId Id="144" Count="0" />
-      <LineId Id="143" Count="0" />
-      <LineId Id="38" Count="1" />
-      <LineId Id="80" Count="0" />
-      <LineId Id="209" Count="0" />
-      <LineId Id="196" Count="5" />
-      <LineId Id="193" Count="0" />
-      <LineId Id="192" Count="0" />
-      <LineId Id="40" Count="0" />
-      <LineId Id="58" Count="0" />
-      <LineId Id="13" Count="0" />
-      <LineId Id="59" Count="4" />
-      <LineId Id="27" Count="0" />
-      <LineId Id="86" Count="0" />
-      <LineId Id="82" Count="0" />
-      <LineId Id="64" Count="0" />
-      <LineId Id="112" Count="0" />
-      <LineId Id="109" Count="0" />
-      <LineId Id="108" Count="0" />
-      <LineId Id="111" Count="0" />
+      <LineId Id="320" Count="2" />
+      <LineId Id="365" Count="1" />
+      <LineId Id="361" Count="0" />
+      <LineId Id="323" Count="0" />
+      <LineId Id="368" Count="0" />
+      <LineId Id="324" Count="33" />
       <LineId Id="110" Count="0" />
     </LineIds>
   </POU>

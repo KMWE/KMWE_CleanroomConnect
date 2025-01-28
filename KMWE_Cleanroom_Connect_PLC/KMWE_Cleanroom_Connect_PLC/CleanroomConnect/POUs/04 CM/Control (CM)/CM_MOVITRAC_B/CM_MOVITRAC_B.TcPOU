@@ -55,6 +55,8 @@ VAR
 	s_bStaDriveError: BOOL;
 	s_bStaBrakeReleased : BOOL;
 	s_bStaMotorStopped : BOOL;
+	s_bStaMotorRunningFwd : BOOL;
+	s_bStaMotorRunningBwd : BOOL;
 	s_bStaWarning : BOOL;
 	
 	s_sInterlockedReasonForward : STRING; //External interlocked reason for clarifying reason
@@ -65,8 +67,8 @@ VAR
 	
 	// Timers
 	s_tofResetPulse : TOF;
-	s_tonMotorStoppedDelay : TON;
-	s_tonBrakeReleasedDelay : TON;
+	//--s_tonMotorStoppedDelay : TON;
+	//--s_tonBrakeReleasedDelay : TON;
 	
 	// Alarms
 	s_fbAlarmHandlerDriveError : FB_AlarmHandler;
@@ -91,6 +93,8 @@ VAR
 	
 	s_fbHmiLedBrakeReleased		: FB_HmiLed;
 	s_fbHmiLedMotorStopped		: FB_HmiLed;
+	s_fbHmiLedMotorRunningFwd	: FB_HmiLed;
+	s_fbHmiLedMotorRunningBwd	: FB_HmiLed;
 	s_fbHmiLedDriveError		: FB_HmiLed;
 	
 	//Sequence
@@ -124,7 +128,10 @@ IF NOT SUPER^._m_Alarms() THEN
 END_IF
 
 // Set error bits
-s_errDriveError := i_bReqEnable AND s_bStaDriveError;// AND NOT(i_bCmdReset);
+//--s_errDriveError := i_bReqEnable AND s_bStaDriveError;// AND NOT(i_bCmdReset);
+s_errDriveError R= i_bCmdReset;
+s_errDriveError S= i_bReqEnable AND s_bStaDriveError;
+
 
 // Interlock warnings
 IF s_bIclkForward AND NOT(s_bStaMotorStopped) THEN	
@@ -205,7 +212,7 @@ CASE eSeqMOVITRAC_B_WithBrake OF
 		s_bCmdForward := FALSE;
 		s_bCmdBackward := FALSE;	
 		s_bCmdReleaseBrake := FALSE;
-		s_bCmdReset := FALSE;
+		//--s_bCmdReset := FALSE;
 		s_bCmdEnable := FALSE;
 		s_fTargetSpeed := 0;
 		
@@ -307,8 +314,8 @@ CASE eSeqMOVITRAC_B_WithBrake OF
 		END_IF
 		
 	E_SeqMOVITRAC_B_WithBrake.ERROR:
-		s_bCmdReset := i_bCmdReset OR s_bReqReset;
-		s_bReqReset := FALSE;
+		//--s_bCmdReset := i_bCmdReset OR s_bReqReset;
+		//--s_bReqReset := FALSE;
 		
 		IF (NOT(s_bStaError) AND i_bReqEnable) THEN
 			eSeqMOVITRAC_B_WithBrake := E_SeqMOVITRAC_B_WithBrake.INIT;
@@ -340,6 +347,8 @@ s_fbHmiBtnManualReset();
 //Led
 s_fbHmiLedBrakeReleased(i_bStaLed := s_bStaBrakeReleased);
 s_fbHmiLedMotorStopped(i_bStaLed := s_bStaMotorStopped);
+s_fbHmiLedMotorRunningFwd(i_bStaLed := s_bStaMotorRunningFwd);
+s_fbHmiLedMotorRunningBwd(i_bStaLed := s_bStaMotorRunningBwd);
 s_fbHmiLedDriveError(i_bStaLed := s_bStaDriveError);
 (*
 {warning '#TODO: Add manual control from hmi'}
@@ -538,6 +547,12 @@ s_fbAlarmHandlerMotorBackwardInterlocked.i_eAlarmLevel := E_AlarmLevel.Warning;
 	s_fbHmiLedMotorStopped.p_bStaVisible := FALSE;
 	s_fbHmiLedMotorStopped.p_sToHmiDescriptionLed := 'Motor Stopped';
 	
+	s_fbHmiLedMotorRunningFwd.p_bStaVisible := FALSE;
+	s_fbHmiLedMotorRunningFwd.p_sToHmiDescriptionLed := 'Motor Running Fwd';
+	
+	s_fbHmiLedMotorRunningBwd.p_bStaVisible := FALSE;
+	s_fbHmiLedMotorRunningBwd.p_sToHmiDescriptionLed := 'Motor Running Bwd';
+	
 	s_fbHmiLedDriveError.p_bStaVisible := FALSE;
 	s_fbHmiLedDriveError.p_sToHmiDescriptionLed := 'Drive Error';
 	
@@ -557,6 +572,8 @@ END_IF
 s_bStaReadyForOperation := I_bStaReadyForOperation;
 s_bStaDriveError := NOT(I_bStaReadyForOperation);
 s_bStaMotorStopped := NOT(I_bStaMotorIsRunning);
+s_bStaMotorRunningFwd := I_bStaMotorIsRunning AND Q_bCmdStartCW;
+s_bStaMotorRunningBwd := I_bStaMotorIsRunning  AND Q_bCmdStartCCW;
 
 s_bIclkForward := i_bIclkForward;
 s_bIclkBackward := i_bIclkBackward;
@@ -588,6 +605,12 @@ IF __ISVALIDREF(i_ref_eCtrlState) THEN
 		s_fForceValueTargetSpeed := 0.0;
 	END_IF
 END_IF 
+
+//s_bCmdReset 
+
+s_tofResetPulse(PT := T#1S, IN := i_bCmdReset OR s_bReqReset);
+s_bCmdReset := s_tofResetPulse.Q;
+s_bReqReset := FALSE;
 
 s_fbForceCmdEnable(
 	i_ref_bCmdInput := s_bCmdEnable,
@@ -857,6 +880,9 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="103" Count="0" />
       <LineId Id="79" Count="0" />
       <LineId Id="86" Count="0" />
+      <LineId Id="193" Count="0" />
+      <LineId Id="192" Count="0" />
+      <LineId Id="194" Count="0" />
       <LineId Id="169" Count="0" />
       <LineId Id="155" Count="0" />
       <LineId Id="170" Count="0" />
@@ -995,7 +1021,9 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="132" Count="3" />
       <LineId Id="128" Count="0" />
       <LineId Id="89" Count="0" />
-      <LineId Id="137" Count="4" />
+      <LineId Id="137" Count="3" />
+      <LineId Id="307" Count="1" />
+      <LineId Id="141" Count="0" />
       <LineId Id="136" Count="0" />
       <LineId Id="146" Count="2" />
       <LineId Id="90" Count="0" />
@@ -1065,7 +1093,9 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="11" Count="0" />
       <LineId Id="62" Count="0" />
       <LineId Id="66" Count="0" />
-      <LineId Id="68" Count="6" />
+      <LineId Id="68" Count="3" />
+      <LineId Id="112" Count="5" />
+      <LineId Id="72" Count="2" />
       <LineId Id="67" Count="0" />
       <LineId Id="5" Count="0" />
       <LineId Id="23" Count="0" />
@@ -1077,6 +1107,8 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="21" Count="0" />
       <LineId Id="20" Count="0" />
       <LineId Id="23" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="35" Count="0" />
       <LineId Id="25" Count="2" />
       <LineId Id="30" Count="1" />
       <LineId Id="29" Count="0" />
@@ -1096,6 +1128,10 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="202" Count="0" />
       <LineId Id="158" Count="0" />
       <LineId Id="210" Count="0" />
+      <LineId Id="212" Count="1" />
+      <LineId Id="216" Count="0" />
+      <LineId Id="215" Count="0" />
+      <LineId Id="217" Count="1" />
       <LineId Id="159" Count="10" />
       <LineId Id="150" Count="0" />
       <LineId Id="173" Count="0" />

@@ -100,16 +100,17 @@ IF NOT SUPER^._m_Alarms() THEN
 	RETURN;
 END_IF
 
-s_bSimFeedBackIsOff := i_stSettings.tValveOffTimeout = T#0S;
-s_bSimFeedBackIsOn := i_stSettings.tValveOnTimeout = T#0S;
+//Sim feedback if time is set to zero
+s_bSimFeedBackIsOff := (i_stSettings.tValveOffTimeout = T#0S);
+s_bSimFeedBackIsOn := (i_stSettings.tValveOnTimeout = T#0S);
 
 // Timeout (timers)
 s_tonFeedBackOffTimeout(
-	IN := i_bReqEnable AND s_bReqOff AND NOT(s_bStaValveIsOff) AND NOT(s_bSimFeedBackIsOff),
+	IN := i_bReqEnable AND s_bReqOff AND NOT(s_bStaValveIsOff) AND NOT(s_bSimFeedBackIsOff) AND (i_eCtrlMode <> E_CtrlMode.IO),
 	PT := i_stSettings.tValveOffTimeout );
 	
 s_tonFeedbackOnTimeout(
-	IN := i_bReqEnable AND s_bReqOn AND NOT(s_bStaValveIsOn) AND NOT(s_bSimFeedBackIsOn),
+	IN := i_bReqEnable AND s_bReqOn AND NOT(s_bStaValveIsOn) AND NOT(s_bSimFeedBackIsOn) AND (i_eCtrlMode <> E_CtrlMode.IO),
 	PT := i_stSettings.tValveOnTimeout );
 
 // Set error bits
@@ -621,6 +622,7 @@ s_sInterlockedReasonOn := p_sInterlockedReasonOn;
     <LineIds Name="CM_ValveWithFB._m_Alarms">
       <LineId Id="28" Count="0" />
       <LineId Id="19" Count="2" />
+      <LineId Id="209" Count="0" />
       <LineId Id="101" Count="0" />
       <LineId Id="100" Count="0" />
       <LineId Id="75" Count="0" />

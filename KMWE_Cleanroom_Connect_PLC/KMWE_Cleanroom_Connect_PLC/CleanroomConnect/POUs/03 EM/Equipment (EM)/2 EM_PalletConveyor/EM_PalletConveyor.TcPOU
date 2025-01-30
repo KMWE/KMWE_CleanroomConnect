@@ -150,6 +150,7 @@ VAR
 	
 	{warning '#TODO' Het zou beter zijn om dit onder te brengen in de onderstaande control modules}
 	s_bHmiForceOutputEnabled : BOOL;
+	s_bHmiForceOutputStartEnabled : BOOL;
 	
 END_VAR
 ]]></Declaration>
@@ -311,8 +312,8 @@ s_cmPalletConveyor(
 	i_eCtrlMode := i_eCtrlMode,
 	i_ref_eCtrlState := i_eCtrlState,
 	i_bCmdReset := i_bCmdReset,
-	i_bIclkForward := s_bIlckConveyorForward,
-	i_bIclkBackward := s_bIlckConveyorBackward);
+	i_bIclkForward := s_bIlckConveyorForward AND (i_eCtrlMode <> E_CtrlMode.IO),
+	i_bIclkBackward := s_bIlckConveyorBackward AND (i_eCtrlMode <> E_CtrlMode.IO));
 
 s_bStaBrakeReleased := s_cmPalletConveyor.p_bStaBrakeReleased;
 s_bStaDriveError := s_cmPalletConveyor.p_bStaError; 
@@ -322,7 +323,7 @@ s_cmCenteringUnit(
 	i_eCtrlMode := i_eCtrlMode,
 	i_ref_eCtrlState := i_eCtrlState,
 	i_bCmdReset := i_bCmdReset,
-	i_bIclkOn := s_bIlckCenteringToCenter,
+	i_bIclkOn := s_bIlckCenteringToCenter AND (i_eCtrlMode <> E_CtrlMode.IO),
 	i_bIclkOff := FALSE);
 	
 s_bStaCenteringCenter := s_cmCenteringUnit.p_bStaIsOn; 
@@ -1092,8 +1093,10 @@ END_IF
 //IO-mode /////////////////////////////////////////////////////////////////////////////////////////
 IF (i_eCtrlMode = E_CtrlMode.IO) AND (i_eCtrlState = E_CtrlState.RUNNING) THEN
 	s_bHmiForceOutputEnabled := TRUE;
+	s_bHmiForceOutputStartEnabled := s_cmPalletConveyor.p_bStaBrakeReleasedQ;
 ELSE
-	s_bHmiForceOutputEnabled := FALSE;	
+	s_bHmiForceOutputEnabled := FALSE;
+	s_bHmiForceOutputStartEnabled := FALSE;	
 END_IF
 
 m_Main := TRUE;
@@ -1665,8 +1668,10 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="3100" Count="2" />
       <LineId Id="3108" Count="0" />
       <LineId Id="2937" Count="1" />
-      <LineId Id="2940" Count="1" />
+      <LineId Id="2940" Count="0" />
+      <LineId Id="3142" Count="1" />
       <LineId Id="2944" Count="0" />
+      <LineId Id="3141" Count="0" />
       <LineId Id="2943" Count="0" />
       <LineId Id="2888" Count="1" />
       <LineId Id="179" Count="0" />

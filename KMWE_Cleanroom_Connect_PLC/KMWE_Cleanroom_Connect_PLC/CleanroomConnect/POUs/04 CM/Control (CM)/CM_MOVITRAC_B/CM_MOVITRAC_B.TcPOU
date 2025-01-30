@@ -793,6 +793,18 @@ p_bStaBrakeReleased := s_bStaBrakeReleased;
         </Implementation>
       </Get>
     </Property>
+    <Property Name="p_bStaBrakeReleasedQ" Id="{8687dc58-c312-40e6-828c-105d3b2ee9ac}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bStaBrakeReleasedQ : BOOL]]></Declaration>
+      <Get Name="Get" Id="{768887b9-8f80-456b-9674-b6b3a4eac91e}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaBrakeReleasedQ := Q_bCmdReleaseBrake;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
     <Property Name="p_bStaMotorRunning" Id="{63a7d5b0-0187-4f50-88ae-20969844be04}" FolderPath="Properties\">
       <Declaration><![CDATA[{attribute 'monitoring':='call'}
 PROPERTY PUBLIC p_bStaMotorRunning : BOOL]]></Declaration>
@@ -812,7 +824,9 @@ PROPERTY PUBLIC p_bStaMotorStopped : BOOL]]></Declaration>
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaMotorStopped := s_bStaMotorStopped;
+//--p_bStaMotorStopped := s_bStaMotorStopped;
+
+p_bStaMotorStopped := (eSeqMOVITRAC_B_WithBrake = E_SeqMOVITRAC_B_WithBrake.STOPPED);
 ]]></ST>
         </Implementation>
       </Get>
@@ -1230,6 +1244,11 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="6" Count="0" />
       <LineId Id="2" Count="0" />
     </LineIds>
+    <LineIds Name="CM_MOVITRAC_B.p_bStaBrakeReleasedQ.Get">
+      <LineId Id="4" Count="0" />
+      <LineId Id="6" Count="0" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
     <LineIds Name="CM_MOVITRAC_B.p_bStaMotorRunning.Get">
       <LineId Id="5" Count="0" />
       <LineId Id="2" Count="0" />
@@ -1238,6 +1257,7 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
     <LineIds Name="CM_MOVITRAC_B.p_bStaMotorStopped.Get">
       <LineId Id="5" Count="0" />
       <LineId Id="7" Count="0" />
+      <LineId Id="13" Count="1" />
       <LineId Id="6" Count="0" />
     </LineIds>
     <LineIds Name="CM_MOVITRAC_B.p_bStaWarning.Get">

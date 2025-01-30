@@ -56,6 +56,7 @@ VAR
 
 //	fbTcAlarm : Tc3_EventLogger.FB_TcAlarm;
 
+	arr_bTestMessage : ARRAY[0..7] OF BOOL;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -124,7 +125,41 @@ arr_fValue[2] := fbHmiParamHandler_2.p_fValue;
 arr_fValue[3] := fbHmiParamHandler_3.p_fValue;
 	
 *)
-]]></ST>
+
+//ADS message test
+(*
+IF arr_bTestMessage[0] THEN 
+	ADSLOGSTR(
+		msgCtrlMask := ADSLOG_MSGTYPE_ERROR,
+		msgFmtStr := 'Error: %s',
+		strArg := 'Test message text');
+	arr_bTestMessage[0] := FALSE;
+END_IF	
+
+IF arr_bTestMessage[1] THEN 
+	ADSLOGSTR(
+		msgCtrlMask := ADSLOG_MSGTYPE_WARN,
+		msgFmtStr := 'Warning: %s',
+		strArg := 'Test message text');
+	arr_bTestMessage[1] := FALSE;
+END_IF
+
+IF arr_bTestMessage[2] THEN 
+	ADSLOGSTR(
+		msgCtrlMask := ADSLOG_MSGTYPE_MSGBOX,
+		msgFmtStr := 'MsgBox: %s',
+		strArg := 'Test message text');
+	arr_bTestMessage[2] := FALSE;
+END_IF
+
+IF arr_bTestMessage[3] THEN 
+	ADSLOGSTR(
+		msgCtrlMask := ADSLOG_MSGTYPE_HINT,
+		msgFmtStr := 'MsgBox: %s',
+		strArg := 'Test info text');
+	arr_bTestMessage[3] := FALSE;
+END_IF	
+*)]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
       <LineId Id="939" Count="0" />
@@ -170,6 +205,21 @@ arr_fValue[3] := fbHmiParamHandler_3.p_fValue;
       <LineId Id="716" Count="1" />
       <LineId Id="694" Count="0" />
       <LineId Id="719" Count="0" />
+      <LineId Id="1033" Count="0" />
+      <LineId Id="1032" Count="0" />
+      <LineId Id="1004" Count="0" />
+      <LineId Id="996" Count="2" />
+      <LineId Id="1001" Count="1" />
+      <LineId Id="1021" Count="0" />
+      <LineId Id="1006" Count="0" />
+      <LineId Id="1008" Count="5" />
+      <LineId Id="1022" Count="0" />
+      <LineId Id="1007" Count="0" />
+      <LineId Id="1015" Count="5" />
+      <LineId Id="1023" Count="0" />
+      <LineId Id="1014" Count="0" />
+      <LineId Id="1025" Count="6" />
+      <LineId Id="1024" Count="0" />
       <LineId Id="718" Count="0" />
     </LineIds>
   </POU>

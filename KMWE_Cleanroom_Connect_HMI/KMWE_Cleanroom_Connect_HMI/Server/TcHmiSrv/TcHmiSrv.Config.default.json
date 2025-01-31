@@ -8641,6 +8641,33 @@
             },
             "USEMAPPING": true
         },
+        "PLC1.GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.s_fbHmiBtnManualReset.p_bStaEnabled": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_cmPalletConveyor::s_fbHmiBtnManualReset::p_bStaEnabled",
+            "SCHEMA": {
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-BOOL"
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.s_fbHmiBtnManualReset.s_bFromHmiPressed": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_cmPalletConveyor::s_fbHmiBtnManualReset::s_bFromHmiPressed",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/BOOL"
+                    },
+                    {
+                        "propertyOrder": 1
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
         "PLC1.GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.s_fbHmiBtnManualStop.p_bStaEnabled": {
             "ACCESS": 3,
             "DOMAIN": "ADS",
@@ -9900,6 +9927,26 @@
             },
             "USEMAPPING": true
         },
+        "PLC1.MAIN.arr_bTestMessage.0": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::MAIN::arr_bTestMessage[0]",
+            "SCHEMA": {
+                "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.MAIN.arr_bTestMessage.1": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::MAIN::arr_bTestMessage[1]",
+            "SCHEMA": {
+                "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            "USEMAPPING": true
+        },
         "PLC1.MAIN.fTestValue": {
             "ACCESS": 3,
             "DOMAIN": "ADS",
@@ -10255,6 +10302,115 @@
                 }
             },
             "SUBSYMBOL_MAPPING": "",
+            "USEMAPPING": true
+        },
+        "TcHmiAlarm.ClearLoggedEvents": {
+            "ACCESS": 3,
+            "DOMAIN": "TcHmiAlarm",
+            "DYNAMIC": false,
+            "HIDDEN": true,
+            "MAPPING": "ClearLoggedEvents",
+            "OPTIONS": {},
+            "SCHEMA": {
+                "function": true
+            },
+            "USEMAPPING": true
+        },
+        "TcHmiAlarm.Config": {
+            "ACCESS": 0,
+            "DOMAIN": "TcHmiAlarm",
+            "DYNAMIC": false,
+            "HIDDEN": true,
+            "MAPPING": "Config",
+            "OPTIONS": {},
+            "SCHEMA": {},
+            "USEMAPPING": true
+        },
+        "TcHmiAlarm.Diagnostics": {
+            "ACCESS": 1,
+            "DOMAIN": "TcHmiAlarm",
+            "DYNAMIC": false,
+            "HIDDEN": true,
+            "MAPPING": "Diagnostics",
+            "OPTIONS": {},
+            "SCHEMA": {
+                "function": true,
+                "properties": {
+                    "activeAlarmsCount": {
+                        "propertyOrder": 7,
+                        "readOnly": true,
+                        "type": "integer"
+                    },
+                    "cachedAlarmsCount": {
+                        "propertyOrder": 5,
+                        "readOnly": true,
+                        "type": "integer"
+                    },
+                    "cachedInvalidAlarmsCount": {
+                        "propertyOrder": 6,
+                        "readOnly": true,
+                        "type": "integer"
+                    },
+                    "cachedMessagesCount": {
+                        "propertyOrder": 4,
+                        "readOnly": true,
+                        "type": "integer"
+                    },
+                    "database": {
+                        "properties": {
+                            "databaseSize": {
+                                "allOf": [
+                                    {
+                                        "$ref": "tchmi:general#/definitions/INT64"
+                                    },
+                                    {
+                                        "displayClass": "byte",
+                                        "propertyOrder": 1,
+                                        "readOnly": true
+                                    }
+                                ]
+                            },
+                            "numEntries": {
+                                "propertyOrder": 2,
+                                "readOnly": true,
+                                "type": "integer"
+                            }
+                        },
+                        "required": [
+                            "databaseSize",
+                            "numEntries"
+                        ],
+                        "type": "object"
+                    },
+                    "importedEventsCount": {
+                        "propertyOrder": 1,
+                        "readOnly": true,
+                        "type": "integer"
+                    },
+                    "importedInvalidAlarmsCount": {
+                        "propertyOrder": 3,
+                        "readOnly": true,
+                        "type": "integer"
+                    },
+                    "importedMessagesCount": {
+                        "propertyOrder": 2,
+                        "readOnly": true,
+                        "type": "integer"
+                    }
+                },
+                "readOnly": true,
+                "required": [
+                    "importedEventsCount",
+                    "importedMessagesCount",
+                    "importedInvalidAlarmsCount",
+                    "cachedMessagesCount",
+                    "cachedAlarmsCount",
+                    "cachedInvalidAlarmsCount",
+                    "activeAlarmsCount",
+                    "database"
+                ],
+                "type": "object"
+            },
             "USEMAPPING": true
         },
         "TcHmiEventLogger.ClearLoggedEvents": {
@@ -11924,6 +12080,8 @@
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.s_fbHmiBtnManualForward.s_bFromHmiPressed": 3,
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.s_fbHmiBtnManualReleaseBrake.p_bStaEnabled": 3,
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.s_fbHmiBtnManualReleaseBrake.s_bFromHmiPressed": 3,
+                "PLC1.GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.s_fbHmiBtnManualReset.p_bStaEnabled": 3,
+                "PLC1.GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.s_fbHmiBtnManualReset.s_bFromHmiPressed": 3,
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.s_fbHmiBtnManualStop.p_bStaEnabled": 3,
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.s_fbHmiBtnManualStop.s_bFromHmiPressed": 3,
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.s_fbHmiLedBrakeReleased.p_bStaLed": 3,
@@ -12039,10 +12197,13 @@
                 "PLC1.GVL_Modules.g_objCarrier.s_stCarrier.bNewTBAtInfeed": 3,
                 "PLC1.MAIN.SoftwareVersion": 3,
                 "PLC1.MAIN.User": 3,
+                "PLC1.MAIN.arr_bTestMessage.0": 3,
+                "PLC1.MAIN.arr_bTestMessage.1": 3,
                 "PLC1.MAIN.fTestValue": 3,
                 "PLC1.MAIN.stMsgBox": 3,
                 "SetLocale": 3,
                 "SubscribeEvents": 3,
+                "TcHmiAlarm.Diagnostics": 1,
                 "TcHmiEventLogger.Diagnostics": 1,
                 "TcHmiEventLogger.ListEnabledTargetSystems": 3,
                 "TcHmiRecipeManagement.ActivateRecipe": 3,

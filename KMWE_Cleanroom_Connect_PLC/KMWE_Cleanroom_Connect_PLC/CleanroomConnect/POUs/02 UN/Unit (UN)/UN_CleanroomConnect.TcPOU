@@ -14,8 +14,6 @@ VAR
 	fbIlckHandlerConvBwd : FB_InterlockHandler;
 	fbIlckHandlerConvFwd : FB_InterlockHandler;
 	
-	arr_bTest : ARRAY[0..4] OF BOOL;
-	
 //------------------------------------------//
 
 //------------------------------------------//
@@ -311,17 +309,15 @@ GVL_Modules.g_emPalletConveyor.i_sEmName  := 'EM Pallet Conveyor';
 
 //Interlocks
 //Conveyor
-fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[0].sReason := 'Utilities not OK';
-fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[1].sReason := 'Docking Clamps Not Open';
-fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[2].sReason := 'Unlocking Pins Not In';
-fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[3].sReason := 'Door Opener Not Closed';
-//++fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[4].sReason := '_spare_reason_';
+//--fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[0].sReason := 'Utilities not OK';
+fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[0].sReason := 'Docking Clamps Not Open';
+fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[1].sReason := 'Unlocking Pins Not In';
+fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[2].sReason := 'Door Opener Not Closed';
 
-fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[0].sReason := 'Utilities not OK';
-fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[1].sReason := 'Docking Clamps Not Open';
-fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[2].sReason := 'Unlocking Pins Not In';
-fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[3].sReason := 'Door Opener Not Closed';
-//++fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[4].sReason := '_spare_reason_';
+//--fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[0].sReason := 'Utilities not OK';
+fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[0].sReason := 'Docking Clamps Not Open';
+fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[1].sReason := 'Unlocking Pins Not In';
+fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[2].sReason := 'Door Opener Not Closed';
 
 //Settings CM Pallet Conveyor (via parameter file)
 //--20240924 s_stSettings.stSettingsPalletConveyor.fSpeedManual := 50.0; //mm/s
@@ -521,7 +517,6 @@ GVL_Modules.g_emPalletConveyor.i_ref_stSettings REF= s_stSettings.stSettingsPall
 GVL_Modules.g_emDockingInterface.i_ref_stSettings REF= s_stSettings.stSettingsDockingInterface;
 //##_LIFTING_TRANSPORT_DISABLED_##GVL_Modules.g_emLiftingTransport.i_ref_stSettings REF= s_stSettings.stSettingsLiftingTransport;
 
-
 /////
 (* ++
 _m_AddModule(i_itfModuleBase := GVL_Modules.g_emDockingCabin);
@@ -586,6 +581,8 @@ VAR
 	//External interlocks for EM_PalletConveyor
 	s_fbExtIlckConvFwd : FB_Interlock;
 	s_fbExtIlckConvBwd : FB_Interlock;
+	//--s_fbExtIlckCenteringCenter : FB_Interlock;
+	//--s_fbExtIlckCenteringRest : FB_Interlock;
 	
 	//External interlocks for EM_DockingInterface
 	s_fbExtIlckDockingClampsToClose : FB_Interlock;
@@ -638,15 +635,13 @@ bReqEnable :=
 fbIlckHandlerConvBwd();
 fbIlckHandlerConvFwd();
 	
-fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[0].bState := NOT(bReqEnable);
-fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[1].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDockingClampsOpened) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking;
-fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[2].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaUnlockingPinsLocked) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking;
-fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[3].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDoorOpenerClosed) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking;
+fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[0].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDockingClampsOpened) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking;
+fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[1].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaUnlockingPinsLocked) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking;
+fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[2].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDoorOpenerClosed) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking;
 
-fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[0].bState := NOT(bReqEnable);
-fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[1].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDockingClampsOpened) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering;
-fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[2].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaUnlockingPinsLocked) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering;
-fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[3].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDoorOpenerClosed) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering;
+fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[0].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDockingClampsOpened) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering;
+fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[1].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaUnlockingPinsLocked) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering;
+fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[2].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDoorOpenerClosed) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering;
 
 s_fbExtIlckConvBwd();
 s_fbExtIlckConvBwd.i_bInterlocked := fbIlckHandlerConvBwd.p_bInterlocked; 
@@ -695,7 +690,6 @@ GVL_Modules.g_emDockingInterface(
 	i_refTB := GVL_Modules.g_objCarrier);	
 
 //##_LIFTING_TRANSPORT_DISABLED_##
-	
 GVL_Modules.g_emLiftingTransport(
 	i_bReqEnable := bReqEnable,
 	i_eCtrlMode := s_eCtrlMode,
@@ -1280,11 +1274,12 @@ GVL_Modules.g_emPalletConveyor._m_CmdTB_ToInfeed(i_refReason := sReason);
       <LineId Id="1965" Count="0" />
       <LineId Id="1955" Count="0" />
       <LineId Id="1950" Count="0" />
-      <LineId Id="1956" Count="1" />
+      <LineId Id="1956" Count="0" />
       <LineId Id="1960" Count="0" />
       <LineId Id="1959" Count="0" />
-      <LineId Id="1961" Count="3" />
-      <LineId Id="1657" Count="16" />
+      <LineId Id="1961" Count="2" />
+      <LineId Id="1967" Count="0" />
+      <LineId Id="1658" Count="15" />
       <LineId Id="1946" Count="0" />
       <LineId Id="1674" Count="14" />
       <LineId Id="1943" Count="2" />
@@ -1311,9 +1306,7 @@ GVL_Modules.g_emPalletConveyor._m_CmdTB_ToInfeed(i_refReason := sReason);
       <LineId Id="1830" Count="0" />
       <LineId Id="1914" Count="0" />
       <LineId Id="1832" Count="0" />
-      <LineId Id="1834" Count="0" />
-      <LineId Id="1917" Count="0" />
-      <LineId Id="1835" Count="29" />
+      <LineId Id="1834" Count="30" />
       <LineId Id="1875" Count="18" />
       <LineId Id="1924" Count="1" />
       <LineId Id="1894" Count="0" />
@@ -1338,9 +1331,9 @@ GVL_Modules.g_emPalletConveyor._m_CmdTB_ToInfeed(i_refReason := sReason);
       <LineId Id="1115" Count="0" />
       <LineId Id="1128" Count="1" />
       <LineId Id="1117" Count="0" />
-      <LineId Id="1116" Count="0" />
       <LineId Id="1119" Count="2" />
-      <LineId Id="1162" Count="4" />
+      <LineId Id="1162" Count="0" />
+      <LineId Id="1164" Count="2" />
       <LineId Id="1134" Count="1" />
       <LineId Id="1123" Count="0" />
       <LineId Id="1118" Count="0" />
@@ -1349,7 +1342,7 @@ GVL_Modules.g_emPalletConveyor._m_CmdTB_ToInfeed(i_refReason := sReason);
       <LineId Id="1125" Count="0" />
       <LineId Id="1168" Count="6" />
       <LineId Id="1167" Count="0" />
-      <LineId Id="868" Count="0" />
+      <LineId Id="1229" Count="0" />
       <LineId Id="874" Count="2" />
       <LineId Id="975" Count="0" />
       <LineId Id="1057" Count="0" />
@@ -1373,7 +1366,6 @@ GVL_Modules.g_emPalletConveyor._m_CmdTB_ToInfeed(i_refReason := sReason);
       <LineId Id="890" Count="0" />
       <LineId Id="1089" Count="0" />
       <LineId Id="1033" Count="0" />
-      <LineId Id="1090" Count="0" />
       <LineId Id="1035" Count="2" />
       <LineId Id="1049" Count="1" />
       <LineId Id="1042" Count="4" />

@@ -606,8 +606,12 @@ IF __ISVALIDREF(i_ref_eCtrlState) THEN
 	END_IF
 END_IF 
 
-//s_bCmdReset 
-
+//Force outputs false if brake output is nog true
+IF NOT(Q_bCmdReleaseBrake) THEN
+	s_fbForceCmdStartCW.i_eForceValue := E_ForceValue.RELEASED;
+	s_fbForceCmdStartCCW.i_eForceValue := E_ForceValue.RELEASED;
+END_IF
+	
 s_tofResetPulse(PT := T#1S, IN := i_bCmdReset OR s_bReqReset);
 s_bCmdReset := s_tofResetPulse.Q;
 s_bReqReset := FALSE;
@@ -826,7 +830,9 @@ PROPERTY PUBLIC p_bStaMotorStopped : BOOL]]></Declaration>
           <ST><![CDATA[
 //--p_bStaMotorStopped := s_bStaMotorStopped;
 
-p_bStaMotorStopped := (eSeqMOVITRAC_B_WithBrake = E_SeqMOVITRAC_B_WithBrake.STOPPED);
+p_bStaMotorStopped :=
+	(eSeqMOVITRAC_B_WithBrake = E_SeqMOVITRAC_B_WithBrake.STOPPED)
+	OR (eSeqMOVITRAC_B_WithBrake = E_SeqMOVITRAC_B_WithBrake.ERROR);
 ]]></ST>
         </Implementation>
       </Get>
@@ -1142,8 +1148,13 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="202" Count="0" />
       <LineId Id="158" Count="0" />
       <LineId Id="210" Count="0" />
-      <LineId Id="212" Count="1" />
-      <LineId Id="216" Count="0" />
+      <LineId Id="228" Count="0" />
+      <LineId Id="226" Count="0" />
+      <LineId Id="223" Count="0" />
+      <LineId Id="225" Count="0" />
+      <LineId Id="224" Count="0" />
+      <LineId Id="227" Count="0" />
+      <LineId Id="212" Count="0" />
       <LineId Id="215" Count="0" />
       <LineId Id="217" Count="1" />
       <LineId Id="159" Count="10" />
@@ -1257,7 +1268,7 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
     <LineIds Name="CM_MOVITRAC_B.p_bStaMotorStopped.Get">
       <LineId Id="5" Count="0" />
       <LineId Id="7" Count="0" />
-      <LineId Id="13" Count="1" />
+      <LineId Id="13" Count="3" />
       <LineId Id="6" Count="0" />
     </LineIds>
     <LineIds Name="CM_MOVITRAC_B.p_bStaWarning.Get">

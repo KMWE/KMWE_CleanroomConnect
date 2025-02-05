@@ -522,9 +522,23 @@ CASE s_eSeqDockingInterface OF
 		END_IF
 	
 	E_SeqDockingInterface.LOCK_UNLOCKING_PINS:
-		IF (s_cmUnlockingPinUpper.m_Off() AND s_cmUnlockingPinLower.m_Off()) THEN
-			
+		//--IF (s_cmUnlockingPinUpper.m_Off() AND s_cmUnlockingPinLower.m_Off()) THEN
+		//--	
+		//--	i_refTB.p_bCloseInnerDoorDone := TRUE;
+		//--	s_eSeqDockingInterface := E_SeqDockingInterface.OPEN_DOOR_SHUTTER_2;
+		//--END_IF
+		
+		s_tonTimer.IN := (s_cmUnlockingPinUpper.m_Off() AND s_cmUnlockingPinLower.m_Off());
+		
+		IF s_tonTimer.ET > i_ref_stSettings.tDelayOpenDoorShutter2 THEN
+			s_tonTimer.IN := FALSE;
 			i_refTB.p_bCloseInnerDoorDone := TRUE;
+			s_eSeqDockingInterface := E_SeqDockingInterface.OPEN_DOOR_SHUTTER_2;
+		END_IF
+		
+	E_SeqDockingInterface.OPEN_DOOR_SHUTTER_2:
+		IF (s_cmDoorShutter.m_Off()) THEN
+			
 			s_eSeqDockingInterface := E_SeqDockingInterface.TB_DOCKED;
 		END_IF
 		
@@ -1540,7 +1554,8 @@ s_cmClampsUpperHighPressure.m_Off();
 s_cmClampsLowerHighPressure.m_Off();
 
 IF s_cmDoorOpener.m_Off() AND s_bStaDoorOpenerAlmostClosed THEN //Close Door Opener
-	IF s_cmDoorShutter.m_On() THEN //Close Door Shutter
+	//--IF s_cmDoorShutter.m_On() THEN //Close Door Shutter
+	IF s_cmDoorShutter.m_Off() THEN //Open Door Shutter
 		IF s_cmUnlockingPinUpper.m_Off() AND s_cmUnlockingPinLower.m_Off() THEN //Lock Unlocking Pins
 			IF s_cmDockingClampsUpper.m_Off() AND s_cmDockingClampsLower.m_Off() THEN // Open Docking Clamps
 				_m_SeqStartup := TRUE;
@@ -2110,6 +2125,15 @@ p_bStaUnlockingPinsReleased := s_bStaUnlockingPinsReleased;
       <LineId Id="525" Count="0" />
       <LineId Id="398" Count="0" />
       <LineId Id="400" Count="0" />
+      <LineId Id="676" Count="0" />
+      <LineId Id="681" Count="1" />
+      <LineId Id="677" Count="1" />
+      <LineId Id="683" Count="0" />
+      <LineId Id="679" Count="1" />
+      <LineId Id="669" Count="1" />
+      <LineId Id="672" Count="1" />
+      <LineId Id="675" Count="0" />
+      <LineId Id="671" Count="0" />
       <LineId Id="311" Count="0" />
       <LineId Id="166" Count="0" />
       <LineId Id="326" Count="0" />
@@ -2646,7 +2670,9 @@ p_bStaUnlockingPinsReleased := s_bStaUnlockingPinsReleased;
       <LineId Id="383" Count="0" />
       <LineId Id="411" Count="0" />
       <LineId Id="413" Count="2" />
-      <LineId Id="401" Count="8" />
+      <LineId Id="401" Count="2" />
+      <LineId Id="419" Count="0" />
+      <LineId Id="404" Count="5" />
       <LineId Id="400" Count="0" />
       <LineId Id="293" Count="0" />
     </LineIds>

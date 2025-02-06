@@ -609,7 +609,7 @@ IF s_bCreate THEN GVL_Modules.g_objCarrier.m_Create(i_eDestination := E_Location
 IF s_bDestroy THEN GVL_Modules.g_objCarrier.m_Destroy(); s_bDestroy := FALSE; END_IF;
 
 sFbModeStateControl(
-	i_bReqStopAlarm := FALSE,
+	i_bReqStopAlarm := GVL_Modules.g_emUtilities.p_bStaError OR GVL_Modules.g_emPalletConveyor.p_bStaError OR GVL_Modules.g_emDockingInterface.p_bStaError,
 	i_bStaAllStopped := TRUE);
 
 s_eCtrlMode := sFbModeStateControl.p_eCtrlMode;

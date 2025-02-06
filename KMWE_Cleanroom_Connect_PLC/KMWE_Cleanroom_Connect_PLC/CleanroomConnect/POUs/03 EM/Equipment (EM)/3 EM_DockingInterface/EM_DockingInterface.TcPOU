@@ -308,6 +308,7 @@ s_fbSeqDockingInterfaceControl(
 					AND (s_eSeqDockingInterface = E_SeqDockingInterface.ERROR) // Only reset/resume sequencer from ERROR state
 					AND i_bReqEnable,   
 	i_bStaError := s_bStaError OR NOT(i_bReqEnable));
+	//--i_bStaError := s_bStaError);
 	
 s_tonTimer(PT := T#3600S);
 	
@@ -322,10 +323,17 @@ CASE s_eSeqDockingInterface OF
 	E_SeqDockingInterface.START:
 		s_tonTimer.IN := FALSE;
 		
-		IF _m_SeqStartup() AND s_fbSeqDockingInterfaceControl.q_tmStepTime > T#1S THEN
+		//Added state running befor continuing the sequense (automatically)
+		IF i_eCtrlState = E_CtrlState.RUNNING THEN
+			
 			s_eSeqDockingInterface := s_eResumeStep;
-		END_IF
 		
+			{warning '#TODO: Check if statup() is good to use or not?'}
+			//--IF _m_SeqStartup() AND s_fbSeqDockingInterfaceControl.q_tmStepTime > T#1S THEN
+			//--	s_eSeqDockingInterface := s_eResumeStep;
+			//--END_IF
+		END_IF
+			
 	E_SeqDockingInterface.OPEN_ALL_DOCKING_CLAMPS:
 		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN	
 			s_cmClampsUpperHighPressure.m_Off();
@@ -406,6 +414,9 @@ CASE s_eSeqDockingInterface OF
 	E_SeqDockingInterface.CLOSE_UPPER_DOCKING_CLAMPS:
 		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN	
 			s_cmClampsUpperHighPressure.m_Off();
+			
+			{warning '#TEST: To check what works best for compressing the seal, compresse lower and upper at the same time.' }
+			s_cmClampsLowerHighPressure.m_Off(); //Back to low pressure at lower clamps
 		END_IF
 		
 		s_tonTimer.IN := s_cmDockingClampsUpper.m_On();
@@ -420,6 +431,7 @@ CASE s_eSeqDockingInterface OF
 	E_SeqDockingInterface.COMPRESS_UPPER_SEAL:
 		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN	
 			s_cmClampsUpperHighPressure.m_On();
+			s_cmClampsLowerHighPressure.m_On();
 		END_IF
 		
 		IF s_fbSeqDockingInterfaceControl.q_tmStepTime >= i_ref_stSettings.tCompressSealDuration THEN
@@ -1973,6 +1985,7 @@ p_bStaUnlockingPinsReleased := s_bStaUnlockingPinsReleased;
       <LineId Id="7" Count="3" />
       <LineId Id="342" Count="1" />
       <LineId Id="11" Count="0" />
+      <LineId Id="708" Count="0" />
       <LineId Id="222" Count="0" />
       <LineId Id="154" Count="0" />
       <LineId Id="223" Count="0" />
@@ -1984,8 +1997,16 @@ p_bStaUnlockingPinsReleased := s_bStaUnlockingPinsReleased;
       <LineId Id="118" Count="0" />
       <LineId Id="120" Count="0" />
       <LineId Id="161" Count="0" />
-      <LineId Id="362" Count="3" />
+      <LineId Id="362" Count="0" />
+      <LineId Id="711" Count="0" />
+      <LineId Id="710" Count="0" />
+      <LineId Id="712" Count="0" />
+      <LineId Id="715" Count="0" />
+      <LineId Id="714" Count="0" />
+      <LineId Id="709" Count="0" />
+      <LineId Id="363" Count="2" />
       <LineId Id="323" Count="0" />
+      <LineId Id="713" Count="0" />
       <LineId Id="162" Count="0" />
       <LineId Id="446" Count="0" />
       <LineId Id="652" Count="1" />
@@ -2040,9 +2061,13 @@ p_bStaUnlockingPinsReleased := s_bStaUnlockingPinsReleased;
       <LineId Id="565" Count="0" />
       <LineId Id="589" Count="0" />
       <LineId Id="591" Count="2" />
+      <LineId Id="702" Count="0" />
+      <LineId Id="707" Count="0" />
+      <LineId Id="703" Count="0" />
       <LineId Id="595" Count="1" />
       <LineId Id="692" Count="3" />
       <LineId Id="598" Count="7" />
+      <LineId Id="706" Count="0" />
       <LineId Id="607" Count="4" />
       <LineId Id="590" Count="0" />
       <LineId Id="558" Count="0" />

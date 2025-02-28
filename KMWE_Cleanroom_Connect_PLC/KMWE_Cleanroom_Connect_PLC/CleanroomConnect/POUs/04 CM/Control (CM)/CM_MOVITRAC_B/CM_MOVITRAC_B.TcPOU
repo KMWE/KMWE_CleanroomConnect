@@ -67,7 +67,7 @@ VAR
 	
 	// Timers
 	s_tofResetPulse : TOF;
-	//--s_tonMotorStoppedDelay : TON;
+	s_tonMotorStoppedDelay : TON;
 	//--s_tonBrakeReleasedDelay : TON;
 	
 	// Alarms
@@ -199,6 +199,8 @@ seqTimer(
 	IN := (eSeqMOVITRAC_B_WithBrake = seqPreStep),
 	PT := T#3600S);
 	
+s_tonMotorStoppedDelay(PT := i_stSettings.tBrakeReleasedDelay);	
+	
 seqPreStep := eSeqMOVITRAC_B_WithBrake;
 
 s_sActStep := TO_STRING(eSeqMOVITRAC_B_WithBrake);
@@ -270,6 +272,7 @@ CASE eSeqMOVITRAC_B_WithBrake OF
 		//s_fTargetSpeed is written by method 
 	
 		IF s_bReqStop THEN
+			s_tonMotorStoppedDelay.IN := FALSE;
 			eSeqMOVITRAC_B_WithBrake := E_SeqMOVITRAC_B_WithBrake.STOPPING;
 		END_IF
 		
@@ -281,6 +284,7 @@ CASE eSeqMOVITRAC_B_WithBrake OF
 		//s_fTargetSpeed is written by method 
 	
 		IF s_bReqStop THEN
+			s_tonMotorStoppedDelay.IN := FALSE;
 			eSeqMOVITRAC_B_WithBrake := E_SeqMOVITRAC_B_WithBrake.STOPPING;
 		END_IF
 	
@@ -289,7 +293,10 @@ CASE eSeqMOVITRAC_B_WithBrake OF
 		s_bCmdBackward := FALSE;
 		s_bReqStop := FALSE;
 		
-		IF s_bStaMotorStopped THEN
+		s_tonMotorStoppedDelay.IN := s_bStaMotorStopped;
+		
+		//??IF s_bStaMotorStopped THEN
+		IF s_tonMotorStoppedDelay.Q THEN	
 			eSeqMOVITRAC_B_WithBrake := E_SeqMOVITRAC_B_WithBrake.APPLY_BRAKE;
 		END_IF
 		
@@ -944,6 +951,7 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="150" Count="1" />
       <LineId Id="153" Count="0" />
       <LineId Id="152" Count="0" />
+      <LineId Id="298" Count="1" />
       <LineId Id="214" Count="0" />
       <LineId Id="213" Count="0" />
       <LineId Id="242" Count="1" />
@@ -995,18 +1003,24 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="172" Count="0" />
       <LineId Id="115" Count="0" />
       <LineId Id="173" Count="0" />
+      <LineId Id="303" Count="0" />
       <LineId Id="175" Count="1" />
       <LineId Id="174" Count="0" />
       <LineId Id="92" Count="0" />
       <LineId Id="187" Count="0" />
       <LineId Id="259" Count="2" />
-      <LineId Id="188" Count="3" />
+      <LineId Id="188" Count="2" />
+      <LineId Id="302" Count="0" />
+      <LineId Id="191" Count="0" />
       <LineId Id="119" Count="0" />
       <LineId Id="93" Count="1" />
       <LineId Id="211" Count="1" />
       <LineId Id="257" Count="0" />
       <LineId Id="200" Count="0" />
+      <LineId Id="296" Count="0" />
+      <LineId Id="300" Count="0" />
       <LineId Id="288" Count="0" />
+      <LineId Id="301" Count="0" />
       <LineId Id="290" Count="0" />
       <LineId Id="286" Count="1" />
       <LineId Id="201" Count="1" />

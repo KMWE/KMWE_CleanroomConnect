@@ -388,7 +388,7 @@ s_cmPalletConveyor.i_bReqEnable := FALSE;
 s_cmPalletConveyor.i_eCtrlMode := E_CtrlMode.IDLE;
 s_cmPalletConveyor.i_sCmName := 'CM Pallet Conveyor';
 s_cmPalletConveyor.i_stSettings.tResetPulseDuration := T#1S;
-s_cmPalletConveyor.i_stSettings.tBrakeReleasedDelay := T#2S;
+s_cmPalletConveyor.i_stSettings.tBrakeReleasedDelay := T#1S;
 s_cmPalletConveyor.i_stSettings.tMotorStoppedDelay := T#3S;
 s_cmPalletConveyor.i_stSettings.rMaxTargetSpeed := 200.0; // mm/s
 {warning '#TODO: Dot we need to added configuration parameters? Seperate struct or via settings or dedicateed variables'}
@@ -512,7 +512,7 @@ fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[1].bState := NOT(i
 fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_bStaCenteringIdle);
 fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[3].bState := NOT(s_bStaDoorOpened) AND s_bStaAtInfeedRearPosition;
 //--fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[4].bState := s_bStaAtCenteringPosition; //Not sure if this is really a interlock?
-fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[5].bState := s_bStaAtDockingPosition; //Not sure if this is really a interlock?
+fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[5].bState := s_bStaAtDockingPosition AND FALSE; //Not sure if this is really a interlock?
 fbIlckHandlerConveyorForward();
 
 s_bIlckConveyorBackward := fbIlckHandlerConveyorBackward.p_bInterlocked;

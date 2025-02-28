@@ -609,7 +609,9 @@ IF s_bCreate THEN GVL_Modules.g_objCarrier.m_Create(i_eDestination := E_Location
 IF s_bDestroy THEN GVL_Modules.g_objCarrier.m_Destroy(); s_bDestroy := FALSE; END_IF;
 
 sFbModeStateControl(
-	i_bReqStopAlarm := GVL_Modules.g_emUtilities.p_bStaError OR GVL_Modules.g_emPalletConveyor.p_bStaError OR GVL_Modules.g_emDockingInterface.p_bStaError,
+	{warning 'TODO: Check if stopping mode on any error is ok, what to do if a valve does not reach posittion, death lock?'}
+	i_bReqStopAlarm := (GVL_Modules.g_emUtilities.p_bStaError OR GVL_Modules.g_emPalletConveyor.p_bStaError OR GVL_Modules.g_emDockingInterface.p_bStaError)
+						AND ( (s_eCtrlMode = E_CtrlMode.AUTOMATIC) OR (s_eCtrlMode = E_CtrlMode.MANUAL) ),
 	i_bStaAllStopped := TRUE);
 
 s_eCtrlMode := sFbModeStateControl.p_eCtrlMode;
@@ -1317,7 +1319,10 @@ GVL_Modules.g_emPalletConveyor._m_CmdTB_ToInfeed(i_refReason := sReason);
       <LineId Id="1017" Count="0" />
       <LineId Id="848" Count="3" />
       <LineId Id="978" Count="0" />
-      <LineId Id="980" Count="1" />
+      <LineId Id="980" Count="0" />
+      <LineId Id="1257" Count="0" />
+      <LineId Id="981" Count="0" />
+      <LineId Id="1256" Count="0" />
       <LineId Id="979" Count="0" />
       <LineId Id="984" Count="0" />
       <LineId Id="982" Count="0" />

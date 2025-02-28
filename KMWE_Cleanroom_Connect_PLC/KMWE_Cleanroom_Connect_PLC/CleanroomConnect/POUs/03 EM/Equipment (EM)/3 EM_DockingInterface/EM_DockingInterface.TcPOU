@@ -465,7 +465,7 @@ CASE s_eSeqDockingInterface OF
 		s_tonTimer.IN := s_cmDoorOpener.m_Off();
 	
 		IF s_tonTimer.ET > i_ref_stSettings.tDelayCloseDoorShutterReleasingPins 
-			AND s_bStaDoorOpenerAlmostClosed THEN
+			AND (s_bStaDoorOpenerClosed OR s_bStaDoorOpenerAlmostClosed) THEN
 			s_tonTimer.IN := FALSE;
 			s_eSeqDockingInterface := E_SeqDockingInterface.CLOSE_DOOR_SHUTTER_RELEASING_PINS;
 		ELSIF s_fbSeqDockingInterfaceControl.q_tmStepTime >= T#10S THEN
@@ -526,7 +526,7 @@ CASE s_eSeqDockingInterface OF
 		s_tonTimer.IN := s_cmDoorOpener.m_Off();
 		
 		IF s_tonTimer.ET > i_ref_stSettings.tDelayCloseDoorShutter
-			AND s_bStaDoorOpenerAlmostClosed
+			AND (s_bStaDoorOpenerClosed OR s_bStaDoorOpenerAlmostClosed)
 			THEN
 			s_tonTimer.IN := FALSE;
 			s_eSeqDockingInterface := E_SeqDockingInterface.CLOSE_DOOR_SHUTTER;

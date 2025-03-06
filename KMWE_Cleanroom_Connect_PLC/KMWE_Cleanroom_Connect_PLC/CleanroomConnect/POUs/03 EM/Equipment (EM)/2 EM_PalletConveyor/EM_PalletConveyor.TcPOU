@@ -884,7 +884,8 @@ CASE s_eSeqTransport OF
 		//??	//--s_cmPalletConveyor.m_Stop();
 		//??END_IF
 		
-		IF s_bStaAtInfeedRearPosition THEN
+		//--IF s_bStaAtInfeedRearPosition THEN //added condigion InfeedFrontPosition, then pallet will be transported al little but further to correct postition.
+		IF s_bStaAtInfeedRearPosition AND s_bStaAtInfeedFrontPosition THEN
 			s_eTmpLocation := E_Location.INFEED;
 			s_eSeqTransport := E_SeqTransport.STOP;
 		ELSIF s_fbSeqTransportControl.q_tmStepTime > s_tMaxTravelTime THEN
@@ -1586,7 +1587,9 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="1860" Count="0" />
       <LineId Id="1829" Count="0" />
       <LineId Id="1822" Count="1" />
-      <LineId Id="1723" Count="15" />
+      <LineId Id="1723" Count="0" />
+      <LineId Id="1864" Count="0" />
+      <LineId Id="1724" Count="14" />
       <LineId Id="1835" Count="0" />
       <LineId Id="1842" Count="3" />
       <LineId Id="1839" Count="2" />

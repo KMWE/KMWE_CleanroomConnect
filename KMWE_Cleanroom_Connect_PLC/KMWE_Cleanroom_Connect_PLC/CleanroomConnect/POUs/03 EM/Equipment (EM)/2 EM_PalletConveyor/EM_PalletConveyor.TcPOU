@@ -766,7 +766,8 @@ CASE s_eSeqCentering OF
 		END_IF	
 		
 	E_SeqCentering.MOVE_TO_CENTER:
-		IF s_cmCenteringUnit.m_On() THEN
+		//++IF s_cmCenteringUnit.m_On() THEN // Temp. added time delay as extra condition to skip reed contacts (end position not reachable with test box)
+		IF s_cmCenteringUnit.m_On() OR (s_fbSeqCenteringControl.q_tmStepTime >= T#3S) THEN
 			s_eSeqCentering := E_SeqCentering.AT_CENTER;
 		END_IF
 	
@@ -1537,6 +1538,7 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="481" Count="0" />
       <LineId Id="518" Count="1" />
       <LineId Id="482" Count="3" />
+      <LineId Id="560" Count="0" />
       <LineId Id="487" Count="1" />
       <LineId Id="539" Count="0" />
       <LineId Id="544" Count="0" />

@@ -339,7 +339,8 @@ s_bStaAtInfeedRearPosition := s_diStaAtInfeedPositionRear.p_bStaInputDelayed;
 s_bStaAtInfeedFrontPosition := s_diStaAtInfeedPositionFront.p_bStaInputDelayed;
 s_bStaAtCenteringPosition := s_diStaAtCenteringPosition.p_bStaInputDelayed;
 s_bStaAtDockingPosition := s_diStaAtDockingPosition.p_bStaInputDelayed;
-s_bStaDoorOpened := s_diStaDoorOpened.p_bStaInputDelayed ;
+{warning 'TODO: Temp. forced door detecion because no door prestent to be detected, OR TRUE should be deleted if TB with door is present'}
+s_bStaDoorOpened := s_diStaDoorOpened.p_bStaInputDelayed OR TRUE;
 	
 _m_Devices := TRUE;
 ]]></ST>
@@ -406,11 +407,11 @@ s_cmCenteringUnit.p_sCfgOnName := 'Center';
 s_cmCenteringUnit.p_sCfgFB1Name := 'Rear';
 s_cmCenteringUnit.p_sCfgFB2Name := 'Front';
 
-s_diStaAtInfeedPositionRear.i_stSettings.tmInputDelay := T#100MS;
-s_diStaAtInfeedPositionFront.i_stSettings.tmInputDelay := T#100MS;
-s_diStaAtCenteringPosition.i_stSettings.tmInputDelay := T#100MS;
-s_diStaAtDockingPosition.i_stSettings.tmInputDelay := T#100MS;
-s_diStaDoorOpened.i_stSettings.tmInputDelay := T#100MS;
+s_diStaAtInfeedPositionRear.i_stSettings.tmInputDelay := T#0MS;
+s_diStaAtInfeedPositionFront.i_stSettings.tmInputDelay := T#0MS;
+s_diStaAtCenteringPosition.i_stSettings.tmInputDelay := T#0MS;
+s_diStaAtDockingPosition.i_stSettings.tmInputDelay := T#1000MS;
+s_diStaDoorOpened.i_stSettings.tmInputDelay := T#0MS;
 
 //Interlock strings
 //Conveyor
@@ -767,7 +768,7 @@ CASE s_eSeqCentering OF
 		
 	E_SeqCentering.MOVE_TO_CENTER:
 		//++IF s_cmCenteringUnit.m_On() THEN // Temp. added time delay as extra condition to skip reed contacts (end position not reachable with test box)
-		IF s_cmCenteringUnit.m_On() OR (s_fbSeqCenteringControl.q_tmStepTime >= T#3S) THEN
+		IF s_cmCenteringUnit.m_On() OR (s_fbSeqCenteringControl.q_tmStepTime >= T#1S) THEN
 			s_eSeqCentering := E_SeqCentering.AT_CENTER;
 		END_IF
 	
@@ -1315,7 +1316,9 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="48" Count="1" />
       <LineId Id="22" Count="1" />
       <LineId Id="25" Count="0" />
-      <LineId Id="27" Count="13" />
+      <LineId Id="27" Count="10" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="38" Count="2" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="EM_PalletConveyor._m_Hmi">

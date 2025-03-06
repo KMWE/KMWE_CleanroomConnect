@@ -323,7 +323,7 @@ CASE s_eSeqDockingInterface OF
 	E_SeqDockingInterface.START:
 		s_tonTimer.IN := FALSE;
 		
-		//Added state running befor continuing the sequense (automatically)
+		//Added state running before continuing the sequense (automatically)
 		IF i_eCtrlState = E_CtrlState.RUNNING THEN
 			
 			s_eSeqDockingInterface := s_eResumeStep;
@@ -363,7 +363,7 @@ CASE s_eSeqDockingInterface OF
 		END_IF
 		
 	E_SeqDockingInterface.CLOSE_ALL_DOCKING_CLAMPS:
-		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN	
+		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN
 			s_cmClampsUpperHighPressure.m_Off();
 			s_cmClampsLowerHighPressure.m_Off();
 		END_IF
@@ -584,14 +584,16 @@ CASE s_eSeqDockingInterface OF
 				s_cmDockingClampsUpper.m_Off();
 				s_cmDockingClampsLower.m_Off();
 			ELSE
-				s_cmDockingClampsUpper.m_Stop();
-				s_cmDockingClampsLower.m_Stop();
+				s_cmDockingClampsUpper.m_Stop(); //pressurized rest/middle position
+				s_cmDockingClampsLower.m_Stop(); //pressurezed rest/middle position
 			END_IF
 			
 			s_cmUnlockingPinUpper.m_Stop();
 			s_cmUnlockingPinLower.m_Stop();
-			s_cmDoorOpener.m_Stop();
-			s_cmDoorShutter.m_Stop(); 
+			
+			{warning 'In case of any error the DoorOpener and the DoorShutter are set to rest position, this is not nessecary (this will depressureize the cilinder)'}
+			//--s_cmDoorOpener.m_Stop(); //de-pressureized rest/middle position
+			//--s_cmDoorShutter.m_Stop(); //de-pressurized rest/middle position 
 		END_IF
 
 END_CASE	
@@ -2184,7 +2186,9 @@ p_bStaUnlockingPinsReleased := s_bStaUnlockingPinsReleased;
       <LineId Id="488" Count="0" />
       <LineId Id="492" Count="0" />
       <LineId Id="349" Count="0" />
-      <LineId Id="351" Count="1" />
+      <LineId Id="351" Count="0" />
+      <LineId Id="717" Count="1" />
+      <LineId Id="352" Count="0" />
       <LineId Id="345" Count="0" />
       <LineId Id="327" Count="0" />
       <LineId Id="189" Count="0" />

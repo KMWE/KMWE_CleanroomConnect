@@ -1137,18 +1137,21 @@ IF i_bReqEnable AND (i_eCtrlMode = E_CtrlMode.MANUAL) AND (i_eCtrlState = E_Ctrl
 		NOT(s_bIlckConveyorBackward)
 		AND NOT(s_bStaAtInfeedRearPosition) //Added extra condition here instead of interlock only 
 		AND NOT(s_cmPalletConveyor.p_bStaError)
+		AND NOT(s_cmPalletConveyor.p_bStaMotorStopped)
 		AND NOT(s_bReqCenteringTB);
 	
 	s_fbHmiBtnTB_ToCentering.p_bStaEnabled :=
 		NOT(s_bIlckConveyorForward)
 		AND NOT(s_bStaAtCenteringPosition) //Added extra condition here instead of interlock only
 		AND NOT(s_cmPalletConveyor.p_bStaError)
+		AND NOT(s_cmPalletConveyor.p_bStaMotorStopped)
 		AND NOT(s_bReqCenteringTB);
 	
 	s_fbHmiBtnTB_ToDocking.p_bStaEnabled :=
 		NOT(s_bIlckConveyorForward)
 		AND NOT(s_bStaAtDockingPosition) //Added extra condition here instead of interlock only
 		AND NOT(s_cmPalletConveyor.p_bStaError)
+		AND NOT(s_cmPalletConveyor.p_bStaMotorStopped)
 		AND NOT(s_bReqCenteringTB);
 	
 	//Centering
@@ -1783,7 +1786,13 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="3041" Count="1" />
       <LineId Id="3091" Count="0" />
       <LineId Id="3030" Count="0" />
-      <LineId Id="3002" Count="17" />
+      <LineId Id="3002" Count="3" />
+      <LineId Id="3150" Count="0" />
+      <LineId Id="3006" Count="5" />
+      <LineId Id="3151" Count="0" />
+      <LineId Id="3012" Count="5" />
+      <LineId Id="3152" Count="0" />
+      <LineId Id="3018" Count="1" />
       <LineId Id="3092" Count="0" />
       <LineId Id="3020" Count="8" />
       <LineId Id="2997" Count="0" />

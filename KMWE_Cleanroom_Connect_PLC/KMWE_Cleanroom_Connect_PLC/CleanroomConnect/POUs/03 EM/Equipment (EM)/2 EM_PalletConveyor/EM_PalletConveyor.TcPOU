@@ -157,10 +157,50 @@ END_VAR
     <Implementation>
       <ST><![CDATA[
 SUPER^();
-
 ]]></ST>
     </Implementation>
     <Folder Name="Base" Id="{067ba958-c4fb-4bce-8177-9625e918c776}" />
+    <Method Name="_CalcMaxTravelTime" Id="{124056bd-8750-438f-b5d1-d60729a56962}">
+      <Declaration><![CDATA[METHOD PRIVATE _CalcMaxTravelTime : TIME
+VAR_INPUT
+	i_fBaseRampTime : LREAL; //Base ramp-up time (setting frequency convertor), to reach 3000rpm, 200mm/s
+	i_fBaseSpeed : LREAL; //Base max. speed (setting frequency converor), 2000mm/s
+	i_TargetSpeed : LREAL;
+	i_TargetDistance : LREAL;
+	i_Tollerance : LREAL;
+END_VAR
+
+VAR
+	s_fRampsTime : LREAL;
+	s_fRampDistance : LREAL;
+	s_fRemainingDistance : LREAL;
+	s_fRemainingTime : LREAL;
+	
+
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+{warning 'Following calculation below is correct but it would be more efficient to convert to one single equation'}
+
+IF i_fBaseSpeed > 0 THEN
+	s_fRampsTime := (i_TargetSpeed / i_fBaseSpeed) * i_fBaseRampTime;
+END_IF
+
+s_fRampDistance := (i_TargetSpeed / 2) * s_fRampsTime; 
+
+s_fRemainingDistance := i_TargetDistance - s_fRampDistance;
+
+IF i_TargetSpeed > 0 THEN
+	s_fRemainingTime := s_fRemainingDistance / i_TargetSpeed;
+END_IF
+
+_CalcMaxTravelTime := LREAL_TO_TIME( (s_fRampsTime + s_fRemainingTime) * i_Tollerance * 1000 );
+
+//Previous calculation
+//--_CalcMaxTravelTime := LREAL_TO_TIME((i_ref_stSettings.fDistanceToInfeed / i_ref_stSettings.fSpeedGoToInfeed) * i_ref_stSettings.fTravelTollerance * 1000);]]></ST>
+      </Implementation>
+    </Method>
     <Method Name="_m_Alarms" Id="{aee2feff-cbd9-4478-9815-a567a5153a13}" FolderPath="Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Alarms : BOOL
 ]]></Declaration>
@@ -872,7 +912,16 @@ CASE s_eSeqTransport OF
 	
 	E_SeqTransport.MOVE_TO_INFEED:
 		IF s_fbSeqTransportControl.q_bStaEntry THEN		
-			s_tMaxTravelTime := LREAL_TO_TIME((i_ref_stSettings.fDistanceToInfeed / i_ref_stSettings.fSpeedGoToInfeed) * i_ref_stSettings.fTravelTollerance * 1000);
+			//--s_tMaxTravelTime := LREAL_TO_TIME((i_ref_stSettings.fDistanceToInfeed / i_ref_stSettings.fSpeedGoToInfeed) * i_ref_stSettings.fTravelTollerance * 1000);
+			//--Optimized caclulation for max. travel time
+			s_tMaxTravelTime :=
+				_CalcMaxTravelTime(
+					i_fBaseRampTime := 4.0,
+					i_fBaseSpeed := 200.0,
+					i_TargetSpeed := i_ref_stSettings.fSpeedGoToInfeed,
+					i_TargetDistance := i_ref_stSettings.fDistanceToInfeed,
+					i_Tollerance := i_ref_stSettings.fTravelTollerance);
+						
 			s_cmPalletConveyor.m_StartBackward(i_rTargetSpeed := i_ref_stSettings.fSpeedGoToInfeed);
 		END_IF
 		
@@ -898,7 +947,16 @@ CASE s_eSeqTransport OF
 	
 	E_SeqTransport.MOVE_TO_CENTERING:
 		IF s_fbSeqTransportControl.q_bStaEntry THEN
-			s_tMaxTravelTime := LREAL_TO_TIME((i_ref_stSettings.fDistanceToCentering / i_ref_stSettings.fSpeedGoToCentering) * i_ref_stSettings.fTravelTollerance * 1000);
+			//--s_tMaxTravelTime := LREAL_TO_TIME((i_ref_stSettings.fDistanceToCentering / i_ref_stSettings.fSpeedGoToCentering) * i_ref_stSettings.fTravelTollerance * 1000);
+			//--Optimized caclulation for max. travel time			
+			s_tMaxTravelTime :=
+				_CalcMaxTravelTime(
+					i_fBaseRampTime := 4.0,
+					i_fBaseSpeed := 200.0,
+					i_TargetSpeed := i_ref_stSettings.fSpeedGoToCentering,
+					i_TargetDistance := i_ref_stSettings.fDistanceToCentering,
+					i_Tollerance := i_ref_stSettings.fTravelTollerance);
+			
 			s_tDoorCheckTime := LREAL_TO_TIME((i_ref_stSettings.fDistanceOuterDoorCheck / i_ref_stSettings.fSpeedGoToCentering) * 1000);
 			s_cmPalletConveyor.m_StartForward(i_rTargetSpeed := i_ref_stSettings.fSpeedGoToCentering);
 		END_IF
@@ -935,7 +993,16 @@ CASE s_eSeqTransport OF
 	
 	E_SeqTransport.MOVE_TO_DOCKING:
 		IF s_fbSeqTransportControl.q_bStaEntry THEN
-			s_tMaxTravelTime := LREAL_TO_TIME((i_ref_stSettings.fDistanceToDocking / i_ref_stSettings.fSpeedGoToDocking) * i_ref_stSettings.fTravelTollerance * 1000);
+			//--s_tMaxTravelTime := LREAL_TO_TIME((i_ref_stSettings.fDistanceToDocking / i_ref_stSettings.fSpeedGoToDocking) * i_ref_stSettings.fTravelTollerance * 1000);
+			//--Optimized caclulation for max. travel time
+			s_tMaxTravelTime :=
+				_CalcMaxTravelTime(
+					i_fBaseRampTime := 4.0,
+					i_fBaseSpeed := 200.0,
+					i_TargetSpeed := i_ref_stSettings.fSpeedGoToDocking,
+					i_TargetDistance := i_ref_stSettings.fDistanceToDocking,
+					i_Tollerance := i_ref_stSettings.fTravelTollerance);
+			
 			s_cmPalletConveyor.m_StartForward(i_rTargetSpeed := i_ref_stSettings.fSpeedGoToDocking);
 		END_IF
 		
@@ -1224,8 +1291,26 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
     <LineIds Name="EM_PalletConveyor">
       <LineId Id="221" Count="0" />
       <LineId Id="9" Count="0" />
-      <LineId Id="607" Count="0" />
-      <LineId Id="403" Count="0" />
+      <LineId Id="766" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_PalletConveyor._CalcMaxTravelTime">
+      <LineId Id="40" Count="1" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="25" Count="1" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="6" Count="0" />
+      <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="EM_PalletConveyor._m_Alarms">
       <LineId Id="12" Count="0" />
@@ -1585,7 +1670,13 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="1804" Count="1" />
       <LineId Id="1703" Count="2" />
       <LineId Id="1708" Count="3" />
-      <LineId Id="1715" Count="7" />
+      <LineId Id="1715" Count="4" />
+      <LineId Id="1894" Count="0" />
+      <LineId Id="1866" Count="0" />
+      <LineId Id="1871" Count="4" />
+      <LineId Id="1867" Count="0" />
+      <LineId Id="1869" Count="0" />
+      <LineId Id="1720" Count="2" />
       <LineId Id="1824" Count="0" />
       <LineId Id="1830" Count="2" />
       <LineId Id="1827" Count="1" />
@@ -1594,7 +1685,12 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="1822" Count="1" />
       <LineId Id="1723" Count="0" />
       <LineId Id="1864" Count="0" />
-      <LineId Id="1724" Count="14" />
+      <LineId Id="1724" Count="10" />
+      <LineId Id="1878" Count="0" />
+      <LineId Id="1893" Count="0" />
+      <LineId Id="1879" Count="4" />
+      <LineId Id="1876" Count="1" />
+      <LineId Id="1735" Count="3" />
       <LineId Id="1835" Count="0" />
       <LineId Id="1842" Count="3" />
       <LineId Id="1839" Count="2" />
@@ -1603,7 +1699,11 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="1739" Count="6" />
       <LineId Id="1792" Count="0" />
       <LineId Id="1746" Count="7" />
-      <LineId Id="1760" Count="8" />
+      <LineId Id="1760" Count="5" />
+      <LineId Id="1892" Count="0" />
+      <LineId Id="1886" Count="5" />
+      <LineId Id="1884" Count="1" />
+      <LineId Id="1766" Count="2" />
       <LineId Id="1848" Count="0" />
       <LineId Id="1856" Count="2" />
       <LineId Id="1853" Count="2" />

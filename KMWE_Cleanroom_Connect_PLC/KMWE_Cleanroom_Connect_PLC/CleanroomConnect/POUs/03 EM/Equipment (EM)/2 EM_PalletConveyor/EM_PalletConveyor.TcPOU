@@ -198,7 +198,11 @@ END_IF
 _CalcMaxTravelTime := LREAL_TO_TIME( (s_fRampsTime + s_fRemainingTime) * i_Tollerance * 1000 );
 
 //Previous calculation
-//--_CalcMaxTravelTime := LREAL_TO_TIME((i_ref_stSettings.fDistanceToInfeed / i_ref_stSettings.fSpeedGoToInfeed) * i_ref_stSettings.fTravelTollerance * 1000);]]></ST>
+//--_CalcMaxTravelTime := LREAL_TO_TIME((i_ref_stSettings.fDistanceToInfeed / i_ref_stSettings.fSpeedGoToInfeed) * i_ref_stSettings.fTravelTollerance * 1000);
+
+//_CalcMaxTravelTime := LREAL_TO_TIME( ( (i_TargetSpeed / i_fBaseSpeed) * i_fBaseRampTime ) + ( (i_TargetDistance - ( (i_TargetSpeed / 2) * ((i_TargetSpeed / i_fBaseSpeed) * i_fBaseRampTime) ) ) / i_TargetSpeed ) * i_Tollerance * 1000 )
+//_CalcMaxTravelTime := LREAL_TO_TIME( ( (i_TargetSpeed / i_fBaseSpeed) * i_fBaseRampTime ) + ( (i_TargetDistance - ( (i_TargetSpeed / 2) * ((i_TargetSpeed / i_fBaseSpeed) * i_fBaseRampTime) ) ) / i_TargetSpeed ) * i_Tollerance * 1000 )
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_Alarms" Id="{aee2feff-cbd9-4478-9815-a567a5153a13}" FolderPath="Base\">
@@ -379,8 +383,7 @@ s_bStaAtInfeedRearPosition := s_diStaAtInfeedPositionRear.p_bStaInputDelayed;
 s_bStaAtInfeedFrontPosition := s_diStaAtInfeedPositionFront.p_bStaInputDelayed;
 s_bStaAtCenteringPosition := s_diStaAtCenteringPosition.p_bStaInputDelayed;
 s_bStaAtDockingPosition := s_diStaAtDockingPosition.p_bStaInputDelayed;
-{warning 'TODO: Temp. forced door detecion because no door prestent to be detected, OR TRUE should be deleted if TB with door is present'}
-s_bStaDoorOpened := s_diStaDoorOpened.p_bStaInputDelayed OR TRUE;
+s_bStaDoorOpened := s_diStaDoorOpened.p_bStaInputDelayed;
 	
 _m_Devices := TRUE;
 ]]></ST>
@@ -1137,21 +1140,21 @@ IF i_bReqEnable AND (i_eCtrlMode = E_CtrlMode.MANUAL) AND (i_eCtrlState = E_Ctrl
 		NOT(s_bIlckConveyorBackward)
 		AND NOT(s_bStaAtInfeedRearPosition) //Added extra condition here instead of interlock only 
 		AND NOT(s_cmPalletConveyor.p_bStaError)
-		AND NOT(s_cmPalletConveyor.p_bStaMotorStopped)
+		AND (s_cmPalletConveyor.p_bStaMotorStopped) AND TRUE
 		AND NOT(s_bReqCenteringTB);
 	
 	s_fbHmiBtnTB_ToCentering.p_bStaEnabled :=
 		NOT(s_bIlckConveyorForward)
 		AND NOT(s_bStaAtCenteringPosition) //Added extra condition here instead of interlock only
 		AND NOT(s_cmPalletConveyor.p_bStaError)
-		AND NOT(s_cmPalletConveyor.p_bStaMotorStopped)
+		AND (s_cmPalletConveyor.p_bStaMotorStopped)
 		AND NOT(s_bReqCenteringTB);
 	
 	s_fbHmiBtnTB_ToDocking.p_bStaEnabled :=
 		NOT(s_bIlckConveyorForward)
 		AND NOT(s_bStaAtDockingPosition) //Added extra condition here instead of interlock only
 		AND NOT(s_cmPalletConveyor.p_bStaError)
-		AND NOT(s_cmPalletConveyor.p_bStaMotorStopped)
+		AND (s_cmPalletConveyor.p_bStaMotorStopped)
 		AND NOT(s_bReqCenteringTB);
 	
 	//Centering
@@ -1314,6 +1317,8 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="8" Count="0" />
       <LineId Id="6" Count="0" />
       <LineId Id="5" Count="0" />
+      <LineId Id="43" Count="2" />
+      <LineId Id="42" Count="0" />
     </LineIds>
     <LineIds Name="EM_PalletConveyor._m_Alarms">
       <LineId Id="12" Count="0" />
@@ -1404,9 +1409,7 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="48" Count="1" />
       <LineId Id="22" Count="1" />
       <LineId Id="25" Count="0" />
-      <LineId Id="27" Count="10" />
-      <LineId Id="68" Count="0" />
-      <LineId Id="38" Count="2" />
+      <LineId Id="27" Count="13" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="EM_PalletConveyor._m_Hmi">

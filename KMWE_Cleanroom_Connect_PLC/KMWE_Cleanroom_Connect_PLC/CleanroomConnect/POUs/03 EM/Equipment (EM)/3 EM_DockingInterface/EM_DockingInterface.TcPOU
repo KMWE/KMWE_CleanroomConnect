@@ -575,7 +575,9 @@ CASE s_eSeqDockingInterface OF
 			
 			//Stop controlling all valves
 			IF i_ref_stSettings.bOpenClampsAfterClosingTimeout AND_THEN
-				s_ePreviousStep = E_SeqDockingInterface.CLOSE_ALL_DOCKING_CLAMPS
+				(s_ePreviousStep = E_SeqDockingInterface.CLOSE_ALL_DOCKING_CLAMPS
+				OR s_ePreviousStep = E_SeqDockingInterface.CLOSE_LOWER_DOCKING_CLAMPS
+				OR s_ePreviousStep = E_SeqDockingInterface.CLOSE_UPPER_DOCKING_CLAMPS)
 				AND (s_cmDockingClampsUpper.p_bStaError OR s_cmDockingClampsLower.p_bStaError) 
 				THEN
 				//Open all docking clamps if closing on low pressure has failed
@@ -583,6 +585,9 @@ CASE s_eSeqDockingInterface OF
 				s_cmClampsLowerHighPressure.m_Off();
 				s_cmDockingClampsUpper.m_Off();
 				s_cmDockingClampsLower.m_Off();
+				
+				//Resume from the beginning
+				s_eResumeStep := E_SeqDockingInterface.READY;
 			ELSE
 				s_cmDockingClampsUpper.m_Stop(); //pressurized rest/middle position
 				s_cmDockingClampsLower.m_Stop(); //pressurezed rest/middle position
@@ -2176,11 +2181,15 @@ p_bStaUnlockingPinsReleased := s_bStaUnlockingPinsReleased;
       <LineId Id="354" Count="0" />
       <LineId Id="489" Count="0" />
       <LineId Id="497" Count="0" />
+      <LineId Id="720" Count="1" />
       <LineId Id="495" Count="1" />
       <LineId Id="494" Count="0" />
       <LineId Id="508" Count="1" />
       <LineId Id="490" Count="0" />
       <LineId Id="493" Count="0" />
+      <LineId Id="722" Count="0" />
+      <LineId Id="725" Count="0" />
+      <LineId Id="724" Count="0" />
       <LineId Id="491" Count="0" />
       <LineId Id="347" Count="1" />
       <LineId Id="488" Count="0" />

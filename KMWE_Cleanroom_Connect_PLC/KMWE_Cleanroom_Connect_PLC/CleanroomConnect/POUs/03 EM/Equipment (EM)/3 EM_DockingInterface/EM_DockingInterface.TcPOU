@@ -573,11 +573,12 @@ CASE s_eSeqDockingInterface OF
 				s_eResumeStep := E_SeqDockingInterface.OPEN_ALL_DOCKING_CLAMPS;
 			END_IF
 			
-			//Stop controlling all valves
+			//Error response: During "Dock TB"
 			IF i_ref_stSettings.bOpenClampsAfterClosingTimeout AND_THEN
-				(s_ePreviousStep = E_SeqDockingInterface.CLOSE_ALL_DOCKING_CLAMPS
-				OR s_ePreviousStep = E_SeqDockingInterface.CLOSE_LOWER_DOCKING_CLAMPS
-				OR s_ePreviousStep = E_SeqDockingInterface.CLOSE_UPPER_DOCKING_CLAMPS)
+				(s_ePreviousStep >= E_SeqDockingInterface.CLOSE_ALL_DOCKING_CLAMPS AND s_ePreviousStep <= E_SeqDockingInterface.COMPRESS_UPPER_SEAL)	
+				//--(s_ePreviousStep = E_SeqDockingInterface.CLOSE_ALL_DOCKING_CLAMPS
+				//--OR s_ePreviousStep = E_SeqDockingInterface.CLOSE_LOWER_DOCKING_CLAMPS
+				//--OR s_ePreviousStep = E_SeqDockingInterface.CLOSE_UPPER_DOCKING_CLAMPS)
 				AND (s_cmDockingClampsUpper.p_bStaError OR s_cmDockingClampsLower.p_bStaError) 
 				THEN
 				//Open all docking clamps if closing on low pressure has failed
@@ -586,8 +587,23 @@ CASE s_eSeqDockingInterface OF
 				s_cmDockingClampsUpper.m_Off();
 				s_cmDockingClampsLower.m_Off();
 				
-				//Resume from the beginning
+				//Resume from READY
 				s_eResumeStep := E_SeqDockingInterface.READY;
+				
+			//Error response: During "Open Inner Door"
+			ELSIF FALSE THEN	
+				; // TBD (reverse sequence?)
+				
+				//Resume from "TB Docked"
+				s_eResumeStep := E_SeqDockingInterface.TB_DOCKED;
+			
+			//Error response: During "Close Inner Door"
+			ELSIF FALSE THEN	
+				; // TBD (reverse sequence?)
+	
+				//Resume from "Inner Door Opened"
+				s_eResumeStep := E_SeqDockingInterface.TB_DOCKED;
+				
 			ELSE
 				s_cmDockingClampsUpper.m_Stop(); //pressurized rest/middle position
 				s_cmDockingClampsLower.m_Stop(); //pressurezed rest/middle position
@@ -1404,12 +1420,12 @@ s_bStaDoorOpenerAlmostClosed := s_diStaDoorAlmostClosed.p_bStaInputDelayed;
 _m_Inputs := TRUE;]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_ManualControl" Id="{cf85508a-2caa-42ea-a56c-5902a15aaf22}">
-      <Declaration><![CDATA[METHOD PRIVATE _m_ManualControl : BOOL
+    <Method Name="_m_MaintenanceControl" Id="{cf85508a-2caa-42ea-a56c-5902a15aaf22}">
+      <Declaration><![CDATA[METHOD PRIVATE _m_MaintenanceControl : BOOL
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-// Manual control has been implemented into lower layer control modules
+// Maintenenace control has been implemented into lower layer control modules
 IF s_fbHmiBtnManualClampsUpperHighPressure.p_osrBtnPress THEN
 	s_cmClampsUpperHighPressure.m_On();
 ELSIF s_fbHmiBtnManualClampsUpperHighPressure.p_osfBtnPress THEN
@@ -1585,8 +1601,7 @@ END_IF
       <Declaration><![CDATA[METHOD PUBLIC m_Main : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[
-IF NOT SUPER^.m_Main() THEN
+        <ST><![CDATA[IF NOT SUPER^.m_Main() THEN
 	RETURN;
 END_IF
 
@@ -1636,7 +1651,7 @@ CASE i_eCtrlMode OF
 		
 		// Manual control has been implemented into lower layer control modules
 		// Execets for pressure selection control outputs 
-		_m_ManualControl();
+		_m_MaintenanceControl();
 	
 	E_CtrlMode.IO:
 		//Execute IO-test control (HMI output force control)
@@ -2187,6 +2202,7 @@ p_bStaUnlockingPinsReleased := s_bStaUnlockingPinsReleased;
       <LineId Id="344" Count="0" />
       <LineId Id="354" Count="0" />
       <LineId Id="489" Count="0" />
+      <LineId Id="726" Count="0" />
       <LineId Id="497" Count="0" />
       <LineId Id="720" Count="1" />
       <LineId Id="495" Count="1" />
@@ -2197,6 +2213,17 @@ p_bStaUnlockingPinsReleased := s_bStaUnlockingPinsReleased;
       <LineId Id="722" Count="0" />
       <LineId Id="725" Count="0" />
       <LineId Id="724" Count="0" />
+      <LineId Id="727" Count="0" />
+      <LineId Id="730" Count="0" />
+      <LineId Id="728" Count="0" />
+      <LineId Id="731" Count="0" />
+      <LineId Id="736" Count="2" />
+      <LineId Id="729" Count="0" />
+      <LineId Id="734" Count="1" />
+      <LineId Id="733" Count="0" />
+      <LineId Id="732" Count="0" />
+      <LineId Id="740" Count="1" />
+      <LineId Id="739" Count="0" />
       <LineId Id="491" Count="0" />
       <LineId Id="347" Count="1" />
       <LineId Id="488" Count="0" />
@@ -2630,7 +2657,7 @@ p_bStaUnlockingPinsReleased := s_bStaUnlockingPinsReleased;
       <LineId Id="241" Count="11" />
       <LineId Id="5" Count="0" />
     </LineIds>
-    <LineIds Name="EM_DockingInterface._m_ManualControl">
+    <LineIds Name="EM_DockingInterface._m_MaintenanceControl">
       <LineId Id="397" Count="1" />
       <LineId Id="409" Count="0" />
       <LineId Id="413" Count="0" />
@@ -2716,77 +2743,7 @@ p_bStaUnlockingPinsReleased := s_bStaUnlockingPinsReleased;
       <LineId Id="293" Count="0" />
     </LineIds>
     <LineIds Name="EM_DockingInterface.m_Main">
-      <LineId Id="178" Count="0" />
-      <LineId Id="6" Count="2" />
-      <LineId Id="397" Count="0" />
-      <LineId Id="184" Count="0" />
-      <LineId Id="189" Count="0" />
-      <LineId Id="186" Count="0" />
-      <LineId Id="458" Count="0" />
-      <LineId Id="333" Count="1" />
-      <LineId Id="332" Count="0" />
-      <LineId Id="193" Count="0" />
-      <LineId Id="471" Count="0" />
-      <LineId Id="431" Count="0" />
-      <LineId Id="493" Count="0" />
-      <LineId Id="425" Count="0" />
-      <LineId Id="445" Count="0" />
-      <LineId Id="407" Count="0" />
-      <LineId Id="460" Count="0" />
-      <LineId Id="466" Count="0" />
-      <LineId Id="481" Count="1" />
-      <LineId Id="494" Count="0" />
-      <LineId Id="496" Count="0" />
-      <LineId Id="495" Count="0" />
-      <LineId Id="483" Count="0" />
-      <LineId Id="489" Count="3" />
-      <LineId Id="488" Count="0" />
-      <LineId Id="468" Count="1" />
-      <LineId Id="476" Count="1" />
-      <LineId Id="479" Count="0" />
-      <LineId Id="619" Count="0" />
-      <LineId Id="478" Count="0" />
-      <LineId Id="624" Count="0" />
-      <LineId Id="628" Count="0" />
-      <LineId Id="627" Count="0" />
-      <LineId Id="625" Count="0" />
-      <LineId Id="630" Count="1" />
-      <LineId Id="626" Count="0" />
-      <LineId Id="620" Count="0" />
-      <LineId Id="474" Count="0" />
-      <LineId Id="497" Count="0" />
-      <LineId Id="499" Count="0" />
-      <LineId Id="513" Count="1" />
-      <LineId Id="473" Count="0" />
-      <LineId Id="516" Count="6" />
-      <LineId Id="515" Count="0" />
-      <LineId Id="523" Count="0" />
-      <LineId Id="187" Count="0" />
-      <LineId Id="524" Count="0" />
-      <LineId Id="526" Count="1" />
-      <LineId Id="529" Count="3" />
-      <LineId Id="545" Count="2" />
-      <LineId Id="543" Count="0" />
-      <LineId Id="537" Count="0" />
-      <LineId Id="548" Count="2" />
-      <LineId Id="541" Count="0" />
-      <LineId Id="525" Count="0" />
-      <LineId Id="551" Count="0" />
-      <LineId Id="553" Count="0" />
-      <LineId Id="552" Count="0" />
-      <LineId Id="561" Count="0" />
-      <LineId Id="565" Count="4" />
-      <LineId Id="571" Count="5" />
-      <LineId Id="578" Count="9" />
-      <LineId Id="589" Count="8" />
-      <LineId Id="622" Count="0" />
-      <LineId Id="556" Count="0" />
-      <LineId Id="558" Count="0" />
-      <LineId Id="608" Count="2" />
-      <LineId Id="555" Count="0" />
-      <LineId Id="542" Count="0" />
-      <LineId Id="613" Count="4" />
-      <LineId Id="612" Count="0" />
+      <LineId Id="632" Count="126" />
       <LineId Id="179" Count="0" />
     </LineIds>
     <LineIds Name="EM_DockingInterface.m_ReqCloseInnerDoor">

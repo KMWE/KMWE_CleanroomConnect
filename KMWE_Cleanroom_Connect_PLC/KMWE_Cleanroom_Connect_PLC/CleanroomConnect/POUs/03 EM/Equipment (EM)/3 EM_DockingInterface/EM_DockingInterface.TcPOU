@@ -368,7 +368,8 @@ CASE s_eSeqDockingInterface OF
 			s_cmClampsLowerHighPressure.m_Off();
 		END_IF
 		
-		s_tonTimer.IN := s_cmDockingClampsUpper.m_On() AND s_cmDockingClampsLower.m_On();
+		//If docking clamps doesn't reach reed contact then continu after fixed time
+		s_tonTimer.IN := (s_cmDockingClampsUpper.m_On() AND s_cmDockingClampsLower.m_On()) OR (s_fbSeqDockingInterfaceControl.q_tmStepTime >= T#2S);
 		
 		IF s_tonTimer.ET >= i_ref_stSettings.tDelayCompressSeal THEN
 			s_tonTimer.IN := FALSE;
@@ -383,7 +384,9 @@ CASE s_eSeqDockingInterface OF
 			s_cmClampsLowerHighPressure.m_On();
 		END_IF
 		
-		IF s_fbSeqDockingInterfaceControl.q_tmStepTime >= i_ref_stSettings.tCompressSealDuration THEN
+		IF s_fbSeqDockingInterfaceControl.q_tmStepTime >= i_ref_stSettings.tCompressSealDuration
+			//Check if all docking clamps are closed 
+			AND (s_cmDockingClampsUpper.p_bStaIsOn AND s_cmDockingClampsLower.p_bStaIsOn) THEN
 			i_refTB.p_bDockingDone := TRUE;	
 			s_eSeqDockingInterface := E_SeqDockingInterface.TB_DOCKED;
 		END_IF
@@ -393,7 +396,8 @@ CASE s_eSeqDockingInterface OF
 			s_cmClampsLowerHighPressure.m_Off();
 		END_IF
 		
-		s_tonTimer.IN := s_cmDockingClampsLower.m_On();  
+		//If docking clamps doesn't reach reed contact then continu after fixed time
+		s_tonTimer.IN := (s_cmDockingClampsLower.m_On()) OR (s_fbSeqDockingInterfaceControl.q_tmStepTime >= T#2S);
 		
 		IF s_tonTimer.ET >= i_ref_stSettings.tDelayCompressSeal THEN
 			s_tonTimer.IN := FALSE;
@@ -407,7 +411,9 @@ CASE s_eSeqDockingInterface OF
 			s_cmClampsLowerHighPressure.m_On();
 		END_IF
 		
-		IF s_fbSeqDockingInterfaceControl.q_tmStepTime >= i_ref_stSettings.tCompressSealDuration THEN
+		IF s_fbSeqDockingInterfaceControl.q_tmStepTime >= i_ref_stSettings.tCompressSealDuration
+			//Check if lower docking clamps are closed 
+			AND (s_cmDockingClampsLower.p_bStaIsOn) THEN
 			s_eSeqDockingInterface := E_SeqDockingInterface.CLOSE_UPPER_DOCKING_CLAMPS;
 		END_IF
 		
@@ -419,7 +425,8 @@ CASE s_eSeqDockingInterface OF
 			s_cmClampsLowerHighPressure.m_Off(); //Back to low pressure at lower clamps
 		END_IF
 		
-		s_tonTimer.IN := s_cmDockingClampsUpper.m_On();
+		//If docking clamps doesn't reach reed contact then continu after fixed time
+		s_tonTimer.IN := (s_cmDockingClampsUpper.m_On()) OR (s_fbSeqDockingInterfaceControl.q_tmStepTime >= T#2S);
 		
 		IF s_tonTimer.ET >= i_ref_stSettings.tDelayCompressSeal THEN
 			s_tonTimer.IN := FALSE;
@@ -434,7 +441,9 @@ CASE s_eSeqDockingInterface OF
 			s_cmClampsLowerHighPressure.m_On();
 		END_IF
 		
-		IF s_fbSeqDockingInterfaceControl.q_tmStepTime >= i_ref_stSettings.tCompressSealDuration THEN
+		IF s_fbSeqDockingInterfaceControl.q_tmStepTime >= i_ref_stSettings.tCompressSealDuration
+			//Check if all docking clamps are closed 
+			AND (s_cmDockingClampsLower.p_bStaIsOn AND s_cmDockingClampsUpper.p_bStaIsOn) THEN
 			i_refTB.p_bDockingDone := TRUE;	
 			s_eSeqDockingInterface := E_SeqDockingInterface.TB_DOCKED;
 		END_IF
@@ -2065,7 +2074,10 @@ p_bStaUnlockingPinsReleased := s_bStaUnlockingPinsReleased;
       <LineId Id="453" Count="2" />
       <LineId Id="451" Count="0" />
       <LineId Id="548" Count="0" />
-      <LineId Id="698" Count="2" />
+      <LineId Id="744" Count="0" />
+      <LineId Id="698" Count="0" />
+      <LineId Id="743" Count="0" />
+      <LineId Id="700" Count="0" />
       <LineId Id="696" Count="0" />
       <LineId Id="377" Count="0" />
       <LineId Id="504" Count="1" />
@@ -2075,17 +2087,21 @@ p_bStaUnlockingPinsReleased := s_bStaUnlockingPinsReleased;
       <LineId Id="456" Count="0" />
       <LineId Id="463" Count="0" />
       <LineId Id="465" Count="0" />
+      <LineId Id="746" Count="0" />
+      <LineId Id="745" Count="0" />
       <LineId Id="533" Count="0" />
       <LineId Id="466" Count="0" />
       <LineId Id="464" Count="0" />
       <LineId Id="457" Count="0" />
       <LineId Id="567" Count="1" />
       <LineId Id="570" Count="2" />
+      <LineId Id="747" Count="0" />
       <LineId Id="685" Count="1" />
       <LineId Id="573" Count="0" />
       <LineId Id="691" Count="0" />
       <LineId Id="574" Count="6" />
       <LineId Id="582" Count="3" />
+      <LineId Id="748" Count="1" />
       <LineId Id="587" Count="0" />
       <LineId Id="565" Count="0" />
       <LineId Id="589" Count="0" />
@@ -2094,10 +2110,13 @@ p_bStaUnlockingPinsReleased := s_bStaUnlockingPinsReleased;
       <LineId Id="707" Count="0" />
       <LineId Id="703" Count="0" />
       <LineId Id="595" Count="1" />
+      <LineId Id="752" Count="0" />
       <LineId Id="692" Count="3" />
       <LineId Id="598" Count="7" />
       <LineId Id="706" Count="0" />
-      <LineId Id="607" Count="4" />
+      <LineId Id="607" Count="2" />
+      <LineId Id="750" Count="1" />
+      <LineId Id="610" Count="1" />
       <LineId Id="590" Count="0" />
       <LineId Id="558" Count="0" />
       <LineId Id="172" Count="0" />

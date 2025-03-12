@@ -16,61 +16,17 @@ VAR
 	
 	fbModeStateControl : FB_ModeStateControl;
 	
-//--	Disabled test, thisis only possibele if all library block with IO inside are changed	
-//--	{attribute 'TcLinkTo' := 'TIID^Master (EtherCAT)^Term 1 (EK1200)^Term 4 (EL1809)^Channel 1^Input'}
-//--    bVarIn1    AT%I*  : BOOL;  // linked via attribute
-
-//--	{attribute 'TcLinkTo' := 'TIID^Master (EtherCAT)^Term 1 (EK1200)^Term 7 (EL2809)^Channel 1^Output'}
-//--    bVarOut1    AT%Q*  : BOOL;  // linked via attribute 
+	//Test other valv configuration (2x 3/2 vs 1x 5/3 with open middle position)	
+	Q_bTestDoorShutterClose AT%Q* : BOOL;	//Link to: Output . Channel 15 . K21 (EL2809) . Master (EtherCAT) . Devices
+	Q_bTestDoorShutterOpen AT%Q* : BOOL;	//Link to: Output . Channel 16 . K21 (EL2809) . Master (EtherCAT) . Devices
+	s_tofPressurizeDelay : TOF;
+	s_nCmd : UINT; // 0 = IDLE, 1 = CLOSE, 2 = OPEN 
 	
 	
-//--	fbHmiParamHandler : FB_HmiParamHandler;
-//--	fbHmiParamHandler_1 : FB_HmiParamHandler;
-//--	fbHmiParamHandler_2 : FB_HmiParamHandler;
-//--	fbHmiParamHandler_3 : FB_HmiParamHandler;
-	
-//--	arr_sValue : ARRAY[1..3] OF STRING;
-//--	arr_fValue : ARRAY[1..3] OF LREAL;
-	
-//--ncTest : NC_Test;	
-
-	//..
-//--	fbMovAvg : FB_MovAvg;
-	
-//--	fbHAL : HAL;
-	
-//--	{attribute 'TcLinkTo' := 'TIID^Master (EtherCAT)^Term 1 (EK1200)^Term 9 (EL1809)^Channel 1^Input'}
-//--	//--bVarIn2    AT%I*  : BOOL;  // linked via attribute
-//--	GVL_Modules_g_emDockingInterface_s_cmDockingClampsUpper_I_bStaValveIsOn    AT%I*  : BOOL;  // linked via attribute 
-
-//--	{attribute 'TcLinkTo' := 'TIID^Master (EtherCAT)^Term 1 (EK1200)^Term 9 (EL1809)^Channel 2^Input'}
-//--	GVL_Modules_g_emUtilities_s_diSafetyOk_I_bStaInput AT%I* : BOOL;
-	
-//--	{attribute 'TcLinkTo' := 'TIID^Master (EtherCAT)^Term 1 (EK1200)^Term 9 (EL1809)^Channel 3^Input'}
-//--	GVL_Modules_g_emUtilities_s_diPowerOk_I_bStaInput AT%I* : BOOL;
-	
-//--	{attribute 'TcLinkTo' := 'TIID^Master (EtherCAT)^Term 1 (EK1200)^Term 9 (EL1809)^Channel 4^Input'}
-//--	GVL_Modules_g_emUtilities_s_diAirPressureOk_I_bStaInput AT%I* : BOOL;
-	
-// Test alarm
-
-//	fbTcAlarm : Tc3_EventLogger.FB_TcAlarm;
-
-	arr_bTestMessage : ARRAY[0..7] OF BOOL;
 END_VAR
 ]]></Declaration>
     <Implementation>
       <ST><![CDATA[
-
-//fbTcAlarm.Create(
-//	eventClass := GUID,
-//	nEventId := 1001,
-//	eSeverity := TcEventSeverity.Error,
-//	bWithConfirmation := TRUE,
-//	ipSourceInfo := I_TcSourceInfo);
-
-//--ncTest();
-
 GVL_KMWEGenericLib.g_fbAlarmManager();
 
 
@@ -85,142 +41,34 @@ fbModeStateControl();
 GVL.g_unCleanroomConnect.p_bCmdReset := GVL_KMWEGenericLib.g_fbAlarmManager.p_osrReset;
 GVL.g_unCleanroomConnect();
 
-//--//Just a test
-//--fbMovAvg(
-//--	i_rIn := ,
-//--	i_nSamples := , 
-//--	o_rOut=> );
+{warning '#TEST: Code below is just test code for a quick test, can be removed if no longer after  test is finisched'}
 
-//--fbHAL();
+s_tofPressurizeDelay(IN := s_nCmd = 0, PT := T#3S);
 
-//Test parameter handling
-(*
-fbHmiParamHandler(
-	i_fDefaultValue := ,
-	i_sName := 'Name',
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := FALSE);
-
-fbHmiParamHandler_1(
-	i_fDefaultValue := ,
-	i_sName := 'Param 1',
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
+CASE s_nCmd OF
+	0: //IDLE
+		Q_bTestDoorShutterClose := FALSE;
+		Q_bTestDoorShutterOpen := FALSE;
+		
+	1: //CLOSE
+		Q_bTestDoorShutterClose := TRUE;
+		Q_bTestDoorShutterOpen := s_tofPressurizeDelay.Q;
 	
-fbHmiParamHandler_2(
-	i_fDefaultValue := ,
-	i_sName := 'Param 2',
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-	
-fbHmiParamHandler_3(
-	i_fDefaultValue := ,
-	i_sName := 'Param 3',
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-	
-arr_sValue[1] := fbHmiParamHandler.p_sValue;
-arr_fValue[1] := fbHmiParamHandler_1.p_fValue;
-arr_fValue[2] := fbHmiParamHandler_2.p_fValue;
-arr_fValue[3] := fbHmiParamHandler_3.p_fValue;
-	
-*)
+	2: //OPEN
+		Q_bTestDoorShutterClose := s_tofPressurizeDelay.Q;
+		Q_bTestDoorShutterOpen := TRUE;
 
-//ADS message test
-(*
-IF arr_bTestMessage[0] THEN 
-	ADSLOGSTR(
-		msgCtrlMask := ADSLOG_MSGTYPE_ERROR,
-		msgFmtStr := 'Error: %s',
-		strArg := 'Test message text');
-	arr_bTestMessage[0] := FALSE;
-END_IF	
+END_CASE
 
-IF arr_bTestMessage[1] THEN 
-	ADSLOGSTR(
-		msgCtrlMask := ADSLOG_MSGTYPE_WARN,
-		msgFmtStr := 'Warning: %s',
-		strArg := 'Test message text');
-	arr_bTestMessage[1] := FALSE;
-END_IF
 
-IF arr_bTestMessage[2] THEN 
-	ADSLOGSTR(
-		msgCtrlMask := ADSLOG_MSGTYPE_MSGBOX,
-		msgFmtStr := 'MsgBox: %s',
-		strArg := 'Test message text');
-	arr_bTestMessage[2] := FALSE;
-END_IF
-
-IF arr_bTestMessage[3] THEN 
-	ADSLOGSTR(
-		msgCtrlMask := ADSLOG_MSGTYPE_HINT,
-		msgFmtStr := 'MsgBox: %s',
-		strArg := 'Test info text');
-	arr_bTestMessage[3] := FALSE;
-END_IF	
-*)]]></ST>
+]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
-      <LineId Id="939" Count="0" />
-      <LineId Id="932" Count="0" />
-      <LineId Id="931" Count="0" />
-      <LineId Id="933" Count="4" />
-      <LineId Id="629" Count="0" />
-      <LineId Id="628" Count="0" />
-      <LineId Id="698" Count="0" />
-      <LineId Id="700" Count="0" />
-      <LineId Id="781" Count="0" />
-      <LineId Id="783" Count="0" />
-      <LineId Id="782" Count="0" />
-      <LineId Id="702" Count="0" />
-      <LineId Id="701" Count="0" />
-      <LineId Id="707" Count="0" />
-      <LineId Id="699" Count="0" />
-      <LineId Id="829" Count="1" />
-      <LineId Id="723" Count="0" />
-      <LineId Id="528" Count="1" />
-      <LineId Id="581" Count="0" />
-      <LineId Id="561" Count="0" />
-      <LineId Id="537" Count="0" />
-      <LineId Id="570" Count="0" />
-      <LineId Id="540" Count="1" />
-      <LineId Id="604" Count="0" />
-      <LineId Id="550" Count="0" />
-      <LineId Id="721" Count="0" />
-      <LineId Id="377" Count="0" />
-      <LineId Id="733" Count="0" />
-      <LineId Id="727" Count="3" />
-      <LineId Id="726" Count="0" />
-      <LineId Id="725" Count="0" />
-      <LineId Id="669" Count="5" />
-      <LineId Id="686" Count="3" />
-      <LineId Id="675" Count="0" />
-      <LineId Id="680" Count="0" />
-      <LineId Id="690" Count="3" />
-      <LineId Id="681" Count="0" />
-      <LineId Id="710" Count="0" />
-      <LineId Id="731" Count="0" />
-      <LineId Id="711" Count="0" />
-      <LineId Id="716" Count="1" />
-      <LineId Id="694" Count="0" />
-      <LineId Id="719" Count="0" />
-      <LineId Id="1033" Count="0" />
-      <LineId Id="1032" Count="0" />
-      <LineId Id="1004" Count="0" />
-      <LineId Id="996" Count="2" />
-      <LineId Id="1001" Count="1" />
-      <LineId Id="1021" Count="0" />
-      <LineId Id="1006" Count="0" />
-      <LineId Id="1008" Count="5" />
-      <LineId Id="1022" Count="0" />
-      <LineId Id="1007" Count="0" />
-      <LineId Id="1015" Count="5" />
-      <LineId Id="1023" Count="0" />
-      <LineId Id="1014" Count="0" />
-      <LineId Id="1025" Count="6" />
-      <LineId Id="1024" Count="0" />
-      <LineId Id="718" Count="0" />
+      <LineId Id="1194" Count="13" />
+      <LineId Id="1304" Count="1" />
+      <LineId Id="1208" Count="0" />
+      <LineId Id="1285" Count="17" />
+      <LineId Id="1100" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>

@@ -26,8 +26,7 @@ VAR
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[
-GVL_KMWEGenericLib.g_fbAlarmManager();
+      <ST><![CDATA[GVL_KMWEGenericLib.g_fbAlarmManager();
 
 
 GVL_KMWEGenericLib.g_fbParamManager.p_bShowHmiParam := TRUE;
@@ -41,33 +40,31 @@ fbModeStateControl();
 GVL.g_unCleanroomConnect.p_bCmdReset := GVL_KMWEGenericLib.g_fbAlarmManager.p_osrReset;
 GVL.g_unCleanroomConnect();
 
-{warning '#TEST: Code below is just test code for a quick test, can be removed if no longer after  test is finisched'}
 
-s_tofPressurizeDelay(IN := s_nCmd = 0, PT := T#3S);
+{warning '#TEST: Code below is just test code for a quick test, can be removed if no longer after  test is finisched'}
+(*
+s_tofPressurizeDelay(IN := s_nCmd = 0, PT := T#75mS);
 
 CASE s_nCmd OF
 	0: //IDLE
-		Q_bTestDoorShutterClose := FALSE;
-		Q_bTestDoorShutterOpen := FALSE;
+		Q_bTestDoorShutterClose := TRUE;
+		Q_bTestDoorShutterOpen := TRUE;
 		
 	1: //CLOSE
-		Q_bTestDoorShutterClose := TRUE;
-		Q_bTestDoorShutterOpen := s_tofPressurizeDelay.Q;
+		Q_bTestDoorShutterOpen := NOT s_tofPressurizeDelay.Q;
+		Q_bTestDoorShutterClose := FALSE;
 	
 	2: //OPEN
-		Q_bTestDoorShutterClose := s_tofPressurizeDelay.Q;
-		Q_bTestDoorShutterOpen := TRUE;
+		Q_bTestDoorShutterClose := NOT s_tofPressurizeDelay.Q;
+		Q_bTestDoorShutterOpen := FALSE;
 
 END_CASE
-
-
-]]></ST>
+*)]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
-      <LineId Id="1194" Count="13" />
-      <LineId Id="1304" Count="1" />
-      <LineId Id="1208" Count="0" />
-      <LineId Id="1285" Count="17" />
+      <LineId Id="1386" Count="12" />
+      <LineId Id="1420" Count="0" />
+      <LineId Id="1399" Count="18" />
       <LineId Id="1100" Count="0" />
     </LineIds>
   </POU>

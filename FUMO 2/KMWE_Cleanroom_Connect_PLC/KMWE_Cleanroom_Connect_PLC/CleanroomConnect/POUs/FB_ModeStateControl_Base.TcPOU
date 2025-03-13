@@ -1,0 +1,421 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_ModeStateControl_Base" Id="{0ff31c57-5f64-4e23-ba53-7c57d2a6b21a}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ModeStateControl_Base
+VAR_INPUT
+	i_bReqAutomatic : BOOL;
+	i_bReqManual : BOOL;
+	i_bReqMaintenance : BOOL;
+	i_bReqIoTest : BOOL;
+	i_bReqCleaning : BOOL;	
+
+	i_bReqStart : BOOL;
+	i_bReqStop : BOOL;
+	i_bReqReset : BOOL;
+	i_bStaStopped : BOOL;
+END_VAR
+VAR_OUTPUT
+END_VAR
+VAR
+	s_bInitDone : BOOL := FALSE;	
+
+	s_eCtrlMode : E_CtrlMode := E_CtrlMode.IDLE;
+	s_eCtrlState : E_CtrlState := E_CtrlState.STOPPED;	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+
+]]></ST>
+    </Implementation>
+    <Folder Name="modes" Id="{ceccf1e7-411f-4bb4-acde-1820b3501566}" />
+    <Folder Name="states" Id="{af1c6641-f6c5-455f-877b-136e82d39a02}" />
+    <Method Name="_m_Init" Id="{0019b3fd-c704-42a7-8153-90eb9278931b}">
+      <Declaration><![CDATA[METHOD PRIVATE _m_Init : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+//Mode buttons
+s_fbHmiBtnModeAutomatic.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnModeAutomatic.p_bStaVisible := FALSE;
+s_fbHmiBtnModeAutomatic.p_bStaEnabled := FALSE;
+s_fbHmiBtnModeAutomatic.p_sBtnText := 'Automatic';
+
+s_fbHmiBtnModeManual.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnModeManual.p_bStaVisible := FALSE;
+s_fbHmiBtnModeManual.p_bStaEnabled := FALSE;
+s_fbHmiBtnModeManual.p_sBtnText := 'Manual';
+
+s_fbHmiBtnModeMaintenance.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnModeMaintenance.p_bStaVisible := FALSE;
+s_fbHmiBtnModeMaintenance.p_bStaEnabled := FALSE;
+s_fbHmiBtnModeMaintenance.p_sBtnText := 'Maintenance';
+
+s_fbHmiBtnModeIO.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnModeIO.p_bStaVisible := FALSE;
+s_fbHmiBtnModeIO.p_bStaEnabled := FALSE;
+s_fbHmiBtnModeIO.p_sBtnText := 'IO';
+
+s_fbHmiBtnModeCleaning.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnModeCleaning.p_bStaVisible := FALSE;
+s_fbHmiBtnModeCleaning.p_bStaEnabled := FALSE;
+s_fbHmiBtnModeCleaning.p_sBtnText := 'Cleaning';
+
+//State buttons
+s_fbHmiBtnStateStart.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnStateStart.p_bStaVisible := FALSE;
+s_fbHmiBtnStateStart.p_bStaEnabled := FALSE;
+s_fbHmiBtnStateStart.p_sBtnText := 'Start';
+
+s_fbHmiBtnStateStop.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnStateStop.p_bStaVisible := FALSE;
+s_fbHmiBtnStateStop.p_bStaEnabled := FALSE;
+s_fbHmiBtnStateStop.p_sBtnText := 'Stop';
+
+s_fbHmiBtnStateReset.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnStateReset.p_bStaVisible := FALSE;
+s_fbHmiBtnStateReset.p_bStaEnabled := FALSE;
+s_fbHmiBtnStateReset.p_sBtnText := 'Reset';
+
+_m_Init := TRUE;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_Main" Id="{6c552307-b2a4-4386-9ac6-29f707c1b3c2}">
+      <Declaration><![CDATA[METHOD PUBLIC m_Main : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+//From IDLE and STOPPED state it is possible to switch mode
+IF (s_eCtrlState = E_CtrlState.IDLE) OR (s_eCtrlState = E_CtrlState.STOPPED) THEN
+	IF i_bReqAutomatic THEN
+		s_eCtrlMode := E_CtrlMode.AUTOMATIC;
+	ELSIF i_bReqManual THEN
+		s_eCtrlMode := E_CtrlMode.MANUAL;
+	ELSIF i_bReqMaintenance THEN
+		s_eCtrlMode := E_CtrlMode.MAINTENANCE;
+	ELSIF i_bReqIoTest THEN
+		s_eCtrlMode := E_CtrlMode.IO;
+	ELSIF i_bReqCleaning THEN
+		s_eCtrlMode := E_CtrlMode.CLEANING; //Future mode? What else?
+	END_IF
+END_IF
+
+CASE s_eCtrlMode OF
+	E_CtrlMode.IDLE:
+		;//Nothing
+	
+	E_CtrlMode.AUTOMATIC:
+		m_ModeAutomatic();
+	
+	E_CtrlMode.MANUAL:
+		m_ModeManual();
+	
+	E_CtrlMode.MAINTENANCE:
+		m_ModeMaintenance();
+	
+	E_CtrlMode.IO:
+		m_ModeIoTest();
+		
+	E_CtrlMode.CLEANING:
+		m_ModeCleaning();
+		
+	ELSE
+		s_eCtrlMode := E_CtrlMode.IDLE;
+END_CASE
+
+CASE s_eCtrlState OF
+	E_CtrlState.STOPPED:
+		m_StateStopped();
+		
+		IF i_bReqReset THEN
+			s_eCtrlState := E_CtrlState.IDLE;
+		END_IF	
+		
+	E_CtrlState.IDLE:
+		m_StateIdle();
+		
+		IF i_bReqStop THEN
+			s_eCtrlState := E_CtrlState.STOPPING;
+		ELSIF i_bReqStart THEN
+			s_eCtrlState := E_CtrlState.RUNNING;
+		END_IF
+	
+	E_CtrlState.RUNNING:
+		m_StateRunning();
+		
+		IF i_bReqStop THEN
+			s_eCtrlState := E_CtrlState.STOPPING;
+		END_IF
+			
+	E_CtrlState.STOPPING:
+		m_StateStopping();
+		
+		IF i_bStaStopped THEN
+			s_eCtrlState := E_CtrlState.STOPPED;
+		END_IF
+	
+	ELSE
+		s_eCtrlState := E_CtrlState.STOPPED;
+END_CASE
+
+m_Main := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_ModeAutomatic" Id="{e990f1a2-dbac-46ab-b9fa-3e2db4742949}" FolderPath="modes\">
+      <Declaration><![CDATA[METHOD PUBLIC m_ModeAutomatic : BOOL
+VAR_INST
+	s_eCtrlState : E_CtrlState := E_CtrlState.STOPPED;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+//No implementation in Base, this could be done the child-class 
+
+CASE s_eCtrlState OF
+	
+	E_CtrlState.STOPPED:
+		IF i_bReqReset THEN
+			s_eCtrlState := E_CtrlState.STOPPED;
+		END_IF
+	
+	E_CtrlState.IDLE:
+		IF i_bReqStart THEN
+			s_eCtrlState := E_CtrlState.RUNNING;
+		END_IF
+	
+	E_CtrlState.RUNNING:
+		IF i_bReqStop THEN
+			s_eCtrlState := E_CtrlState.STOPPING;
+		END_IF
+	
+	E_CtrlState.STOPPING:
+		IF i_bStaStopped THEN
+			s_eCtrlState := E_CtrlState.STOPPED;
+		END_IF
+
+	ELSE
+		s_eCtrlState := E_CtrlState.STOPPED;
+END_CASE
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_ModeCleaning" Id="{719eef6e-a547-4145-9820-6ac1e3772c8e}" FolderPath="modes\">
+      <Declaration><![CDATA[METHOD PUBLIC m_ModeCleaning : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+//No implementation in Base, this could be done the child-class
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_ModeIoTest" Id="{3d73adce-d293-4a9c-aec0-9275c0db02ef}" FolderPath="modes\">
+      <Declaration><![CDATA[METHOD PUBLIC m_ModeIoTest : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+//No implementation in Base, this could be done the child-class
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_ModeMaintenance" Id="{5b5130cb-51aa-4e7e-8d5a-a00d3d24864e}" FolderPath="modes\">
+      <Declaration><![CDATA[METHOD PUBLIC m_ModeMaintenance : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+//No implementation in Base, this could be done the child-class
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_ModeManual" Id="{daaee783-e776-4c37-b94c-4e2b57285428}" FolderPath="modes\">
+      <Declaration><![CDATA[METHOD PUBLIC m_ModeManual : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+//No implementation in Base, this could be done the child-class
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_StateIdle" Id="{94e0b4c9-9c7b-4fe3-b7d8-03530dc9f43b}" FolderPath="states\">
+      <Declaration><![CDATA[METHOD PUBLIC m_StateIdle : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+//No implementation in Base, this could be done the child-class
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_StateRunning" Id="{4ddb2b3b-e0d3-40a1-b13b-038664c09471}" FolderPath="states\">
+      <Declaration><![CDATA[METHOD PUBLIC m_StateRunning : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+//No implementation in Base, this could be done the child-class
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_StateStopped" Id="{0f7c6642-355d-43b8-b178-611a57e55b50}" FolderPath="states\">
+      <Declaration><![CDATA[METHOD PUBLIC m_StateStopped : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+//No implementation in Base, this could be done the child-class
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_StateStopping" Id="{736b5d08-289d-4576-842e-2ffba08064f4}" FolderPath="states\">
+      <Declaration><![CDATA[METHOD PUBLIC m_StateStopping : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+//No implementation in Base, this could be done the child-class
+]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="FB_ModeStateControl_Base">
+      <LineId Id="762" Count="0" />
+      <LineId Id="715" Count="0" />
+      <LineId Id="703" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_ModeStateControl_Base._m_Init">
+      <LineId Id="203" Count="0" />
+      <LineId Id="505" Count="0" />
+      <LineId Id="547" Count="1" />
+      <LineId Id="506" Count="0" />
+      <LineId Id="509" Count="1" />
+      <LineId Id="549" Count="1" />
+      <LineId Id="511" Count="0" />
+      <LineId Id="514" Count="0" />
+      <LineId Id="551" Count="0" />
+      <LineId Id="515" Count="0" />
+      <LineId Id="552" Count="0" />
+      <LineId Id="516" Count="0" />
+      <LineId Id="519" Count="0" />
+      <LineId Id="553" Count="0" />
+      <LineId Id="520" Count="0" />
+      <LineId Id="554" Count="0" />
+      <LineId Id="521" Count="0" />
+      <LineId Id="524" Count="0" />
+      <LineId Id="555" Count="0" />
+      <LineId Id="525" Count="0" />
+      <LineId Id="556" Count="0" />
+      <LineId Id="526" Count="0" />
+      <LineId Id="529" Count="1" />
+      <LineId Id="532" Count="0" />
+      <LineId Id="557" Count="1" />
+      <LineId Id="533" Count="0" />
+      <LineId Id="536" Count="0" />
+      <LineId Id="559" Count="0" />
+      <LineId Id="537" Count="0" />
+      <LineId Id="560" Count="0" />
+      <LineId Id="538" Count="0" />
+      <LineId Id="541" Count="0" />
+      <LineId Id="561" Count="0" />
+      <LineId Id="542" Count="0" />
+      <LineId Id="562" Count="0" />
+      <LineId Id="543" Count="0" />
+      <LineId Id="546" Count="0" />
+      <LineId Id="500" Count="0" />
+      <LineId Id="4" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_ModeStateControl_Base.m_Main">
+      <LineId Id="3043" Count="0" />
+      <LineId Id="2921" Count="0" />
+      <LineId Id="2986" Count="0" />
+      <LineId Id="2989" Count="9" />
+      <LineId Id="2987" Count="1" />
+      <LineId Id="2940" Count="0" />
+      <LineId Id="2942" Count="1" />
+      <LineId Id="2970" Count="0" />
+      <LineId Id="2999" Count="0" />
+      <LineId Id="2954" Count="13" />
+      <LineId Id="2972" Count="0" />
+      <LineId Id="2968" Count="0" />
+      <LineId Id="2971" Count="0" />
+      <LineId Id="2941" Count="0" />
+      <LineId Id="3001" Count="4" />
+      <LineId Id="3026" Count="0" />
+      <LineId Id="3024" Count="0" />
+      <LineId Id="3027" Count="0" />
+      <LineId Id="3025" Count="0" />
+      <LineId Id="3006" Count="1" />
+      <LineId Id="3028" Count="0" />
+      <LineId Id="3030" Count="3" />
+      <LineId Id="3029" Count="0" />
+      <LineId Id="3008" Count="2" />
+      <LineId Id="3034" Count="2" />
+      <LineId Id="3011" Count="0" />
+      <LineId Id="3037" Count="0" />
+      <LineId Id="3023" Count="0" />
+      <LineId Id="3013" Count="0" />
+      <LineId Id="3038" Count="0" />
+      <LineId Id="3040" Count="1" />
+      <LineId Id="3039" Count="0" />
+      <LineId Id="3014" Count="0" />
+      <LineId Id="3021" Count="1" />
+      <LineId Id="3000" Count="0" />
+      <LineId Id="2888" Count="1" />
+      <LineId Id="179" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_ModeStateControl_Base.m_ModeAutomatic">
+      <LineId Id="30" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="34" Count="2" />
+      <LineId Id="42" Count="1" />
+      <LineId Id="50" Count="1" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="53" Count="1" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="45" Count="1" />
+      <LineId Id="56" Count="1" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="47" Count="1" />
+      <LineId Id="59" Count="1" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="38" Count="1" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="31" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_ModeStateControl_Base.m_ModeCleaning">
+      <LineId Id="7" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="8" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_ModeStateControl_Base.m_ModeIoTest">
+      <LineId Id="7" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="8" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_ModeStateControl_Base.m_ModeMaintenance">
+      <LineId Id="7" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="8" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_ModeStateControl_Base.m_ModeManual">
+      <LineId Id="7" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="8" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_ModeStateControl_Base.m_StateIdle">
+      <LineId Id="30" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="31" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_ModeStateControl_Base.m_StateRunning">
+      <LineId Id="30" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="31" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_ModeStateControl_Base.m_StateStopped">
+      <LineId Id="30" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="31" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_ModeStateControl_Base.m_StateStopping">
+      <LineId Id="30" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="31" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

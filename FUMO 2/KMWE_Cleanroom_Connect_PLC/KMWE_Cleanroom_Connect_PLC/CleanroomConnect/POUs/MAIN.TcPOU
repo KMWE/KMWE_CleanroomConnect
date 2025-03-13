@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="MAIN" Id="{c137dca6-2078-4081-8260-8d6099001278}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+	s_ParamPathnames	: ARRAY[1..Param_Project.n_MaxParamFolders] OF STRING := ['C:\Cleanroom_Connect\Parameters'];//, 'C:\Cleanroom_Connect\Param\DockingInterface'];
+
+	User : STRING := '<user_name>';
+	SoftwareVersion : STRING := '<software_version>';
+	InitDone : BOOL;
+	Shutdown : BOOL;
+	
+	fTestValue : LREAL; 
+	
+	stMsgBox : ST_MsgBox;
+	
+	fbModeStateControl : FB_ModeStateControl;
+	
+	//Test other valv configuration (2x 3/2 vs 1x 5/3 with open middle position)	
+	Q_bTestDoorShutterClose AT%Q* : BOOL;	//Link to: Output . Channel 15 . K21 (EL2809) . Master (EtherCAT) . Devices
+	Q_bTestDoorShutterOpen AT%Q* : BOOL;	//Link to: Output . Channel 16 . K21 (EL2809) . Master (EtherCAT) . Devices
+	s_tofPressurizeDelay : TOF;
+	s_nCmd : UINT; // 0 = IDLE, 1 = CLOSE, 2 = OPEN 
+	
+	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[GVL_KMWEGenericLib.g_fbAlarmManager();
+
+
+GVL_KMWEGenericLib.g_fbParamManager.p_bShowHmiParam := TRUE;
+
+GVL_KMWEGenericLib.g_fbParamManager(
+	i_sPathName := s_ParamPathnames, 
+	i_osrResetImportExport := GVL_KMWEGenericLib.g_fbAlarmManager.p_osrReset);
+
+fbModeStateControl();
+	
+GVL.g_unCleanroomConnect.p_bCmdReset := GVL_KMWEGenericLib.g_fbAlarmManager.p_osrReset;
+GVL.g_unCleanroomConnect();
+
+
+{warning '#TEST: Code below is just test code for a quick test, can be removed if no longer after  test is finisched'}
+(*
+s_tofPressurizeDelay(IN := s_nCmd = 0, PT := T#75mS);
+
+CASE s_nCmd OF
+	0: //IDLE
+		Q_bTestDoorShutterClose := TRUE;
+		Q_bTestDoorShutterOpen := TRUE;
+		
+	1: //CLOSE
+		Q_bTestDoorShutterOpen := NOT s_tofPressurizeDelay.Q;
+		Q_bTestDoorShutterClose := FALSE;
+	
+	2: //OPEN
+		Q_bTestDoorShutterClose := NOT s_tofPressurizeDelay.Q;
+		Q_bTestDoorShutterOpen := FALSE;
+
+END_CASE
+*)]]></ST>
+    </Implementation>
+    <LineIds Name="MAIN">
+      <LineId Id="1386" Count="12" />
+      <LineId Id="1420" Count="0" />
+      <LineId Id="1399" Count="18" />
+      <LineId Id="1100" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

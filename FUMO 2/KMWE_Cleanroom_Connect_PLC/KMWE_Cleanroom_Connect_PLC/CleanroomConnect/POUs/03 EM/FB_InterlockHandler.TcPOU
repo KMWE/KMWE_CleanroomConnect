@@ -1,0 +1,134 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_InterlockHandler" Id="{3f803ac0-c811-44d7-bc37-de6385932f87}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_InterlockHandler
+VAR_INPUT
+	i_stInterlockList : ST_InterlockList; 
+END_VAR
+VAR
+	s_bInterlocked : BOOL;
+	s_sReason : STRING(GVL.g_MAX_LEN_INTERLOCK_REASON);
+	i : USINT;
+	s_nInterlockCnt : USINT;
+	
+	s_ton : TON;
+	s_nIndexShow : USINT := 0;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+s_bInterlocked := FALSE;
+s_sReason := '';
+s_nInterlockCnt := 0;
+
+//Old code showing only one (first found reson)
+//--FOR i := 0 TO (GVL.g_LEN_INTERLOCK_LIST-1) DO
+//--	IF i_stInterlockList.arr_Interlocks[i].bState THEN
+//--		s_bInterlocked := i_stInterlockList.arr_Interlocks[i].bState;
+//--		s_sReason := i_stInterlockList.arr_Interlocks[i].sReason;
+//--		EXIT;
+//--	END_IF
+//--END_FOR
+
+FOR i := 0 TO (GVL.g_LEN_INTERLOCK_LIST-1) DO
+	IF i_stInterlockList.arr_Interlocks[i].bState THEN
+		s_nInterlockCnt := s_nInterlockCnt + 1;
+		s_bInterlocked := i_stInterlockList.arr_Interlocks[i].bState;
+		//--s_sReason := i_stInterlockList.arr_Interlocks[i].sReason;
+		IF s_nInterlockCnt > 1 THEN
+			s_sReason := CONCAT(s_sReason, CONCAT('; ', i_stInterlockList.arr_Interlocks[i].sReason));
+		ELSE
+			s_sReason := i_stInterlockList.arr_Interlocks[i].sReason;
+		END_IF	
+	END_IF
+END_FOR
+
+//New code showing all active interlocks time based
+(*
+	s_ton(IN := NOT(s_ton.Q), PT := T#2S);
+
+	IF s_ton.Q THEN
+		IF i_stInterlockList.arr_Interlocks[s_nIndexShow].bState THEN
+			s_bInterlocked := i_stInterlockList.arr_Interlocks[s_nIndexShow].bState;
+			s_sReason := i_stInterlockList.arr_Interlocks[s_nIndexShow].sReason;
+		END_IF
+		
+		IF s_nIndexShow < (GVL.g_LEN_INTERLOCK_LIST-1) THEN
+			s_nIndexShow := s_nIndexShow + 1; 
+		ELSE
+			s_nIndexShow := 0;
+		END_IF
+		
+	END_IF
+*)]]></ST>
+    </Implementation>
+    <Property Name="p_bInterlocked" Id="{86e04223-6d35-4c0b-a8e3-7fa2c5ae859f}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bInterlocked : BOOL]]></Declaration>
+      <Get Name="Get" Id="{18a6c684-2c70-43a4-813f-00bd04500324}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bInterlocked := s_bInterlocked;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_sReason" Id="{aaf90641-7dc3-4684-ad11-173ff784777c}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_sReason : STRING]]></Declaration>
+      <Get Name="Get" Id="{dcfe3acf-6a85-4f02-8995-d2803f5f511d}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_sReason := s_sReason;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <LineIds Name="FB_InterlockHandler">
+      <LineId Id="38" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="114" Count="0" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="100" Count="2" />
+      <LineId Id="115" Count="0" />
+      <LineId Id="103" Count="1" />
+      <LineId Id="116" Count="0" />
+      <LineId Id="105" Count="0" />
+      <LineId Id="117" Count="2" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="98" Count="0" />
+      <LineId Id="92" Count="2" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="16" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_InterlockHandler.p_bInterlocked.Get">
+      <LineId Id="5" Count="2" />
+    </LineIds>
+    <LineIds Name="FB_InterlockHandler.p_sReason.Get">
+      <LineId Id="5" Count="2" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

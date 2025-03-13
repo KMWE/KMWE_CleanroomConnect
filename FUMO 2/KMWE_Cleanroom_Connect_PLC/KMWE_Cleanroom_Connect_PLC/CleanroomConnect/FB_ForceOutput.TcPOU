@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_ForceOutput" Id="{42d93ba6-ff74-4151-9386-92423e853090}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ForceOutput
+VAR_INPUT
+	i_ref_bCmdInput : REFERENCE TO BOOL;
+	i_ref_bCmdOutput : REFERENCE TO BOOL;
+	i_eForceValue : E_ForceValue := E_ForceValue.RELEASED;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF i_eForceValue = E_ForceValue.RELEASED THEN
+	i_ref_bCmdOutput := i_ref_bCmdInput;
+ELSE
+	i_ref_bCmdOutput := (i_eForceValue = E_ForceValue.FORCE_ON);
+END_IF
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ForceOutput">
+      <LineId Id="26" Count="0" />
+      <LineId Id="11" Count="3" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="21" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

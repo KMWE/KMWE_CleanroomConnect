@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="ST_SettingsDockingInterface" Id="{6e6e126f-0cd0-4d9e-9e49-3988c4ac89bc}">
+    <Declaration><![CDATA[TYPE ST_SettingsDockingInterface :
+STRUCT
+	tTimeoutDockingClamps : TIME := T#5S; //Timeout for moving docking clamps [default: 5s]
+	tTimeoutUnlockingPins : TIME := T#5S; //Timeout for moving unlocking pins [default: 5s]
+	tTimeoutDoorOpener : TIME := T#5S; //Timeout for moving door opener [default: 5s]
+	tTimeoutDoorShutter : TIME := T#5S; //Timeout for moving door shutter [default: 5s]
+	
+	tDelayCompressSeal : TIME := T#3S;
+	tCompressSealDuration : TIME := T#3S;
+	tDelayCloseDoorShutterReleasingPins : TIME := T#3S;
+	tDelayReleaseUnlockingPins : TIME := T#3S;
+	tDelayOpenDoorShutter : TIME := T#3S;
+	tDelayOpenDoorOpener : TIME := T#3S;
+	tDelayCloseDoorShutter : TIME := T#3S;
+	tDelayLockUnlockingPins : TIME := T#3S;
+		
+	bOpenClampsAfterClosingTimeout : BOOL := TRUE; //Open docking clamps automatically in case of closing (on low pressure) [default: YES]
+	bCloseClampsAfterEachOther : BOOL := TRUE; //Close docking clamps after each other (first lower the upper) [default: YES]
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

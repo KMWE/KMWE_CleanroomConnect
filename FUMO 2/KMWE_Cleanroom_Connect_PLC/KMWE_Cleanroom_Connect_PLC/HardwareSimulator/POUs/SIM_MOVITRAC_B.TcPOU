@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="SIM_MOVITRAC_B" Id="{7ea27d36-a06c-4207-8d42-016f89631b9e}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK SIM_MOVITRAC_B
+VAR 
+	// Outputs from PLC --> HW
+	I_bCmdReset AT %I* : BOOL;
+	I_bCmdEnable AT %I* : BOOL;
+	I_bCmdStartCW AT %I* : BOOL;
+	I_bCmdStartCCW AT %I* : BOOL;
+	
+	// Inputs from HW --> PLC
+	Q_bStaReadyForOperation AT %Q* : BOOL;
+	Q_bStaMotorIsRunning AT %Q* : BOOL;
+	
+	s_tonEnabled : TON;
+	s_tonRunning : TON;
+	s_tonStopped : TON;
+	
+	s_bError : BOOL := TRUE;	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+s_tonEnabled(IN := (*I_bCmdEnable AND*) NOT(s_bError), PT := T#2S);
+s_tonRunning(IN := s_tonEnabled.Q AND (I_bCmdStartCW OR I_bCmdStartCCW) , PT := T#2S);
+s_tonStopped(IN := NOT(s_tonRunning.Q), PT := T#2S);
+
+Q_bStaReadyForOperation := s_tonEnabled.Q;
+Q_bStaMotorIsRunning := s_tonRunning.Q OR NOT(s_tonStopped.Q);
+
+IF I_bCmdReset THEN
+	s_bError := FALSE;
+END_IF
+]]></ST>
+    </Implementation>
+    <LineIds Name="SIM_MOVITRAC_B">
+      <LineId Id="168" Count="0" />
+      <LineId Id="144" Count="1" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="146" Count="0" />
+      <LineId Id="169" Count="0" />
+      <LineId Id="171" Count="0" />
+      <LineId Id="177" Count="0" />
+      <LineId Id="176" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="178" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

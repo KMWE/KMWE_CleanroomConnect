@@ -1,0 +1,737 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="EM_Utilities" Id="{d3bdaf93-23e0-447c-addf-e1fdaa10e5f0}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK EM_Utilities EXTENDS EM_Base IMPLEMENTS I_EM_Utilities
+VAR
+	//Control modules
+	s_diSafetyOk : FB_DigInput;
+	s_diPower400VacOk : FB_DigInput;
+	s_diPower230VacOk : FB_DigInput;
+	s_diPower230VacSocketsOk : FB_DigInput;
+	s_diPowerPotentialGroup24VdcOk : FB_DigInput;
+	s_diAirPressureOk : FB_DigInput;
+	s_diCabinetTemperatureOk : FB_DigInput;
+
+	s_doBeaconLedGreen : FB_DigOutput;
+	s_doBeaconLedYellow : FB_DigOutput;
+	s_doBeaconLedRed : FB_DigOutput;
+	
+	s_FbForceOutputLedGreen : FB_ForceOutput;
+	s_FbForceOutputLedYellow : FB_ForceOutput;
+	s_FbForceOutputLedRed : FB_ForceOutput;
+		
+	//States
+	s_bStaSafetyOk : BOOL := FALSE;
+	s_bStsPower400VacOk : BOOL := FALSE;
+	s_bStsPower230VacOk : BOOL := FALSE;
+	s_bStsPower230VacSocketsOk : BOOL := FALSE;
+	s_bStsPowerPotentialGroup24VdcOk : BOOL := FALSE;
+	s_bStaAirPressureOk : BOOL := FALSE;
+	s_bStaCabinetTemperatureOk : BOOL := FALSE;
+	
+	//s_bStaError
+	s_bStaWarning : BOOL;
+	
+	s_bExtError : BOOL;
+	s_bExtWarning : BOOL;
+	s_bExtRunning : BOOL;
+	
+	//Alarms
+	s_fbAlarmHandlerSafetyNotOk : FB_AlarmHandler;
+	s_fbAlarmHandlerPower400VacNotOk : FB_AlarmHandler;
+	s_fbAlarmHandlerPower230VacNotOk : FB_AlarmHandler;
+	s_fbAlarmHandlerPower230VacSocketsNotOk : FB_AlarmHandler;
+	s_fbAlarmHandlerPowerPotentialGroup24VdcNotOk : FB_AlarmHandler;
+	s_fbAlarmHandlerAirPressureNotOk : FB_AlarmHandler;
+	s_fbAlarmHandlerCabinetTemperatureNotOk : FB_AlarmHandler;
+	
+	s_bErrSafetyNotOk : BOOL;
+	s_bErrPower400VacOk : BOOL;
+	s_bErrPower230VacOk : BOOL;
+	s_bWrnPower230VacSocketsOk : BOOL;
+	s_bErrPowerPotentialGroup24VdcOk : BOOL;
+	s_bErrAirPressureNotOk : BOOL;
+	s_bErrCabinetTemperatureNotOk : BOOL;
+	
+	//Hmi
+	s_fbHmiLedSafetyOk : FB_HmiLed;
+	s_fbHmiLedPower400VacOk : FB_HmiLed;
+	s_fbHmiLedPower230VacOk : FB_HmiLed;
+	s_fbHmiLedPower230VacSocketsOk : FB_HmiLed;
+	s_fbHmiLedPowerPotentialGroup24VdcOk : FB_HmiLed;
+	
+	s_fbHmiLedAirPressureOk : FB_HmiLed;
+	s_fbHmiLedCabinetTemperatureOk : FB_HmiLed;
+	
+	s_fbHmiLedBeaconGreen : FB_HmiLed;
+	s_fbHmiLedBeaconYellow : FB_HmiLed;
+	s_fbHmiLedBeaconRed : FB_HmiLed;
+	
+	{warning '#TODO' Het zou beter zijn om dit onder te brengen in de onderstaande control modules}
+	s_bHmiForceOutputEnabled : BOOL;
+END_VAR
+
+VAR_INPUT
+	i_eCtrlState		: E_CtrlState;
+END_VAR
+
+VAR_OUTPUT
+	q_bStaWarning : BOOL;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+SUPER^();
+]]></ST>
+    </Implementation>
+    <Folder Name="Base" Id="{51a251f3-18e3-4027-86be-bdb2be30b25f}" />
+    <Method Name="_m_Alarms" Id="{91068a31-fcc6-4281-af61-d7a6e7120f8c}" FolderPath="Base\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Alarms : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Alarms() THEN
+	RETURN;
+END_IF
+
+//Set error bits
+s_bErrSafetyNotOk S= NOT(s_bStaSafetyOk);
+s_bErrPower400VacOk S= NOT(s_bStsPower400VacOk);
+s_bErrPower230VacOk S= NOT(s_bStsPower230VacOk);
+s_bWrnPower230VacSocketsOk S= NOT(s_bStsPower230VacSocketsOk);
+//--s_bErrPower24VdcOk S= NOT(s_bStsPower24VdcOk);
+s_bErrPowerPotentialGroup24VdcOk S= NOT(s_bStsPowerPotentialGroup24VdcOk);
+s_bErrAirPressureNotOk S= NOT(s_bStaAirPressureOk);
+s_bErrCabinetTemperatureNotOk S= NOT(s_bStaCabinetTemperatureOk);
+
+// Alarm Handlers ( config --> init() )
+s_fbAlarmHandlerSafetyNotOk(i_bStaActive := s_bErrSafetyNotOk);
+s_fbAlarmHandlerPower400VacNotOk(i_bStaActive := s_bErrPower400VacOk);
+s_fbAlarmHandlerPower230VacNotOk(i_bStaActive := s_bErrPower230VacOk);
+s_fbAlarmHandlerPower230VacSocketsNotOk(i_bStaActive := s_bWrnPower230VacSocketsOk);
+//--s_fbAlarmHandlerPower24VdcNotOk(i_bStaActive := s_bErrPower24VdcOk);
+s_fbAlarmHandlerPowerPotentialGroup24VdcNotOk(i_bStaActive := s_bErrPowerPotentialGroup24VdcOk);
+s_fbAlarmHandlerAirPressureNotOk(i_bStaActive := s_bErrAirPressureNotOk);
+s_fbAlarmHandlerCabinetTemperatureNotOk(i_bStaActive := s_bErrCabinetTemperatureNotOk);
+	
+// Reset Errors
+s_bErrSafetyNotOk R= i_bCmdReset AND s_bStaSafetyOk;
+s_bErrPower400VacOk R= i_bCmdReset AND s_bStsPower400VacOk;
+s_bErrPower230VacOk R= i_bCmdReset AND s_bStsPower230VacOk;
+s_bWrnPower230VacSocketsOk R= i_bCmdReset AND s_bStsPower230VacSocketsOk;
+//--s_bErrPower24VdcOk R= i_bCmdReset AND s_bStsPower24VdcOk;
+s_bErrPowerPotentialGroup24VdcOk R= i_bCmdReset AND s_bStsPowerPotentialGroup24VdcOk;
+
+s_bErrAirPressureNotOk R= i_bCmdReset AND s_bStaAirPressureOk;
+
+s_bErrCabinetTemperatureNotOk R= i_bCmdReset AND s_bStaCabinetTemperatureOk;
+
+s_bStaError := 
+	s_fbAlarmHandlerSafetyNotOk.q_bStaActive
+	OR s_fbAlarmHandlerPower400VacNotOk.q_bStaActive
+	OR s_fbAlarmHandlerPower230VacNotOk.q_bStaActive
+	OR s_fbAlarmHandlerPower230VacSocketsNotOk.q_bStaActive
+	//--OR s_fbAlarmHandlerPower24VdcNotOk.q_bStaActive
+	OR s_fbAlarmHandlerPowerPotentialGroup24VdcNotOk.q_bStaActive
+	OR s_fbAlarmHandlerAirPressureNotOk.q_bStaActive
+	OR s_fbAlarmHandlerCabinetTemperatureNotOk.q_bStaActive;
+	
+s_bStaWarning := FALSE;	
+	
+_m_Alarms := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Devices" Id="{97b8a94d-21c8-46ff-ac2c-0f330eabe3be}" FolderPath="Base\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Devices : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Devices() THEN
+	RETURN;
+END_IF
+
+//Control module
+s_diSafetyOk();
+s_diPower400VacOk();
+s_diPower230VacOk();
+s_diPower230VacSocketsOk();
+//--s_diPower24VdcOk();
+s_diPowerPotentialGroup24VdcOk();
+s_diAirPressureOk();
+s_diCabinetTemperatureOk();
+
+s_doBeaconLedGreen();
+s_doBeaconLedYellow();
+s_doBeaconLedRed();
+
+_m_Devices := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Hmi" Id="{97417a1d-1af2-4f07-b43b-e4325d410b41}" FolderPath="Base\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Hmi : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Hmi() THEN
+	RETURN;
+END_IF
+
+//Buttons
+//..
+
+//Hmi Leds
+s_fbHmiLedSafetyOk(i_bStaLed := s_bStaSafetyOk);
+s_fbHmiLedPower400VacOk(i_bStaLed := s_bStsPower400VacOk);
+s_fbHmiLedPower230VacOk(i_bStaLed := s_bStsPower230VacOk);
+s_fbHmiLedPower230VacSocketsOk(i_bStaLed := s_bStsPower230VacSocketsOk);
+//--s_fbHmiLedPower24VdcOk(i_bStaLed := s_bStsPower24VdcOk);
+s_fbHmiLedPowerPotentialGroup24VdcOk(i_bStaLed := s_bStsPowerPotentialGroup24VdcOk);
+s_fbHmiLedAirPressureOk(i_bStaLed := s_bStaAirPressureOk);
+s_fbHmiLedCabinetTemperatureOk(i_bStaLed := s_bStaCabinetTemperatureOk);
+
+s_fbHmiLedBeaconGreen(i_bStaLed := s_bExtRunning);
+s_fbHmiLedBeaconYellow(i_bStaLed := s_bExtWarning);
+s_fbHmiLedBeaconRed(i_bStaLed := s_bExtError);
+
+_m_Hmi := TRUE;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Init" Id="{7f1871a0-83c4-4557-ac15-5a15f84be50f}" FolderPath="Base\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Init : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Init() THEN
+	RETURN;
+END_IF
+
+//Control Modules
+s_diSafetyOk.i_stSettings.tmInputDelay := T#1S;
+s_diPower400VacOk.i_stSettings.tmInputDelay := T#1S;
+s_diPower230VacOk.i_stSettings.tmInputDelay := T#1S;
+s_diPower230VacSocketsOk.i_stSettings.tmInputDelay := T#1S;
+//--s_diPower24VdcOk.i_stSettings.tmInputDelay := T#1S;
+s_diPowerPotentialGroup24VdcOk.i_stSettings.tmInputDelay := T#1S;
+s_diAirPressureOk.i_stSettings.tmInputDelay := T#1S;
+s_diCabinetTemperatureOk.i_stSettings.tmInputDelay := T#600S;
+
+s_doBeaconLedGreen.i_stSettings.bCfgDelay := FALSE;
+s_doBeaconLedGreen.i_stSettings.tmOutputDelay := T#0S;
+s_doBeaconLedYellow.i_stSettings.bCfgDelay := FALSE;
+s_doBeaconLedYellow.i_stSettings.tmOutputDelay := T#0S;
+s_doBeaconLedRed.i_stSettings.bCfgDelay := FALSE;
+s_doBeaconLedRed.i_stSettings.tmOutputDelay := T#0S;
+
+//---------------------------------//	
+	
+//----------------------------------//	
+
+//Alarm config
+s_fbAlarmHandlerSafetyNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Safety not OK');
+s_fbAlarmHandlerSafetyNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
+
+s_fbAlarmHandlerPower400VacNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Power supply 400Vac not OK');
+s_fbAlarmHandlerPower400VacNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
+
+s_fbAlarmHandlerPower230VacNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Power supply 230Vac not OK');
+s_fbAlarmHandlerPower230VacNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
+
+s_fbAlarmHandlerPower230VacSocketsNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Power supply 230Vac sockets not OK');
+s_fbAlarmHandlerPower230VacSocketsNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
+
+//--s_fbAlarmHandlerPower24VdcNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Power supply 24Vdc not OK');
+//--s_fbAlarmHandlerPower24VdcNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
+
+s_fbAlarmHandlerPowerPotentialGroup24VdcNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Power potential group 24Vdc not OK');
+s_fbAlarmHandlerPowerPotentialGroup24VdcNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
+
+s_fbAlarmHandlerAirPressureNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Air pressure not OK');
+s_fbAlarmHandlerAirPressureNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
+
+s_fbAlarmHandlerCabinetTemperatureNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Cabinet temperature not OK');
+s_fbAlarmHandlerCabinetTemperatureNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
+
+//Hmi 
+s_fbHmiLedSafetyOk.p_bStaVisible := FALSE;
+s_fbHmiLedSafetyOk.p_sToHmiDescriptionLed := 'Safety Ok';
+
+s_fbHmiLedPower400VacOk.p_bStaVisible := FALSE;
+s_fbHmiLedPower400VacOk.p_sToHmiDescriptionLed := 'Power 400Vac Ok';
+
+s_fbHmiLedPower230VacOk.p_bStaVisible := FALSE;
+s_fbHmiLedPower230VacOk.p_sToHmiDescriptionLed := 'Power 230Vac Ok';
+
+s_fbHmiLedPower230VacSocketsOk.p_bStaVisible := FALSE;
+s_fbHmiLedPower230VacSocketsOk.p_sToHmiDescriptionLed := 'Power 230Vac Service Ok';
+
+//--s_fbHmiLedPower24VdcOk.p_bStaVisible := FALSE;
+//--s_fbHmiLedPower24VdcOk.p_sToHmiDescriptionLed := 'Power 24Vdc Ok';
+
+s_fbHmiLedPowerPotentialGroup24VdcOk.p_bStaVisible := FALSE;
+s_fbHmiLedPowerPotentialGroup24VdcOk.p_sToHmiDescriptionLed := 'Power Potentialgroup Ok';
+
+s_fbHmiLedAirPressureOk.p_bStaVisible := FALSE;
+s_fbHmiLedAirPressureOk.p_sToHmiDescriptionLed := 'Air pressure Ok';
+
+s_fbHmiLedCabinetTemperatureOk.p_bStaVisible := FALSE;
+s_fbHmiLedCabinetTemperatureOk.p_sToHmiDescriptionLed := 'Cabinet temperature Ok';
+
+s_fbHmiLedBeaconGreen.p_bStaVisible := FALSE;
+s_fbHmiLedBeaconGreen.p_sToHmiDescriptionLed := 'Beacon green led';
+
+s_fbHmiLedBeaconYellow.p_bStaVisible := FALSE;
+s_fbHmiLedBeaconYellow.p_sToHmiDescriptionLed := 'Beacon yellow led';
+
+s_fbHmiLedBeaconRed.p_bStaVisible := FALSE;
+s_fbHmiLedBeaconRed.p_sToHmiDescriptionLed := 'Beacon red led';
+	
+_m_Init := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Inputs" Id="{458358e5-23ba-4231-abac-3325a6a209a2}" FolderPath="Base\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Inputs : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Inputs() THEN
+	RETURN;
+END_IF
+
+s_bStaSafetyOk := s_diSafetyOk.p_bStaInputDelayed AND s_diSafetyOk.p_bStaInput; //on-delay only
+s_bStsPower400VacOk := s_diPower400VacOk.p_bStaInputDelayed AND s_diPower400VacOk.p_bStaInput; //on-delay only
+s_bStsPower230VacOk := s_diPower230VacOk.p_bStaInputDelayed AND s_diPower230VacOk.p_bStaInput; //on-delay only
+s_bStsPower230VacSocketsOk := s_diPower230VacSocketsOk.p_bStaInputDelayed AND s_diPower230VacSocketsOk.p_bStaInput; //on-delay only
+//--s_bStsPower24VdcOk := s_diPower24VdcOk.p_bStaInputDelayed AND s_diPower24VdcOk.p_bStaInput; //on-delay only
+s_bStsPowerPotentialGroup24VdcOk := s_diPowerPotentialGroup24VdcOk.p_bStaInputDelayed AND s_diPowerPotentialGroup24VdcOk.p_bStaInput; //on-delay only
+s_bStaAirPressureOk := s_diAirPressureOk.p_bStaInputDelayed AND s_diAirPressureOk.p_bStaInput; //on-delay only
+s_bStaCabinetTemperatureOk := s_diCabinetTemperatureOk.p_bStaInputDelayed OR s_diCabinetTemperatureOk.p_bStaInput; //off-delay only
+
+_m_Inputs := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Outputs" Id="{535a3bcf-7515-4ea2-9150-50d7560b683c}" FolderPath="Base\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Outputs : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Outputs() THEN
+	RETURN;
+END_IF
+
+//Reset to released if IO-Test Running is not active anymore
+IF (i_eCtrlMode <> E_CtrlMode.IO) OR (i_eCtrlState <> E_CtrlState.RUNNING) THEN
+	s_FbForceOutputLedGreen.i_eForceValue := E_ForceValue.RELEASED; 	
+END_IF
+
+IF (i_eCtrlMode <> E_CtrlMode.IO) OR (i_eCtrlState <> E_CtrlState.RUNNING) THEN
+	s_FbForceOutputLedYellow.i_eForceValue := E_ForceValue.RELEASED; 	
+END_IF 
+
+IF (i_eCtrlMode <> E_CtrlMode.IO) OR (i_eCtrlState <> E_CtrlState.RUNNING) THEN
+	s_FbForceOutputLedRed.i_eForceValue := E_ForceValue.RELEASED; 	
+END_IF
+
+//Force outputs
+IF s_FbForceOutputLedGreen.i_eForceValue = E_ForceValue.RELEASED THEN
+	s_doBeaconLedGreen.i_bStaOutput := s_bExtRunning;
+ELSE
+	s_doBeaconLedGreen.i_bStaOutput := s_FbForceOutputLedGreen.i_eForceValue = E_ForceValue.FORCE_ON;
+END_IF
+
+IF s_FbForceOutputLedYellow.i_eForceValue = E_ForceValue.RELEASED THEN
+	s_doBeaconLedYellow.i_bStaOutput := s_bExtWarning;
+ELSE
+	s_doBeaconLedYellow.i_bStaOutput := s_FbForceOutputLedYellow.i_eForceValue = E_ForceValue.FORCE_ON;
+END_IF
+
+IF s_FbForceOutputLedRed.i_eForceValue = E_ForceValue.RELEASED THEN
+	s_doBeaconLedRed.i_bStaOutput := s_bExtError;
+ELSE
+	s_doBeaconLedRed.i_bStaOutput := s_FbForceOutputLedRed.i_eForceValue = E_ForceValue.FORCE_ON;
+END_IF
+
+q_bStaWarning := s_bStaWarning;
+
+_m_Outputs := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_GetGeneralState" Id="{c779e9cb-e8a4-4825-ad08-77e95827b039}">
+      <Declaration><![CDATA[METHOD PUBLIC m_GetGeneralState : BOOL
+VAR_INPUT
+	i_bError : BOOL;
+	i_bWarning : BOOL;
+	i_bRunning : BOOL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+s_bExtError := i_bError;
+s_bExtWarning := i_bWarning;
+s_bExtRunning := i_bRunning;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_Main" Id="{6ee57644-97c7-4cd8-ab66-2c7443d8efae}" FolderPath="Base\">
+      <Declaration><![CDATA[METHOD PUBLIC m_Main : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^.m_Main() THEN
+	RETURN;
+END_IF
+
+CASE i_eCtrlMode OF
+	E_CtrlMode.IDLE:
+		;//Nothing
+		
+	E_CtrlMode.AUTOMATIC:
+		//Execute automatic control (based on request from higher-layer unit)
+		;//Nothing
+		
+	E_CtrlMode.MANUAL:
+		//Execute manaual control (based on HMI buttons)
+		;//Nothing
+		
+	E_CtrlMode.MAINTENANCE:
+		//Execute maintenance control (HMI control module buttons)
+		;//Nothing
+	
+	E_CtrlMode.IO:
+		//Execute IO-test control (HMI output force control)
+		; 	//IO-Test control is implemented in lower-layer control modules
+		
+	E_CtrlMode.CLEANING:
+		//Execute cleaning control (cleaning  specific functionalities)
+		;	//Cleaning control is not implemented, this could be a done in the future if neccesary
+END_CASE
+
+//AUTOMATIC-mode //////////////////////////////////////////////////////////////////////////////////
+//..
+
+//MANUAL-mode /////////////////////////////////////////////////////////////////////////////////////
+//..
+
+//MAINTENANCE-mode ////////////////////////////////////////////////////////////////////////////////
+//..
+
+//IO-mode /////////////////////////////////////////////////////////////////////////////////////////
+IF (i_eCtrlMode = E_CtrlMode.IO) AND (i_eCtrlState = E_CtrlState.RUNNING) THEN
+	s_bHmiForceOutputEnabled := TRUE;
+ELSE
+	s_bHmiForceOutputEnabled := FALSE;	
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="p_bStaAirPressureOk" Id="{0af5c43c-8953-4fa1-af7f-5b3f4e44e13a}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaAirPressureOk : BOOL]]></Declaration>
+      <Get Name="Get" Id="{4dede668-7bed-49aa-adc6-f4d7ad59be53}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaAirPressureOk := s_bStaAirPressureOk;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaCabinetTemperatureOk" Id="{80fd165e-a940-4d5d-899f-027c185da331}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaCabinetTemperatureOk : BOOL]]></Declaration>
+      <Get Name="Get" Id="{4d1c5c46-3465-46a4-9268-9816d243c519}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaCabinetTemperatureOk := s_bStaCabinetTemperatureOk;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaSafetyOk" Id="{7ea03187-b7ec-46c2-a694-807e2d1d70bb}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaSafetyOk : BOOL]]></Declaration>
+      <Get Name="Get" Id="{7f5e3440-eaae-47cd-8f92-6961cd1007ef}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaSafetyOk := s_bStaSafetyOk;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStsPowerOk" Id="{4313e908-4780-46b5-aee4-16ddce14fbff}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStsPowerOk : BOOL]]></Declaration>
+      <Get Name="Get" Id="{b2a078c1-b0bd-4ba8-8232-d29d32a14d28}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStsPowerOk := 
+	s_bStsPower400VacOk
+	AND s_bStsPower230VacOk
+	AND s_bStsPower230VacSocketsOk
+	AND s_bStsPowerPotentialGroup24VdcOk;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <LineIds Name="EM_Utilities">
+      <LineId Id="48" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="207" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Utilities._m_Alarms">
+      <LineId Id="12" Count="0" />
+      <LineId Id="8" Count="1" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="81" Count="1" />
+      <LineId Id="84" Count="1" />
+      <LineId Id="93" Count="1" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="116" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="45" Count="1" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="100" Count="0" />
+      <LineId Id="105" Count="0" />
+      <LineId Id="110" Count="0" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="124" Count="0" />
+      <LineId Id="122" Count="0" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="58" Count="1" />
+      <LineId Id="90" Count="1" />
+      <LineId Id="88" Count="0" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="87" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="118" Count="0" />
+      <LineId Id="117" Count="0" />
+      <LineId Id="61" Count="1" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="113" Count="2" />
+      <LineId Id="132" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="127" Count="0" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="78" Count="1" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="14" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Utilities._m_Devices">
+      <LineId Id="255" Count="0" />
+      <LineId Id="234" Count="6" />
+      <LineId Id="264" Count="1" />
+      <LineId Id="262" Count="0" />
+      <LineId Id="268" Count="0" />
+      <LineId Id="241" Count="0" />
+      <LineId Id="266" Count="0" />
+      <LineId Id="257" Count="2" />
+      <LineId Id="242" Count="0" />
+      <LineId Id="260" Count="0" />
+      <LineId Id="254" Count="0" />
+      <LineId Id="50" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Utilities._m_Hmi">
+      <LineId Id="222" Count="0" />
+      <LineId Id="7" Count="2" />
+      <LineId Id="263" Count="0" />
+      <LineId Id="262" Count="0" />
+      <LineId Id="264" Count="0" />
+      <LineId Id="248" Count="0" />
+      <LineId Id="239" Count="0" />
+      <LineId Id="256" Count="1" />
+      <LineId Id="270" Count="1" />
+      <LineId Id="268" Count="0" />
+      <LineId Id="275" Count="0" />
+      <LineId Id="258" Count="0" />
+      <LineId Id="273" Count="0" />
+      <LineId Id="272" Count="0" />
+      <LineId Id="259" Count="1" />
+      <LineId Id="253" Count="0" />
+      <LineId Id="210" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Utilities._m_Init">
+      <LineId Id="203" Count="0" />
+      <LineId Id="5" Count="3" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="326" Count="1" />
+      <LineId Id="373" Count="2" />
+      <LineId Id="445" Count="0" />
+      <LineId Id="329" Count="0" />
+      <LineId Id="385" Count="0" />
+      <LineId Id="364" Count="2" />
+      <LineId Id="368" Count="0" />
+      <LineId Id="367" Count="0" />
+      <LineId Id="370" Count="0" />
+      <LineId Id="369" Count="0" />
+      <LineId Id="362" Count="0" />
+      <LineId Id="35" Count="2" />
+      <LineId Id="391" Count="1" />
+      <LineId Id="399" Count="0" />
+      <LineId Id="426" Count="0" />
+      <LineId Id="438" Count="0" />
+      <LineId Id="404" Count="0" />
+      <LineId Id="428" Count="0" />
+      <LineId Id="439" Count="0" />
+      <LineId Id="409" Count="0" />
+      <LineId Id="430" Count="0" />
+      <LineId Id="440" Count="0" />
+      <LineId Id="414" Count="0" />
+      <LineId Id="432" Count="0" />
+      <LineId Id="441" Count="0" />
+      <LineId Id="419" Count="0" />
+      <LineId Id="434" Count="0" />
+      <LineId Id="450" Count="1" />
+      <LineId Id="449" Count="0" />
+      <LineId Id="442" Count="0" />
+      <LineId Id="424" Count="0" />
+      <LineId Id="435" Count="0" />
+      <LineId Id="443" Count="0" />
+      <LineId Id="394" Count="0" />
+      <LineId Id="437" Count="0" />
+      <LineId Id="390" Count="0" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="354" Count="0" />
+      <LineId Id="344" Count="1" />
+      <LineId Id="355" Count="0" />
+      <LineId Id="346" Count="0" />
+      <LineId Id="377" Count="1" />
+      <LineId Id="376" Count="0" />
+      <LineId Id="380" Count="1" />
+      <LineId Id="379" Count="0" />
+      <LineId Id="383" Count="1" />
+      <LineId Id="382" Count="0" />
+      <LineId Id="446" Count="0" />
+      <LineId Id="448" Count="0" />
+      <LineId Id="447" Count="0" />
+      <LineId Id="347" Count="0" />
+      <LineId Id="356" Count="0" />
+      <LineId Id="348" Count="0" />
+      <LineId Id="388" Count="1" />
+      <LineId Id="386" Count="0" />
+      <LineId Id="349" Count="0" />
+      <LineId Id="357" Count="0" />
+      <LineId Id="350" Count="1" />
+      <LineId Id="358" Count="0" />
+      <LineId Id="352" Count="1" />
+      <LineId Id="359" Count="0" />
+      <LineId Id="338" Count="0" />
+      <LineId Id="318" Count="0" />
+      <LineId Id="4" Count="0" />
+      <LineId Id="360" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Utilities._m_Inputs">
+      <LineId Id="46" Count="0" />
+      <LineId Id="6" Count="2" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="86" Count="1" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="88" Count="0" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="81" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Utilities._m_Outputs">
+      <LineId Id="20" Count="0" />
+      <LineId Id="6" Count="2" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="76" Count="1" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="79" Count="2" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="83" Count="2" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="87" Count="1" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="90" Count="1" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="97" Count="4" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="103" Count="4" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="23" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Utilities.m_GetGeneralState">
+      <LineId Id="9" Count="1" />
+      <LineId Id="15" Count="1" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Utilities.m_Main">
+      <LineId Id="178" Count="0" />
+      <LineId Id="6" Count="2" />
+      <LineId Id="397" Count="0" />
+      <LineId Id="184" Count="0" />
+      <LineId Id="186" Count="0" />
+      <LineId Id="469" Count="0" />
+      <LineId Id="487" Count="0" />
+      <LineId Id="332" Count="0" />
+      <LineId Id="484" Count="0" />
+      <LineId Id="430" Count="0" />
+      <LineId Id="488" Count="0" />
+      <LineId Id="460" Count="0" />
+      <LineId Id="485" Count="0" />
+      <LineId Id="461" Count="0" />
+      <LineId Id="489" Count="0" />
+      <LineId Id="458" Count="0" />
+      <LineId Id="486" Count="0" />
+      <LineId Id="463" Count="0" />
+      <LineId Id="490" Count="0" />
+      <LineId Id="465" Count="0" />
+      <LineId Id="457" Count="0" />
+      <LineId Id="492" Count="0" />
+      <LineId Id="491" Count="0" />
+      <LineId Id="468" Count="0" />
+      <LineId Id="466" Count="0" />
+      <LineId Id="493" Count="0" />
+      <LineId Id="187" Count="0" />
+      <LineId Id="494" Count="0" />
+      <LineId Id="496" Count="0" />
+      <LineId Id="498" Count="0" />
+      <LineId Id="497" Count="0" />
+      <LineId Id="495" Count="0" />
+      <LineId Id="482" Count="0" />
+      <LineId Id="471" Count="0" />
+      <LineId Id="479" Count="1" />
+      <LineId Id="472" Count="5" />
+      <LineId Id="451" Count="0" />
+      <LineId Id="179" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Utilities.p_bStaAirPressureOk.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Utilities.p_bStaCabinetTemperatureOk.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Utilities.p_bStaSafetyOk.Get">
+      <LineId Id="5" Count="1" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Utilities.p_bStsPowerOk.Get">
+      <LineId Id="5" Count="1" />
+      <LineId Id="8" Count="1" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

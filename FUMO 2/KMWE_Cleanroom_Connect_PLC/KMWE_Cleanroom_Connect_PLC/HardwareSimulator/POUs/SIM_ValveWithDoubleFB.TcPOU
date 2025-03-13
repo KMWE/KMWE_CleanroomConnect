@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="SIM_ValveWithDoubleFB" Id="{01e519f1-18a3-4c99-b91a-8a425f7cfbe5}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK SIM_ValveWithDoubleFB
+VAR 
+	// Outputs from PLC --> HW
+	I_bCmdValveOn AT %I* : BOOL;
+	I_bCmdValveOff AT %I* : BOOL;
+	
+	// Inputs from HW --> PLC
+	Q_bStaFeedbackOn AT %Q* : BOOL;
+	Q_bStaFeedbackOff AT %Q* : BOOL;
+	Q_bStaFeedbackOn2 AT %Q* : BOOL;
+	Q_bStaFeedbackOff2 AT %Q* : BOOL;
+	
+	s_tonOn : TON;
+	s_tonOff : TON;
+	
+END_VAR
+
+VAR_OUTPUT
+	q_bStaValveOn : BOOL;
+	q_bStaValveOff : BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+s_tonOn(IN := I_bCmdValveOn AND NOT(I_bCmdValveOff), PT := T#2S);
+
+IF s_tonOn.Q THEN
+	Q_bStaFeedbackOn := TRUE;
+	Q_bStaFeedbackOn2 := TRUE;
+ELSIF I_bCmdValveOff THEN
+	Q_bStaFeedbackOn := FALSE;
+	Q_bStaFeedbackOn2 := FALSE;
+END_IF	
+	
+s_tonOff(IN := I_bCmdValveOff AND NOT(I_bCmdValveOn), PT := T#2S);
+
+IF s_tonOff.Q THEN
+	Q_bStaFeedbackOff := TRUE;
+	Q_bStaFeedbackOff2 := TRUE;
+ELSIF I_bCmdValveOn THEN
+	Q_bStaFeedbackOff := FALSE;
+	Q_bStaFeedbackOff2 := FALSE;
+END_IF
+
+q_bStaValveOn := Q_bStaFeedbackOn;
+q_bStaValveOff := Q_bStaFeedbackOff;
+]]></ST>
+    </Implementation>
+    <LineIds Name="SIM_ValveWithDoubleFB">
+      <LineId Id="65" Count="0" />
+      <LineId Id="67" Count="3" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="71" Count="1" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="73" Count="5" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="79" Count="1" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="106" Count="1" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="108" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

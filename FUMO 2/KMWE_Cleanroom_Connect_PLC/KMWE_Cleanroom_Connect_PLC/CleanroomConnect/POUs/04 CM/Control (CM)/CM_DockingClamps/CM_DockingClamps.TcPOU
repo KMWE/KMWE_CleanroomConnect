@@ -1,0 +1,336 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="CM_DockingClamps" Id="{707e5e9b-ec6e-4cfc-802c-8528e1988b9b}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK CM_DockingClamps EXTENDS CM_Base
+
+VAR_INPUT
+	i_stSettings : ST_SettingsDockingClamps;
+END_VAR
+
+VAR
+	// Control Modules
+	s_cmValveDockingClampsUpper : CM_ValveWithDoubleFB;
+	s_cmValveDockingClampsLower : CM_ValveWithDoubleFB;
+
+	// Request
+	s_bReqOpen : BOOL;
+	s_bReqClose : BOOL;
+	
+	// Status
+	s_bStaIsOpened : BOOL; 
+	s_bStaIsClosed : BOOL;
+	
+	{attribute: 'Hide'}
+	s_bStaClamps : BOOL; //FALSE = Closed, TRUE = Opened
+	
+	// Alarms
+	
+	// Timers
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+SUPER^();
+]]></ST>
+    </Implementation>
+    <Folder Name="Methods" Id="{ffeb2278-57ae-456a-853a-75bd02373c15}" />
+    <Folder Name="Properties" Id="{4d103486-2a68-4a14-b19c-bb4ac96a75be}" />
+    <Method Name="_m_Alarms" Id="{f33d2966-4692-4c6e-951b-66a70933eb5b}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Alarms : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Alarms() THEN
+	RETURN;
+END_IF
+
+s_bStaError := 
+	s_cmValveDockingClampsUpper.p_bStaError
+	OR s_cmValveDockingClampsLower.p_bStaError;
+
+_m_Alarms := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Devices" Id="{bda56788-e543-4c1d-a9c1-3bcca55e5a0e}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Devices : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Devices() THEN
+	RETURN;
+END_IF
+
+//Call lower-layer devices
+s_cmValveDockingClampsUpper(
+	i_bReqEnable	:= i_bReqEnable, 
+	i_eCtrlMode		:= i_eCtrlMode,
+	i_bCmdReset		:= i_bCmdReset,
+	i_sCmName		:= 'Upper Docking Clamps'); 
+	
+s_cmValveDockingClampsLower(
+	i_bReqEnable	:= i_bReqEnable, 
+	i_eCtrlMode		:= i_eCtrlMode,
+	i_bCmdReset		:= i_bCmdReset,
+	i_sCmName		:= 'Lower Docking Clamps');
+
+//Control lower-layer devcies
+IF s_bReqOpen THEN
+	s_cmValveDockingClampsUpper.m_Off();
+	s_cmValveDockingClampsLower.m_Off();
+ELSIF s_bReqClose THEN
+	s_cmValveDockingClampsUpper.m_On();
+	s_cmValveDockingClampsLower.m_On();
+ELSE
+	s_cmValveDockingClampsUpper.m_Stop();
+	s_cmValveDockingClampsLower.m_Stop();
+END_IF
+	
+//Statusses
+s_bStaIsOpened := s_cmValveDockingClampsUpper.p_bStaIsOff AND s_cmValveDockingClampsLower.p_bStaIsOff;
+s_bStaIsClosed := s_cmValveDockingClampsUpper.p_bStaIsOn AND s_cmValveDockingClampsLower.p_bStaIsOn;
+
+s_bStaClamps := NOT(s_bStaIsOpened) AND s_bStaIsClosed; 
+
+_m_Devices := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Hmi" Id="{161a2353-3fa8-4a12-bcb9-7cd8e64b8355}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Hmi : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Hmi() THEN
+	RETURN;
+END_IF
+
+_m_Hmi := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Init" Id="{246b5534-eba6-48a2-9d8e-ab08715419e1}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Init : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT SUPER^._m_Init() THEN
+	RETURN;
+END_IF
+
+s_cmValveDockingClampsUpper.i_stSettings.tValveOffTimeout := i_stSettings.tClampsOpenTimeout;
+s_cmValveDockingClampsUpper.i_stSettings.tValveOnTimeout := i_stSettings.tClampsCloseTimeout;
+
+s_cmValveDockingClampsLower.i_stSettings.tValveOffTimeout := i_stSettings.tClampsOpenTimeout;
+s_cmValveDockingClampsLower.i_stSettings.tValveOnTimeout := i_stSettings.tClampsCloseTimeout;
+
+_m_Init := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Inputs" Id="{b00b0ad1-683f-43da-8632-a01c1971348b}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Inputs : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Inputs() THEN
+	RETURN;
+END_IF
+
+_m_Inputs := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Outputs" Id="{2d786b78-4b0b-41c0-9cad-0cfe793a91e3}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Outputs : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Outputs() THEN
+	RETURN;
+END_IF
+
+_m_Outputs := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_Close" Id="{f0019df8-b38e-4360-b666-0a6461ce5434}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PUBLIC m_Close : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+s_bReqOpen := FALSE;
+s_bReqClose := TRUE;
+
+m_Close := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_Open" Id="{ee548796-f12d-4452-8126-b68ccf293d10}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PUBLIC m_Open : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+s_bReqOpen := TRUE;
+s_bReqClose := FALSE;
+
+m_Open := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_Stop" Id="{baaf2f36-9288-4025-b2f3-7b96489fad9e}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PUBLIC m_Stop : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+s_bReqOpen := FALSE;
+s_bReqClose := FALSE;
+
+m_Stop := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="p_bStaClamps" Id="{59914008-3706-4d6d-a885-02d051be215d}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bStaClamps : BOOL]]></Declaration>
+      <Get Name="Get" Id="{28aeb0a5-88dd-402f-b72e-702c29341244}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaClamps := s_bStaClamps;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaIsClosed" Id="{b5985041-12b2-4457-a7ba-6467f6192394}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bStaIsClosed : BOOL]]></Declaration>
+      <Get Name="Get" Id="{9f3c5d38-a6b3-4848-a2c8-7bb49acc32d4}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaIsClosed := s_bStaIsOpened;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaIsOpened" Id="{1f74d561-75ba-4c24-9a4d-2d3cc0be044a}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bStaIsOpened : BOOL]]></Declaration>
+      <Get Name="Get" Id="{096de774-de50-4249-bc2b-268c7b612ac8}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaIsOpened := s_bStaIsClosed;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <LineIds Name="CM_DockingClamps">
+      <LineId Id="124" Count="0" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_DockingClamps._m_Alarms">
+      <LineId Id="28" Count="0" />
+      <LineId Id="19" Count="2" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="100" Count="1" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="29" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_DockingClamps._m_Devices">
+      <LineId Id="6" Count="3" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="50" Count="5" />
+      <LineId Id="57" Count="4" />
+      <LineId Id="64" Count="0" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="68" Count="2" />
+      <LineId Id="73" Count="2" />
+      <LineId Id="77" Count="1" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="81" Count="2" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="13" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_DockingClamps._m_Hmi">
+      <LineId Id="17" Count="3" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="87" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_DockingClamps._m_Init">
+      <LineId Id="46" Count="2" />
+      <LineId Id="57" Count="0" />
+      <LineId Id="49" Count="1" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="52" Count="1" />
+      <LineId Id="55" Count="1" />
+      <LineId Id="23" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_DockingClamps._m_Inputs">
+      <LineId Id="13" Count="0" />
+      <LineId Id="5" Count="2" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="17" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_DockingClamps._m_Outputs">
+      <LineId Id="31" Count="0" />
+      <LineId Id="7" Count="2" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="32" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_DockingClamps.m_Close">
+      <LineId Id="34" Count="0" />
+      <LineId Id="26" Count="7" />
+      <LineId Id="23" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_DockingClamps.m_Open">
+      <LineId Id="56" Count="0" />
+      <LineId Id="48" Count="7" />
+      <LineId Id="26" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_DockingClamps.m_Stop">
+      <LineId Id="43" Count="0" />
+      <LineId Id="35" Count="7" />
+      <LineId Id="23" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_DockingClamps.p_bStaClamps.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_DockingClamps.p_bStaIsClosed.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_DockingClamps.p_bStaIsOpened.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

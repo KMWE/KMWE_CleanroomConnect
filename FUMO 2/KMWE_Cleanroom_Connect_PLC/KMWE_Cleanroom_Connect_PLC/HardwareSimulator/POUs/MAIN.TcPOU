@@ -1,0 +1,107 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="MAIN" Id="{81b5c3b0-b471-4cd8-addb-1925034be3d2}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+	//EM Pallet Transport
+	sim_MOVITRAC_B : SIM_MOVITRAC_B;
+	//--sim_MOVITRAC_B2 : SIM_MOVITRAC_B2;
+	simCentering : SIM_ValveWithDoubleFB;	
+
+	//EM Docking Interface
+	simDockingClampUpper : SIM_ValveWithDoubleFB;
+	simDockingClampLower : SIM_ValveWithDoubleFB;
+	simUnlockPinUpper : SIM_ValveWithFB;
+	simUnlockPinLower : SIM_ValveWithFB;
+	simDoorOpener : SIM_ValveWithFB;
+	simDoorShutter : SIM_ValveWithFB;
+	simDoorOpenerAlmostClosed AT %Q* : BOOL;
+	tonDoorOpenerAlmosClosed : TON;
+	
+	simLiftActPosition AT %I* : LREAL;
+	simLiftHomed AT %Q* : BOOL;
+	simTransportUnitActPos AT %I* : LREAL;
+	simTransportUnitHomed AT %Q* : BOOL;
+	
+	bInitDone : BOOL;
+	simSafetyOK AT %Q* : BOOL;
+	simPower400VacOK AT %Q* : BOOL;
+	simPower230VacOK AT %Q* : BOOL;
+	simPower230VacSocketsOK AT %Q* : BOOL;
+	simPowerPotentialGroupOK AT %Q* : BOOL;
+	simAirPressureOK AT %Q* : BOOL;
+	simCabinetTemperatureOK AT %Q* : BOOL;
+	
+	
+////{attribute 'TcLinkTo' := 'TIID^Device 1 (EtherCAT)^Term 1 (EK1100)^Term 2 (EL1004)^Channel 2^Input'}
+(*	{attribute 'TcLinkTo' := 'TIPC^CleanroomConnect^CleanroomConnect Instance^PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdReset'}
+	I_bCmdReset AT %I* : BOOL;
+	{attribute 'TcLinkTo' := 'TIPC^CleanroomConnect^CleanroomConnect Instance^PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdEnable'}
+	I_bCmdEnable AT %I* : BOOL;
+	{attribute 'TcLinkTo' := 'TIPC^CleanroomConnect^CleanroomConnect Instance^PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdStartCW'}
+	I_bCmdStartCW AT %I* : BOOL;
+	{attribute 'TcLinkTo' := 'TIPC^CleanroomConnect^CleanroomConnect Instance^PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdStartCCW'}
+	I_bCmdStartCCW AT %I* : BOOL;
+	{attribute 'TcLinkTo' := 'TIPC^CleanroomConnect^CleanroomConnect Instance^PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.I_bStaReadyForOperation'}
+	Q_bStaReadyForOperation AT %Q* : BOOL;
+	{attribute 'TcLinkTo' := 'TIPC^CleanroomConnect^CleanroomConnect Instance^PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.I_bStaMotorIsRunning'}
+	Q_bStaMotorIsRunning AT %Q* : BOOL;
+*)	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT(bInitDone) THEN
+	simSafetyOK := TRUE;
+	simPower400VacOK := TRUE;
+	simPower230VacOK := TRUE;
+	simPower230VacSocketsOK := TRUE;
+	simPowerPotentialGroupOK := TRUE;
+	simAirPressureOK := TRUE;
+	simCabinetTemperatureOK := TRUE;
+	
+	simDoorShutter.mForceOff();
+	simDoorOpener.mForceOff();
+	
+	bInitDone := TRUE;
+END_IF
+
+//EM Pallet Conveyor
+sim_MOVITRAC_B();
+(*
+sim_MOVITRAC_B2(
+	i_ref_I_bCmdReset := I_bCmdReset, 
+	i_ref_I_bCmdEnable := I_bCmdEnable, 
+	i_ref_I_bCmdStartCW := I_bCmdStartCW, 
+	i_ref_I_bCmdStartCCW := I_bCmdStartCCW, 
+	i_ref_Q_bStaReadyForOperation := Q_bStaReadyForOperation, 
+	i_ref_Q_bStaMotorIsRunning := Q_bStaMotorIsRunning);
+*)
+simCentering();
+
+//EM Docking Interface
+simDockingClampUpper();
+simDockingClampLower();
+simUnlockPinUpper();
+simUnlockPinLower();
+simDoorOpener();
+simDoorShutter();
+
+tonDoorOpenerAlmosClosed(IN := (simDoorOpener.q_bCmdValveOff OR simDoorOpener.q_bStaValveOff), PT := T#1S);
+simDoorOpenerAlmostClosed := tonDoorOpenerAlmosClosed.Q; 
+
+//IF (simLiftActPosition > 9999999000 AND simLiftActPosition < 10000000000 THEN
+//simLiftHomed := TRUE;
+
+//simLiftHomed := FALSE;]]></ST>
+    </Implementation>
+    <LineIds Name="MAIN">
+      <LineId Id="320" Count="2" />
+      <LineId Id="365" Count="1" />
+      <LineId Id="361" Count="0" />
+      <LineId Id="323" Count="0" />
+      <LineId Id="368" Count="0" />
+      <LineId Id="324" Count="33" />
+      <LineId Id="110" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

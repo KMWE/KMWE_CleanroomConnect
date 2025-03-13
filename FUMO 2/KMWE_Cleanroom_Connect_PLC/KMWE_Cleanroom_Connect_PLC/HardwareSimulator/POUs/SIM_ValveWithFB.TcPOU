@@ -1,0 +1,89 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="SIM_ValveWithFB" Id="{09601eef-f9e1-47f9-b679-e64bd657cf22}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK SIM_ValveWithFB
+VAR 
+	// Outputs from PLC --> HW
+	I_bCmdValveOn AT %I* : BOOL;
+	I_bCmdValveOff AT %I* : BOOL;
+	
+	// Inputs from HW --> PLC
+	Q_bStaFeedbackOn AT %Q* : BOOL;
+	Q_bStaFeedbackOff AT %Q* : BOOL;
+	
+	s_tonOn : TON;
+	s_tonOff : TON;
+	
+END_VAR
+
+VAR_OUTPUT
+	q_bStaValveOn : BOOL;
+	q_bStaValveOff : BOOL;
+
+	q_bCmdValveOn : BOOL;	//Q*
+	q_bCmdValveOff : BOOL;	//Q*
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[s_tonOn(IN := I_bCmdValveOn AND NOT(I_bCmdValveOff), PT := T#2S);
+
+IF s_tonOn.Q THEN
+	Q_bStaFeedbackOn := TRUE;
+ELSIF I_bCmdValveOff THEN
+	Q_bStaFeedbackOn := FALSE;
+END_IF	
+	
+s_tonOff(IN := I_bCmdValveOff AND NOT(I_bCmdValveOn), PT := T#2S);
+
+IF s_tonOff.Q THEN
+	Q_bStaFeedbackOff := TRUE;
+ELSIF I_bCmdValveOn THEN
+	Q_bStaFeedbackOff := FALSE;
+END_IF
+
+q_bStaValveOn := Q_bStaFeedbackOn;
+q_bStaValveOff := Q_bStaFeedbackOff;
+
+q_bCmdValveOn := I_bCmdValveOn;
+q_bCmdValveOff := I_bCmdValveOff;
+]]></ST>
+    </Implementation>
+    <Method Name="mForceOff" Id="{a0fe2536-8b35-407e-a1c3-615eddeeb966}">
+      <Declaration><![CDATA[METHOD mForceOff : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+Q_bStaFeedbackOff := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="mForceOn" Id="{4b722c82-54ae-4cf3-8430-c9fbfcb88b98}">
+      <Declaration><![CDATA[METHOD mForceOn : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+Q_bStaFeedbackOn := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="SIM_ValveWithFB">
+      <LineId Id="144" Count="15" />
+      <LineId Id="162" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="186" Count="0" />
+      <LineId Id="185" Count="0" />
+      <LineId Id="187" Count="0" />
+      <LineId Id="161" Count="0" />
+    </LineIds>
+    <LineIds Name="SIM_ValveWithFB.mForceOff">
+      <LineId Id="6" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="7" Count="0" />
+    </LineIds>
+    <LineIds Name="SIM_ValveWithFB.mForceOn">
+      <LineId Id="6" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="7" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

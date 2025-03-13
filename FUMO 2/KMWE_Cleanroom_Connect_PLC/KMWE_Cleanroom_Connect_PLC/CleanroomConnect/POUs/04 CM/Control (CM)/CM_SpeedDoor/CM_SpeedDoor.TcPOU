@@ -1,0 +1,444 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="CM_SpeedDoor" Id="{e2ac819d-166f-472e-93dd-5b172f53ac70}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK CM_SpeedDoor EXTENDS CM_Base IMPLEMENTS I_Door
+VAR_INPUT
+	i_stSettings : ST_SettingsSpeedDoor;
+END_VAR
+VAR
+	// Inputs
+	I_bStaDoorIsOpended AT %I* : BOOL; // Door is opened
+	I_bStaDoorIsClosed AT %I* : BOOL; // Door is closed
+	I_bStaControllerError AT %I* : BOOL; // Controller has error
+	
+	// Outputs
+	Q_bCmdOpenDoor AT %Q* : BOOL; // Command to open door
+	Q_bCmdCloseDoor AT %Q* : BOOL; // Command to close door
+	Q_bCmdResetDoor AT %Q* : BOOL; // Command to reset door (controller)
+		
+	// Requests
+	s_bReqClose : BOOL;
+	s_bReqOpen : BOOL;
+	s_bReqReset : BOOL;
+	
+	// States
+	s_bStaDoorIsClosed : BOOL;
+	s_bStaDoorIsClosing : BOOL;
+	s_bStaDoorIsOpened : BOOL;
+	s_bStaDoorIsOpening : BOOL;
+	s_bStaDoorControllerError : BOOL;
+	
+	// Timers
+	s_tofResetPulse : TOF;
+	s_tonOpeningTimeout : TON;
+	s_tonClosingTimeout : TON;
+	
+	// Alarms
+	s_fbAlarmHandlerSpeeddoorController : FB_AlarmHandler;
+	s_fbAlarmHandlerOpeningTimeout : FB_AlarmHandler;
+	s_fbAlarmHandlerClosingTimeout : FB_AlarmHandler;
+	
+	s_errDoorController : BOOL;
+	s_errOpeningTimeout : BOOL;
+	s_errClosingTimeout : BOOL;
+		
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+SUPER^();
+]]></ST>
+    </Implementation>
+    <Folder Name="Methods" Id="{dd2ef451-5f00-4ad8-b27b-ac26bc262820}" />
+    <Folder Name="Properties" Id="{94c06e33-8c98-4e4c-9eed-8612b89d755c}" />
+    <Method Name="_m_Alarms" Id="{b8083211-2c26-4309-a88e-d066548d2c6f}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Alarms : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Alarms() THEN
+	RETURN;
+END_IF
+
+// Timeout (timers)
+s_tonOpeningTimeout(
+	IN := i_bReqEnable AND s_bReqOpen AND NOT(s_bStaDoorIsOpened),
+	PT := i_stSettings.tDoorOpeningTimeout );
+	
+s_tonClosingTimeout(
+	IN := i_bReqEnable AND s_bReqClose AND NOT(s_bStaDoorIsClosing),
+	PT := i_stSettings.tDoorClosingTimeout );
+
+// Set error bits
+s_errDoorController := i_bReqEnable AND (s_bStaDoorControllerError OR s_errDoorController) AND NOT(i_bCmdReset);
+s_errOpeningTimeout := (s_tonOpeningTimeout.Q OR s_errOpeningTimeout) AND NOT(i_bCmdReset);
+s_errClosingTimeout := (s_tonClosingTimeout.Q OR s_errClosingTimeout) AND NOT(i_bCmdReset);
+
+// Alarm Handlers
+s_fbAlarmHandlerSpeeddoorController(
+	i_bStaActive := s_errDoorController, 
+	i_eAlarmLevel := E_AlarmLevel.Alarm,
+	i_sAlarmText := CONCAT(i_sCmName , CONCAT(': Controller - ', 'has error (check DYNACO-system).')) );
+
+s_fbAlarmHandlerOpeningTimeout(
+	i_bStaActive := s_errOpeningTimeout,
+	i_eAlarmLevel := E_AlarmLevel.Alarm,
+	i_sAlarmText := CONCAT(i_sCmName , ': Door - opening timeout (check DYNACO-system).') );
+	
+s_fbAlarmHandlerClosingTimeout(
+	i_bStaActive := s_errClosingTimeout,
+	i_eAlarmLevel := E_AlarmLevel.Alarm,
+	i_sAlarmText := CONCAT(i_sCmName , ': Door - closing timeout (check DYNACO-system).') );
+	
+// Alarm collector	
+s_bStaError := 
+	s_fbAlarmHandlerSpeeddoorController.q_bStaActive
+	OR s_fbAlarmHandlerOpeningTimeout.q_bStaActive
+	OR s_fbAlarmHandlerClosingTimeout.q_bStaActive;
+
+_m_Alarms := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Devices" Id="{19806151-6bfc-4d1c-84d0-f6d34cd7cf25}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Devices : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Devices() THEN
+	RETURN;
+END_IF
+
+// Reset request
+IF s_bStaDoorIsOpened THEN
+	s_bReqOpen := FALSE;
+ELSIF s_bStaDoorIsClosed THEN
+	s_bReqClose := FALSE;	
+ELSIF s_bStaError THEN
+	s_bReqOpen := FALSE;
+	s_bReqClose := FALSE;
+END_IF
+
+_m_Devices := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Hmi" Id="{7840a539-413d-41f3-9ea8-d8dc0b64e9ee}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Hmi : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Hmi() THEN
+	RETURN;
+END_IF
+
+_m_Hmi := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Init" Id="{ed9edf80-d019-4069-bda1-c3433fdfc559}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Init : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Init() THEN
+	RETURN;
+END_IF
+
+{warning '#TODO: Not sure if this control module needs initialzation'}
+//--s_DOValve.i_stSettings.bCfgDelay 		:= FALSE;
+//--s_DOValve.i_stSettings.tmOutputDelay 	:= T#0S;
+
+_m_Init := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Inputs" Id="{2072e72c-41a8-4ff9-a497-b847d4491135}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Inputs : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Inputs() THEN
+	RETURN;
+END_IF
+
+s_bStaDoorIsOpened := I_bStaDoorIsOpended;
+s_bStaDoorIsClosed := I_bStaDoorIsClosed;
+s_bStaDoorControllerError := I_bStaControllerError;
+
+_m_Inputs := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Outputs" Id="{b9720cd4-7d4f-42d3-8c4a-83730026236d}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Outputs : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Outputs() THEN
+	RETURN;
+END_IF
+
+// Generate reset pulse for resetting speeddoor controller (via IO)
+s_tofResetPulse(
+	IN := s_bReqReset AND NOT(s_tofResetPulse.Q),
+	PT := i_stSettings.tResetPulseDuration );
+
+s_bReqReset := FALSE;
+	
+Q_bCmdResetDoor := s_tofResetPulse.Q;
+Q_bCmdOpenDoor := i_bReqEnable AND s_bReqOpen AND NOT(s_bStaDoorIsOpened);
+Q_bCmdCloseDoor := i_bReqEnable AND s_bReqClose AND NOT(s_bStaDoorIsClosed);
+	
+_m_Outputs := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_Close" Id="{7be6b50d-5014-443a-be9d-cc86325ee4dd}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PUBLIC m_Close : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+s_bReqClose := TRUE;
+s_bReqOpen := FALSE;
+	
+m_Close := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_Open" Id="{49abf2ba-d09f-4bfc-8f29-0007510177f3}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PUBLIC m_Open : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+s_bReqClose := FALSE;
+s_bReqOpen := TRUE;
+	
+m_Open := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_Reset" Id="{2b94f0b3-4541-4c9a-84a0-3021994a0458}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PUBLIC m_Reset : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+s_bReqReset := TRUE;
+	
+m_Reset := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_Stop" Id="{803f8574-e518-404c-afa9-ff03ca230bc4}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PUBLIC m_Stop : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+s_bReqClose := FALSE;
+s_bReqOpen := FALSE;
+	
+m_Stop := TRUE;
+	]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="p_bStaIsClosed" Id="{ef1dc088-110b-467e-86be-7f52cc54884f}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bStaIsClosed : BOOL]]></Declaration>
+      <Get Name="Get" Id="{b33ffe41-405f-44dc-9f2a-e98f9f590f06}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaIsClosed := s_bStaDoorIsClosed;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaIsClosing" Id="{e38aff16-9321-443b-af16-44540701eeba}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bStaIsClosing : BOOL]]></Declaration>
+      <Get Name="Get" Id="{e9c2334a-530d-42a6-9150-7c6498b38b35}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaIsClosing := s_bReqClose AND NOT s_bStaDoorIsClosed;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaIsOpened" Id="{32401d29-e49a-4af3-b091-b0c12d3eebf7}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bStaIsOpened : BOOL]]></Declaration>
+      <Get Name="Get" Id="{e6852986-45e6-4621-95cd-f7a435ccbaef}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaIsOpened := s_bStaDoorIsOpened;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaIsOpening" Id="{8e8ccc3c-3c29-4ab6-808d-63f7f129183c}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bStaIsOpening : BOOL]]></Declaration>
+      <Get Name="Get" Id="{03452541-5f72-4a9e-a064-a4ab86d90405}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaIsOpening := s_bReqOpen AND NOT s_bStaDoorIsOpened;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <LineIds Name="CM_SpeedDoor">
+      <LineId Id="410" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="411" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SpeedDoor._m_Alarms">
+      <LineId Id="28" Count="0" />
+      <LineId Id="19" Count="2" />
+      <LineId Id="103" Count="0" />
+      <LineId Id="105" Count="0" />
+      <LineId Id="107" Count="1" />
+      <LineId Id="113" Count="1" />
+      <LineId Id="116" Count="1" />
+      <LineId Id="115" Count="0" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="88" Count="2" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="34" Count="1" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="94" Count="4" />
+      <LineId Id="100" Count="2" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="110" Count="2" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="29" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SpeedDoor._m_Devices">
+      <LineId Id="6" Count="3" />
+      <LineId Id="14" Count="1" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="19" Count="1" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="13" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SpeedDoor._m_Hmi">
+      <LineId Id="17" Count="3" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="87" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SpeedDoor._m_Init">
+      <LineId Id="21" Count="0" />
+      <LineId Id="15" Count="2" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="23" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SpeedDoor._m_Inputs">
+      <LineId Id="13" Count="0" />
+      <LineId Id="5" Count="2" />
+      <LineId Id="10" Count="1" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="17" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SpeedDoor._m_Outputs">
+      <LineId Id="29" Count="0" />
+      <LineId Id="7" Count="2" />
+      <LineId Id="57" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="59" Count="1" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="39" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SpeedDoor.m_Close">
+      <LineId Id="28" Count="0" />
+      <LineId Id="11" Count="2" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="25" Count="2" />
+      <LineId Id="3" Count="0" />
+      <LineId Id="29" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SpeedDoor.m_Open">
+      <LineId Id="4" Count="0" />
+      <LineId Id="11" Count="7" />
+      <LineId Id="3" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SpeedDoor.m_Reset">
+      <LineId Id="4" Count="0" />
+      <LineId Id="9" Count="4" />
+      <LineId Id="15" Count="1" />
+      <LineId Id="3" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SpeedDoor.m_Stop">
+      <LineId Id="4" Count="0" />
+      <LineId Id="3" Count="0" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SpeedDoor.p_bStaIsClosed.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SpeedDoor.p_bStaIsClosing.Get">
+      <LineId Id="4" Count="0" />
+      <LineId Id="6" Count="0" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SpeedDoor.p_bStaIsOpened.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SpeedDoor.p_bStaIsOpening.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,1543 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="UN_CleanroomConnect" Id="{8b93890b-f796-4713-9491-f75e01fbeba7}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK UN_CleanroomConnect EXTENDS Un_Base
+VAR
+	s_stSettings : ST_UN_CleanroomConnectSettings;	
+
+//------------------------------------------//
+//Function Blocks
+
+
+	sFbModeStateControl : FB_ModeStateControl;
+
+	fbIlckHandlerConvBwd : FB_InterlockHandler;
+	fbIlckHandlerConvFwd : FB_InterlockHandler;
+	
+//------------------------------------------//
+
+//------------------------------------------//
+//Inputs
+//??	s_diTwoHandControl			: FB_DigInput;
+
+//------------------------------------------//
+
+//------------------------------------------//
+//Alarms
+//------------------------------------------//
+	
+//------------------------------------------//
+//Params
+
+//------------------------------------------//
+
+//------------------------------------------//
+//Variables
+	s_bStaWarning : BOOL;
+	s_bStaRunning : BOOL;
+//------------------------------------------//
+
+//------------------------------------------//
+//Properties
+
+//------------------------------------------//
+
+//------------------------------------------//
+//Hmi
+	s_fbHmiBtnAlarms			: FB_HmiBtn;
+	
+	s_fbHmiBtnReset				: FB_HmiBtn;
+//------------------------------------------//
+
+s_bCreate : BOOL;
+s_bDestroy : BOOL;
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+SUPER^();
+]]></ST>
+    </Implementation>
+    <Method Name="_m_Alarms" Id="{c0f56159-8f50-4d36-acac-c259038873b1}">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Alarms : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Alarms() THEN
+	RETURN;
+END_IF
+
+//overbruggen in automode tot en met place table blablabla
+s_errEmergencyBtn(i_bStaActive 			:= NOT s_DiEmergencyBtn.p_bStaInput AND NOT GVL.g_fbHmiBtnSimulation.p_bStaBtn AND GVL.g_bConnectTestEquipment ,
+				  i_eAlarmLevel 		:= E_AlarmLevel.Alarm,
+				  i_sAlarmText 			:= 'Emergency button pressed');
+
+IF GVL_KMWEGenericLib.g_fbAlarmManager.p_bAlarmActive THEN 
+	GVL.g_eStaLedColor := E_KmweLedColors.Red;
+END_IF
+
+s_bStaError := s_errEmergencyBtn.q_bStaActive;
+
+_m_Alarms := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Devices" Id="{68eeb98b-de01-4c23-9e4b-e0a75e4ed7ba}">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Devices : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Devices() THEN
+	RETURN;
+END_IF
+
+//------------------------------------------//
+// Control Modules
+
+//------------------------------------------//
+
+//------------------------------------------//
+//Outputs
+//------------------------------------------//
+
+//------------------------------------------//
+//Inputs
+//??	s_diTwoHandControl();
+//------------------------------------------//
+
+_m_Devices := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Hmi" Id="{6e489294-edbd-4c11-9b41-7f97eb3787da}">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Hmi : BOOL
+VAR_INST
+	s_sPrevPageAlarms 		: STRING;
+	s_sPrevBottom1Alarms	: STRING;
+	
+	s_sCompanySelectionVisible	: STRING;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Hmi() THEN
+	RETURN;
+END_IF
+
+//------------------------------------------//
+//Mode management
+IF GVL_KMWEGenericLib.g_fbHmiBtnReturnToStart.p_osfBtnPress THEN
+	s_eCtrlMode := E_CtrlMode.IDLE;
+
+	GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaVisible	:= TRUE;
+	GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaEnabled	:= TRUE;	
+END_IF
+
+//------------------------------------------//
+
+//------------------------------------------//
+//Alarm Button can always be pressed
+IF s_fbHmiBtnAlarms.p_osrBtnPress AND GVL.g_sToHmiMiddleContent <> GVL.g_stHmiMiddle.AlarmManager THEN
+	s_sPrevPageAlarms			:= GVL.g_sToHmiMiddleContent;
+	s_sPrevBottom1Alarms		:= GvL.g_sToHmiBottomContent;
+	GVL.g_sToHmiMiddleContent 	:= GVL.g_stHmiMiddle.AlarmManager;
+	GVL.g_sToHmiBottomContent	:= GVL.g_stHmiBottomBar.Alarm;
+	
+	GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible 			:= TRUE;
+	GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled 			:= TRUE;
+END_IF
+
+IF GVL.g_sToHmiMiddleContent = GVL.g_stHmiMiddle.AlarmManager AND GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_osfBtnPress THEN
+	GVL.g_sToHmiMiddleContent 	:=	s_sPrevPageAlarms;
+	GVL.g_sToHmiBottomContent	:=	s_sPrevBottom1Alarms;
+	
+	GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible 			:= FALSE;
+	GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled 			:= FALSE;
+END_IF
+//------------------------------------------//
+
+//------------------------------------------//
+//Hmi view management (General, Em can set module specific pages)
+CASE s_eCtrlMode OF
+	E_CtrlMode.IDLE:
+(*		GVL.g_bConnectTestEquipment		:= TRUE;
+
+		IF NOT GVL_KMWEGenericLib.g_fbAlarmManager.p_bAlarmActive THEN
+			GVL.g_bLedFlashFast	:= FALSE;
+			GVL.g_bLedFlashSlow	:= FALSE;
+			GVL.g_eStaLedColor := E_KmweLedColors.Idle;
+		END_IF
+	
+		s_fbHmiBtnTesterConfig.p_sBtnText		:= 'Tester Configuration';	
+	
+		IF GVL_KMWEGenericLib.g_fbHmiBtnReturnToStart.p_osfBtnPress THEN
+			GVL_KMWEGenericLib.g_fbParamManager.p_bShowHmiParam := FALSE;
+
+			GVL.g_sToHmiMiddleContent 	:= GVL.g_stHmiMiddle.Start;
+			GVL.g_sToHmiBottomContent	:= GVL.g_stHmiBottomBar.Start;
+		END_IF
+		
+		IF s_fbHmiBtnTesterConfig.p_osrBtnPress THEN
+			GVL_KMWEGenericLib.g_fbParamManager.p_nFolderIndex 	:= 1;
+			GVL_KMWEGenericLib.g_fbParamManager.p_bShowHmiParam := TRUE;
+
+			GVL.g_sToHmiMiddleContent 	:= GVL.g_stHmiMiddle.TesterConfig;
+			GVL.g_sToHmiBottomContent	:= GVL.g_stHmiBottomBar.General_ReturnToStart;
+		END_IF
+		
+		IF s_fbHmiBtnAutomatic.p_osrBtnPress THEN
+			s_eCtrlMode 					:= E_CtrlMode.AUTOMATIC;
+			GVL.g_bConnectTestEquipment		:= FALSE;
+			
+			GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_sBtnText		:= 'Acknowledge';
+			
+			GVL_KMWEGenericLib.g_fbParamManager.p_nFolderIndex 		:= 2;
+			
+			GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaVisible	:= FALSE;
+			GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaEnabled	:= FALSE;
+	
+			GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible		:= TRUE;
+			GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled		:= TRUE;
+			
+			GVL.g_sToHmiMiddleContent 	:= GVL.g_stHmiMiddle.OperatorInputData;
+			GVL.g_sToHmiBottomContent	:= GVL.g_stHmiBottomBar.Procedure;
+		END_IF
+		
+		IF s_fbHmiBtnManual.p_osrBtnPress THEN
+			s_eCtrlMode := E_CtrlMode.MANUAL;
+			
+			GVL.g_sToHmiMiddleContent 	:= GVL.g_stHmiMiddle.Manual;
+			GVL.g_sToHmiBottomContent	:= GVL.g_stHmiBottomBar.General_ReturnToStart;
+		END_IF
+*)
+	E_CtrlMode.AUTOMATIC:
+(*		s_fbHmiBtnTesterConfig.p_sBtnText		:= 'Procedure Configuration';
+		
+		IF GVL.g_sToHmiMiddleContent = GVL.g_stHmiMiddle.OperatorInputData 
+			AND GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_osrBtnPress 
+		THEN
+			GVL_KMWEGenericLib.g_fbParamManager.p_bShowHmiParam := FALSE;
+
+			GVL.g_sToHmiMiddleContent 							:= GVL.g_stHmiMiddle.Start;
+			GVL.g_sToHmiBottomContent							:= GVL.g_stHmiBottomBar.Start;
+			
+			s_eCtrlMode 										:= E_CtrlMode.IDLE;	
+		END_IF
+		
+		IF s_fbHmiBtnTesterConfig.p_osrBtnPress THEN
+			GVL_KMWEGenericLib.g_fbParamManager.p_nFolderIndex 	:= 2;
+			GVL_KMWEGenericLib.g_fbParamManager.p_bShowHmiParam := TRUE;
+
+			GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaVisible	:= FALSE;
+			GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaEnabled	:= FALSE;
+			
+			GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible		:= TRUE;
+			GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled		:= TRUE;
+
+			GVL.g_sToHmiMiddleContent 	:= GVL.g_stHmiMiddle.TesterConfig;
+			GVL.g_sToHmiBottomContent	:= GVL.g_stHmiBottomBar.General_Return;
+		END_IF
+		
+		IF GVL.g_sToHmiMiddleContent = GVL.g_stHmiMiddle.TesterConfig THEN
+			IF GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_osrBtnPress THEN
+				GVL.g_sToHmiMiddleContent 	:= GVL.g_stHmiMiddle.OperatorInputData;
+				GVL.g_sToHmiBottomContent	:= GVL.g_stHmiBottomBar.Procedure;
+				
+				GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible		:= FALSE;
+				GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled		:= FALSE;
+			END_IF
+		END_IF
+*)		
+	E_CtrlMode.MANUAL:
+		IF GVL_KMWEGenericLib.g_fbAlarmManager.p_osrAlarmsResolved THEN
+			GVL.g_eStaLedColor := E_KmweLedColors.Green;
+		END_IF
+	
+		GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaVisible	:= FALSE;
+		GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaEnabled	:= FALSE;
+		
+//		IF GVL_KMWEGenericLib.g_fbHmiBtnReturnToStart.p_osrBtnPress THEN
+//			GVL.g_sToHmiMiddleContent 	:= ST_HmiMiddle.Start;
+//			GVL.g_sToHmiBottomContect	:= ST_HmiBottomBar.Start;
+//		END_IF
+		;
+END_CASE
+//------------------------------------------//
+
+//------------------------------------------//
+//Hmi Buttons
+//--s_fbHmiBtnAutomatic();
+//--s_fbHmiBtnManual();
+//??s_fbHmiBtnTesterConfig();
+s_fbHmiBtnAlarms();
+
+s_fbHmiBtnReset();
+
+GVL.g_fbHmiBtnSimulation();
+//------------------------------------------//
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Init" Id="{71192b96-a840-4eae-8166-473534974241}">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Init : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Init() THEN
+	RETURN;
+END_IF
+
+//EM Utilities
+_m_AddModule(i_itfModuleBase := GVL_Modules.g_emUtilities);
+
+GVL_Modules.g_emUtilities.i_bReqEnable := FALSE;
+GVL_Modules.g_emUtilities.i_eCtrlMode := E_CtrlMode.IDLE;
+GVL_Modules.g_emUtilities.i_bCmdReset := FALSE;
+GVL_Modules.g_emUtilities.i_sEmName  := 'EM Utilities';
+
+//Settings Doors
+//<none>
+
+//EM Pallet Conveyor
+_m_AddModule(i_itfModuleBase := GVL_Modules.g_emPalletConveyor);
+
+GVL_Modules.g_emPalletConveyor.i_bReqEnable := FALSE;
+GVL_Modules.g_emPalletConveyor.i_eCtrlMode := E_CtrlMode.IDLE;
+GVL_Modules.g_emPalletConveyor.i_bCmdReset := FALSE;
+GVL_Modules.g_emPalletConveyor.i_sEmName  := 'EM Pallet Conveyor';
+
+//Interlocks
+//Conveyor
+//--fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[0].sReason := 'Utilities not OK';
+fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[0].sReason := 'Docking Clamps Not Open';
+fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[1].sReason := 'Unlocking Pins Not In';
+fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[2].sReason := 'Door Opener Not Closed';
+
+//--fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[0].sReason := 'Utilities not OK';
+fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[0].sReason := 'Docking Clamps Not Open';
+fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[1].sReason := 'Unlocking Pins Not In';
+fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[2].sReason := 'Door Opener Not Closed';
+
+//Settings CM Pallet Conveyor (via parameter file)
+//--20240924 s_stSettings.stSettingsPalletConveyor.fSpeedManual := 50.0; //mm/s
+//--20240924 s_stSettings.stSettingsPalletConveyor.fSpeedGoToInfeed := 100.0; //mm/s
+//--20240924 s_stSettings.stSettingsPalletConveyor.fSpeedGoToCentering := 100.0; //mm/s
+//--20240924 s_stSettings.stSettingsPalletConveyor.fSpeedGoToDocking := 50.0; //mm/s
+
+//Settings CM Centering
+//--20240924 s_stSettings.stSettingsPalletConveyor.tTimeoutCenteringToCenter := T#3S;
+//--20240924 s_stSettings.stSettingsPalletConveyor.tTimeoutCenteringToIdle := T#3S;
+
+//EM Docking Interface
+_m_AddModule(i_itfModuleBase := GVL_Modules.g_emDockingInterface);
+GVL_Modules.g_emDockingInterface.i_bReqEnable := FALSE;
+GVL_Modules.g_emDockingInterface.i_eCtrlMode := E_CtrlMode.IDLE;
+GVL_Modules.g_emDockingInterface.i_bCmdReset := FALSE;
+GVL_Modules.g_emDockingInterface.i_sEmName  := 'EM Docking Interface';
+
+//Settings CM Docking Interface (via paramter file)
+//--20240924 s_stSettings.stSettingsDockingInterface.tTimeoutDockingClamps := T#5S;
+//--20240924 s_stSettings.stSettingsDockingInterface.tTimeoutUnlockingPins := T#5S;
+//--20240924 s_stSettings.stSettingsDockingInterface.tTimeoutDoorOpener := T#5S;
+//--20240924 s_stSettings.stSettingsDockingInterface.tTimeoutDoorShutter := T#5S;
+
+//--20240924 s_stSettings.stSettingsDockingInterface.tCompressSealDuration := T#3S;
+//--20240924 s_stSettings.stSettingsDockingInterface.tDelayCloseDoorShutterReleasingPins := T#3S;
+//--20240924 s_stSettings.stSettingsDockingInterface.tDelayReleaseUnlockingPins := T#3S;
+//--20240924 s_stSettings.stSettingsDockingInterface.tDelayOpenDoorShutter := T#3S;
+//--20240924 s_stSettings.stSettingsDockingInterface.tDelayOpenDoorOpener := T#3S;
+//--20240924 s_stSettings.stSettingsDockingInterface.tDelayCloseDoorShutter := T#3S;
+//--20240924 s_stSettings.stSettingsDockingInterface.tDelayLockUnlockingPins := T#3S;
+
+//--20240924 s_stSettings.stSettingsDockingInterface.bOpenClampsAfterClosingTimeout := FALSE; 
+
+//##_LIFTING_TRANSPORT_DISABLED_##
+(*
+//EM Lifting Transport
+_m_AddModule(i_itfModuleBase := GVL_Modules.g_emLiftingTransport);
+GVL_Modules.g_emLiftingTransport.i_bReqEnable := FALSE;
+GVL_Modules.g_emLiftingTransport.i_eCtrlMode := E_CtrlMode.IDLE;
+GVL_Modules.g_emLiftingTransport.i_bCmdReset := FALSE;
+GVL_Modules.g_emLiftingTransport.i_sEmName := 'EM Lifting Transport';
+*)
+
+(* ++
+//Manual-Jogging
+s_stSettings.stSettingsLiftingTransport.stLiftSpeedProfileJogging.fVelocity := 25.0; //mm/s
+s_stSettings.stSettingsLiftingTransport.stLiftSpeedProfileJogging.fAcceleration := 25.0; //mm/s^2
+s_stSettings.stSettingsLiftingTransport.stLiftSpeedProfileJogging.fDeceleration	:= 25.0; //mm/s^2
+s_stSettings.stSettingsLiftingTransport.stLiftSpeedProfileJogging.fJerk	:= 250.0; //mm/s^3
+
+//Manual-Positioning
+s_stSettings.stSettingsLiftingTransport.stLiftSpeedProfilePositioning.fVelocity	:= 25.0; //mm/s
+s_stSettings.stSettingsLiftingTransport.stLiftSpeedProfilePositioning.fAcceleration	:= 25.0; //mm/s^2
+s_stSettings.stSettingsLiftingTransport.stLiftSpeedProfilePositioning.fDeceleration	:= 25.0; //mm/s^2
+s_stSettings.stSettingsLiftingTransport.stLiftSpeedProfilePositioning.fJerk	:= 250.0; //mm/s^3
+*)
+
+//Automatic-Positioning Lift
+(* ++
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[0].sName	:= 'Idle';
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[0].fPosition := 50.0; //[mm]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[0].fVelocity := 100.0; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[0].fAcceleration := 10.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[0].fDeceleration	:= 10.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[0].fJerk := 100.0; //[mm/s^3]
+
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[1].sName	:= 'PrePickFromTB';
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[1].fPosition := 300.0; //[mm]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[1].fVelocity := 100.0; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[1].fAcceleration := 10.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[1].fDeceleration := 10.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[1].fJerk := 100.0; //[mm/s^3]
+
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[2].sName	:= 'PickFromTB';
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[2].fPosition := 325.0; //[mm]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[2].fVelocity := 10.0; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[2].fAcceleration := 10.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[2].fDeceleration := 10.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[2].fJerk := 100.0; //[mm/s^3]
+
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[3].sName	:= 'RaiseFromTB';
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[3].fPosition := 350.0; //[mm]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[3].fVelocity := 10.0; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[3].fAcceleration := 10.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[3].fDeceleration := 10.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[3].fJerk := 100.0; //[mm/s^3]
+
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[4].sName	:= 'PrePlaceInCabin';
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[4].fPosition := 75.0; //[mm]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[4].fVelocity := 100.0; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[4].fAcceleration := 10.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[4].fDeceleration := 10.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[4].fJerk := 100.0; //[mm/s^3]
+
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[5].sName	:= 'PlaceInCabin';
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[5].fPosition := 0.0; //[mm]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[5].fVelocity := 10.0; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[5].fAcceleration := 10.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[5].fDeceleration := 10.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[5].fJerk := 100.0; //[mm/s^3]
+
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[6].sName	:= 'PrePickFromCabin';
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[6].fPosition := 100.0; //[mm]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[6].fVelocity := 10.0; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[6].fAcceleration := 10.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[6].fDeceleration := 10.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[6].fJerk := 100.0; //[mm/s^3]
+
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[7].sName	:= 'PickFromCabin';
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[7].fPosition := 125.0; //[mm]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[7].fVelocity := 10.0; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[7].fAcceleration := 10.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[7].fDeceleration := 10.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[7].fJerk := 100.0; //[mm/s^3]
+
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[8].sName	:= 'RaiseFromCabin';
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[8].fPosition := 350.0; //[mm]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[8].fVelocity := 100.0; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[8].fAcceleration := 10.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[8].fDeceleration := 10.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[8].fJerk := 100.0; //[mm/s^3]
+
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[9].sName	:= 'PrePlaceInTB';
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[9].fPosition := 325.0; //[mm]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[9].fVelocity := 10.0; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[9].fAcceleration := 10.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[9].fDeceleration := 10.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[9].fJerk := 100.0; //[mm/s^3]
+
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[10].sName := 'PlaceInTB';
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[10].fPosition := 300.0; //[mm]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[10].fVelocity := 10.0; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[10].fAcceleration := 10.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[10].fDeceleration := 10.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[10].fJerk := 100.0; //[mm/s^3]
+
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[11].sName	:= 'ReturnInCabin';
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[11].fPosition := 50.0; //[mm]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[11].fVelocity := 100.0; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[11].fAcceleration := 10.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[11].fDeceleration	:= 10.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[11].fJerk := 100.0; //[mm/s^3]
+
+//Automatic-Positioning Transport
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[0].sName := 'Idle';
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[0].fPosition := 50.0; //[mm]
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[0].fVelocity := 10.0; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[0].fAcceleration := 10.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[0].fDeceleration := 10.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[0].fJerk := 100.0; //[mm/s^3]
+
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[1].sName := 'PrePickFromTB';
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[1].fPosition := 400.0; //[mm]
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[1].fVelocity := 100.0; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[1].fAcceleration := 10.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[1].fDeceleration := 10.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[1].fJerk := 100.0; //[mm/s^3]
+
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[2].sName := 'PickFromTB';
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[2].fPosition := 425.0; //[mm]
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[2].fVelocity := 10.0; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[2].fAcceleration := 10.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[2].fDeceleration := 10.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[2].fJerk := 100.0; //[mm/s^3]
+
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[3].sName := 'PlaceInCabin';
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[3].fPosition := 50.0; //[mm]
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[3].fVelocity := 100.0; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[3].fAcceleration := 10.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[3].fDeceleration := 10.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[3].fJerk := 100.0; //[mm/s^3]
+
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[4].sName := 'PrePlaceInTB';
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[4].fPosition := 400.0; //[mm]
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[4].fVelocity := 100.0; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[4].fAcceleration := 10.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[4].fDeceleration := 10.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[4].fJerk := 100.0; //[mm/s^3]
+
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[5].sName := 'PlaceInTB';
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[5].fPosition := 425.0; //[mm]
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[5].fVelocity := 10.0; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[5].fAcceleration := 10.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[5].fDeceleration := 10.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[5].fJerk := 100.0; //[mm/s^3]
+
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[6].sName := 'ReturnInCabin';
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[6].fPosition := 50.0; //[mm]
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[6].fVelocity := 10.0; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[6].fAcceleration := 10.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[6].fDeceleration := 10.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[6].fJerk := 100.0; //[mm/s^3]
+*)
+
+GVL_Modules.g_emPalletConveyor.i_ref_stSettings REF= s_stSettings.stSettingsPalletConveyor;
+GVL_Modules.g_emDockingInterface.i_ref_stSettings REF= s_stSettings.stSettingsDockingInterface;
+//##_LIFTING_TRANSPORT_DISABLED_##GVL_Modules.g_emLiftingTransport.i_ref_stSettings REF= s_stSettings.stSettingsLiftingTransport;
+
+/////
+(* ++
+_m_AddModule(i_itfModuleBase := GVL_Modules.g_emDockingCabin);
+
+GVL_Modules.g_emDockingCabin.i_bReqEnable := FALSE;
+GVL_Modules.g_emDockingCabin.i_eCtrlMode := E_CtrlMode.IDLE;
+GVL_Modules.g_emDockingCabin.i_bCmdReset := FALSE;
+GVL_Modules.g_emDockingCabin.i_sEmName  := 'EM State Machine';
+
+//Settings Doors
+GVL_Modules.g_emDockingCabin.i_stSettings.stSettingsDoors.tOuterDoorTimeout := T#15S;
+GVL_Modules.g_emDockingCabin.i_stSettings.stSettingsDoors.tCleanroomDoorTimeout := T#3S;
+GVL_Modules.g_emDockingCabin.i_stSettings.stSettingsDoors.tResetPulseDuration := T#1S;
+
+//Settings Docking Interface
+GVL_Modules.g_emDockingCabin.i_stSettings.stSettingsDockingInterface.tClampsTimeout := T#5S;
+GVL_Modules.g_emDockingCabin.i_stSettings.stSettingsDockingInterface.tReleasePinsTimeout := T#5S;
+*)
+//Settings AirTreatment
+//..GVL_Modules.g_emDockingCabin.i_stSettings.stSettingsAirTrearment.. := TODO;
+
+//------------------------------------------//
+//Hmi Startup
+GVL.g_sToHmiTopContent 		:= GVL.g_stHmiTopBar.GeneralTopbar;
+GVL.g_sToHmiMiddleContent 	:= GVL.g_stHmiMiddle.Start;
+GVL.g_sToHmiBottomContent	:= GVL.g_stHmiBottomBar.Start;
+//------------------------------------------//
+
+//------------------------------------------//
+//Buttons
+	s_fbHmiBtnAlarms.p_bStaVisible 			:= TRUE;
+	s_fbHmiBtnAlarms.p_bStaEnabled			:= TRUE;
+	s_fbHmiBtnAlarms.p_eButtontype 			:= E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnAlarms.p_sBtnText				:= 'Alarms';
+	
+	s_fbHmiBtnReset.p_bStaVisible 			:= TRUE;
+	s_fbHmiBtnReset.p_bStaEnabled			:= TRUE;
+	s_fbHmiBtnReset.p_eButtontype 			:= E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnReset.p_sBtnText				:= 'Reset';
+
+	GVL.g_fbHmiBtnSimulation.p_bStaVisible 	:= TRUE;
+	GVL.g_fbHmiBtnSimulation.p_bStaEnabled	:= TRUE;
+	GVL.g_fbHmiBtnSimulation.p_eButtontype 	:= E_HmiButtonType.TOGGLEBUTTON;
+	GVL.g_fbHmiBtnSimulation.p_sBtnText		:= 'Simulation';
+	
+	GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible 	:= FALSE;
+	GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled 	:= FALSE;
+//------------------------------------------//
+
+
+//??s_diTwoHandControl.i_stSettings.tmInputDelay := T#2S;
+
+_m_Init := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Modules" Id="{2372c80a-8810-4c92-8500-979916e08046}">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Modules : BOOL
+VAR
+	bReqEnable : BOOL;
+	
+	//External interlocks for EM_PalletConveyor
+	s_fbExtIlckConvFwd : FB_Interlock;
+	s_fbExtIlckConvBwd : FB_Interlock;
+	//--s_fbExtIlckCenteringCenter : FB_Interlock;
+	//--s_fbExtIlckCenteringRest : FB_Interlock;
+	
+	//External interlocks for EM_DockingInterface
+	s_fbExtIlckDockingClampsToClose : FB_Interlock;
+	s_fbExtIlckDockingClampsToOpen : FB_Interlock;
+	s_fbExtIlckUnlockingPinsToLock : FB_Interlock;
+	s_fbExtIlckUnlockingPinsToRelease : FB_Interlock;
+	
+	//External interlocks for EM_LiftingTransport
+	{warning '#TODO: check what is nessecary, probebly only Transport Extract (door open)'}
+	s_fbExtIlckLiftUp : FB_Interlock;	
+	s_fbExtIlckLiftDown : FB_Interlock;
+	s_fbExtIlckTransportExtract : FB_Interlock;
+	s_fbExtIlckTransportRetract : FB_Interlock;
+		
+	s_bSimCleanroomDoorClosed : BOOL := TRUE;
+	
+	s_eCtrlState : E_CtrlState;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+GVL_Modules.g_objCarrier();
+
+IF s_bCreate THEN GVL_Modules.g_objCarrier.m_Create(i_eDestination := E_Location.CLEANROOM); s_bCreate := FALSE; END_IF; 
+IF s_bDestroy THEN GVL_Modules.g_objCarrier.m_Destroy(); s_bDestroy := FALSE; END_IF;
+
+sFbModeStateControl(
+	{warning 'TODO: Check if stopping mode on any error is ok, what to do if a valve does not reach posittion, death lock?'}
+	i_bReqStopAlarm := (GVL_Modules.g_emUtilities.p_bStaError OR GVL_Modules.g_emPalletConveyor.p_bStaError OR GVL_Modules.g_emDockingInterface.p_bStaError)
+						AND ( (s_eCtrlMode = E_CtrlMode.AUTOMATIC) OR (s_eCtrlMode = E_CtrlMode.MANUAL) ),
+	i_bStaAllStopped := TRUE);
+
+s_eCtrlMode := sFbModeStateControl.p_eCtrlMode;
+s_eCtrlState :=	sFbModeStateControl.p_eCtrlState;
+	
+GVL_Modules.g_emUtilities.m_GetGeneralState(
+	i_bError := s_bStaError,
+	i_bWarning := s_bStaWarning,
+	i_bRunning := s_bStaRunning);
+
+GVL_Modules.g_emUtilities(
+	i_bReqEnable := TRUE,
+	i_eCtrlMode := s_eCtrlMode,
+	i_eCtrlState := s_eCtrlState,
+	i_bCmdReset := p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn); //Add temp reset button
+	
+bReqEnable :=
+	GVL_Modules.g_emUtilities.p_bStaSafetyOk
+	AND GVL_Modules.g_emUtilities.p_bStsPowerOk
+	AND GVL_Modules.g_emUtilities.p_bStaAirPressureOk
+	AND NOT GVL_Modules.g_emUtilities.p_bStaError;
+
+fbIlckHandlerConvBwd();
+fbIlckHandlerConvFwd();
+	
+fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[0].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDockingClampsOpened) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking;
+fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[1].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaUnlockingPinsLocked) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking;
+fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[2].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDoorOpenerClosed) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking;
+
+fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[0].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDockingClampsOpened) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering;
+fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[1].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaUnlockingPinsLocked) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering;
+fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[2].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDoorOpenerClosed) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering;
+
+s_fbExtIlckConvBwd();
+s_fbExtIlckConvBwd.i_bInterlocked := fbIlckHandlerConvBwd.p_bInterlocked; 
+IF fbIlckHandlerConvBwd.p_bInterlocked THEN
+	s_fbExtIlckConvBwd.p_sReason := fbIlckHandlerConvBwd.p_sReason;
+ELSE
+	s_fbExtIlckConvBwd.p_sReason := '-';	
+END_IF
+
+s_fbExtIlckConvFwd();
+s_fbExtIlckConvFwd.i_bInterlocked := fbIlckHandlerConvFwd.p_bInterlocked; 
+IF fbIlckHandlerConvFwd.p_bInterlocked THEN
+	s_fbExtIlckConvFwd.p_sReason := fbIlckHandlerConvFwd.p_sReason;
+ELSE
+	s_fbExtIlckConvFwd.p_sReason := '-';	
+END_IF
+
+GVL_Modules.g_emPalletConveyor(
+	i_bReqEnable := bReqEnable,
+	i_eCtrlMode := s_eCtrlMode,
+	i_eCtrlState := s_eCtrlState,
+	i_bCmdReset := p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn, //Add temp reset button
+	i_fbExtIlckConvFwd := s_fbExtIlckConvFwd,
+	i_fbExtIlckConvBwd := s_fbExtIlckConvBwd,
+	i_refTB := GVL_Modules.g_objCarrier);
+
+s_fbExtIlckDockingClampsToClose(i_bInterlocked := NOT(GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking) AND FALSE); // NOT(GVL_Modules.g_emDockingInterface.p_bStaUndocked));
+s_fbExtIlckDockingClampsToClose.p_sReason := 'No TB detected';
+
+s_fbExtIlckDockingClampsToOpen(i_bInterlocked := NOT(s_bSimCleanroomDoorClosed));
+s_fbExtIlckDockingClampsToOpen.p_sReason := 'Cleanroon Door not closed';
+
+//--s_fbExtIlckUnlockingPinsToLock;
+//--s_fbExtIlckUnlockingPinsToLock;
+
+//--s_fbExtIlckUnlockingPinsToRelease;
+//--s_fbExtIlckUnlockingPinsToRelease;	
+	
+GVL_Modules.g_emDockingInterface(
+	i_bReqEnable := bReqEnable,
+	i_eCtrlMode := s_eCtrlMode,
+	i_eCtrlState := s_eCtrlState,
+	i_bCmdReset := p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn, //Add temp reset button
+	i_fbExtIlckDockingClampsToOpen := s_fbExtIlckDockingClampsToOpen,
+	i_fbExtIlckDockingClampsToClose := s_fbExtIlckDockingClampsToClose, 
+	i_refTB := GVL_Modules.g_objCarrier);	
+
+//##_LIFTING_TRANSPORT_DISABLED_##
+GVL_Modules.g_emLiftingTransport(
+	i_bReqEnable := bReqEnable,
+	i_eCtrlMode := s_eCtrlMode,
+	i_eCtrlState := s_eCtrlState,
+	i_bCmdReset := p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn, //Add temp reset button
+	i_fbExtIlckLiftUp := s_fbExtIlckLiftUp, //TODO,
+	i_fbExtIlckLiftDown := s_fbExtIlckLiftDown, //TODO,
+	i_fbExtIlckTransportExtract := s_fbExtIlckTransportExtract, //TODO,
+	i_fbExtIlckTransportRetract := s_fbExtIlckTransportRetract, //TODO,
+	i_refTB := GVL_Modules.g_objCarrier);
+	
+//??GVL_Modules.g_emDockingCabin(
+//??	i_bReqEnable := TRUE,
+//??	i_eCtrlMode := s_eCtrlMode,
+//??	i_bCmdReset := p_bCmdReset,
+//??	i_sEmName := 'EM State Machine',
+//??	i_ref_objCarrier := GVL_Modules.g_objCarrier);
+
+s_bStaError :=
+	GVL_Modules.g_emUtilities.q_bStaError 
+	OR GVL_Modules.g_emPalletConveyor.q_bStaError
+	OR GVL_Modules.g_emDockingInterface.q_bStaError;
+//##_LIFTING_TRANSPORT_DISABLED_##	OR GVL_Modules.g_emLiftingTransport.q_bStaError;
+//++OR GVL_Modules.g_emDockingCabin.q_bStaError
+//++OR GVL_Modules.g_emDoors.q_bStaError;
+
+s_bStaWarning := 
+	GVL_Modules.g_emUtilities.q_bStaWarning 
+	OR GVL_Modules.g_emPalletConveyor.q_bStaWarning
+	OR GVL_Modules.g_emDockingInterface.q_bStaWarning;
+//##_LIFTING_TRANSPORT_DISABLED_##	OR GVL_Modules.g_emLiftingTransport.q_bStaWarning;
+//++OR GVL_Modules.g_emDockingCabin.q_bStaWarning
+//++OR GVL_Modules.g_emDoors.q_bStaWarning;
+	
+_m_Modules := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_SelectConfigFile" Id="{7c7e81b7-08ef-4473-8a6d-b20d88aaf565}">
+      <Declaration><![CDATA[METHOD PRIVATE _m_SelectConfigFile : BOOL
+VAR_INPUT
+	i_bCmdReset 			: BOOL;
+END_VAR
+VAR_INST	
+	i, x					: UDINT;
+		
+	s_aPossibleRevs			: ARRAY[0..TO_DINT(Param_Project.n_MaxParamFiles)] OF T_MAXSTRING;
+	
+	s_aConfigFileNames 		: ARRAY[0..Param_Project.n_MaxParamFiles] OF T_MAXSTRING;
+	s_aConfigFileDUTs		: ARRAY[0..TO_DINT(Param_Project.n_MaxParamFiles)] OF T_MAXSTRING;	
+	s_aConfigFileRev		: ARRAY[0..Param_Project.n_MaxParamFiles] OF T_MAXSTRING;
+	
+	s_aSingleDUTs			: ARRAY[0..TO_DINT(Param_Project.n_MaxParamFiles)] OF T_MAXSTRING;
+	s_aSingleREVs			: ARRAY[0..TO_DINT(Param_Project.n_MaxParamFiles)] OF T_MAXSTRING;
+		
+	s_nIndexDut				: INT;
+//	s_nIndexSR				: INT;
+	s_nIndexRev				: INT;
+	
+	s_nIndexDutPrev			: INT;
+	s_nIndexRevPrev			: INT;
+	
+	s_sChosenFile			: T_MAXSTRING;
+	s_sToHmiChosenFile		: T_MAXSTRING;
+	
+	s_bCmdResetInternal	 	: BOOL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+//1413824/E test bestand met deze naam.
+
+IF i_bCmdReset OR s_bCmdResetInternal THEN	
+	MEMSET(ADR(s_aConfigFileNames), 0, SIZEOF(s_aConfigFileNames));
+	MEMSET(ADR(s_aConfigFileDUTs), 0, SIZEOF(s_aConfigFileDUTs));
+	MEMSET(ADR(s_aSingleDUTs), 0, SIZEOF(s_aSingleDUTs));
+	
+	MEMCPY(ADR(s_aConfigFileNames), ADR(GVL_KMWEGenericLib.g_fbParamManager.s_aFileListHmi), SIZEOF(GVL_KMWEGenericLib.g_fbParamManager.s_aFileListHmi));
+	
+	s_nIndexDut		:= -1;
+//	s_nIndexSR		:= -1;
+	s_nIndexRev		:= -1;
+	
+	FOR i := 0 TO Param_Project.n_MaxParamFiles DO 
+		FindAndSplit(pSeparator:= ADR('^'),
+							 pSrcString:= ADR(s_aConfigFileNames[i]),
+							 pLeftString:= ADR(s_aConfigFileDUTs[i]),
+							 nLeftSize:= SIZEOF(s_aConfigFileDUTs[i]),
+							 pRightString:= ADR(s_aConfigFileRev[i]),
+							 nRightSize:= SIZEOF(s_aConfigFileRev[i]),
+							 bSearchFromRight:= FALSE);	
+
+		s_aConfigFileRev[i] := 	DELETE(s_aConfigFileRev[i], 6, 2);			
+	END_FOR
+	
+	F_CheckDuplicatesInArray(iq_aOriginalArray := s_aConfigFileDUTs, iq_aUniqueArray := s_aSingleDUTs);
+
+	IF s_aConfigFileNames[0] = '' THEN
+		s_bCmdResetInternal := TRUE;	
+	ELSE
+		s_bCmdResetInternal := FALSE;	
+	END_IF
+END_IF
+
+IF s_nIndexDutPrev <> s_nIndexDut AND s_nIndexDutPrev <> -1 THEN
+	s_nIndexRev := -1;
+	
+	MEMSET(ADR(s_aSingleREVs), 0, SIZEOF(s_aSingleREVs));
+END_IF
+
+IF s_nIndexDut <> -1 AND s_nIndexRev = -1 THEN 
+	x := 0;
+	MEMSET(ADR(s_aSingleREVs), 0, SIZEOF(s_aSingleREVs));
+	MEMSET(ADR(s_aPossibleRevs), 0, SIZEOF(s_aPossibleRevs));
+	FOR i:= 0 TO Param_Project.n_MaxParamFiles DO
+		IF FIND(s_aConfigFileNames[i], s_aSingleDUTs[s_nIndexDut]) <> 0 THEN
+			s_aPossibleRevs[x] := MID(s_aConfigFileNames[i],1,FIND(s_aConfigFileNames[i], '^')+1);
+			x := x + 1;
+		END_IF					
+	END_FOR	
+	
+	F_CheckDuplicatesInArray(iq_aOriginalArray := s_aPossibleRevs, iq_aUniqueArray := s_aSingleREVs); 
+END_IF
+
+IF s_nIndexDut <> -1 AND s_nIndexRev <> -1 AND s_nIndexRevPrev <> s_nIndexRev THEN
+	FOR i := 0 TO Param_Project.n_MaxParamFiles DO
+		IF s_aConfigFileNames[i] = CONCAT(s_aSingleDUTs[s_nIndexDut], 
+										CONCAT('^', 
+										CONCAT(s_aSingleRevs[s_nIndexRev], '.csv')))
+		THEN
+			s_sChosenFile := s_aConfigFileNames[i];
+		END_IF
+	END_FOR
+	
+	FOR i := 0 TO Param_Project.n_MaxParamFiles DO
+		IF GVL_KMWEGenericLib.g_fbParamManager.s_aFileListHmi[i] = s_sChosenFile THEN
+			GVL_KMWEGenericLib.g_fbParamManager.p_nHmiFileSelected := TO_UDINT(i);
+		END_IF
+	END_FOR 
+END_IF
+
+IF s_aConfigFileNames[GVL_KMWEGenericLib.g_fbParamManager.p_nHmiFileSelected] <> s_sChosenFile THEN
+	s_nIndexDut	:= -1;
+	s_nIndexRev	:= -1;
+	
+	MEMSET(ADR(s_aSingleREVs), 0, SIZEOF(s_aSingleREVs));
+END_IF
+
+s_sChosenFile 		:= GVL_KMWEGenericLib.g_fbParamManager.s_aFileListHmi[GVL_KMWEGenericLib.g_fbParamManager.p_nHmiFileSelected];
+s_sToHmiChosenFile 	:= DELETE(s_sChosenFile, 4, FIND(s_sChosenFile, '.csv'));
+
+s_nIndexRevPrev := s_nIndexRev;
+s_nIndexDutPrev	:= s_nIndexDut;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_FullCycle" Id="{85945a60-1e58-4d91-af47-0c270dd5f580}">
+      <Declaration><![CDATA[METHOD PUBLIC m_FullCycle : BOOL
+
+VAR_INPUT
+	i_objTB : REFERENCE TO OBJ_Carrier;
+END_VAR
+
+
+VAR_INST
+	osrTbToCenter : R_TRIG;
+	osrTbToDocking : R_TRIG;
+	osrTbToInfeed : R_TRIG;
+	osrCenterTb : R_TRIG;
+	
+	osrDockTb : R_TRIG;
+	osrUndockTb : R_TRIG;
+	osrOpenInnerDoor : R_TRIG;
+	osrCloseInnerDoor : R_TRIG;
+	
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT(__ISVALIDREF(i_objTB)) THEN
+	RETURN;
+END_IF
+
+//Unit will control lower-layer control modules based on data in Object Carrier
+//By changing the data in this object the behanvior can be manipulated / controlled.
+
+{warning '#TODO na gaan of het in onderstaande code niet beter zou zijn om puur te kijken naar de data uit de struct ipv naar properties uit de onderliggende modules?'}
+// zoals bij voorbeeld voor TB centered status
+
+//EM_PalletConveyor
+IF i_objTB.p_eDestination <> E_Location.UNKNOWN	THEN
+
+	//Transporting TB to Center
+	osrTbToCenter(
+		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING) 
+		AND i_objTB.p_eDestination > i_objTB.p_eActLocation
+		AND i_objTB.p_eActLocation < E_Location.CENTERING  
+		AND i_objTB.p_bOuterDoorOpened
+		AND i_objTB.p_bApprovedAtInfeed);
+	
+	IF osrTbToCenter.Q THEN
+		GVL_Modules.g_emPalletConveyor.m_ReqTB_ToCenter();
+	END_IF
+			
+	//Transporting TB to Docking
+	osrTbToDocking(
+		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING)
+		AND i_objTB.p_eDestination > i_objTB.p_eActLocation
+		AND i_objTB.p_eActLocation < E_Location.DOCKING 
+		AND GVL_Modules.g_emPalletConveyor.p_bStaTB_CenteringDone
+		AND GVL_Modules.g_emDockingInterface.p_bStaUndocked);
+	
+	IF osrTbToDocking.Q THEN
+		GVL_Modules.g_emPalletConveyor.m_ReqTB_ToDocking();
+	END_IF	
+		
+	//Transporting TB to Infeed
+	osrTbToInfeed(
+		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING)
+		AND i_objTB.p_eDestination < i_objTB.p_eActLocation
+		AND i_objTB.p_eActLocation > E_Location.INFEED
+		AND GVL_Modules.g_emDockingInterface.p_bStaUndocked);
+	
+	IF osrTbToInfeed.Q THEN
+		GVL_Modules.g_emPalletConveyor.m_ReqTB_ToInfeed();
+	END_IF
+	
+	//Centering TB
+	osrCenterTb(
+		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING) 
+		AND i_objTB.p_eActLocation = E_Location.CENTERING  
+		AND NOT(GVL_Modules.g_emPalletConveyor.p_bStaTB_CenteringDone));
+	
+	IF osrCenterTb.Q THEN
+		GVL_Modules.g_emPalletConveyor.m_ReqCenteringTB();
+	END_IF
+	
+END_IF
+	
+//EM_DockingInterface
+IF i_objTB.p_eDestination <> E_Location.UNKNOWN	THEN
+	
+	//Docking TB
+	osrDockTb(
+		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING) 
+		AND i_objTB.p_eActLocation = E_Location.DOCKING
+		AND i_objTB.p_eDestination > E_Location.DOCKING 
+		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaDocked));
+
+	IF osrDockTb.Q THEN
+		GVL_Modules.g_emDockingInterface.m_ReqDockTB();
+	END_IF
+	
+	//Undocking TB
+	osrUndockTb(
+		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING)
+		AND i_objTB.p_eActLocation = E_Location.DOCKING //Is this about the TB or Trolley location? 
+		AND i_objTB.p_eDestination < E_Location.DOCKING
+		AND GVL_Modules.g_emDockingInterface.p_bStaInnerDoorCloseAndLocked
+		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaUndocked));
+	
+	IF osrUndockTb.Q THEN
+		GVL_Modules.g_emDockingInterface.m_ReqUndockTB();
+	END_IF
+
+	//Opening Inner Door TB
+	osrOpenInnerDoor(
+		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING)
+		AND i_objTB.p_eActLocation = E_Location.DOCKING
+		AND i_objTB.p_eDestination > E_Location.DOCKING
+		AND GVL_Modules.g_emDockingInterface.p_bStaDocked
+		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpenAndReleased));
+	
+	IF osrOpenInnerDoor.Q THEN
+		GVL_Modules.g_emDockingInterface.m_ReqOpenInnerDoor();
+	END_IF
+			
+	//Closing Inner Door TB
+	osrCloseInnerDoor(
+		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING)
+		AND i_objTB.p_eActLocation = E_Location.DOCKING
+		AND i_objTB.p_eDestination < E_Location.DOCKING
+		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorCloseAndLocked));
+	
+	IF osrCloseInnerDoor.Q THEN
+		GVL_Modules.g_emDockingInterface.m_ReqCloseInnerDoor();
+	END_IF
+	
+END_IF	
+	
+	
+(* Lod Code 20241108	
+//EM_PalletConveyor
+	
+	//Transporting TB to Center
+	IF i_objTB.p_eDestination <> E_Location.UNKNOWN
+		AND i_objTB.p_eDestination > i_objTB.p_eActLocation
+		AND i_objTB.p_eActLocation < E_Location.CENTERING  
+		AND i_objTB.p_bOuterDoorOpened
+		AND i_objTB.p_bApprovedAtInfeed THEN
+			GVL_Modules.g_emPalletConveyor.m_ReqTB_ToCenter();
+			
+	//Transporting TB to Docking		
+	ELSIF i_objTB.p_eDestination <> E_Location.UNKNOWN
+		AND i_objTB.p_eDestination > i_objTB.p_eActLocation
+		AND i_objTB.p_eActLocation < E_Location.DOCKING 
+		AND GVL_Modules.g_emPalletConveyor.p_bStaTB_CenteringDone
+		AND GVL_Modules.g_emDockingInterface.p_bStaUndocked THEN
+			GVL_Modules.g_emPalletConveyor.m_ReqTB_ToDocking();
+	
+	//Transporting TB to Infeed
+	ELSIF i_objTB.p_eDestination <> E_Location.UNKNOWN
+		AND i_objTB.p_eDestination < i_objTB.p_eActLocation
+		AND i_objTB.p_eActLocation > E_Location.INFEED
+		AND GVL_Modules.g_emDockingInterface.p_bStaUndocked THEN 
+			GVL_Modules.g_emPalletConveyor.m_ReqTB_ToInfeed();
+	
+	END_IF
+	
+	//Centering TB
+	IF i_objTB.p_eDestination <> E_Location.UNKNOWN
+		AND i_objTB.p_eActLocation = E_Location.CENTERING  
+		AND NOT(GVL_Modules.g_emPalletConveyor.p_bStaTB_CenteringDone) THEN
+		///AND NOT(i_objTB.p_bCenteringDone) AND NOT(bTest) THEN
+		; 
+		//	GVL_Modules.g_emPalletConveyor.m_ReqCenteringTB();
+	END_IF
+	
+	osrCenterTb(
+		CLK := i_objTB.p_eDestination <> E_Location.UNKNOWN
+		AND i_objTB.p_eActLocation = E_Location.CENTERING  
+		AND NOT(GVL_Modules.g_emPalletConveyor.p_bStaTB_CenteringDone));
+	
+	IF osrCenterTb.Q THEN
+		GVL_Modules.g_emPalletConveyor.m_ReqCenteringTB();
+	END_IF
+	
+//EM_DockingInterface
+
+	//Docking TB
+	IF i_objTB.p_eDestination <> E_Location.UNKNOWN
+		AND i_objTB.p_eActLocation = E_Location.DOCKING
+		AND i_objTB.p_eDestination > E_Location.DOCKING 
+		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaDocked) THEN
+			GVL_Modules.g_emDockingInterface.m_ReqDockTB();
+			
+	//Undocking TB
+	ELSIF i_objTB.p_eDestination <> E_Location.UNKNOWN
+		AND i_objTB.p_eActLocation = E_Location.DOCKING		//Is this about the TB or Trolley location? 
+		AND i_objTB.p_eDestination < E_Location.DOCKING
+		AND GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosedAndLocked
+		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaUndocked) THEN  
+			GVL_Modules.g_emDockingInterface.m_ReqUndockTB();
+
+	//Opening Inner Door TB
+	ELSIF i_objTB.p_eDestination <> E_Location.UNKNOWN
+		AND i_objTB.p_eActLocation = E_Location.DOCKING
+		AND i_objTB.p_eDestination > E_Location.DOCKING
+		AND GVL_Modules.g_emDockingInterface.p_bStaDocked
+		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpenedAndReleased) THEN  
+			GVL_Modules.g_emDockingInterface.m_ReqOpenInnerDoor();
+			
+	//Closing Inner Door TB
+	ELSIF i_objTB.p_eDestination <> E_Location.UNKNOWN
+		AND i_objTB.p_eActLocation = E_Location.DOCKING
+		AND i_objTB.p_eDestination < E_Location.DOCKING
+		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosedAndLocked) THEN  
+			GVL_Modules.g_emDockingInterface.m_ReqCloseInnerDoor();
+			
+	END_IF
+*)
+//EM_LiftingTransport
+	//Get Trolley from TB to Cabin
+	//Get Trolley from Cabin to TB
+	//..	
+	
+//EM_Doors
+	//Open Speeddoor Infeed
+	//Close Speeddoor Infeed
+	
+	//Release Cleanroom Door
+	//Lock Cleanroom Door
+	//..
+
+//EM_..	
+	
+	
+//-- Old Code
+//FullCycle
+//++	m_Inbound();
+//	Wait(T#5S)
+//	m_Outbound();]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_Inbound" Id="{90534ebe-9d21-4aeb-b2cc-cf785c67a06d}">
+      <Declaration><![CDATA[METHOD PUBLIC m_Inbound : BOOL
+VAR
+	sReason : STRING;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// Onderstaande sequencer zal nog verder moeten worden opgebouwd
+
+GVL_Modules.g_emPalletConveyor._m_CmdTB_ToCenter(i_refReason := sReason);
+GVL_Modules.g_emPalletConveyor._m_CmdCenteringTB(i_refReason := sReason);
+GVL_Modules.g_emPalletConveyor._m_CmdTB_ToDocking(i_refReason := sReason);
+//--GVL_Modules.g_emDockingInterface.m_DockBox();
+GVL_Modules.g_emDockingInterface.m_ReqDockTB();
+//GVL_Modules.g_emDockingInterface.m_OpenDoors();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_Main" Id="{bf5d9d9d-3881-4722-ad23-ed0781ff35d5}">
+      <Declaration><![CDATA[METHOD PUBLIC m_Main : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^.m_Main() THEN
+	RETURN;
+END_IF
+
+GVL.g_osrNotify();
+
+//--GVL_DataLogging.g_fbDataLogger(i_sPathName := 'C:\RMMT\', i_bCmdReset := s_bCmdReset);
+
+//--GVL_DataLogging.g_fbSqlDatabase(i_stSettings := s_stSqlDbSettings, i_bCmdReset := s_bCmdReset);
+
+//--_m_SelectConfigFile(i_bCmdReset := s_fbHmiBtnAutomatic.p_osfBtnPress);
+
+GVL.g_osrNotify.CLK := FALSE;	
+
+
+
+m_FullCycle(i_objTB := GVL_Modules.g_objCarrier);
+
+m_Main := TRUE;
+
+
+
+// Paul Schippers: just a test with the use of interfaces
+//??itfEmDoors.m_CloseOuterDoor();
+
+//??itfEmDockingInterface.m_OpenDockingClamps();
+
+//IF NOT(itfEmAirTreatment.p_bStaPressurizingOK) THEN 
+//	itfEmAirTreatment.m_Pressurize();
+//END_IF
+
+(*	
+	// Interlocks (doors must work as an airlock, only one door may be opened at all times)
+	s_bIlckSpeedDoorOuterToOpen :=
+		s_cmDoorLockCleanroom.p_bStaError
+		OR NOT(s_cmDoorLockCleanroom.p_bStaEnabled)
+		NOT(s_cmDoorLockCleanroom.p_bStaDoorIsClosed)
+		OR NOT (s_cmDoorLockCleanroom.p_bStaLockIsApplied)
+		OR s_cmDoorLockCleanroom.p_bStaLockIsReleased
+		OR TRUE (*Air treathment unit must be running and ok*)
+		OR TRUE (*Add more..*);
+	s_bIlckSpeedDoorOuterToClose :=
+		TRUE (*Opening must be free*)
+		OR TRUE (*Add more..*);
+	
+	s_bIlckDoorLockCleanroomToOpen :=
+		s_cmSpeedDoorOuter.p_bStaError
+		OR NOT(s_cmSpeedDoorOuter.p_bStaEnabled)
+		OR NOT(s_cmSpeedDoorOuter.p_bStaIsClosed)
+		OR s_cmSpeedDoorOuter.p_bStaIsClosing
+		OR s_cmSpeedDoorOuter.p_bStaIsOpened
+		OR s_cmSpeedDoorOuter.p_bStaIsOpening
+		OR TRUE (*Air treathment unit must be running and ok*)
+		OR TRUE (*Add more..*);
+*)	]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_Outbound" Id="{6261bd7c-d400-4b5a-911e-fc663ac04169}">
+      <Declaration><![CDATA[METHOD PUBLIC m_Outbound : BOOL
+VAR
+	sReason : STRING;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// Onderstaande sequencer zal nog verder moeten worden opgebouwd
+
+//GVL_Modules.g_emDockingInterface.m_CloseDoors();
+//--GVL_Modules.g_emDockingInterface.m_UndockBox();
+GVL_Modules.g_emDockingInterface.m_ReqUndockTB();
+GVL_Modules.g_emPalletConveyor._m_CmdTB_ToInfeed(i_refReason := sReason);
+]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="UN_CleanroomConnect">
+      <LineId Id="171" Count="0" />
+      <LineId Id="168" Count="0" />
+      <LineId Id="317" Count="0" />
+    </LineIds>
+    <LineIds Name="UN_CleanroomConnect._m_Alarms">
+      <LineId Id="28" Count="0" />
+      <LineId Id="6" Count="2" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="11" Count="3" />
+      <LineId Id="16" Count="6" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="29" Count="0" />
+    </LineIds>
+    <LineIds Name="UN_CleanroomConnect._m_Devices">
+      <LineId Id="35" Count="0" />
+      <LineId Id="6" Count="3" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="22" Count="1" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="25" Count="1" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="36" Count="0" />
+    </LineIds>
+    <LineIds Name="UN_CleanroomConnect._m_Hmi">
+      <LineId Id="286" Count="0" />
+      <LineId Id="9" Count="11" />
+      <LineId Id="307" Count="0" />
+      <LineId Id="326" Count="0" />
+      <LineId Id="22" Count="25" />
+      <LineId Id="274" Count="1" />
+      <LineId Id="240" Count="0" />
+      <LineId Id="254" Count="1" />
+      <LineId Id="242" Count="1" />
+      <LineId Id="241" Count="0" />
+      <LineId Id="233" Count="1" />
+      <LineId Id="51" Count="16" />
+      <LineId Id="277" Count="1" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="184" Count="1" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="191" Count="2" />
+      <LineId Id="235" Count="0" />
+      <LineId Id="237" Count="0" />
+      <LineId Id="239" Count="0" />
+      <LineId Id="160" Count="0" />
+      <LineId Id="76" Count="4" />
+      <LineId Id="84" Count="4" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="231" Count="1" />
+      <LineId Id="187" Count="0" />
+      <LineId Id="189" Count="1" />
+      <LineId Id="196" Count="2" />
+      <LineId Id="195" Count="0" />
+      <LineId Id="199" Count="0" />
+      <LineId Id="188" Count="0" />
+      <LineId Id="186" Count="0" />
+      <LineId Id="207" Count="0" />
+      <LineId Id="209" Count="2" />
+      <LineId Id="216" Count="1" />
+      <LineId Id="215" Count="0" />
+      <LineId Id="228" Count="2" />
+      <LineId Id="212" Count="2" />
+      <LineId Id="208" Count="0" />
+      <LineId Id="218" Count="0" />
+      <LineId Id="220" Count="7" />
+      <LineId Id="219" Count="0" />
+      <LineId Id="159" Count="0" />
+      <LineId Id="141" Count="0" />
+      <LineId Id="263" Count="0" />
+      <LineId Id="265" Count="1" />
+      <LineId Id="264" Count="0" />
+      <LineId Id="244" Count="2" />
+      <LineId Id="142" Count="11" />
+      <LineId Id="155" Count="1" />
+      <LineId Id="295" Count="1" />
+      <LineId Id="294" Count="0" />
+      <LineId Id="157" Count="1" />
+      <LineId Id="8" Count="0" />
+    </LineIds>
+    <LineIds Name="UN_CleanroomConnect._m_Init">
+      <LineId Id="1923" Count="0" />
+      <LineId Id="1635" Count="21" />
+      <LineId Id="1949" Count="0" />
+      <LineId Id="1951" Count="0" />
+      <LineId Id="1953" Count="0" />
+      <LineId Id="1965" Count="0" />
+      <LineId Id="1955" Count="0" />
+      <LineId Id="1950" Count="0" />
+      <LineId Id="1956" Count="0" />
+      <LineId Id="1960" Count="0" />
+      <LineId Id="1959" Count="0" />
+      <LineId Id="1961" Count="2" />
+      <LineId Id="1967" Count="0" />
+      <LineId Id="1658" Count="15" />
+      <LineId Id="1946" Count="0" />
+      <LineId Id="1674" Count="14" />
+      <LineId Id="1943" Count="2" />
+      <LineId Id="1690" Count="1" />
+      <LineId Id="1693" Count="3" />
+      <LineId Id="1947" Count="0" />
+      <LineId Id="1927" Count="0" />
+      <LineId Id="1908" Count="0" />
+      <LineId Id="1698" Count="10" />
+      <LineId Id="1919" Count="0" />
+      <LineId Id="1709" Count="1" />
+      <LineId Id="1916" Count="0" />
+      <LineId Id="1711" Count="28" />
+      <LineId Id="1911" Count="0" />
+      <LineId Id="1741" Count="45" />
+      <LineId Id="1928" Count="0" />
+      <LineId Id="1930" Count="4" />
+      <LineId Id="1929" Count="0" />
+      <LineId Id="1787" Count="42" />
+      <LineId Id="1936" Count="5" />
+      <LineId Id="1935" Count="0" />
+      <LineId Id="1921" Count="0" />
+      <LineId Id="1913" Count="0" />
+      <LineId Id="1830" Count="0" />
+      <LineId Id="1914" Count="0" />
+      <LineId Id="1832" Count="0" />
+      <LineId Id="1834" Count="30" />
+      <LineId Id="1875" Count="18" />
+      <LineId Id="1924" Count="1" />
+      <LineId Id="1894" Count="0" />
+      <LineId Id="1905" Count="0" />
+      <LineId Id="78" Count="0" />
+    </LineIds>
+    <LineIds Name="UN_CleanroomConnect._m_Modules">
+      <LineId Id="1017" Count="0" />
+      <LineId Id="848" Count="3" />
+      <LineId Id="978" Count="0" />
+      <LineId Id="980" Count="0" />
+      <LineId Id="1257" Count="0" />
+      <LineId Id="981" Count="0" />
+      <LineId Id="1256" Count="0" />
+      <LineId Id="979" Count="0" />
+      <LineId Id="984" Count="0" />
+      <LineId Id="982" Count="0" />
+      <LineId Id="852" Count="0" />
+      <LineId Id="983" Count="0" />
+      <LineId Id="853" Count="7" />
+      <LineId Id="1001" Count="0" />
+      <LineId Id="861" Count="0" />
+      <LineId Id="863" Count="4" />
+      <LineId Id="946" Count="0" />
+      <LineId Id="1115" Count="0" />
+      <LineId Id="1128" Count="1" />
+      <LineId Id="1117" Count="0" />
+      <LineId Id="1119" Count="2" />
+      <LineId Id="1162" Count="0" />
+      <LineId Id="1164" Count="2" />
+      <LineId Id="1134" Count="1" />
+      <LineId Id="1123" Count="0" />
+      <LineId Id="1118" Count="0" />
+      <LineId Id="1124" Count="0" />
+      <LineId Id="1126" Count="1" />
+      <LineId Id="1125" Count="0" />
+      <LineId Id="1168" Count="6" />
+      <LineId Id="1167" Count="0" />
+      <LineId Id="1229" Count="0" />
+      <LineId Id="874" Count="2" />
+      <LineId Id="975" Count="0" />
+      <LineId Id="1057" Count="0" />
+      <LineId Id="879" Count="1" />
+      <LineId Id="883" Count="0" />
+      <LineId Id="922" Count="0" />
+      <LineId Id="924" Count="0" />
+      <LineId Id="927" Count="1" />
+      <LineId Id="925" Count="0" />
+      <LineId Id="929" Count="1" />
+      <LineId Id="926" Count="0" />
+      <LineId Id="931" Count="1" />
+      <LineId Id="884" Count="0" />
+      <LineId Id="933" Count="0" />
+      <LineId Id="923" Count="0" />
+      <LineId Id="885" Count="2" />
+      <LineId Id="1000" Count="0" />
+      <LineId Id="1056" Count="0" />
+      <LineId Id="959" Count="0" />
+      <LineId Id="961" Count="0" />
+      <LineId Id="890" Count="0" />
+      <LineId Id="1089" Count="0" />
+      <LineId Id="1033" Count="0" />
+      <LineId Id="1035" Count="2" />
+      <LineId Id="1049" Count="1" />
+      <LineId Id="1042" Count="4" />
+      <LineId Id="1034" Count="0" />
+      <LineId Id="904" Count="10" />
+      <LineId Id="1058" Count="3" />
+      <LineId Id="916" Count="3" />
+      <LineId Id="1063" Count="1" />
+      <LineId Id="1062" Count="0" />
+      <LineId Id="920" Count="1" />
+      <LineId Id="20" Count="0" />
+    </LineIds>
+    <LineIds Name="UN_CleanroomConnect._m_SelectConfigFile">
+      <LineId Id="202" Count="0" />
+      <LineId Id="172" Count="1" />
+      <LineId Id="3" Count="30" />
+      <LineId Id="40" Count="1" />
+      <LineId Id="43" Count="2" />
+      <LineId Id="47" Count="14" />
+      <LineId Id="79" Count="5" />
+      <LineId Id="143" Count="0" />
+      <LineId Id="87" Count="12" />
+      <LineId Id="101" Count="2" />
+      <LineId Id="105" Count="6" />
+      <LineId Id="203" Count="0" />
+    </LineIds>
+    <LineIds Name="UN_CleanroomConnect.m_FullCycle">
+      <LineId Id="569" Count="0" />
+      <LineId Id="312" Count="5" />
+      <LineId Id="422" Count="2" />
+      <LineId Id="474" Count="0" />
+      <LineId Id="476" Count="1" />
+      <LineId Id="564" Count="0" />
+      <LineId Id="478" Count="0" />
+      <LineId Id="557" Count="0" />
+      <LineId Id="573" Count="0" />
+      <LineId Id="695" Count="0" />
+      <LineId Id="571" Count="1" />
+      <LineId Id="560" Count="3" />
+      <LineId Id="554" Count="0" />
+      <LineId Id="485" Count="1" />
+      <LineId Id="575" Count="0" />
+      <LineId Id="578" Count="0" />
+      <LineId Id="694" Count="0" />
+      <LineId Id="581" Count="0" />
+      <LineId Id="580" Count="0" />
+      <LineId Id="577" Count="0" />
+      <LineId Id="574" Count="0" />
+      <LineId Id="584" Count="1" />
+      <LineId Id="583" Count="0" />
+      <LineId Id="582" Count="0" />
+      <LineId Id="494" Count="0" />
+      <LineId Id="589" Count="0" />
+      <LineId Id="597" Count="0" />
+      <LineId Id="696" Count="0" />
+      <LineId Id="598" Count="0" />
+      <LineId Id="593" Count="3" />
+      <LineId Id="586" Count="0" />
+      <LineId Id="502" Count="1" />
+      <LineId Id="512" Count="1" />
+      <LineId Id="697" Count="0" />
+      <LineId Id="515" Count="4" />
+      <LineId Id="600" Count="0" />
+      <LineId Id="599" Count="0" />
+      <LineId Id="520" Count="2" />
+      <LineId Id="601" Count="0" />
+      <LineId Id="523" Count="0" />
+      <LineId Id="605" Count="0" />
+      <LineId Id="613" Count="0" />
+      <LineId Id="698" Count="0" />
+      <LineId Id="614" Count="0" />
+      <LineId Id="609" Count="0" />
+      <LineId Id="627" Count="0" />
+      <LineId Id="611" Count="1" />
+      <LineId Id="602" Count="0" />
+      <LineId Id="604" Count="0" />
+      <LineId Id="530" Count="0" />
+      <LineId Id="617" Count="0" />
+      <LineId Id="624" Count="0" />
+      <LineId Id="699" Count="0" />
+      <LineId Id="625" Count="1" />
+      <LineId Id="620" Count="3" />
+      <LineId Id="615" Count="0" />
+      <LineId Id="537" Count="1" />
+      <LineId Id="630" Count="0" />
+      <LineId Id="638" Count="0" />
+      <LineId Id="700" Count="0" />
+      <LineId Id="639" Count="1" />
+      <LineId Id="634" Count="3" />
+      <LineId Id="628" Count="0" />
+      <LineId Id="545" Count="1" />
+      <LineId Id="643" Count="0" />
+      <LineId Id="651" Count="0" />
+      <LineId Id="701" Count="0" />
+      <LineId Id="652" Count="0" />
+      <LineId Id="647" Count="3" />
+      <LineId Id="641" Count="1" />
+      <LineId Id="553" Count="0" />
+      <LineId Id="567" Count="1" />
+      <LineId Id="318" Count="1" />
+      <LineId Id="387" Count="0" />
+      <LineId Id="320" Count="4" />
+      <LineId Id="426" Count="0" />
+      <LineId Id="325" Count="1" />
+      <LineId Id="389" Count="0" />
+      <LineId Id="327" Count="6" />
+      <LineId Id="390" Count="0" />
+      <LineId Id="334" Count="11" />
+      <LineId Id="427" Count="0" />
+      <LineId Id="460" Count="0" />
+      <LineId Id="346" Count="0" />
+      <LineId Id="348" Count="0" />
+      <LineId Id="453" Count="0" />
+      <LineId Id="455" Count="0" />
+      <LineId Id="473" Count="0" />
+      <LineId Id="459" Count="0" />
+      <LineId Id="457" Count="0" />
+      <LineId Id="454" Count="0" />
+      <LineId Id="449" Count="0" />
+      <LineId Id="451" Count="1" />
+      <LineId Id="450" Count="0" />
+      <LineId Id="350" Count="0" />
+      <LineId Id="388" Count="0" />
+      <LineId Id="351" Count="30" />
+      <LineId Id="407" Count="0" />
+      <LineId Id="382" Count="0" />
+      <LineId Id="409" Count="1" />
+      <LineId Id="408" Count="0" />
+      <LineId Id="398" Count="0" />
+      <LineId Id="391" Count="0" />
+      <LineId Id="399" Count="4" />
+      <LineId Id="394" Count="0" />
+      <LineId Id="411" Count="0" />
+      <LineId Id="395" Count="0" />
+      <LineId Id="406" Count="0" />
+      <LineId Id="392" Count="0" />
+      <LineId Id="383" Count="3" />
+      <LineId Id="211" Count="0" />
+    </LineIds>
+    <LineIds Name="UN_CleanroomConnect.m_Inbound">
+      <LineId Id="119" Count="7" />
+      <LineId Id="95" Count="0" />
+    </LineIds>
+    <LineIds Name="UN_CleanroomConnect.m_Main">
+      <LineId Id="30" Count="0" />
+      <LineId Id="6" Count="2" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="9" Count="3" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="74" Count="1" />
+      <LineId Id="71" Count="1" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="59" Count="3" />
+      <LineId Id="66" Count="3" />
+      <LineId Id="64" Count="0" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="33" Count="24" />
+      <LineId Id="31" Count="0" />
+    </LineIds>
+    <LineIds Name="UN_CleanroomConnect.m_Outbound">
+      <LineId Id="100" Count="5" />
+      <LineId Id="91" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

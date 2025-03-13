@@ -1,0 +1,533 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="CM_DigOutput" Id="{f6926334-60a3-431a-8319-95017baa0ee2}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK CM_DigOutput EXTENDS CM_Base
+
+VAR CONSTANT
+	c_MAX_FB_NAME_LENGTH : USINT := 8; //Maximum feedback-name length
+END_VAR
+
+VAR_INPUT
+	i_stSettings : ST_DigOutputSettings;
+	i_bIclkOn : BOOL := TRUE; //TRUE = interlocked
+	i_bIclkOff : BOOL := TRUE; //TRUE = interlocked
+	
+	i_ref_eCtrlState : REFERENCE TO E_CtrlState;
+END_VAR
+
+VAR
+	// Outputs
+	Q_bStaOutput AT %Q* : BOOL;
+	
+	// Force outputs (IO-test functions)
+	s_fbForceCmdOutput : FB_ForceOutput;
+	
+	// Interlocks
+	s_sInterlockedReasonOn : STRING(GVL.g_MAX_LEN_INTERLOCK_REASON); //External interlocked reason for clarifying reason
+	s_sInterlockedReasonOff : STRING(GVL.g_MAX_LEN_INTERLOCK_REASON); //External interlocked reason for clarifying reason
+	s_wrnOnInterlocked : BOOL;
+	s_wrnOffInterlocked : BOOL;
+	
+	// Request
+	s_bReqOff : BOOL;
+	s_bReqOn : BOOL;
+	
+	// Status
+	s_bStaOutputIsOff : BOOL;
+	s_bStaOutputIsOn : BOOL;
+	s_bStaWarning : BOOL;
+	
+	{attribute 'hide'}
+	s_bStaOutput			: BOOL;
+	
+	{attribute: 'Hide'}
+	s_bCfgReverseOutput : BOOL; // FALSE = NORMAL, TRUE = INVERTED
+	
+	s_sCfgOffName : STRING(c_MAX_FB_NAME_LENGTH) := 'Off';
+	s_sCfgOnName : STRING(c_MAX_FB_NAME_LENGTH) := 'On';
+	
+	// Alarms
+	// none
+
+	// Hmi
+	stHmiData : ST_DigOutput_HMI;
+	
+	s_fbHmiBtnManualOff		: FB_HmiBtn;
+	s_fbHmiBtnManualOn		: FB_HmiBtn;
+	
+	s_fbHmiLedIsOff			: FB_HmiLed;
+	s_fbHmiLedIsOn			: FB_HmiLed;
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+m_Main();
+]]></ST>
+    </Implementation>
+    <Folder Name="Methods" Id="{8e6d06cb-4405-49f8-902f-b0c016a886d0}" />
+    <Folder Name="Properties" Id="{445cfafc-a5c1-4426-9164-91ffc9a267f4}" />
+    <Method Name="_m_Hmi" Id="{f4e34c00-dde3-49d5-b728-851a846aadfb}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Hmi : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT SUPER^._m_Hmi() THEN
+	RETURN;
+END_IF
+
+//To Hmi
+stHmiData.sDescription := i_sCmName;
+stHmiData.sNameOff := s_fbHmiBtnManualOff.p_sBtnText;
+stHmiData.sNameOn := s_fbHmiBtnManualOn.p_sBtnText;
+stHmiData.bStaOff := NOT(s_bStaOutput);
+stHmiData.bStaOn := s_bStaOutput;
+stHmiData.bBtnOffEnabled := s_fbHmiBtnManualOff.p_bStaEnabled;
+stHmiData.bBtnOnEnabled := s_fbHmiBtnManualOn.p_bStaEnabled;
+stHmiData.sInterlockedReasonOn := s_sInterlockedReasonOn;
+stHmiData.sInterlockedReasonOff := s_sInterlockedReasonOff;
+
+//From Hmi
+IF stHmiData.bCmdOffPressed THEN
+	s_fbHmiBtnManualOff.m_On();
+ELSE
+	s_fbHmiBtnManualOff.m_Off();	
+END_IF
+
+IF stHmiData.bCmdOnPressed THEN
+	s_fbHmiBtnManualOn.m_On();
+ELSE
+	s_fbHmiBtnManualOn.m_Off();	
+END_IF 
+
+//Buttons
+s_fbHmiBtnManualOff();
+s_fbHmiBtnManualOn();
+
+//Led
+s_fbHmiLedIsOff(i_bStaLed := NOT(s_bStaOutput));
+s_fbHmiLedIsOn(i_bStaLed := s_bStaOutput);
+		
+IF __ISVALIDREF(i_ref_eCtrlState) THEN
+	//MAINTENANCE-mode is running
+	IF (i_eCtrlMode = E_CtrlMode.MAINTENANCE) AND (i_ref_eCtrlState = E_CtrlState.RUNNING) THEN
+		s_fbHmiBtnManualOff.p_bStaVisible := TRUE;
+		s_fbHmiBtnManualOff.p_bStaEnabled := i_bReqEnable AND NOT(i_bIclkOff);
+		
+		s_fbHmiBtnManualOn.p_bStaVisible := TRUE;
+		s_fbHmiBtnManualOn.p_bStaEnabled := i_bReqEnable AND NOT(i_bIclkOn);
+			
+		IF s_fbHmiBtnManualOff.p_osrBtnPress THEN
+			m_Off();
+		END_IF
+			
+		IF s_fbHmiBtnManualOn.p_osrBtnPress THEN
+			m_On();
+		END_IF
+		
+	//other-mode	
+	ELSE
+		s_fbHmiBtnManualOff.p_bStaVisible := FALSE;
+		s_fbHmiBtnManualOff.p_bStaEnabled := FALSE;
+	
+		s_fbHmiBtnManualOn.p_bStaVisible := FALSE;
+		s_fbHmiBtnManualOn.p_bStaEnabled := FALSE;
+
+		s_fbHmiBtnManualOn.p_bStaVisible := FALSE;
+		s_fbHmiBtnManualOn.p_bStaEnabled := FALSE;
+	END_IF
+END_IF	
+	
+_m_Hmi := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Init" Id="{58eaf209-c641-4c2f-b3df-64ebcea68410}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Init : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Init() THEN
+	RETURN;
+END_IF
+
+//Hmi 
+	s_fbHmiBtnManualOff.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnManualOff.p_bStaVisible := FALSE;
+	s_fbHmiBtnManualOff.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnManualOff.p_sBtnText := s_sCfgOffName;
+	
+	s_fbHmiBtnManualOn.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnManualon.p_bStaVisible := FALSE;
+	s_fbHmiBtnManualOn.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnManualon.p_sBtnText := s_sCfgOnName;
+	
+	s_fbHmiLedIsOff.p_bStaVisible := FALSE;
+	s_fbHmiLedIsOff.p_sToHmiDescriptionLed := CONCAT('Is at: ', s_sCfgOffName);
+	
+	s_fbHmiLedIsOn.p_bStaVisible := FALSE;
+	s_fbHmiLedIsOn.p_sToHmiDescriptionLed := CONCAT('Is at: ', s_sCfgOnName);
+
+_m_Init := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Outputs" Id="{e570ab94-2a26-4b08-93d9-96af8fab708a}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Outputs : BOOL
+VAR_INST
+	s_bCmdOutput : BOOL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT SUPER^._m_Outputs() THEN
+	RETURN;
+END_IF
+
+IF i_bReqEnable AND s_bReqOff AND NOT(i_bIclkOff) THEN
+			s_bCmdOutput := FALSE;
+		ELSIF i_bReqEnable AND s_bReqOn AND NOT(i_bIclkOn) THEN
+			s_bCmdOutput := TRUE;
+		ELSE
+			;
+			//--s_bCmdOutput := FALSE;	
+		END_IF
+
+IF __ISVALIDREF(i_ref_eCtrlState) THEN
+	IF (i_eCtrlMode <> E_CtrlMode.IO) OR (i_ref_eCtrlState <> E_CtrlState.RUNNING) THEN
+		s_fbForceCmdOutput.i_eForceValue := E_ForceValue.RELEASED; 	
+	END_IF
+END_IF
+	
+s_fbForceCmdOutput(
+	i_ref_bCmdInput := s_bCmdOutput,
+	i_ref_bCmdOutput := Q_bStaOutput);
+
+s_bStaOutput := Q_bStaOutput;	
+	
+_m_Outputs := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_Off" Id="{ecec5de6-8993-4f02-85de-c763a17adf6c}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PUBLIC m_Off : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+IF NOT(i_bIclkOff) THEN
+	s_bReqOff := TRUE XOR s_bCfgReverseOutput;
+	s_bReqOn := FALSE XOR s_bCfgReverseOutput;
+ELSE
+	s_wrnOffInterlocked := TRUE;
+END_IF	
+	
+m_off := s_bStaOutputIsOff;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_On" Id="{72dee1e9-15f6-4acf-a222-f05c7a0f3b2a}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD PUBLIC m_On : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+IF NOT(i_bIclkOn) THEN
+	s_bReqOff := FALSE XOR s_bCfgReverseOutput;
+	s_bReqOn := TRUE XOR s_bCfgReverseOutput;
+ELSE
+	s_wrnOnInterlocked := TRUE;
+END_IF
+	
+m_On := s_bStaOutputIsOn;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="p_bCfgReverseOutput" Id="{91faff52-ccfa-4828-8537-1e596812f30f}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bCfgReverseOutput : BOOL]]></Declaration>
+      <Get Name="Get" Id="{36007a3c-1d2d-4d74-b650-7e1855152a36}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bCfgReverseOutput := s_bCfgReverseOutput;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{dad35811-9b82-45a9-b984-ddbbd50110e7}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+s_bCfgReverseOutput := p_bCfgReverseOutput;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="p_bStaIsOff" Id="{b7c83b24-d0ae-42f1-a82a-ab2f516b13a1}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bStaIsOff : BOOL]]></Declaration>
+      <Get Name="Get" Id="{5dec523d-3816-4f0a-bd4f-cf74110f9c1d}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaIsOff := s_bStaOutputIsOff;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaIsOn" Id="{a5094957-1772-4d40-9c14-e5eba61eb945}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bStaIsOn : BOOL]]></Declaration>
+      <Get Name="Get" Id="{aa06a3e2-4e28-4410-9202-80b549a4969f}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaIsOn := s_bStaOutputIsOn;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaOutput" Id="{cdc0ff34-12d0-4b48-b5e8-b09853bb5cc9}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bStaOutput : BOOL]]></Declaration>
+      <Get Name="Get" Id="{42e85b44-18f0-412a-9346-64d13e29ff2a}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[p_bStaOutput := s_bStaOutput;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaWarning" Id="{3d0e8e10-0192-43a6-a918-fca531311cfd}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bStaWarning : BOOL]]></Declaration>
+      <Get Name="Get" Id="{1864105f-9395-4c47-afc3-a0e6285c2bde}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaWarning := s_bStaWarning;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_sCfgOffName" Id="{bad7f86a-ed76-4fc4-b545-49766b502d8b}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_sCfgOffName : STRING(c_MAX_FB_NAME_LENGTH)]]></Declaration>
+      <Get Name="Get" Id="{ecdac295-9e12-42e1-af6a-1438fc907ace}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_sCfgOffName := s_sCfgOffName;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{cc069142-38c9-413b-93f9-16c3e3887d0b}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+s_sCfgOffName := p_sCfgOffName;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="p_sCfgOnName" Id="{c262eae1-1891-4a87-a7b5-82eb7fd3a41c}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_sCfgOnName : STRING(c_MAX_FB_NAME_LENGTH)]]></Declaration>
+      <Get Name="Get" Id="{f4a2f70f-caa9-4957-9aec-eceee385e016}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_sCfgOnName := s_sCfgOnName;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{a5550812-774b-4113-93cf-353687427523}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+s_sCfgOnName := p_sCfgOnName;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="p_sInterlockedReasonOff" Id="{34e39de3-1002-4b2d-9f20-9e3d7e031852}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_sInterlockedReasonOff : STRING(GVL.g_MAX_LEN_INTERLOCK_REASON)]]></Declaration>
+      <Get Name="Get" Id="{02af5916-8462-404d-ba13-c9bf19efff4c}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_sInterlockedReasonOff := s_sInterlockedReasonOff;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{63c7fba6-aadc-432b-8f62-3e22ecb87594}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+s_sInterlockedReasonOff := p_sInterlockedReasonOff;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="p_sInterlockedReasonOn" Id="{9f60b92c-c8a8-4ac7-9e39-6da66771e2a7}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_sInterlockedReasonOn : STRING(GVL.g_MAX_LEN_INTERLOCK_REASON)]]></Declaration>
+      <Get Name="Get" Id="{92330fa5-6f16-48b5-8c4f-5e514f368ece}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_sInterlockedReasonOn := s_sInterlockedReasonOn;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{ed995ebe-f73e-4698-bbee-a8437daca919}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+s_sInterlockedReasonOn := p_sInterlockedReasonOn;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <LineIds Name="CM_DigOutput">
+      <LineId Id="115" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="189" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_DigOutput._m_Hmi">
+      <LineId Id="260" Count="12" />
+      <LineId Id="326" Count="0" />
+      <LineId Id="273" Count="52" />
+      <LineId Id="87" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_DigOutput._m_Init">
+      <LineId Id="39" Count="2" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="23" Count="15" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="9" Count="1" />
+    </LineIds>
+    <LineIds Name="CM_DigOutput._m_Outputs">
+      <LineId Id="69" Count="0" />
+      <LineId Id="71" Count="1" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="79" Count="1" />
+      <LineId Id="82" Count="1" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="62" Count="1" />
+      <LineId Id="51" Count="2" />
+      <LineId Id="64" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="46" Count="1" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="56" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_DigOutput.m_Off">
+      <LineId Id="25" Count="0" />
+      <LineId Id="14" Count="2" />
+      <LineId Id="31" Count="1" />
+      <LineId Id="23" Count="1" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="26" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_DigOutput.m_On">
+      <LineId Id="22" Count="0" />
+      <LineId Id="12" Count="2" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="29" Count="1" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="23" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_DigOutput.p_bCfgReverseOutput.Get">
+      <LineId Id="3" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="4" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_DigOutput.p_bCfgReverseOutput.Set">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_DigOutput.p_bStaIsOff.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_DigOutput.p_bStaIsOn.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_DigOutput.p_bStaOutput.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_DigOutput.p_bStaWarning.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_DigOutput.p_sCfgOffName.Get">
+      <LineId Id="3" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="4" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_DigOutput.p_sCfgOffName.Set">
+      <LineId Id="7" Count="0" />
+      <LineId Id="5" Count="1" />
+    </LineIds>
+    <LineIds Name="CM_DigOutput.p_sCfgOnName.Get">
+      <LineId Id="3" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="4" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_DigOutput.p_sCfgOnName.Set">
+      <LineId Id="7" Count="0" />
+      <LineId Id="5" Count="1" />
+    </LineIds>
+    <LineIds Name="CM_DigOutput.p_sInterlockedReasonOff.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_DigOutput.p_sInterlockedReasonOff.Set">
+      <LineId Id="6" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="7" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_DigOutput.p_sInterlockedReasonOn.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_DigOutput.p_sInterlockedReasonOn.Set">
+      <LineId Id="6" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="7" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

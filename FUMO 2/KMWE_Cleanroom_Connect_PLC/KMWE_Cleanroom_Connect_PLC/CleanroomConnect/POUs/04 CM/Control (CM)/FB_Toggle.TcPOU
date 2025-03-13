@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_Toggle" Id="{bc3b0774-fe4f-4cbd-a043-08f9c1e5a0d2}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Toggle
+VAR_INPUT
+	CLK : BOOL;
+END_VAR
+VAR_OUTPUT
+	Q : BOOL;
+	osrQ : BOOL;
+END_VAR
+VAR
+	s_osr : R_TRIG;
+	s_osrQ : R_TRIG;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+s_osr(CLK := CLK);
+
+IF s_osr.Q AND Q THEN
+	Q := FALSE; 
+ELSIF s_osr.Q AND NOT(Q) THEN	
+	Q := TRUE;
+END_IF
+
+s_osrQ(CLK := Q);
+osrQ := s_osrQ.Q;
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Toggle">
+      <LineId Id="83" Count="1" />
+      <LineId Id="69" Count="1" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="98" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="22" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

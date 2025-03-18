@@ -4,11 +4,14 @@
     <Declaration><![CDATA[FUNCTION_BLOCK EM_Utilities EXTENDS EM_Base IMPLEMENTS I_EM_Utilities
 VAR
 	//Control modules
-	s_diSafetyOk : FB_DigInput;
+	s_diSafetyOk : FB_DigInput;	//State from TwinSAFE
+//??	s_diEStopsInfeedOK : FB_DigInput;	//State from TwinSAFE
+//??	s_diEStopsCleanroomOK : FB_DigInput;	//State from TwinSAFE
+	s_diSafetyFbErr : FB_DigInput;	//State from TwinSAFE
+	s_diRestartSafety : FB_DigInput;
 	s_diPower400VacOk : FB_DigInput;
 	s_diPower230VacOk : FB_DigInput;
 	s_diPower230VacSocketsOk : FB_DigInput;
-	s_diPower48VdcOk : FB_DigInput;
 	s_diPowerPotentialGroup24VdcOk : FB_DigInput;
 	s_diAirPressureOk : FB_DigInput;
 	s_diCabinetTemperatureOk : FB_DigInput;
@@ -16,13 +19,17 @@ VAR
 	s_doBeaconLedGreen : FB_DigOutput;
 	s_doBeaconLedYellow : FB_DigOutput;
 	s_doBeaconLedRed : FB_DigOutput;
+	s_doSnRestartSafety : FB_DigOutput;
 	
 	s_FbForceOutputLedGreen : FB_ForceOutput;
 	s_FbForceOutputLedYellow : FB_ForceOutput;
 	s_FbForceOutputLedRed : FB_ForceOutput;
+	s_FbForceOutputSnRestartSafety : FB_ForceOutput;
 		
 	//States
 	s_bStaSafetyOk : BOOL := FALSE;
+	s_bSafetyFbErr : BOOL := FALSE;
+	s_bRestartSafety : BOOL := FALSE;
 	s_bStsPower400VacOk : BOOL := FALSE;
 	s_bStsPower230VacOk : BOOL := FALSE;
 	s_bStsPower230VacSocketsOk : BOOL := FALSE;
@@ -56,6 +63,7 @@ VAR
 	
 	//Hmi
 	s_fbHmiLedSafetyOk : FB_HmiLed;
+	s_fbHmiLedRestartSafety : FB_HmiLed;
 	s_fbHmiLedPower400VacOk : FB_HmiLed;
 	s_fbHmiLedPower230VacOk : FB_HmiLed;
 	s_fbHmiLedPower230VacSocketsOk : FB_HmiLed;
@@ -68,6 +76,12 @@ VAR
 	s_fbHmiLedBeaconYellow : FB_HmiLed;
 	s_fbHmiLedBeaconRed : FB_HmiLed;
 	
+	
+	//Interface with TwinSAFE
+	Q_bCmdRun AT %Q* : BOOL; //Set TwinSAFE to Run-Mode	
+	Q_bCmdErrAck AT %Q* : BOOL; //Reset errors in TwinSAFE logic
+	Q_bCmdRestartSafety AT %Q* : BOOL; //Restart/reset safety blocks (reset Estop-safety-relay)
+			
 	{warning '#TODO' Het zou beter zijn om dit onder te brengen in de onderstaande control modules}
 	s_bHmiForceOutputEnabled : BOOL;
 END_VAR
@@ -153,6 +167,8 @@ END_IF
 
 //Control module
 s_diSafetyOk();
+s_diSafetyFbErr();
+s_diRestartSafety();
 s_diPower400VacOk();
 s_diPower230VacOk();
 s_diPower230VacSocketsOk();
@@ -164,7 +180,16 @@ s_diCabinetTemperatureOk();
 s_doBeaconLedGreen();
 s_doBeaconLedYellow();
 s_doBeaconLedRed();
+s_doSnRestartSafety();
 
+//TwinSAFE --> PLC
+
+
+//PLC --> TwinSAFE
+Q_bCmdRun := i_bReqEnable; 
+Q_bCmdErrAck := i_bCmdReset;
+Q_bCmdRestartSafety := s_bRestartSafety; 
+ 
 _m_Devices := TRUE;
 ]]></ST>
       </Implementation>
@@ -183,6 +208,8 @@ END_IF
 
 //Hmi Leds
 s_fbHmiLedSafetyOk(i_bStaLed := s_bStaSafetyOk);
+s_fbHmiLedSafetyFbErr(i_bStaLed := s_bSafetyFbErr);
+s_fbHmiLedRestartSafety(i_bStaLed := s_bRestartSafety);
 s_fbHmiLedPower400VacOk(i_bStaLed := s_bStsPower400VacOk);
 s_fbHmiLedPower230VacOk(i_bStaLed := s_bStsPower230VacOk);
 s_fbHmiLedPower230VacSocketsOk(i_bStaLed := s_bStsPower230VacSocketsOk);
@@ -209,6 +236,8 @@ END_IF
 
 //Control Modules
 s_diSafetyOk.i_stSettings.tmInputDelay := T#1S;
+s_diSafetyFbErr.i_stSettings.tmInputDelay := T#1S;
+s_diRestartSafety.i_stSettings.tmInputDelay := T#0S;
 s_diPower400VacOk.i_stSettings.tmInputDelay := T#1S;
 s_diPower230VacOk.i_stSettings.tmInputDelay := T#1S;
 s_diPower230VacSocketsOk.i_stSettings.tmInputDelay := T#1S;
@@ -223,6 +252,8 @@ s_doBeaconLedYellow.i_stSettings.bCfgDelay := FALSE;
 s_doBeaconLedYellow.i_stSettings.tmOutputDelay := T#0S;
 s_doBeaconLedRed.i_stSettings.bCfgDelay := FALSE;
 s_doBeaconLedRed.i_stSettings.tmOutputDelay := T#0S;
+s_doSnRestartSafety.i_stSettings.bCfgDelay := FALSE;
+s_doSnRestartSafety.i_stSettings.tmOutputDelay := T#0S;
 
 //---------------------------------//	
 	
@@ -256,6 +287,9 @@ s_fbAlarmHandlerCabinetTemperatureNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
 //Hmi 
 s_fbHmiLedSafetyOk.p_bStaVisible := FALSE;
 s_fbHmiLedSafetyOk.p_sToHmiDescriptionLed := 'Safety Ok';
+
+s_fbHmiLedRestartSafety.p_bStaVisible := FALSE;
+s_fbHmiLedRestartSafety.p_sToHmiDescriptionLed := 'Restart Safety';
 
 s_fbHmiLedPower400VacOk.p_bStaVisible := FALSE;
 s_fbHmiLedPower400VacOk.p_sToHmiDescriptionLed := 'Power 400Vac Ok';
@@ -301,6 +335,8 @@ IF NOT SUPER^._m_Inputs() THEN
 END_IF
 
 s_bStaSafetyOk := s_diSafetyOk.p_bStaInputDelayed AND s_diSafetyOk.p_bStaInput; //on-delay only
+s_bSafetyFbErr := s_diSafetyFbErr.p_bStaInput;
+s_bRestartSafety := s_diRestartSafety.p_bStaInput;  
 s_bStsPower400VacOk := s_diPower400VacOk.p_bStaInputDelayed AND s_diPower400VacOk.p_bStaInput; //on-delay only
 s_bStsPower230VacOk := s_diPower230VacOk.p_bStaInputDelayed AND s_diPower230VacOk.p_bStaInput; //on-delay only
 s_bStsPower230VacSocketsOk := s_diPower230VacSocketsOk.p_bStaInputDelayed AND s_diPower230VacSocketsOk.p_bStaInput; //on-delay only
@@ -335,6 +371,10 @@ IF (i_eCtrlMode <> E_CtrlMode.IO) OR (i_eCtrlState <> E_CtrlState.RUNNING) THEN
 	s_FbForceOutputLedRed.i_eForceValue := E_ForceValue.RELEASED; 	
 END_IF
 
+IF (i_eCtrlMode <> E_CtrlMode.IO) OR (i_eCtrlState <> E_CtrlState.RUNNING) THEN
+	s_FbForceOutputSnRestartSafety.i_eForceValue := E_ForceValue.RELEASED; 	
+END_IF
+
 //Force outputs
 IF s_FbForceOutputLedGreen.i_eForceValue = E_ForceValue.RELEASED THEN
 	s_doBeaconLedGreen.i_bStaOutput := s_bExtRunning;
@@ -352,6 +392,12 @@ IF s_FbForceOutputLedRed.i_eForceValue = E_ForceValue.RELEASED THEN
 	s_doBeaconLedRed.i_bStaOutput := s_bExtError;
 ELSE
 	s_doBeaconLedRed.i_bStaOutput := s_FbForceOutputLedRed.i_eForceValue = E_ForceValue.FORCE_ON;
+END_IF
+   
+IF s_FbForceOutputSnRestartSafety.i_eForceValue = E_ForceValue.RELEASED THEN
+	s_doSnRestartSafety.i_bStaOutput := s_bRestartSafety;
+ELSE
+	s_doSnRestartSafety.i_bStaOutput := s_FbForceOutputSnRestartSafety.i_eForceValue = E_ForceValue.FORCE_ON;
 END_IF
 
 q_bStaWarning := s_bStaWarning;
@@ -525,7 +571,10 @@ p_bStsPowerOk :=
     </LineIds>
     <LineIds Name="EM_Utilities._m_Devices">
       <LineId Id="255" Count="0" />
-      <LineId Id="234" Count="6" />
+      <LineId Id="234" Count="5" />
+      <LineId Id="284" Count="0" />
+      <LineId Id="282" Count="0" />
+      <LineId Id="240" Count="0" />
       <LineId Id="264" Count="1" />
       <LineId Id="262" Count="0" />
       <LineId Id="268" Count="0" />
@@ -533,7 +582,13 @@ p_bStsPowerOk :=
       <LineId Id="266" Count="0" />
       <LineId Id="257" Count="2" />
       <LineId Id="242" Count="0" />
-      <LineId Id="260" Count="0" />
+      <LineId Id="283" Count="0" />
+      <LineId Id="279" Count="2" />
+      <LineId Id="270" Count="1" />
+      <LineId Id="273" Count="0" />
+      <LineId Id="278" Count="0" />
+      <LineId Id="276" Count="0" />
+      <LineId Id="274" Count="0" />
       <LineId Id="254" Count="0" />
       <LineId Id="50" Count="0" />
     </LineIds>
@@ -545,7 +600,10 @@ p_bStsPowerOk :=
       <LineId Id="264" Count="0" />
       <LineId Id="248" Count="0" />
       <LineId Id="239" Count="0" />
-      <LineId Id="256" Count="1" />
+      <LineId Id="256" Count="0" />
+      <LineId Id="278" Count="0" />
+      <LineId Id="277" Count="0" />
+      <LineId Id="257" Count="0" />
       <LineId Id="270" Count="1" />
       <LineId Id="268" Count="0" />
       <LineId Id="275" Count="0" />
@@ -561,7 +619,10 @@ p_bStsPowerOk :=
       <LineId Id="203" Count="0" />
       <LineId Id="5" Count="3" />
       <LineId Id="10" Count="0" />
-      <LineId Id="326" Count="1" />
+      <LineId Id="326" Count="0" />
+      <LineId Id="461" Count="0" />
+      <LineId Id="453" Count="0" />
+      <LineId Id="327" Count="0" />
       <LineId Id="373" Count="2" />
       <LineId Id="445" Count="0" />
       <LineId Id="329" Count="0" />
@@ -571,6 +632,8 @@ p_bStsPowerOk :=
       <LineId Id="367" Count="0" />
       <LineId Id="370" Count="0" />
       <LineId Id="369" Count="0" />
+      <LineId Id="460" Count="0" />
+      <LineId Id="459" Count="0" />
       <LineId Id="362" Count="0" />
       <LineId Id="35" Count="2" />
       <LineId Id="391" Count="1" />
@@ -599,7 +662,9 @@ p_bStsPowerOk :=
       <LineId Id="390" Count="0" />
       <LineId Id="38" Count="0" />
       <LineId Id="354" Count="0" />
-      <LineId Id="344" Count="1" />
+      <LineId Id="344" Count="0" />
+      <LineId Id="454" Count="2" />
+      <LineId Id="345" Count="0" />
       <LineId Id="355" Count="0" />
       <LineId Id="346" Count="0" />
       <LineId Id="377" Count="1" />
@@ -632,6 +697,8 @@ p_bStsPowerOk :=
       <LineId Id="6" Count="2" />
       <LineId Id="56" Count="0" />
       <LineId Id="77" Count="0" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="92" Count="0" />
       <LineId Id="79" Count="0" />
       <LineId Id="86" Count="1" />
       <LineId Id="85" Count="0" />
@@ -653,6 +720,8 @@ p_bStsPowerOk :=
       <LineId Id="78" Count="0" />
       <LineId Id="83" Count="2" />
       <LineId Id="82" Count="0" />
+      <LineId Id="121" Count="2" />
+      <LineId Id="120" Count="0" />
       <LineId Id="108" Count="0" />
       <LineId Id="87" Count="1" />
       <LineId Id="70" Count="0" />
@@ -662,7 +731,9 @@ p_bStsPowerOk :=
       <LineId Id="96" Count="0" />
       <LineId Id="103" Count="4" />
       <LineId Id="102" Count="0" />
-      <LineId Id="38" Count="0" />
+      <LineId Id="113" Count="4" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="111" Count="0" />
       <LineId Id="47" Count="0" />
       <LineId Id="22" Count="0" />
       <LineId Id="5" Count="0" />

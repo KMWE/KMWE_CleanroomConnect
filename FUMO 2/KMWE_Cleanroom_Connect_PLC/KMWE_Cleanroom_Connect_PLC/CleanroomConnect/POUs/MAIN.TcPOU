@@ -16,13 +16,6 @@ VAR
 	
 	fbModeStateControl : FB_ModeStateControl;
 	
-	//Test other valv configuration (2x 3/2 vs 1x 5/3 with open middle position)	
-	Q_bTestDoorShutterClose AT%Q* : BOOL;	//Link to: Output . Channel 15 . K21 (EL2809) . Master (EtherCAT) . Devices
-	Q_bTestDoorShutterOpen AT%Q* : BOOL;	//Link to: Output . Channel 16 . K21 (EL2809) . Master (EtherCAT) . Devices
-	s_tofPressurizeDelay : TOF;
-	s_nCmd : UINT; // 0 = IDLE, 1 = CLOSE, 2 = OPEN 
-	
-	
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -39,33 +32,11 @@ fbModeStateControl();
 	
 GVL.g_unCleanroomConnect.p_bCmdReset := GVL_KMWEGenericLib.g_fbAlarmManager.p_osrReset;
 GVL.g_unCleanroomConnect();
-
-
-{warning '#TEST: Code below is just test code for a quick test, can be removed if no longer after  test is finisched'}
-(*
-s_tofPressurizeDelay(IN := s_nCmd = 0, PT := T#75mS);
-
-CASE s_nCmd OF
-	0: //IDLE
-		Q_bTestDoorShutterClose := TRUE;
-		Q_bTestDoorShutterOpen := TRUE;
-		
-	1: //CLOSE
-		Q_bTestDoorShutterOpen := NOT s_tofPressurizeDelay.Q;
-		Q_bTestDoorShutterClose := FALSE;
-	
-	2: //OPEN
-		Q_bTestDoorShutterClose := NOT s_tofPressurizeDelay.Q;
-		Q_bTestDoorShutterOpen := FALSE;
-
-END_CASE
-*)]]></ST>
+]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
       <LineId Id="1386" Count="12" />
-      <LineId Id="1420" Count="0" />
-      <LineId Id="1399" Count="18" />
-      <LineId Id="1100" Count="0" />
+      <LineId Id="1444" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>

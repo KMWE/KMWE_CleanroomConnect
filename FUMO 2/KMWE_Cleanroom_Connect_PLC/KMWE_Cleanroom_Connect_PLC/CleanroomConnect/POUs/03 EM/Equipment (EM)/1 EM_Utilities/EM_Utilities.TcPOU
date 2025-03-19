@@ -9,10 +9,11 @@ VAR
 //??	s_diEStopsCleanroomOK : FB_DigInput;	//State from TwinSAFE
 	s_diSafetyFbErr : FB_DigInput;	//State from TwinSAFE
 	s_diRestartSafety : FB_DigInput;
-	s_diPower400VacOk : FB_DigInput;
-	s_diPower230VacOk : FB_DigInput;
-	s_diPower230VacSocketsOk : FB_DigInput;
-	s_diPowerPotentialGroup24VdcOk : FB_DigInput;
+	s_diPower400VacOk : FB_DigInput; //F1
+	s_diPower230VacOk : FB_DigInput; //F2
+	s_diPower230VacSocketsOk : FB_DigInput; //F3
+	s_diPower48VdcOk : FB_DigInput; //F4	
+	s_diPowerPotentialGroup24VdcOk : FB_DigInput; //EL9110
 	s_diAirPressureOk : FB_DigInput;
 	s_diCabinetTemperatureOk : FB_DigInput;
 
@@ -33,6 +34,7 @@ VAR
 	s_bStsPower400VacOk : BOOL := FALSE;
 	s_bStsPower230VacOk : BOOL := FALSE;
 	s_bStsPower230VacSocketsOk : BOOL := FALSE;
+	s_bStsPower48VdcOk : BOOL := FALSE;
 	s_bStsPowerPotentialGroup24VdcOk : BOOL := FALSE;
 	s_bStaAirPressureOk : BOOL := FALSE;
 	s_bStaCabinetTemperatureOk : BOOL := FALSE;
@@ -50,6 +52,7 @@ VAR
 	s_fbAlarmHandlerPower400VacNotOk : FB_AlarmHandler;
 	s_fbAlarmHandlerPower230VacNotOk : FB_AlarmHandler;
 	s_fbAlarmHandlerPower230VacSocketsNotOk : FB_AlarmHandler;
+	s_fbAlarmHandlerPower48VdcNotOk : FB_AlarmHandler;
 	s_fbAlarmHandlerPowerPotentialGroup24VdcNotOk : FB_AlarmHandler;
 	s_fbAlarmHandlerAirPressureNotOk : FB_AlarmHandler;
 	s_fbAlarmHandlerCabinetTemperatureNotOk : FB_AlarmHandler;
@@ -59,6 +62,7 @@ VAR
 	s_bErrPower400VacOk : BOOL;
 	s_bErrPower230VacOk : BOOL;
 	s_bWrnPower230VacSocketsOk : BOOL;
+	s_bErrPower48VdcOk : BOOL;
 	s_bErrPowerPotentialGroup24VdcOk : BOOL;
 	s_bErrAirPressureNotOk : BOOL;
 	s_bErrCabinetTemperatureNotOk : BOOL;
@@ -70,6 +74,7 @@ VAR
 	s_fbHmiLedPower400VacOk : FB_HmiLed;
 	s_fbHmiLedPower230VacOk : FB_HmiLed;
 	s_fbHmiLedPower230VacSocketsOk : FB_HmiLed;
+	s_fbHmiLedPower48VdcOk : FB_HmiLed;
 	s_fbHmiLedPowerPotentialGroup24VdcOk : FB_HmiLed;
 	
 	s_fbHmiLedAirPressureOk : FB_HmiLed;
@@ -117,7 +122,7 @@ s_bErrSafetyFbErr S= s_bSafetyFbErr;
 s_bErrPower400VacOk S= NOT(s_bStsPower400VacOk);
 s_bErrPower230VacOk S= NOT(s_bStsPower230VacOk);
 s_bWrnPower230VacSocketsOk S= NOT(s_bStsPower230VacSocketsOk);
-//--s_bErrPower24VdcOk S= NOT(s_bStsPower24VdcOk);
+s_bErrPower48VdcOk S= NOT(s_bStsPower48VdcOk);
 s_bErrPowerPotentialGroup24VdcOk S= NOT(s_bStsPowerPotentialGroup24VdcOk);
 s_bErrAirPressureNotOk S= NOT(s_bStaAirPressureOk);
 s_bErrCabinetTemperatureNotOk S= NOT(s_bStaCabinetTemperatureOk);
@@ -128,7 +133,7 @@ s_fbAlarmHandlerSafetyFbErr(i_bStaActive := s_bErrSafetyFbErr);
 s_fbAlarmHandlerPower400VacNotOk(i_bStaActive := s_bErrPower400VacOk);
 s_fbAlarmHandlerPower230VacNotOk(i_bStaActive := s_bErrPower230VacOk);
 s_fbAlarmHandlerPower230VacSocketsNotOk(i_bStaActive := s_bWrnPower230VacSocketsOk);
-//--s_fbAlarmHandlerPower24VdcNotOk(i_bStaActive := s_bErrPower24VdcOk);
+s_fbAlarmHandlerPower48VdcNotOk(i_bStaActive := s_bErrPower48VdcOk);
 s_fbAlarmHandlerPowerPotentialGroup24VdcNotOk(i_bStaActive := s_bErrPowerPotentialGroup24VdcOk);
 s_fbAlarmHandlerAirPressureNotOk(i_bStaActive := s_bErrAirPressureNotOk);
 s_fbAlarmHandlerCabinetTemperatureNotOk(i_bStaActive := s_bErrCabinetTemperatureNotOk);
@@ -179,7 +184,7 @@ s_diRestartSafety();
 s_diPower400VacOk();
 s_diPower230VacOk();
 s_diPower230VacSocketsOk();
-//--s_diPower24VdcOk();
+s_diPower48VdcOk();
 s_diPowerPotentialGroup24VdcOk();
 s_diAirPressureOk();
 s_diCabinetTemperatureOk();
@@ -220,7 +225,7 @@ s_fbHmiLedRestartSafety(i_bStaLed := s_bRestartSafety);
 s_fbHmiLedPower400VacOk(i_bStaLed := s_bStsPower400VacOk);
 s_fbHmiLedPower230VacOk(i_bStaLed := s_bStsPower230VacOk);
 s_fbHmiLedPower230VacSocketsOk(i_bStaLed := s_bStsPower230VacSocketsOk);
-//--s_fbHmiLedPower24VdcOk(i_bStaLed := s_bStsPower24VdcOk);
+s_fbHmiLedPower48VdcOk(i_bStaLed := s_bStsPower48VdcOk);
 s_fbHmiLedPowerPotentialGroup24VdcOk(i_bStaLed := s_bStsPowerPotentialGroup24VdcOk);
 s_fbHmiLedAirPressureOk(i_bStaLed := s_bStaAirPressureOk);
 s_fbHmiLedCabinetTemperatureOk(i_bStaLed := s_bStaCabinetTemperatureOk);
@@ -248,7 +253,7 @@ s_diRestartSafety.i_stSettings.tmInputDelay := T#0S;
 s_diPower400VacOk.i_stSettings.tmInputDelay := T#1S;
 s_diPower230VacOk.i_stSettings.tmInputDelay := T#1S;
 s_diPower230VacSocketsOk.i_stSettings.tmInputDelay := T#1S;
-//--s_diPower24VdcOk.i_stSettings.tmInputDelay := T#1S;
+s_diPower48VdcOk.i_stSettings.tmInputDelay := T#1S;
 s_diPowerPotentialGroup24VdcOk.i_stSettings.tmInputDelay := T#1S;
 s_diAirPressureOk.i_stSettings.tmInputDelay := T#1S;
 s_diCabinetTemperatureOk.i_stSettings.tmInputDelay := T#600S;
@@ -282,8 +287,8 @@ s_fbAlarmHandlerPower230VacNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
 s_fbAlarmHandlerPower230VacSocketsNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Power supply 230Vac sockets not OK');
 s_fbAlarmHandlerPower230VacSocketsNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
 
-//--s_fbAlarmHandlerPower24VdcNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Power supply 24Vdc not OK');
-//--s_fbAlarmHandlerPower24VdcNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
+s_fbAlarmHandlerPower48VdcNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Power supply 48Vdc not OK');
+s_fbAlarmHandlerPower48VdcNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
 
 s_fbAlarmHandlerPowerPotentialGroup24VdcNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Power potential group 24Vdc not OK');
 s_fbAlarmHandlerPowerPotentialGroup24VdcNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
@@ -313,8 +318,8 @@ s_fbHmiLedPower230VacOk.p_sToHmiDescriptionLed := 'Power 230Vac Ok';
 s_fbHmiLedPower230VacSocketsOk.p_bStaVisible := FALSE;
 s_fbHmiLedPower230VacSocketsOk.p_sToHmiDescriptionLed := 'Power 230Vac Service Ok';
 
-//--s_fbHmiLedPower24VdcOk.p_bStaVisible := FALSE;
-//--s_fbHmiLedPower24VdcOk.p_sToHmiDescriptionLed := 'Power 24Vdc Ok';
+s_fbHmiLedPower48VdcOk.p_bStaVisible := FALSE;
+s_fbHmiLedPower48VdcOk.p_sToHmiDescriptionLed := 'Power 48Vdc Ok';
 
 s_fbHmiLedPowerPotentialGroup24VdcOk.p_bStaVisible := FALSE;
 s_fbHmiLedPowerPotentialGroup24VdcOk.p_sToHmiDescriptionLed := 'Power Potentialgroup Ok';
@@ -353,7 +358,7 @@ s_bRestartSafety := s_diRestartSafety.p_bStaInput;
 s_bStsPower400VacOk := s_diPower400VacOk.p_bStaInputDelayed AND s_diPower400VacOk.p_bStaInput; //on-delay only
 s_bStsPower230VacOk := s_diPower230VacOk.p_bStaInputDelayed AND s_diPower230VacOk.p_bStaInput; //on-delay only
 s_bStsPower230VacSocketsOk := s_diPower230VacSocketsOk.p_bStaInputDelayed AND s_diPower230VacSocketsOk.p_bStaInput; //on-delay only
-//--s_bStsPower24VdcOk := s_diPower24VdcOk.p_bStaInputDelayed AND s_diPower24VdcOk.p_bStaInput; //on-delay only
+s_bStsPower48VdcOk := s_diPower48VdcOk.p_bStaInputDelayed AND s_diPower48VdcOk.p_bStaInput; //on-delay only
 s_bStsPowerPotentialGroup24VdcOk := s_diPowerPotentialGroup24VdcOk.p_bStaInputDelayed AND s_diPowerPotentialGroup24VdcOk.p_bStaInput; //on-delay only
 s_bStaAirPressureOk := s_diAirPressureOk.p_bStaInputDelayed AND s_diAirPressureOk.p_bStaInput; //on-delay only
 s_bStaCabinetTemperatureOk := s_diCabinetTemperatureOk.p_bStaInputDelayed OR s_diCabinetTemperatureOk.p_bStaInput; //off-delay only

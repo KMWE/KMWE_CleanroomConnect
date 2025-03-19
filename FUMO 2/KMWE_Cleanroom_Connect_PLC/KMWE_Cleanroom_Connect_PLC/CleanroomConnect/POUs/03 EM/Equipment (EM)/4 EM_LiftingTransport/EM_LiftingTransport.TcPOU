@@ -30,7 +30,7 @@ VAR_INPUT
 	
 	fActSpindPos : LREAL;
 	fActLiftHeight : LREAL;
-	
+				
 	I_nInfoDataInputLevel AT %I* : UINT;	//Bit8: STO Input Level (UINT8) 
 END_VAR
 
@@ -50,7 +50,9 @@ VAR
 	fbIlckHandlerTransportRetract : FB_InterlockHandler;
 
 //------------------------------------------//
-	//Control Modules (Devices)
+	//Control Modules
+	//--s_diPower48VdcOk : FB_DigInput;
+	
 	axisLift : AXIS_REF; //??AXIS_REF; TC2_MC2.AXIS_REF;
 	s_cmLift : CM_AX5000; // Including 2 limit switched and 1 reference switch
 
@@ -120,6 +122,7 @@ VAR
 	s_fbAlarmHandlerLiftDrive : FB_AlarmHandler;
 	s_fbAlarmHandlerTransportDrive : FB_AlarmHandler;
 	
+	//--s_bErrPower48VdcOk : BOOL;
 	s_bErrLiftDrive : BOOL;
 	s_bErrTransportDrive : BOOL;
 	
@@ -176,7 +179,7 @@ END_VAR
 fActLiftHeight := _m_ConvSpindPosToLiftHeight(fSetSpindPos);
 	
 Q_bDriveStateSTO := I_nInfoDataInputLevel.8;
-	
+
 SUPER^();
 ]]></ST>
     </Implementation>
@@ -379,6 +382,9 @@ IF NOT SUPER^._m_Devices() THEN
 	RETURN;
 END_IF
 
+//Control module
+//--s_diPower48VdcOk(); 
+
 s_cmLift(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
@@ -471,6 +477,8 @@ IF NOT SUPER^._m_Init() THEN
 END_IF
 
 //Control Modules
+//--s_diPower48VdcOk.i_stSettings.tmInputDelay := T#1S;
+
 s_cmLift.i_bReqEnable := FALSE;
 s_cmLift.i_eCtrlMode := E_CtrlMode.IDLE;
 s_cmLift.i_sCmName := 'CM Lift';
@@ -563,13 +571,12 @@ IF NOT SUPER^._m_Inputs() THEN
 	RETURN;
 END_IF
 
+//--s_bStsPower48VdcOk := s_diPower48VdcOk.p_bStaInputDelayed AND s_diPower48VdcOk.p_bStaInput; //on-delay only
+
 s_cmLift.p_fSetTargetPosition := s_fSetLiftPosition;
 s_cmTransport.p_fSetTargetPosition := s_fSetTransportPosition;
 
 //Lift interlocks depends situiation.
-
-
-
 
 //Interlocks
 //Lift
@@ -1585,7 +1592,7 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="12" Count="0" />
       <LineId Id="8" Count="1" />
       <LineId Id="7" Count="0" />
-      <LineId Id="78" Count="0" />
+      <LineId Id="93" Count="0" />
       <LineId Id="20" Count="0" />
       <LineId Id="81" Count="0" />
       <LineId Id="46" Count="1" />
@@ -1646,6 +1653,9 @@ p_fActTransportPosition := s_fActTransportPosition;
     <LineIds Name="EM_LiftingTransport._m_Devices">
       <LineId Id="41" Count="0" />
       <LineId Id="6" Count="2" />
+      <LineId Id="113" Count="0" />
+      <LineId Id="115" Count="0" />
+      <LineId Id="114" Count="0" />
       <LineId Id="51" Count="0" />
       <LineId Id="53" Count="2" />
       <LineId Id="93" Count="0" />
@@ -1701,6 +1711,8 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="203" Count="0" />
       <LineId Id="5" Count="3" />
       <LineId Id="10" Count="0" />
+      <LineId Id="563" Count="0" />
+      <LineId Id="562" Count="0" />
       <LineId Id="461" Count="0" />
       <LineId Id="463" Count="0" />
       <LineId Id="466" Count="0" />
@@ -1761,13 +1773,11 @@ p_fActTransportPosition := s_fActTransportPosition;
     <LineIds Name="EM_LiftingTransport._m_Inputs">
       <LineId Id="129" Count="0" />
       <LineId Id="103" Count="2" />
+      <LineId Id="258" Count="1" />
       <LineId Id="224" Count="0" />
       <LineId Id="223" Count="0" />
       <LineId Id="226" Count="0" />
       <LineId Id="250" Count="1" />
-      <LineId Id="253" Count="0" />
-      <LineId Id="252" Count="0" />
-      <LineId Id="249" Count="0" />
       <LineId Id="130" Count="0" />
       <LineId Id="132" Count="4" />
       <LineId Id="229" Count="0" />

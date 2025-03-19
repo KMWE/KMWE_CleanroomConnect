@@ -2,37 +2,27 @@
 <VarLinks>
 	<OwnerA Name="TIID^Master (EtherCAT)">
 		<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K11 (EL2904)">
-			<Link VarA="K1 (EK1200)^Term 1 (EL6910)^ConnectionInputs^TwinSafeGroup1.EL2904, 4 digital outputs_1_22 TxPDO" VarB="Module 1 (FSOES)^RxPDO^FSOE"/>
+			<Link VarA="K1 (EK1200)^K12 (EL1918 + TwinSAFE Logic)^ConnectionInputs^TwinSafeGroup1.EL2904, 4 digital outputs_1_22 TxPDO" VarB="Module 1 (FSOES)^RxPDO^FSOE"/>
+			<Link VarA="K1 (EK1200)^K12 (EL1918 + TwinSAFE Logic)^ConnectionOutputs^TwinSafeGroup1.EL2904, 4 digital outputs_1_22 RxPDO" VarB="Module 1 (FSOES)^TxPDO^FSOE"/>
 		</OwnerB>
-		<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^Term 1 (EL6910)">
-			<Link VarA="K1 (EK1200)^K11 (EL2904)^Module 1 (FSOES)^TxPDO^FSOE" VarB="ConnectionOutputs^TwinSafeGroup1.EL2904, 4 digital outputs_1_22 RxPDO"/>
+		<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K12 (EL1918 + TwinSAFE Logic)">
+			<Link VarA="K1 (EK1200)^U9 (AX5805)^Module 1 (Safety Process Data, 1 axis)^Outputs (Controlword)^FSOE" VarB="ConnectionInputs^TwinSafeGroup1.AX 5805 Drive Option Card (1 axis, FW 5)_1_20 TxPDO"/>
 		</OwnerB>
 		<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^U9 (AX5805)">
-			<Link VarA="K1 (EK1200)^Term 1 (EL6910)^ConnectionInputs^TwinSafeGroup1.AX 5805 Drive Option Card (1 axis, FW 5)_1_20 TxPDO" VarB="Module 1 (Safety Process Data, 1 axis)^Outputs (Controlword)^FSOE"/>
-			<Link VarA="K1 (EK1200)^Term 1 (EL6910)^ConnectionOutputs^TwinSafeGroup1.AX 5805 Drive Option Card (1 axis, FW 5)_1_20 RxPDO" VarB="Module 1 (Safety Process Data, 1 axis)^Inputs (Statusword)^FSOE"/>
-		</OwnerB>
-	</OwnerA>
-	<OwnerA Name="TINC^NC-Task 1 SAF^Axes^ScissorLift">
-		<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K6 (EL1809)">
-			<Link VarA="Inputs^FromPlc^ControlDWord^FeedEnableMinus" VarB="Channel 1^Input"/>
-			<Link VarA="Inputs^FromPlc^ControlDWord^FeedEnablePlus" VarB="Channel 2^Input"/>
-			<Link VarA="Inputs^FromPlc^ControlDWord^HomingSensor" VarB="Channel 3^Input"/>
-		</OwnerB>
-		<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^Term 1 (EL6910)">
-			<Link VarA="Inputs^FromPlc^ControlDWord^Enable" VarB="StandardInputs^TwinSafeGroup1.ScissorLift_EnableNC_26"/>
-		</OwnerB>
-	</OwnerA>
-	<OwnerA Name="TINC^NC-Task 1 SAF^Axes^TransportUnit">
-		<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K6 (EL1809)">
-			<Link VarA="Inputs^FromPlc^ControlDWord^FeedEnableMinus" VarB="Channel 9^Input"/>
-			<Link VarA="Inputs^FromPlc^ControlDWord^FeedEnablePlus" VarB="Channel 10^Input"/>
-			<Link VarA="Inputs^FromPlc^ControlDWord^HomingSensor" VarB="Channel 11^Input"/>
-		</OwnerB>
-		<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^Term 1 (EL6910)">
-			<Link VarA="Inputs^FromPlc^ControlDWord^Enable" VarB="StandardInputs^TwinSafeGroup1.TransportUnit_EnableNC_27"/>
+			<Link VarA="K1 (EK1200)^K12 (EL1918 + TwinSAFE Logic)^ConnectionOutputs^TwinSafeGroup1.AX 5805 Drive Option Card (1 axis, FW 5)_1_20 RxPDO" VarB="Module 1 (Safety Process Data, 1 axis)^Inputs (Statusword)^FSOE"/>
 		</OwnerB>
 	</OwnerA>
 	<OwnerA Name="TIPC^CleanroomConnect^CleanroomConnect Instance">
+		<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K12 (EL1918 + TwinSAFE Logic)">
+			<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmLift.I_bEnable" VarB="StandardInputs^TwinSafeGroup1.ScissorLift_EnableNC_26"/>
+			<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmTransport.I_bEnable" VarB="StandardInputs^TwinSafeGroup1.TransportUnit_EnableNC_27"/>
+			<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diSafetyFbErr.I_bStaInput" VarB="StandardInputs^TwinSafeGroup1.FB_Err_24"/>
+			<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diSafetyOk.I_bStaInput" VarB="StandardInputs^TwinSafeGroup1.SafetyOK_29"/>
+			<Link VarA="PlcTask Outputs^GVL_Modules.g_emLiftingTransport.Q_bDriveStateSTO" VarB="StandardOutputs^TwinSafeGroup1.FbTransportUnit_STO_28"/>
+			<Link VarA="PlcTask Outputs^GVL_Modules.g_emUtilities.Q_bCmdErrAck" VarB="StandardOutputs^TwinSafeGroup1.ErrorAcknowledgement_1"/>
+			<Link VarA="PlcTask Outputs^GVL_Modules.g_emUtilities.Q_bCmdRestartSafety" VarB="StandardOutputs^TwinSafeGroup1.RestartSafety_5"/>
+			<Link VarA="PlcTask Outputs^GVL_Modules.g_emUtilities.Q_bCmdRun" VarB="StandardOutputs^TwinSafeGroup1.Run_2"/>
+		</OwnerB>
 		<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K20 (EL9110)">
 			<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diPowerPotentialGroup24VdcOk.I_bStaInput" VarB="PowerOK^Input"/>
 		</OwnerB>
@@ -60,6 +50,7 @@
 			<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diPower230VacOk.I_bStaInput" VarB="Channel 3^Input"/>
 			<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diPower230VacSocketsOk.I_bStaInput" VarB="Channel 4^Input"/>
 			<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diPower400VacOk.I_bStaInput" VarB="Channel 2^Input"/>
+			<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diPower48VdcOk.I_bStaInput" VarB="Channel 5^Input"/>
 			<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diRestartSafety.I_bStaInput" VarB="Channel 1^Input"/>
 		</OwnerB>
 		<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K4 (EL1809)">
@@ -95,6 +86,12 @@
 			<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_diStaDoorAlmostClosed.I_bStaInput" VarB="Channel 10^Input"/>
 		</OwnerB>
 		<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K6 (EL1809)">
+			<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmLift.I_bDetLimitSwitchNegative" VarB="Channel 1^Input"/>
+			<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmLift.I_bDetLimitSwitchPositive" VarB="Channel 2^Input"/>
+			<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmLift.I_bDetReferenceSwitch" VarB="Channel 3^Input"/>
+			<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmTransport.I_bDetLimitSwitchNegative" VarB="Channel 9^Input"/>
+			<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmTransport.I_bDetLimitSwitchPositive" VarB="Channel 10^Input"/>
+			<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmTransport.I_bDetReferenceSwitch" VarB="Channel 11^Input"/>
 			<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_diStaCabinAreaOccupied.I_bStaInput" VarB="Channel 12^Input"/>
 			<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_diStaCollisionAvoidanceSensor.I_bStaInput" VarB="Channel 6^Input"/>
 			<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_diStaTrolleyLocked.I_bStaInput" VarB="Channel 13^Input"/>
@@ -118,12 +115,13 @@
 		<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K9 (EL7211-9014)">
 			<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.I_nInfoDataInputLevel" VarB="DRV Info data 1^Info data 1"/>
 		</OwnerB>
-		<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^Term 1 (EL6910)">
-			<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diSafetyOk.I_bStaInput" VarB="StandardInputs^TwinSafeGroup1.SafetyOK_29"/>
-			<Link VarA="PlcTask Outputs^GVL_Modules.g_emLiftingTransport.Q_bDriveStateSTO" VarB="StandardOutputs^TwinSafeGroup1.FbTransportUnit_STO_28"/>
-			<Link VarA="PlcTask Outputs^GVL_Modules.g_emUtilities.Q_bCmdErrAck" VarB="StandardOutputs^TwinSafeGroup1.ErrorAcknowledgement_1"/>
-			<Link VarA="PlcTask Outputs^GVL_Modules.g_emUtilities.Q_bCmdRestartSafety" VarB="StandardOutputs^TwinSafeGroup1.RestartSafety_5"/>
-			<Link VarA="PlcTask Outputs^GVL_Modules.g_emUtilities.Q_bCmdRun" VarB="StandardOutputs^TwinSafeGroup1.Run_2"/>
+		<OwnerB Name="TINC^NC-Task 1 SAF^Axes^ScissorLift">
+			<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.axisLift.NcToPlc" VarB="Outputs^ToPlc"/>
+			<Link VarA="PlcTask Outputs^GVL_Modules.g_emLiftingTransport.axisLift.PlcToNc" VarB="Inputs^FromPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC-Task 1 SAF^Axes^TransportUnit">
+			<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.axisTransport.NcToPlc" VarB="Outputs^ToPlc"/>
+			<Link VarA="PlcTask Outputs^GVL_Modules.g_emLiftingTransport.axisTransport.PlcToNc" VarB="Inputs^FromPlc"/>
 		</OwnerB>
 	</OwnerA>
 </VarLinks>

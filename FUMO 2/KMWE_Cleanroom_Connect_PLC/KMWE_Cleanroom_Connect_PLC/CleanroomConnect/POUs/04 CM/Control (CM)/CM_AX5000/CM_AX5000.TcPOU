@@ -30,6 +30,7 @@ VAR
 	s_fSetTargetPosition : LREAL;
 	
 	// Inputs
+	I_bEnable AT %I* : BOOL; //Enable from safety controller
 	I_bDetReferenceSwitch AT %I* : BOOL; //Reference-/home switch
 	I_bDetLimitSwitchPositive AT %I* : BOOL; //Limit switch positive-/CW- direction
 	I_bDetLimitSwitchNegative AT %I* : BOOL; //Limit switch negative-/CCW- direction
@@ -59,6 +60,7 @@ VAR
 	s_bCmdReleaseBrake : BOOL;
 		
 	// States
+	s_bStaEnabled : BOOL;
 	s_bStaReferenceSwitch : BOOL;
 	s_bStaLimitSwitchPositive : BOOL;
 	s_bStaLimitSwitchNegative : BOOL;
@@ -200,7 +202,7 @@ IF NOT SUPER^._m_Devices() THEN
 	RETURN;
 END_IF
 
-s_bStaEnabledControl := fbPower.Status;
+s_bStaEnabledControl := s_bStaEnabled; //fbPower.Status;
 s_bStaEnabledForward := s_bStaLimitSwitchPositive;
 s_bStaEnabledBackward := s_bStaLimitSwitchNegative;
 
@@ -468,6 +470,7 @@ IF NOT SUPER^._m_Inputs() THEN
 	RETURN;
 END_IF
 
+s_bStaEnabled := I_bEnable;
 s_bStaReferenceSwitch := I_bDetReferenceSwitch;
 s_bStaLimitSwitchPositive := I_bDetLimitSwitchPositive;
 s_bStaLimitSwitchNegative := I_bDetLimitSwitchNegative;
@@ -1150,6 +1153,7 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
     <LineIds Name="CM_AX5000._m_Inputs">
       <LineId Id="13" Count="0" />
       <LineId Id="5" Count="2" />
+      <LineId Id="95" Count="0" />
       <LineId Id="33" Count="0" />
       <LineId Id="35" Count="1" />
       <LineId Id="34" Count="0" />

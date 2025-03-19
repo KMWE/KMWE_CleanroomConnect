@@ -353,16 +353,14 @@ GVL_Modules.g_emDockingInterface.i_sEmName  := 'EM Docking Interface';
 //--20240924 s_stSettings.stSettingsDockingInterface.bOpenClampsAfterClosingTimeout := FALSE; 
 
 //##_LIFTING_TRANSPORT_DISABLED_##
-(*
+
 //EM Lifting Transport
 _m_AddModule(i_itfModuleBase := GVL_Modules.g_emLiftingTransport);
 GVL_Modules.g_emLiftingTransport.i_bReqEnable := FALSE;
 GVL_Modules.g_emLiftingTransport.i_eCtrlMode := E_CtrlMode.IDLE;
 GVL_Modules.g_emLiftingTransport.i_bCmdReset := FALSE;
 GVL_Modules.g_emLiftingTransport.i_sEmName := 'EM Lifting Transport';
-*)
 
-(* ++
 //Manual-Jogging
 s_stSettings.stSettingsLiftingTransport.stLiftSpeedProfileJogging.fVelocity := 25.0; //mm/s
 s_stSettings.stSettingsLiftingTransport.stLiftSpeedProfileJogging.fAcceleration := 25.0; //mm/s^2
@@ -374,10 +372,8 @@ s_stSettings.stSettingsLiftingTransport.stLiftSpeedProfilePositioning.fVelocity	
 s_stSettings.stSettingsLiftingTransport.stLiftSpeedProfilePositioning.fAcceleration	:= 25.0; //mm/s^2
 s_stSettings.stSettingsLiftingTransport.stLiftSpeedProfilePositioning.fDeceleration	:= 25.0; //mm/s^2
 s_stSettings.stSettingsLiftingTransport.stLiftSpeedProfilePositioning.fJerk	:= 250.0; //mm/s^3
-*)
 
 //Automatic-Positioning Lift
-(* ++
 s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[0].sName	:= 'Idle';
 s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[0].fPosition := 50.0; //[mm]
 s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[0].fVelocity := 100.0; //[mm/s] 
@@ -511,13 +507,11 @@ s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[6].fVelo
 s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[6].fAcceleration := 10.0;  //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[6].fDeceleration := 10.0; //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[6].fJerk := 100.0; //[mm/s^3]
-*)
 
 GVL_Modules.g_emPalletConveyor.i_ref_stSettings REF= s_stSettings.stSettingsPalletConveyor;
 GVL_Modules.g_emDockingInterface.i_ref_stSettings REF= s_stSettings.stSettingsDockingInterface;
-//##_LIFTING_TRANSPORT_DISABLED_##GVL_Modules.g_emLiftingTransport.i_ref_stSettings REF= s_stSettings.stSettingsLiftingTransport;
+GVL_Modules.g_emLiftingTransport.i_ref_stSettings REF= s_stSettings.stSettingsLiftingTransport;
 
-/////
 (* ++
 _m_AddModule(i_itfModuleBase := GVL_Modules.g_emDockingCabin);
 
@@ -713,16 +707,16 @@ GVL_Modules.g_emLiftingTransport(
 s_bStaError :=
 	GVL_Modules.g_emUtilities.q_bStaError 
 	OR GVL_Modules.g_emPalletConveyor.q_bStaError
-	OR GVL_Modules.g_emDockingInterface.q_bStaError;
-//##_LIFTING_TRANSPORT_DISABLED_##	OR GVL_Modules.g_emLiftingTransport.q_bStaError;
+	OR GVL_Modules.g_emDockingInterface.q_bStaError
+	OR GVL_Modules.g_emLiftingTransport.q_bStaError;
 //++OR GVL_Modules.g_emDockingCabin.q_bStaError
 //++OR GVL_Modules.g_emDoors.q_bStaError;
 
 s_bStaWarning := 
 	GVL_Modules.g_emUtilities.q_bStaWarning 
 	OR GVL_Modules.g_emPalletConveyor.q_bStaWarning
-	OR GVL_Modules.g_emDockingInterface.q_bStaWarning;
-//##_LIFTING_TRANSPORT_DISABLED_##	OR GVL_Modules.g_emLiftingTransport.q_bStaWarning;
+	OR GVL_Modules.g_emDockingInterface.q_bStaWarning
+	OR GVL_Modules.g_emLiftingTransport.q_bStaWarning;
 //++OR GVL_Modules.g_emDockingCabin.q_bStaWarning
 //++OR GVL_Modules.g_emDoors.q_bStaWarning;
 	
@@ -1288,13 +1282,7 @@ GVL_Modules.g_emPalletConveyor._m_CmdTB_ToInfeed(i_refReason := sReason);
       <LineId Id="1690" Count="1" />
       <LineId Id="1693" Count="3" />
       <LineId Id="1947" Count="0" />
-      <LineId Id="1927" Count="0" />
-      <LineId Id="1908" Count="0" />
-      <LineId Id="1698" Count="10" />
-      <LineId Id="1919" Count="0" />
-      <LineId Id="1709" Count="1" />
-      <LineId Id="1916" Count="0" />
-      <LineId Id="1711" Count="28" />
+      <LineId Id="1698" Count="41" />
       <LineId Id="1911" Count="0" />
       <LineId Id="1741" Count="45" />
       <LineId Id="1928" Count="0" />
@@ -1303,12 +1291,12 @@ GVL_Modules.g_emPalletConveyor._m_CmdTB_ToInfeed(i_refReason := sReason);
       <LineId Id="1787" Count="42" />
       <LineId Id="1936" Count="5" />
       <LineId Id="1935" Count="0" />
-      <LineId Id="1921" Count="0" />
       <LineId Id="1913" Count="0" />
       <LineId Id="1830" Count="0" />
       <LineId Id="1914" Count="0" />
       <LineId Id="1832" Count="0" />
-      <LineId Id="1834" Count="30" />
+      <LineId Id="1834" Count="0" />
+      <LineId Id="1836" Count="28" />
       <LineId Id="1875" Count="18" />
       <LineId Id="1924" Count="1" />
       <LineId Id="1894" Count="0" />

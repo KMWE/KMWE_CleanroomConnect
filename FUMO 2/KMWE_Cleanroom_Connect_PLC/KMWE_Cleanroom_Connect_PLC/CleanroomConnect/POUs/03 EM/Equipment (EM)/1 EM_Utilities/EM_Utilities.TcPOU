@@ -30,6 +30,8 @@ VAR
 	//States
 	s_bStaSafetyOk : BOOL := FALSE;
 	s_bSafetyFbErr : BOOL := FALSE;
+	s_bEstopInfeedOk : BOOL := FALSE;
+	s_bEstopCleanroomOk : BOOL := FALSE;
 	s_bRestartSafety : BOOL := FALSE;
 	s_bStsPower400VacOk : BOOL := FALSE;
 	s_bStsPower230VacOk : BOOL := FALSE;
@@ -38,6 +40,10 @@ VAR
 	s_bStsPowerPotentialGroup24VdcOk : BOOL := FALSE;
 	s_bStaAirPressureOk : BOOL := FALSE;
 	s_bStaCabinetTemperatureOk : BOOL := FALSE;
+	s_bRestartSafetyState : BOOL := FALSE;
+	
+	//Timer
+	s_tp1HzPulse : FB_Flash;
 	
 	//s_bStaError
 	s_bStaWarning : BOOL;
@@ -49,6 +55,8 @@ VAR
 	//Alarms
 	s_fbAlarmHandlerSafetyNotOk : FB_AlarmHandler;
 	s_fbAlarmHandlerSafetyFbErr : FB_AlarmHandler;
+	s_fbAlarmHandlerEstopInfeedPressed : FB_AlarmHandler;
+	s_fbAlarmHandlerEstopCleanroomPressed : FB_AlarmHandler;
 	s_fbAlarmHandlerPower400VacNotOk : FB_AlarmHandler;
 	s_fbAlarmHandlerPower230VacNotOk : FB_AlarmHandler;
 	s_fbAlarmHandlerPower230VacSocketsNotOk : FB_AlarmHandler;
@@ -59,6 +67,8 @@ VAR
 	
 	s_bErrSafetyNotOk : BOOL;
 	s_bErrSafetyFbErr : BOOL;
+	s_bErrEstopInfeedPressed : BOOL;
+	s_bErrEstopCleanroomPressed : BOOL;
 	s_bErrPower400VacOk : BOOL;
 	s_bErrPower230VacOk : BOOL;
 	s_bWrnPower230VacSocketsOk : BOOL;
@@ -70,6 +80,8 @@ VAR
 	//Hmi
 	s_fbHmiLedSafetyOk : FB_HmiLed;
 	s_fbHmiLedSafetyFbErr : FB_HmiLed;
+	s_fbHmiLedEstopInfeedOk : FB_HmiLed;
+	s_fbHmiLedEstopCleanroomOk : FB_HmiLed;
 	s_fbHmiLedRestartSafety : FB_HmiLed;
 	s_fbHmiLedPower400VacOk : FB_HmiLed;
 	s_fbHmiLedPower230VacOk : FB_HmiLed;
@@ -89,8 +101,18 @@ VAR
 	Q_bCmdRun AT %Q* : BOOL; //Set TwinSAFE to Run-Mode	
 	Q_bCmdErrAck AT %Q* : BOOL; //Reset errors in TwinSAFE logic
 	Q_bCmdRestartSafety AT %Q* : BOOL; //Restart/reset safety blocks (reset Estop-safety-relay)
+
+	{warning '#TODO: Nog beslissen of dat deze statussen ook weergegeven moeten gaan worden op het HMI'}
+	// En moeten er daan alarmen voor worden aangemaakt met name voor welke noodstop knop er is ingedrukt
+	I_bStaTwinSAFE_Estop1ChA AT %I* : BOOL;
+	I_bStaTwinSAFE_Estop1ChB AT %I* : BOOL;
+	I_bStaTwinSAFE_Estop2ChA AT %I* : BOOL;
+	I_bStaTwinSAFE_Estop2ChB AT %I* : BOOL;
+	I_bStaTwinSAFE_FbPalletConveyorSTO AT %I* : BOOL;
+	I_bStaTwinSAFE_FbPotGrpValvesOFF AT %I* : BOOL;
+	I_bStaTwinSAFE_FbTransportUnitSTO AT %I* : BOOL;
 			
-	{warning '#TODO' Het zou beter zijn om dit onder te brengen in de onderstaande control modules}
+	{warning '#TODO Het zou beter zijn om dit onder te brengen in de onderstaande control modules'}
 	s_bHmiForceOutputEnabled : BOOL;
 END_VAR
 
@@ -119,6 +141,8 @@ END_IF
 //Set error bits
 s_bErrSafetyNotOk S= NOT(s_bStaSafetyOk);
 s_bErrSafetyFbErr S= s_bSafetyFbErr;
+s_bErrEstopInfeedPressed S= NOT(s_bEstopInfeedOk);
+s_bErrEstopCleanroomPressed S= NOT(s_bEstopCleanroomOk);
 s_bErrPower400VacOk S= NOT(s_bStsPower400VacOk);
 s_bErrPower230VacOk S= NOT(s_bStsPower230VacOk);
 s_bWrnPower230VacSocketsOk S= NOT(s_bStsPower230VacSocketsOk);
@@ -130,6 +154,8 @@ s_bErrCabinetTemperatureNotOk S= NOT(s_bStaCabinetTemperatureOk);
 // Alarm Handlers ( config --> init() )
 s_fbAlarmHandlerSafetyNotOk(i_bStaActive := s_bErrSafetyNotOk);
 s_fbAlarmHandlerSafetyFbErr(i_bStaActive := s_bErrSafetyFbErr);
+s_fbAlarmHandlerEstopInfeedPressed(i_bStaActive := s_bErrEstopInfeedPressed);
+s_fbAlarmHandlerEstopCleanroomPressed(i_bStaActive := s_bErrEstopCleanroomPressed);
 s_fbAlarmHandlerPower400VacNotOk(i_bStaActive := s_bErrPower400VacOk);
 s_fbAlarmHandlerPower230VacNotOk(i_bStaActive := s_bErrPower230VacOk);
 s_fbAlarmHandlerPower230VacSocketsNotOk(i_bStaActive := s_bWrnPower230VacSocketsOk);
@@ -140,11 +166,13 @@ s_fbAlarmHandlerCabinetTemperatureNotOk(i_bStaActive := s_bErrCabinetTemperature
 	
 // Reset Errors
 s_bErrSafetyNotOk R= i_bCmdReset AND s_bStaSafetyOk;
-s_bErrSafetyFbErr R= i_bCmdReset AND s_bSafetyFbErr;
+s_bErrSafetyFbErr R= i_bCmdReset AND NOT(s_bSafetyFbErr);
+s_bErrEstopInfeedPressed R= i_bCmdReset AND s_bEstopInfeedOk;
+s_bErrEstopCleanroomPressed R= i_bCmdReset AND s_bEstopCleanroomOk;
 s_bErrPower400VacOk R= i_bCmdReset AND s_bStsPower400VacOk;
 s_bErrPower230VacOk R= i_bCmdReset AND s_bStsPower230VacOk;
 s_bWrnPower230VacSocketsOk R= i_bCmdReset AND s_bStsPower230VacSocketsOk;
-//--s_bErrPower24VdcOk R= i_bCmdReset AND s_bStsPower24VdcOk;
+s_bErrPower48VdcOk R= i_bCmdReset AND s_bStsPower48VdcOk;
 s_bErrPowerPotentialGroup24VdcOk R= i_bCmdReset AND s_bStsPowerPotentialGroup24VdcOk;
 
 s_bErrAirPressureNotOk R= i_bCmdReset AND s_bStaAirPressureOk;
@@ -154,10 +182,12 @@ s_bErrCabinetTemperatureNotOk R= i_bCmdReset AND s_bStaCabinetTemperatureOk;
 s_bStaError := 
 	s_fbAlarmHandlerSafetyNotOk.q_bStaActive
 	OR s_fbAlarmHandlerSafetyFbErr.q_bStaActive
+	OR s_fbAlarmHandlerEstopInfeedPressed.q_bStaActive
+	OR s_fbAlarmHandlerEstopCleanroomPressed.q_bStaActive
 	OR s_fbAlarmHandlerPower400VacNotOk.q_bStaActive
 	OR s_fbAlarmHandlerPower230VacNotOk.q_bStaActive
 	OR s_fbAlarmHandlerPower230VacSocketsNotOk.q_bStaActive
-	//--OR s_fbAlarmHandlerPower24VdcNotOk.q_bStaActive
+	OR s_fbAlarmHandlerPower48VdcNotOk.q_bStaActive
 	OR s_fbAlarmHandlerPowerPotentialGroup24VdcNotOk.q_bStaActive
 	OR s_fbAlarmHandlerAirPressureNotOk.q_bStaActive
 	OR s_fbAlarmHandlerCabinetTemperatureNotOk.q_bStaActive;
@@ -194,8 +224,18 @@ s_doBeaconLedYellow();
 s_doBeaconLedRed();
 s_doSnRestartSafety();
 
-//TwinSAFE --> PLC
+IF NOT(s_bStaSafetyOk) THEN
+	IF s_bSafetyFbErr THEN 
+		s_tp1HzPulse(i_bExcecute := TRUE, t_tOnTime := T#500MS, t_tOffTime := T#500MS);
+		s_bRestartSafetyState := s_tp1HzPulse.o_bQ;
+	ELSE
+		s_bRestartSafetyState := TRUE;	
+	END_IF
+ELSE
+	s_bRestartSafetyState := FALSE;
+END_IF
 
+//TwinSAFE --> PLC
 
 //PLC --> TwinSAFE
 Q_bCmdRun := i_bReqEnable; 
@@ -221,7 +261,9 @@ END_IF
 //Hmi Leds
 s_fbHmiLedSafetyOk(i_bStaLed := s_bStaSafetyOk);
 s_fbHmiLedSafetyFbErr(i_bStaLed := s_bSafetyFbErr);
-s_fbHmiLedRestartSafety(i_bStaLed := s_bRestartSafety);
+s_fbHmiLedEstopInfeedOk(i_bStaLed := s_bEstopInfeedOk);
+s_fbHmiLedEstopCleanroomOk(i_bStaLed := s_bEstopCleanroomOk);
+s_fbHmiLedRestartSafety(i_bStaLed := s_bRestartSafetyState);
 s_fbHmiLedPower400VacOk(i_bStaLed := s_bStsPower400VacOk);
 s_fbHmiLedPower230VacOk(i_bStaLed := s_bStsPower230VacOk);
 s_fbHmiLedPower230VacSocketsOk(i_bStaLed := s_bStsPower230VacSocketsOk);
@@ -275,8 +317,14 @@ s_doSnRestartSafety.i_stSettings.tmOutputDelay := T#0S;
 s_fbAlarmHandlerSafetyNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Safety not OK');
 s_fbAlarmHandlerSafetyNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
 
-s_fbAlarmHandlerSafetyFbErr.i_sAlarmText := CONCAT(i_sEmName, ' - Safety FB error');
+s_fbAlarmHandlerSafetyFbErr.i_sAlarmText := CONCAT(i_sEmName, ' - Safety Fb error (ssytem error), twinSAFE configuration for details');
 s_fbAlarmHandlerSafetyFbErr.i_eAlarmLevel := E_AlarmLevel.Alarm;
+
+s_fbAlarmHandlerEstopInfeedPressed.i_sAlarmText := CONCAT(i_sEmName, ' - Emergency stop button infeed not OK');
+s_fbAlarmHandlerEstopInfeedPressed.i_eAlarmLevel := E_AlarmLevel.Alarm;
+
+s_fbAlarmHandlerEstopCleanroomPressed.i_sAlarmText := CONCAT(i_sEmName, ' - Emergency stop button cleanroom not OK');
+s_fbAlarmHandlerEstopCleanroomPressed.i_eAlarmLevel := E_AlarmLevel.Alarm;
 
 s_fbAlarmHandlerPower400VacNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Power supply 400Vac not OK');
 s_fbAlarmHandlerPower400VacNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
@@ -354,6 +402,8 @@ END_IF
 
 s_bStaSafetyOk := s_diSafetyOk.p_bStaInputDelayed AND s_diSafetyOk.p_bStaInput; //on-delay only
 s_bSafetyFbErr := s_diSafetyFbErr.p_bStaInput;
+s_bEstopInfeedOk := I_bStaTwinSAFE_Estop1ChA AND I_bStaTwinSAFE_Estop1ChB;
+s_bEstopCleanroomOk := I_bStaTwinSAFE_Estop2ChA AND I_bStaTwinSAFE_Estop2ChB;
 s_bRestartSafety := s_diRestartSafety.p_bStaInput;  
 s_bStsPower400VacOk := s_diPower400VacOk.p_bStaInputDelayed AND s_diPower400VacOk.p_bStaInput; //on-delay only
 s_bStsPower230VacOk := s_diPower230VacOk.p_bStaInputDelayed AND s_diPower230VacOk.p_bStaInput; //on-delay only
@@ -413,7 +463,7 @@ ELSE
 END_IF
    
 IF s_FbForceOutputSnRestartSafety.i_eForceValue = E_ForceValue.RELEASED THEN
-	s_doSnRestartSafety.i_bStaOutput := s_bRestartSafety;
+	s_doSnRestartSafety.i_bStaOutput := s_bRestartSafetyState;
 ELSE
 	s_doSnRestartSafety.i_bStaOutput := s_FbForceOutputSnRestartSafety.i_eForceValue = E_ForceValue.FORCE_ON;
 END_IF
@@ -448,6 +498,8 @@ s_bExtRunning := i_bRunning;
 IF NOT SUPER^.m_Main() THEN
 	RETURN;
 END_IF
+
+
 
 CASE i_eCtrlMode OF
 	E_CtrlMode.IDLE:
@@ -552,6 +604,7 @@ p_bStsPowerOk :=
       <LineId Id="81" Count="1" />
       <LineId Id="84" Count="0" />
       <LineId Id="134" Count="0" />
+      <LineId Id="145" Count="1" />
       <LineId Id="85" Count="0" />
       <LineId Id="93" Count="1" />
       <LineId Id="97" Count="0" />
@@ -561,6 +614,7 @@ p_bStsPowerOk :=
       <LineId Id="34" Count="0" />
       <LineId Id="45" Count="1" />
       <LineId Id="136" Count="0" />
+      <LineId Id="140" Count="1" />
       <LineId Id="67" Count="0" />
       <LineId Id="100" Count="0" />
       <LineId Id="105" Count="0" />
@@ -572,6 +626,7 @@ p_bStsPowerOk :=
       <LineId Id="56" Count="0" />
       <LineId Id="58" Count="0" />
       <LineId Id="135" Count="0" />
+      <LineId Id="148" Count="1" />
       <LineId Id="59" Count="0" />
       <LineId Id="90" Count="1" />
       <LineId Id="88" Count="0" />
@@ -583,6 +638,8 @@ p_bStsPowerOk :=
       <LineId Id="61" Count="1" />
       <LineId Id="44" Count="0" />
       <LineId Id="137" Count="0" />
+      <LineId Id="143" Count="0" />
+      <LineId Id="142" Count="0" />
       <LineId Id="75" Count="0" />
       <LineId Id="113" Count="2" />
       <LineId Id="132" Count="0" />
@@ -607,7 +664,15 @@ p_bStsPowerOk :=
       <LineId Id="257" Count="2" />
       <LineId Id="242" Count="0" />
       <LineId Id="283" Count="0" />
-      <LineId Id="279" Count="2" />
+      <LineId Id="297" Count="1" />
+      <LineId Id="307" Count="0" />
+      <LineId Id="309" Count="0" />
+      <LineId Id="313" Count="0" />
+      <LineId Id="311" Count="1" />
+      <LineId Id="299" Count="2" />
+      <LineId Id="303" Count="0" />
+      <LineId Id="314" Count="0" />
+      <LineId Id="280" Count="0" />
       <LineId Id="270" Count="1" />
       <LineId Id="273" Count="0" />
       <LineId Id="278" Count="0" />
@@ -626,6 +691,8 @@ p_bStsPowerOk :=
       <LineId Id="239" Count="0" />
       <LineId Id="256" Count="0" />
       <LineId Id="278" Count="0" />
+      <LineId Id="281" Count="0" />
+      <LineId Id="280" Count="0" />
       <LineId Id="277" Count="0" />
       <LineId Id="257" Count="0" />
       <LineId Id="270" Count="1" />
@@ -666,6 +733,11 @@ p_bStsPowerOk :=
       <LineId Id="470" Count="0" />
       <LineId Id="469" Count="0" />
       <LineId Id="471" Count="0" />
+      <LineId Id="474" Count="1" />
+      <LineId Id="473" Count="0" />
+      <LineId Id="477" Count="0" />
+      <LineId Id="479" Count="0" />
+      <LineId Id="476" Count="0" />
       <LineId Id="438" Count="0" />
       <LineId Id="404" Count="0" />
       <LineId Id="428" Count="0" />
@@ -728,6 +800,7 @@ p_bStsPowerOk :=
       <LineId Id="56" Count="0" />
       <LineId Id="77" Count="0" />
       <LineId Id="93" Count="0" />
+      <LineId Id="96" Count="1" />
       <LineId Id="92" Count="0" />
       <LineId Id="79" Count="0" />
       <LineId Id="86" Count="1" />
@@ -777,6 +850,7 @@ p_bStsPowerOk :=
     <LineIds Name="EM_Utilities.m_Main">
       <LineId Id="178" Count="0" />
       <LineId Id="6" Count="2" />
+      <LineId Id="500" Count="1" />
       <LineId Id="397" Count="0" />
       <LineId Id="184" Count="0" />
       <LineId Id="186" Count="0" />

@@ -46,6 +46,7 @@ VAR
 	
 	//Alarms
 	s_fbAlarmHandlerSafetyNotOk : FB_AlarmHandler;
+	s_fbAlarmHandlerSafetyFbErr : FB_AlarmHandler;
 	s_fbAlarmHandlerPower400VacNotOk : FB_AlarmHandler;
 	s_fbAlarmHandlerPower230VacNotOk : FB_AlarmHandler;
 	s_fbAlarmHandlerPower230VacSocketsNotOk : FB_AlarmHandler;
@@ -54,6 +55,7 @@ VAR
 	s_fbAlarmHandlerCabinetTemperatureNotOk : FB_AlarmHandler;
 	
 	s_bErrSafetyNotOk : BOOL;
+	s_bErrSafetyFbErr : BOOL;
 	s_bErrPower400VacOk : BOOL;
 	s_bErrPower230VacOk : BOOL;
 	s_bWrnPower230VacSocketsOk : BOOL;
@@ -63,6 +65,7 @@ VAR
 	
 	//Hmi
 	s_fbHmiLedSafetyOk : FB_HmiLed;
+	s_fbHmiLedSafetyFbErr : FB_HmiLed;
 	s_fbHmiLedRestartSafety : FB_HmiLed;
 	s_fbHmiLedPower400VacOk : FB_HmiLed;
 	s_fbHmiLedPower230VacOk : FB_HmiLed;
@@ -110,6 +113,7 @@ END_IF
 
 //Set error bits
 s_bErrSafetyNotOk S= NOT(s_bStaSafetyOk);
+s_bErrSafetyFbErr S= s_bSafetyFbErr;
 s_bErrPower400VacOk S= NOT(s_bStsPower400VacOk);
 s_bErrPower230VacOk S= NOT(s_bStsPower230VacOk);
 s_bWrnPower230VacSocketsOk S= NOT(s_bStsPower230VacSocketsOk);
@@ -120,6 +124,7 @@ s_bErrCabinetTemperatureNotOk S= NOT(s_bStaCabinetTemperatureOk);
 
 // Alarm Handlers ( config --> init() )
 s_fbAlarmHandlerSafetyNotOk(i_bStaActive := s_bErrSafetyNotOk);
+s_fbAlarmHandlerSafetyFbErr(i_bStaActive := s_bErrSafetyFbErr);
 s_fbAlarmHandlerPower400VacNotOk(i_bStaActive := s_bErrPower400VacOk);
 s_fbAlarmHandlerPower230VacNotOk(i_bStaActive := s_bErrPower230VacOk);
 s_fbAlarmHandlerPower230VacSocketsNotOk(i_bStaActive := s_bWrnPower230VacSocketsOk);
@@ -130,6 +135,7 @@ s_fbAlarmHandlerCabinetTemperatureNotOk(i_bStaActive := s_bErrCabinetTemperature
 	
 // Reset Errors
 s_bErrSafetyNotOk R= i_bCmdReset AND s_bStaSafetyOk;
+s_bErrSafetyFbErr R= i_bCmdReset AND s_bSafetyFbErr;
 s_bErrPower400VacOk R= i_bCmdReset AND s_bStsPower400VacOk;
 s_bErrPower230VacOk R= i_bCmdReset AND s_bStsPower230VacOk;
 s_bWrnPower230VacSocketsOk R= i_bCmdReset AND s_bStsPower230VacSocketsOk;
@@ -142,6 +148,7 @@ s_bErrCabinetTemperatureNotOk R= i_bCmdReset AND s_bStaCabinetTemperatureOk;
 
 s_bStaError := 
 	s_fbAlarmHandlerSafetyNotOk.q_bStaActive
+	OR s_fbAlarmHandlerSafetyFbErr.q_bStaActive
 	OR s_fbAlarmHandlerPower400VacNotOk.q_bStaActive
 	OR s_fbAlarmHandlerPower230VacNotOk.q_bStaActive
 	OR s_fbAlarmHandlerPower230VacSocketsNotOk.q_bStaActive
@@ -263,6 +270,9 @@ s_doSnRestartSafety.i_stSettings.tmOutputDelay := T#0S;
 s_fbAlarmHandlerSafetyNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Safety not OK');
 s_fbAlarmHandlerSafetyNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
 
+s_fbAlarmHandlerSafetyFbErr.i_sAlarmText := CONCAT(i_sEmName, ' - Safety FB error');
+s_fbAlarmHandlerSafetyFbErr.i_eAlarmLevel := E_AlarmLevel.Alarm;
+
 s_fbAlarmHandlerPower400VacNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Power supply 400Vac not OK');
 s_fbAlarmHandlerPower400VacNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
 
@@ -290,6 +300,9 @@ s_fbHmiLedSafetyOk.p_sToHmiDescriptionLed := 'Safety Ok';
 
 s_fbHmiLedRestartSafety.p_bStaVisible := FALSE;
 s_fbHmiLedRestartSafety.p_sToHmiDescriptionLed := 'Restart Safety';
+
+s_fbHmiLedSafetyFbErr.p_bStaVisible := FALSE;
+s_fbHmiLedSafetyFbErr.p_sToHmiDescriptionLed := 'Safety FB error';
 
 s_fbHmiLedPower400VacOk.p_bStaVisible := FALSE;
 s_fbHmiLedPower400VacOk.p_sToHmiDescriptionLed := 'Power 400Vac Ok';
@@ -532,7 +545,9 @@ p_bStsPowerOk :=
       <LineId Id="8" Count="1" />
       <LineId Id="7" Count="0" />
       <LineId Id="81" Count="1" />
-      <LineId Id="84" Count="1" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="134" Count="0" />
+      <LineId Id="85" Count="0" />
       <LineId Id="93" Count="1" />
       <LineId Id="97" Count="0" />
       <LineId Id="129" Count="0" />
@@ -540,6 +555,7 @@ p_bStsPowerOk :=
       <LineId Id="116" Count="0" />
       <LineId Id="34" Count="0" />
       <LineId Id="45" Count="1" />
+      <LineId Id="136" Count="0" />
       <LineId Id="67" Count="0" />
       <LineId Id="100" Count="0" />
       <LineId Id="105" Count="0" />
@@ -549,7 +565,9 @@ p_bStsPowerOk :=
       <LineId Id="124" Count="0" />
       <LineId Id="122" Count="0" />
       <LineId Id="56" Count="0" />
-      <LineId Id="58" Count="1" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="135" Count="0" />
+      <LineId Id="59" Count="0" />
       <LineId Id="90" Count="1" />
       <LineId Id="88" Count="0" />
       <LineId Id="130" Count="0" />
@@ -559,6 +577,7 @@ p_bStsPowerOk :=
       <LineId Id="117" Count="0" />
       <LineId Id="61" Count="1" />
       <LineId Id="44" Count="0" />
+      <LineId Id="137" Count="0" />
       <LineId Id="75" Count="0" />
       <LineId Id="113" Count="2" />
       <LineId Id="132" Count="0" />
@@ -639,6 +658,9 @@ p_bStsPowerOk :=
       <LineId Id="391" Count="1" />
       <LineId Id="399" Count="0" />
       <LineId Id="426" Count="0" />
+      <LineId Id="470" Count="0" />
+      <LineId Id="469" Count="0" />
+      <LineId Id="471" Count="0" />
       <LineId Id="438" Count="0" />
       <LineId Id="404" Count="0" />
       <LineId Id="428" Count="0" />
@@ -663,7 +685,10 @@ p_bStsPowerOk :=
       <LineId Id="38" Count="0" />
       <LineId Id="354" Count="0" />
       <LineId Id="344" Count="0" />
-      <LineId Id="454" Count="2" />
+      <LineId Id="463" Count="0" />
+      <LineId Id="455" Count="1" />
+      <LineId Id="467" Count="1" />
+      <LineId Id="466" Count="0" />
       <LineId Id="345" Count="0" />
       <LineId Id="355" Count="0" />
       <LineId Id="346" Count="0" />

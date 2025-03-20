@@ -1727,9 +1727,6 @@ External Setpoint Generation:
 				<Task Id="4" Priority="21" CycleTime="100000" AmsPort="351" AdtTasks="true">
 					<Name>PlcTask1</Name>
 				</Task>
-				<Task Id="5" Priority="30" CycleTime="2000000" AmsPort="352" DisableFpExceptions="true" AdtTasks="true">
-					<Name>VISU_TASK</Name>
-				</Task>
 			</Tasks>
 		</System>
 		<Motion>
@@ -1916,8 +1913,8 @@ External Setpoint Generation:
 						<Velo RefSearch="1.23514" RefSync="1.23514" SlowManual="0.25" FastManual="1.5" Fast="123.514" Maximum="123.514"/>
 						<OtherSettings AllowMotionCmdToSlave="true"/>
 					</AxisPara>
-					<Encoder Name="Enc" EncType="19">
-						<EncPara ScaleFactorNumerator="174.487168" ScaleFactorDenominator="52428800" MaxCount="#xffffffff">
+					<Encoder Name="Enc" EncType="1">
+						<EncPara ScaleFactorNumerator="174.487168" ScaleFactorDenominator="52428800">
 							<SoftEndMinControl Enable="true"/>
 							<SoftEndMaxControl Enable="true" Range="1750"/>
 						</EncPara>
@@ -1977,9 +1974,9 @@ External Setpoint Generation:
 							</Var>
 						</Vars>
 					</Encoder>
-					<Drive Name="Drive" DrvType="16">
-						<DrvPara MaxCount="#xffffffff" DriveControlDWord="#x00000100">
-							<Analog VeloReferenz="135.8654" VeloScale="32" TorqueSetpointScale="10" ScaleFactorActTorque="0.1"/>
+					<Drive Name="Drive" DrvType="5">
+						<DrvPara>
+							<Analog VeloReferenz="135.8654" TorqueSetpointScale="10" ScaleFactorActTorque="0.1"/>
 							<TimeComp TaskDelayCycles="1"/>
 						</DrvPara>
 						<Vars VarGrpType="1">
@@ -2017,6 +2014,22 @@ External Setpoint Generation:
 								</SubVar>
 								<SubVar TypeFormatIndex="2">
 									<Name>nDataOut2</Name>
+								</SubVar>
+								<SubVar>
+									<Name>nCtrl2</Name>
+									<Comment><![CDATA[Digital Outputs Setpoint Generator:
+0x41 (0100 0001) = Minus (0x42 for inverse motor polarity)
+0x42 (0100 0010) = Plus (0x41 for inverse motor polarity)
+0x80 (1000 0000) = Stop
+]]></Comment>
+								</SubVar>
+								<SubVar>
+									<Name>nCtrl3</Name>
+									<Comment><![CDATA[Digital Outputs (Setpoint Generator + Position Controller):
+0x41 (0100 0001) = Minus (0x42 for inverse motor polarity)
+0x42 (0100 0010) = Plus (0x41 for inverse motor polarity)
+0x80 (1000 0000) = Stop
+]]></Comment>
 								</SubVar>
 								<SubVar TypeFormatIndex="2">
 									<Name>nDataOut3</Name>
@@ -2057,7 +2070,7 @@ External Setpoint Generation:
 		</Motion>
 		<Plc>
 			<Project GUID="{13F6CD22-9663-4738-8378-3A901949CB98}" Name="CleanroomConnect" PrjFilePath="CleanroomConnect\CleanroomConnect.plcproj" TmcFilePath="CleanroomConnect\CleanroomConnect.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" TmcPath="CleanroomConnect\CleanroomConnect.tmc" TmcHash="{22721D2B-9032-5A67-BDAC-E86B7914EBE5}">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" TmcPath="CleanroomConnect\CleanroomConnect.tmc" TmcHash="{689ACA53-D88D-071B-A005-0A5783CD95ED}">
 					<Name>CleanroomConnect Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1">
@@ -2070,6 +2083,90 @@ External Setpoint Generation:
 						<Var>
 							<Name>GVL_KMWEGenericLib.g_IMasterAdsAdr</Name>
 							<Type GUID="{18071995-0000-0000-0000-000000000041}">AMSNETID</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emUtilities.s_diSafetyOk.I_bStaInput</Name>
+							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emUtilities.s_diSafetyFbErr.I_bStaInput</Name>
+							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emUtilities.s_diRestartSafety.I_bStaInput</Name>
+							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emUtilities.s_diPower400VacOk.I_bStaInput</Name>
+							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emUtilities.s_diPower230VacOk.I_bStaInput</Name>
+							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emUtilities.s_diPower230VacSocketsOk.I_bStaInput</Name>
+							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emUtilities.s_diPower48VdcOk.I_bStaInput</Name>
+							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emUtilities.s_diPowerPotentialGroup24VdcOk.I_bStaInput</Name>
+							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emUtilities.s_diAirPressureOk.I_bStaInput</Name>
+							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emUtilities.s_diCabinetTemperatureOk.I_bStaInput</Name>
+							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emUtilities.I_bStaTwinSAFE_Estop1ChA</Name>
+							<Comment><![CDATA[ En moeten er daan alarmen voor worden aangemaakt met name voor welke noodstop knop er is ingedrukt]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emUtilities.I_bStaTwinSAFE_Estop1ChB</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emUtilities.I_bStaTwinSAFE_Estop2ChA</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emUtilities.I_bStaTwinSAFE_Estop2ChB</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emUtilities.I_bStaTwinSAFE_FbPalletConveyorSTO</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emUtilities.I_bStaTwinSAFE_FbPotGrpValvesOFF</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emUtilities.I_bStaTwinSAFE_FbTransportUnitSTO</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emUtilities.I_nTwinSATE_ProjectCrc</Name>
+							<Comment><![CDATA[Cyclic Redundancy Check (check if TwinSAFE code is still the same)]]></Comment>
+							<Type>WORD</Type>
 						</Var>
 						<Var>
 							<Name>GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.I_bStaReadyForOperation</Name>
@@ -2289,88 +2386,44 @@ External Setpoint Generation:
 							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emUtilities.s_diSafetyOk.I_bStaInput</Name>
-							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emUtilities.s_diSafetyFbErr.I_bStaInput</Name>
-							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emUtilities.s_diRestartSafety.I_bStaInput</Name>
-							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emUtilities.s_diPower400VacOk.I_bStaInput</Name>
-							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emUtilities.s_diPower230VacOk.I_bStaInput</Name>
-							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emUtilities.s_diPower230VacSocketsOk.I_bStaInput</Name>
-							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emUtilities.s_diPower48VdcOk.I_bStaInput</Name>
-							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emUtilities.s_diPowerPotentialGroup24VdcOk.I_bStaInput</Name>
-							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emUtilities.s_diAirPressureOk.I_bStaInput</Name>
-							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emUtilities.s_diCabinetTemperatureOk.I_bStaInput</Name>
-							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emUtilities.I_bStaTwinSAFE_Estop1ChA</Name>
-							<Comment><![CDATA[ En moeten er daan alarmen voor worden aangemaakt met name voor welke noodstop knop er is ingedrukt]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emUtilities.I_bStaTwinSAFE_Estop1ChB</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emUtilities.I_bStaTwinSAFE_Estop2ChA</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emUtilities.I_bStaTwinSAFE_Estop2ChB</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emUtilities.I_bStaTwinSAFE_FbPalletConveyorSTO</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emUtilities.I_bStaTwinSAFE_FbPotGrpValvesOFF</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emUtilities.I_bStaTwinSAFE_FbTransportUnitSTO</Name>
-							<Type>BOOL</Type>
-						</Var>
 					</Vars>
 					<Vars VarGrpType="2" AreaNo="1">
 						<Name>PlcTask Outputs</Name>
+						<Var>
+							<Name>GVL_Modules.g_emUtilities.s_doBeaconLedGreen.Q_bStaOutput</Name>
+							<Comment><![CDATA[----------------------Outputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emUtilities.s_doBeaconLedYellow.Q_bStaOutput</Name>
+							<Comment><![CDATA[----------------------Outputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emUtilities.s_doBeaconLedRed.Q_bStaOutput</Name>
+							<Comment><![CDATA[----------------------Outputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emUtilities.s_doSnRestartSafety.Q_bStaOutput</Name>
+							<Comment><![CDATA[----------------------Outputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emUtilities.Q_bCmdRun</Name>
+							<Comment><![CDATA[Set TwinSAFE to Run-Mode	]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emUtilities.Q_bCmdErrAck</Name>
+							<Comment><![CDATA[Reset errors in TwinSAFE logic]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emUtilities.Q_bCmdRestartSafety</Name>
+							<Comment><![CDATA[Restart/reset safety blocks (reset Estop-safety-relay)]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
 						<Var>
 							<Name>GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdReset</Name>
 							<Comment><![CDATA[ Command to reset drive.]]></Comment>
@@ -2492,41 +2545,6 @@ External Setpoint Generation:
 						<Var>
 							<Name>GVL_Modules.g_emLiftingTransport.axisTransport.PlcToNc</Name>
 							<Type GUID="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" Namespace="MC">PLCTONC_AXIS_REF</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emUtilities.s_doBeaconLedGreen.Q_bStaOutput</Name>
-							<Comment><![CDATA[----------------------Outputs---------------------------//]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emUtilities.s_doBeaconLedYellow.Q_bStaOutput</Name>
-							<Comment><![CDATA[----------------------Outputs---------------------------//]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emUtilities.s_doBeaconLedRed.Q_bStaOutput</Name>
-							<Comment><![CDATA[----------------------Outputs---------------------------//]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emUtilities.s_doSnRestartSafety.Q_bStaOutput</Name>
-							<Comment><![CDATA[----------------------Outputs---------------------------//]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emUtilities.Q_bCmdRun</Name>
-							<Comment><![CDATA[Set TwinSAFE to Run-Mode	]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emUtilities.Q_bCmdErrAck</Name>
-							<Comment><![CDATA[Reset errors in TwinSAFE logic]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emUtilities.Q_bCmdRestartSafety</Name>
-							<Comment><![CDATA[Restart/reset safety blocks (reset Estop-safety-relay)]]></Comment>
-							<Type>BOOL</Type>
 						</Var>
 					</Vars>
 					<UnrestoredVarLinks ImportTime="2024-06-17T15:00:21">
@@ -4320,7 +4338,7 @@ Bit 8 - 15 : reserved]]></Comment>
 							<SyncMan>001000012600010001000000000100010001001026010000</SyncMan>
 							<SyncMan>001100012200010002000000000100010001001122010000</SyncMan>
 							<SyncMan>001216002400010003000000000000000800001224010000</SyncMan>
-							<SyncMan>001d21002000010004000000000000000900001d20010000</SyncMan>
+							<SyncMan>001d27002000010004000000000000000900001d20010000</SyncMan>
 							<SyncMan>002e00002400000003000000000000000000002e24000000</SyncMan>
 							<SyncMan>002f00002000000004000000000000000000002f20000000</SyncMan>
 							<Fmmu>0000000000000000001200020100000001000000060000000200000000000000</Fmmu>
@@ -4390,6 +4408,14 @@ Bit 8 - 15 : reserved]]></Comment>
 								</Entry>
 								<Entry Name="TwinSafeGroup1.EL2904, 4 digital outputs_1_22 Info Data" Index="#x7000" Sub="#x02">
 									<Type GUID="{A384EE9A-BDD6-1708-CADE-13C7C20E1D78}">INFODATA_3_1_1</Type>
+								</Entry>
+							</Pdo>
+							<Pdo Name="Device Info Data" Index="#x1bfe" Flags="#x2011" SyncMan="3">
+								<Entry Name="Project CRC" Index="#x7000" Sub="#x01" Flags="#x00008000">
+									<Type>WORD</Type>
+								</Entry>
+								<Entry Name="Serial Number" Index="#x7000" Sub="#x02" Flags="#x00008000">
+									<Type>UDINT</Type>
 								</Entry>
 							</Pdo>
 							<Pdo Name="FSoE Inputs" Index="#x1a00" Flags="#x0091" SyncMan="3">
@@ -4479,7 +4505,7 @@ Bit 8 - 15 : reserved]]></Comment>
 								<Entry Name="FSOE__FSIN Module 8.ErrAck" Index="#x7072" Sub="#x01">
 									<Type>BIT</Type>
 								</Entry>
-								<Entry Name="FSOE__FSoE CRC 000" Index="#x7080" Sub="#x03">
+								<Entry Name="FSOE__FSoE CRC 000" Index="#x7080" Sub="#x03" Flags="#x00008020">
 									<Type>UINT</Type>
 								</Entry>
 								<Entry Name="FSOE__FSoE Connection ID" Index="#x7080" Sub="#x02">
@@ -4876,9 +4902,27 @@ Bit 8 - 15 : reserved]]></Comment>
 		</Io>
 	</Project>
 	<Mappings>
-		<MappingInfo Identifier="{08502001-2041-0850-0020-500840205008}" Id="#x02030010" Watchdog="04000000040000000400000004000000"/>
-		<MappingInfo Identifier="{05000010-2001-0850-3000-040300205008}" Id="#x02030020" Watchdog="14000000040000000400000004000000"/>
+		<MappingInfo Identifier="{08502001-2041-0850-0020-500840205008}" Id="#x02030020" Watchdog="04000000040000000400000004000000"/>
+		<MappingInfo Identifier="{05000010-2001-0850-3000-040300205008}" Id="#x02030010" Watchdog="14000000040000000400000004000000"/>
+		<OwnerA Name="TIID^Master (EtherCAT)">
+			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K11 (EL2904)">
+				<Link VarA="K1 (EK1200)^K12 (EL1918 + TwinSAFE Logic)^ConnectionInputs^TwinSafeGroup1.EL2904, 4 digital outputs_1_22 TxPDO" VarB="Module 1 (FSOES)^RxPDO^FSOE"/>
+				<Link VarA="K1 (EK1200)^K12 (EL1918 + TwinSAFE Logic)^ConnectionOutputs^TwinSafeGroup1.EL2904, 4 digital outputs_1_22 RxPDO" VarB="Module 1 (FSOES)^TxPDO^FSOE"/>
+			</OwnerB>
+			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K12 (EL1918 + TwinSAFE Logic)">
+				<Link VarA="K1 (EK1200)^U9 (AX5805)^Module 1 (Safety Process Data, 1 axis)^Outputs (Controlword)^FSOE" VarB="ConnectionInputs^TwinSafeGroup1.AX 5805 Drive Option Card (1 axis, FW 5)_1_20 TxPDO"/>
+			</OwnerB>
+			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^U9 (AX5805)">
+				<Link VarA="K1 (EK1200)^K12 (EL1918 + TwinSAFE Logic)^ConnectionOutputs^TwinSafeGroup1.AX 5805 Drive Option Card (1 axis, FW 5)_1_20 RxPDO" VarB="Module 1 (Safety Process Data, 1 axis)^Inputs (Statusword)^FSOE"/>
+			</OwnerB>
+		</OwnerA>
 		<OwnerA Name="TIPC^CleanroomConnect^CleanroomConnect Instance">
+			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K12 (EL1918 + TwinSAFE Logic)">
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_nTwinSATE_ProjectCrc" VarB="Device Info Data^Project CRC"/>
+			</OwnerB>
+			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K9 (EL7211-9014)">
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.I_nInfoDataInputLevel" VarB="DRV Info data 1^Info data 1"/>
+			</OwnerB>
 			<OwnerB Name="TINC^NC-Task 1 SAF^Axes^ScissorLift">
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.axisLift.NcToPlc" VarB="Outputs^ToPlc"/>
 				<Link VarA="PlcTask Outputs^GVL_Modules.g_emLiftingTransport.axisLift.PlcToNc" VarB="Inputs^FromPlc"/>
@@ -4911,6 +4955,10 @@ Bit 8 - 15 : reserved]]></Comment>
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.I_bStaValveIsOn2" VarB="PlcTask Outputs^MAIN.simCentering.Q_bStaFeedbackOn2"/>
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.I_bStaMotorIsRunning" VarB="PlcTask Outputs^MAIN.sim_MOVITRAC_B.Q_bStaMotorIsRunning"/>
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.I_bStaReadyForOperation" VarB="PlcTask Outputs^MAIN.sim_MOVITRAC_B.Q_bStaReadyForOperation"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_bStaTwinSAFE_Estop1ChA" VarB="PlcTask Outputs^MAIN.simSafetyOK"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_bStaTwinSAFE_Estop1ChB" VarB="PlcTask Outputs^MAIN.simSafetyOK"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_bStaTwinSAFE_Estop2ChA" VarB="PlcTask Outputs^MAIN.simSafetyOK"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_bStaTwinSAFE_Estop2ChB" VarB="PlcTask Outputs^MAIN.simSafetyOK"/>
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diAirPressureOk.I_bStaInput" VarB="PlcTask Outputs^MAIN.simAirPressureOK"/>
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diCabinetTemperatureOk.I_bStaInput" VarB="PlcTask Outputs^MAIN.simCabinetTemperatureOK"/>
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diPower230VacOk.I_bStaInput" VarB="PlcTask Outputs^MAIN.simPower230VacOK"/>

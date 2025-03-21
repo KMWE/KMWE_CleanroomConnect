@@ -1,16 +1,18 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
   <POU Name="CM_AX5000" Id="{29dfdbae-f16d-497a-b262-2baea4701d77}" SpecialFunc="None">
-    <Declaration><![CDATA[FUNCTION_BLOCK CM_AX5000 EXTENDS CM_Base IMPLEMENTS I_AX5000
+    <Declaration><![CDATA[FUNCTION_BLOCK CM_AX5000 EXTENDS CM_Base //IMPLEMENTS I_AX5000
 VAR_INPUT
 	i_refAxis : REFERENCE TO Tc2_MC2.AXIS_REF;
 	i_mcHomingMode : Tc2_MC2.MC_HomingMode := Tc2_MC2.MC_HomingMode.MC_Direct;
+	i_mcBufferMode : Tc2_MC2.MC_BufferMode := Tc2_MC2.MC_BufferMode.MC_Aborting;
 	i_bIclkForward : BOOL := TRUE; //TRUE = interlocked
 	i_bIclkBackward : BOOL := TRUE; //TRUE = interlocked
 	
 //--	i_fSetManualPosition :  
 	
-	i_ref_setting : REFERENCE TO ST_SpeedProfile;
+	i_ref_setting : REFERENCE TO ST_PositioningProfile;
+	//i_ref_setting : REFERENCE TO ST_SpeedProfile;
 	
 	i_ref_eCtrlState : REFERENCE TO E_CtrlState;
 END_VAR
@@ -117,10 +119,30 @@ VAR
 	s_fbHmiLedAtPosition : FB_HmiLed;
 	s_fbHmiLedDriveError : FB_HmiLed;
 	
+	
+	s_eSeqNcTask : E_SeqNcTask;
+	s_fbSeqNcTaskControl : FB_SeqControl;
+	
+	s_bReqNcPower : BOOL;
+	s_bReqNcReset : BOOL;
+	s_bReqNcStop : BOOL;
+	s_bReqNcMoveAbs : BOOL;
+	s_bReqNcMoveVel : BOOL;
+	s_bReqNcHome : BOOL;
+	
+	s_mcDirection : Tc2_MC2.MC_Direction;
+	
 END_VAR
 ]]></Declaration>
     <Implementation>
       <ST><![CDATA[
+m_MC_Power(
+	i_bEnable := I_bEnable,
+	i_bEnablePositive := I_bDetLimitSwitchPositive,
+	i_bEnableNegative := I_bDetLimitSwitchNegative,
+	i_fOverride	:= 100.0,
+	i_eBufferMode := TC2_MC2.MC_BufferMode.MC_Aborting);
+
 SUPER^();
 
 ]]></ST>
@@ -218,24 +240,29 @@ s_bStaStandstill := i_refAxis.NcToPlc.StateDWord.2;
 s_bStaMoving := NOT(i_refAxis.NcToPlc.StateDWord.2);
 s_bStaAtPosition := i_refAxis.NcToPlc.StateDWord.4;
 s_bStaDriveError := i_refAxis.NcToPlc.StateDWord.31;
-
+(*
 //Stop drive if interlock occur
 m_MC_Stop(
 	i_bExecute := (i_bIclkForward AND i_refAxis.NcToPlc.ActVelo > 0.1) OR (i_bIclkBackward AND i_refAxis.NcToPlc.ActVelo < -0.1),
 	i_fDeceleration := i_ref_setting.fDeceleration,
 	i_fJerk := i_ref_setting.fJerk);
 
+m_MC_Reset(
+	i_bExecute := i_bCmdReset);
+	
 //Actions
+	IF (i_eCtrlMode = E_CtrlMode.MAINTENANCE) AND (i_ref_eCtrlState = E_CtrlState.RUNNING) THEN
+		
 		IF s_fbHmiBtnPower.p_osrBtnPress THEN 
 			s_bSetPoweOn := NOT(s_bSetPoweOn);
 		END_IF
 				
-		m_MC_Power(
-			i_bEnable := I_bEnable AND s_bSetPoweOn,
-			i_bEnablePositive := I_bDetLimitSwitchPositive,
-			i_bEnableNegative := I_bDetLimitSwitchNegative,
-			i_fOverride	:= 100.0,
-			i_eBufferMode := TC2_MC2.MC_BufferMode.MC_Aborting);
+//--		m_MC_Power(
+//--			i_bEnable := I_bEnable AND s_bSetPoweOn,
+//--			i_bEnablePositive := I_bDetLimitSwitchPositive,
+//--			i_bEnableNegative := I_bDetLimitSwitchNegative,
+//--			i_fOverride	:= 100.0,
+//--			i_eBufferMode := TC2_MC2.MC_BufferMode.MC_Aborting);
 		
 		m_MC_Home(
 			i_bExecute := s_fbHmiBtnHome.p_osrBtnPress,
@@ -286,7 +313,175 @@ m_MC_Stop(
 			i_bExecute := s_fbHmiBtnStop.p_osrBtnPress OR s_fbHmiBtnJogPos.p_osfBtnPress OR s_fbHmiBtnJogNeg.p_osfBtnPress,
 			i_fDeceleration := i_ref_setting.fDeceleration,
 			i_fJerk := i_ref_setting.fJerk);	
+END_IF	
+*)
+
+
+s_fbSeqNcTaskControl(
+	i_nSeqStep := s_eSeqNcTask, 
+	i_sStepName := TO_STRING(s_eSeqNcTask), 
+	i_bCmdReset := FALSE, 
+	i_bStaError := FALSE);
+
+	IF s_bReqNcStop THEN 
+		s_eSeqNcTask := E_SeqNcTask.STOP;
+	END_IF		
 	
+CASE s_eSeqNcTask OF
+
+	E_SeqNcTask.IDLE:
+		
+		IF s_bReqNcStop THEN 
+			s_eSeqNcTask := E_SeqNcTask.STOP;
+		ELSIF s_bReqNcReset THEN
+			s_eSeqNcTask := E_SeqNcTask.RESET;
+		ELSIF s_bReqNcPower THEN
+			s_eSeqNcTask := E_SeqNcTask.POWER;
+		ELSIF s_bReqNcHome THEN
+			s_eSeqNcTask := E_SeqNcTask.HOME;
+		ELSIF s_bReqNcMoveAbs THEN
+			s_eSeqNcTask := E_SeqNcTask.MOVE_ABS;
+		ELSIF s_bReqNcMoveVel THEN
+			s_eSeqNcTask := E_SeqNcTask.MOVE_VEL;	
+		END_IF
+		
+				
+		//--s_bReqNcStop := FALSE; 
+		//--s_bReqNcReset := FALSE;
+		//--s_bReqNcPower := FALSE;
+		//--s_bReqNcHome := FALSE;
+		//--s_bReqNcMoveAbs := FALSE;
+		//--s_bReqNcMoveVel := FALSE;
+		
+	E_SeqNcTask.STOP:
+		fbStop(
+			Axis := i_refAxis,
+			Execute := NOT(s_fbSeqNcTaskControl.q_bStaEntry),
+			Deceleration := 100.0, //i_ref_setting.fDeceleration,
+			Jerk := i_ref_setting.fJerk,
+			Options := ,
+			Done => s_bDone,
+			Busy => s_bBusy,
+			Active => s_bActive,
+			CommandAborted => s_bCommandAborted,
+			Error => s_bError,
+			ErrorID => s_nErrorID);	
+			
+		IF fbStop.Done THEN
+			s_bReqNcStop := FALSE;
+			s_eSeqNcTask := E_SeqNcTask.IDLE;
+		END_IF
+			
+	E_SeqNcTask.RESET:
+		fbReset(
+			Axis := i_refAxis,
+			Execute := NOT(s_fbSeqNcTaskControl.q_bStaEntry),
+			Done => s_bDone,
+			Busy => s_bBusy,
+			Error => s_bError,
+			ErrorID => s_nErrorID);
+			
+		IF fbReset.Done THEN
+			s_bReqNcReset := FALSE;
+			s_eSeqNcTask := E_SeqNcTask.IDLE;
+		END_IF
+			
+	E_SeqNcTask.POWER:
+		s_eSeqNcTask := E_SeqNcTask.IDLE;
+			
+	E_SeqNcTask.HOME:
+		fbHome(
+			Axis := i_refAxis,
+			Execute := NOT(s_fbSeqNcTaskControl.q_bStaEntry),
+			Position := i_ref_setting.fPosition,
+			HomingMode := i_mcHomingMode,
+			BufferMode := i_mcBufferMode,
+			Options := ,
+			bCalibrationCam := I_bDetReferenceSwitch,
+			Done => s_bDone,
+			Busy => s_bBusy,
+			Active => s_bActive,
+			CommandAborted => s_bCommandAborted,
+			Error => s_bError,
+			ErrorID => s_nErrorID);
+			
+		IF fbHome.Done THEN
+			s_bReqNcHome := FALSE;
+			s_eSeqNcTask := E_SeqNcTask.IDLE;
+		END_IF
+	
+	E_SeqNcTask.MOVE_VEL:
+		fbJog(
+			Axis := i_refAxis,
+			JogForward := s_fbHmiBtnJogPos.p_bStaBtn,
+			JogBackwards := s_fbHmiBtnJogNeg.p_bStaBtn,
+			Mode := MC_JOGMODE_STANDARD_SLOW,
+			Position := i_ref_setting.fPosition,
+			Velocity := i_ref_setting.fVelocity,
+			Acceleration := i_ref_setting.fAcceleration,
+			Deceleration := i_ref_setting.fDeceleration,
+			Jerk := i_ref_setting.fJerk,
+			Done => s_bDone,
+			Busy => s_bBusy,
+			Active => s_bActive,
+			CommandAborted => s_bCommandAborted,
+			Error => s_bError,
+			ErrorID => s_nErrorID);
+
+			IF NOT(s_fbHmiBtnJogPos.p_bStaBtn OR s_fbHmiBtnJogNeg.p_bStaBtn) OR fbJog.Error OR fbJog.CommandAborted THEN
+				s_bReqNcMoveVel := FALSE;
+				s_eSeqNcTask := E_SeqNcTask.IDLE;
+			END_IF
+			
+//**		fbMoveVelocity(
+//**			Axis := i_refAxis,
+//**			Execute := s_fbHmiBtnJogPos.p_bStaBtn, //NOT(s_fbSeqNcTaskControl.q_bStaEntry) AND NOT(fbMoveVelocity.Error OR fbMoveVelocity.CommandAborted),
+//**			Velocity := i_ref_setting.fVelocity,
+//**			Acceleration := i_ref_setting.fAcceleration,
+//**			Deceleration := i_ref_setting.fDeceleration,
+//**			Jerk := i_ref_setting.fJerk,
+//**			Direction := s_mcDirection, 
+//**			BufferMode := i_mcBufferMode,
+//**			Options := ,
+//**			InVelocity => s_bInVelocity,
+//**			Busy => s_bBusy,
+//**			Active => s_bActive,
+//**			CommandAborted => s_bCommandAborted,
+//**			Error => s_bError,
+//**			ErrorID => s_nErrorID);
+			
+//--		IF fbMoveVelocity.Active OR fbMoveVelocity.Error OR fbMoveVelocity.CommandAborted THEN
+//--			;
+//--			s_bReqNcMoveVel := FALSE;
+//--			s_eSeqNcTask := E_SeqNcTask.IDLE;
+//--		END_IF	
+	
+	E_SeqNcTask.MOVE_ABS:
+		fbMoveAbsolute(
+			Axis := i_refAxis,
+			Execute := NOT(s_fbSeqNcTaskControl.q_bStaEntry), 
+			Position := i_ref_setting.fPosition,
+			Velocity := i_ref_setting.fVelocity,
+			Acceleration := i_ref_setting.fAcceleration,
+			Deceleration := i_ref_setting.fDeceleration,
+			Jerk := i_ref_setting.fJerk,
+			BufferMode := i_mcBufferMode,
+			Options := ,
+			Done => s_bDone,
+			Busy => s_bBusy,
+			Active => s_bActive,
+			CommandAborted => s_bCommandAborted,
+			Error => s_bError,
+			ErrorID => s_nErrorID);
+		
+		IF fbMoveAbsolute.Done OR fbMoveAbsolute.Error OR fbMoveAbsolute.CommandAborted THEN
+			s_bReqNcMoveAbs := FALSE;
+			s_eSeqNcTask := E_SeqNcTask.IDLE;
+		END_IF
+		
+END_CASE
+
+
 	
 _m_Devices := TRUE;
 ]]></ST>
@@ -344,6 +539,36 @@ IF __ISVALIDREF(i_ref_eCtrlState) THEN
 		
 		s_fbHmiBtnStop.p_bStaVisible := TRUE;
 		s_fbHmiBtnStop.p_bStaEnabled := TRUE;
+		
+		//Maintenance commands from buttons
+		IF s_fbHmiBtnStop.p_osrBtnPress THEN
+			s_bReqNcStop := TRUE;
+		END_IF
+		
+		IF s_fbHmiBtnReset.p_osrBtnPress THEN
+			s_bReqNcReset := TRUE;
+		END_IF
+		
+		IF s_fbHmiBtnHome.p_osrBtnPress THEN
+			s_bReqNcHome := TRUE;
+		END_IF
+		
+		IF s_fbHmiBtnJogNeg.p_osrBtnPress THEN
+			s_mcDirection := Tc2_MC2.MC_Direction.MC_Negative_Direction;
+			s_bReqNcMoveVel := TRUE;
+		END_IF
+		
+		IF s_fbHmiBtnJogPos.p_osrBtnPress THEN
+			s_mcDirection := Tc2_MC2.MC_Direction.MC_Positive_Direction;
+			s_bReqNcMoveVel := TRUE;
+		END_IF
+		
+		IF s_fbHmiBtnMoveAbs.p_osrBtnPress THEN
+			s_bReqNcMoveAbs := TRUE;
+		END_IF
+		
+			
+		
 (*		
 		//Actions
 		IF s_fbHmiBtnPower.p_osrBtnPress THEN 
@@ -648,7 +873,8 @@ m_MC_Jog := s_bDone;
       </Implementation>
     </Method>
     <Method Name="m_MC_MoveAbsolute" Id="{0f6a7ef6-bbb9-453d-8d82-3eac920331b1}" FolderPath="Methods\">
-      <Declaration><![CDATA[METHOD PUBLIC m_MC_MoveAbsolute : BOOL
+      <Declaration><![CDATA[//Returms TRUE if move absolute is done
+METHOD PUBLIC m_MC_MoveAbsolute : BOOL
 VAR_INPUT
 	i_bExecute : BOOL;
 	i_fPosition : LREAL; 
@@ -660,13 +886,15 @@ VAR_INPUT
 END_VAR
 VAR_OUTPUT
 	o_Busy : BOOL;
+	o_bDone : BOOL;
+	o_bError : BOOL;
 END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
 fbMoveAbsolute(
 	Axis := i_refAxis,
-	Execute := i_bExecute AND NOT(fbMoveAbsolute.Done OR fbMoveAbsolute.Busy OR fbMoveAbsolute.Error), 
+	Execute := i_bExecute,// AND NOT(fbMoveAbsolute.Done OR fbMoveAbsolute.Busy OR fbMoveAbsolute.Error), 
 	Position := i_fPosition,
 	Velocity := i_fVelocity,
 	Acceleration := i_fAcceleration,
@@ -683,6 +911,8 @@ fbMoveAbsolute(
 
 //Outputs
 o_Busy := s_bBusy;
+o_bDone := s_bDone;
+o_bError := s_bError;
 	
 m_MC_MoveAbsolute := s_bDone;
 ]]></ST>
@@ -817,7 +1047,7 @@ END_VAR
         <ST><![CDATA[
 fbStop(
 	Axis := i_refAxis,
-	Execute := i_bExecute AND NOT(fbStop.Busy OR fbStop.Error),
+	Execute := i_bExecute, // AND NOT(fbStop.Busy OR fbStop.Error),
 	Deceleration := i_fDeceleration,
 	Jerk := i_fJerk,
 	Options := ,
@@ -859,6 +1089,45 @@ m_MC_WriteParameter := s_bDone;
 	]]></ST>
       </Implementation>
     </Method>
+    <Method Name="m_MoveAbsolute" Id="{33b1db53-3e9c-45b9-acb8-f86fe15b34c1}" FolderPath="Methods\">
+      <Declaration><![CDATA[//Returms TRUE if move absolute is done
+METHOD PUBLIC m_MoveAbsolute : BOOL
+VAR_INPUT
+	i_bExecute : BOOL;
+	i_fPosition : LREAL; 
+	i_fVelocity : LREAL; 
+	i_fAcceleration : LREAL; 
+	i_fDeceleration : LREAL; 
+	i_fJerk : LREAL;
+//--	i_eBufferMode : TC2_MC2.MC_BufferMode;
+END_VAR
+VAR_OUTPUT
+	o_Busy : BOOL;
+	o_bDone : BOOL;
+	o_bError : BOOL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+//Inputs
+fbMoveAbsolute.Execute := i_bExecute;
+fbMoveAbsolute.Position := i_fPosition;
+fbMoveAbsolute.Velocity := i_fVelocity;
+fbMoveAbsolute.Acceleration := i_fAcceleration;
+fbMoveAbsolute.Deceleration := i_fDeceleration;
+fbMoveAbsolute.Jerk := i_fJerk;
+
+s_bReqNcMoveAbs S= i_bExecute;
+
+//Outputs
+o_Busy := fbMoveAbsolute.Busy;
+o_bDone := fbMoveAbsolute.Done;
+o_bError := fbMoveAbsolute.Error;
+	
+m_MoveAbsolute := s_bDone;
+]]></ST>
+      </Implementation>
+    </Method>
     <Property Name="p_bActive" Id="{fdebd466-4355-4961-86f7-17cb1e74e332}" FolderPath="Properties\">
       <Declaration><![CDATA[PROPERTY PUBLIC p_bActive : BOOL
 ]]></Declaration>
@@ -868,6 +1137,17 @@ m_MC_WriteParameter := s_bDone;
           <ST><![CDATA[
 p_bActive := s_bActive;
 ]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bAtPosition" Id="{1427e9eb-62b0-446d-9229-ecc0728aa739}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bAtPosition : BOOL
+]]></Declaration>
+      <Get Name="Get" Id="{f7ed9d8f-2a48-406a-a4f6-3a1e43916f46}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bAtPosition := s_bStaAtPosition;]]></ST>
         </Implementation>
       </Get>
     </Property>
@@ -1047,6 +1327,9 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       </Set>
     </Property>
     <LineIds Name="CM_AX5000">
+      <LineId Id="774" Count="0" />
+      <LineId Id="769" Count="4" />
+      <LineId Id="768" Count="0" />
       <LineId Id="410" Count="0" />
       <LineId Id="47" Count="0" />
       <LineId Id="650" Count="0" />
@@ -1116,12 +1399,101 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="325" Count="0" />
       <LineId Id="322" Count="2" />
       <LineId Id="321" Count="0" />
+      <LineId Id="398" Count="0" />
       <LineId Id="328" Count="0" />
-      <LineId Id="331" Count="51" />
+      <LineId Id="400" Count="0" />
+      <LineId Id="399" Count="0" />
+      <LineId Id="331" Count="0" />
+      <LineId Id="396" Count="1" />
+      <LineId Id="332" Count="50" />
       <LineId Id="392" Count="0" />
       <LineId Id="383" Count="6" />
       <LineId Id="294" Count="0" />
-      <LineId Id="329" Count="1" />
+      <LineId Id="329" Count="0" />
+      <LineId Id="401" Count="1" />
+      <LineId Id="609" Count="0" />
+      <LineId Id="611" Count="3" />
+      <LineId Id="610" Count="0" />
+      <LineId Id="616" Count="0" />
+      <LineId Id="403" Count="0" />
+      <LineId Id="618" Count="1" />
+      <LineId Id="617" Count="0" />
+      <LineId Id="404" Count="0" />
+      <LineId Id="411" Count="1" />
+      <LineId Id="418" Count="0" />
+      <LineId Id="496" Count="0" />
+      <LineId Id="615" Count="0" />
+      <LineId Id="509" Count="0" />
+      <LineId Id="511" Count="1" />
+      <LineId Id="514" Count="0" />
+      <LineId Id="513" Count="0" />
+      <LineId Id="516" Count="0" />
+      <LineId Id="515" Count="0" />
+      <LineId Id="518" Count="0" />
+      <LineId Id="517" Count="0" />
+      <LineId Id="510" Count="0" />
+      <LineId Id="508" Count="0" />
+      <LineId Id="574" Count="0" />
+      <LineId Id="608" Count="0" />
+      <LineId Id="576" Count="4" />
+      <LineId Id="575" Count="0" />
+      <LineId Id="427" Count="0" />
+      <LineId Id="523" Count="11" />
+      <LineId Id="520" Count="0" />
+      <LineId Id="581" Count="1" />
+      <LineId Id="601" Count="0" />
+      <LineId Id="583" Count="1" />
+      <LineId Id="572" Count="0" />
+      <LineId Id="414" Count="0" />
+      <LineId Id="444" Count="5" />
+      <LineId Id="420" Count="0" />
+      <LineId Id="585" Count="0" />
+      <LineId Id="587" Count="0" />
+      <LineId Id="602" Count="0" />
+      <LineId Id="588" Count="0" />
+      <LineId Id="586" Count="0" />
+      <LineId Id="536" Count="0" />
+      <LineId Id="443" Count="0" />
+      <LineId Id="535" Count="0" />
+      <LineId Id="431" Count="0" />
+      <LineId Id="539" Count="13" />
+      <LineId Id="538" Count="0" />
+      <LineId Id="589" Count="0" />
+      <LineId Id="591" Count="0" />
+      <LineId Id="603" Count="0" />
+      <LineId Id="592" Count="0" />
+      <LineId Id="590" Count="0" />
+      <LineId Id="537" Count="0" />
+      <LineId Id="417" Count="0" />
+      <LineId Id="624" Count="14" />
+      <LineId Id="621" Count="0" />
+      <LineId Id="639" Count="0" />
+      <LineId Id="641" Count="0" />
+      <LineId Id="643" Count="1" />
+      <LineId Id="622" Count="0" />
+      <LineId Id="640" Count="0" />
+      <LineId Id="468" Count="14" />
+      <LineId Id="423" Count="0" />
+      <LineId Id="596" Count="0" />
+      <LineId Id="594" Count="0" />
+      <LineId Id="620" Count="0" />
+      <LineId Id="604" Count="0" />
+      <LineId Id="595" Count="0" />
+      <LineId Id="593" Count="0" />
+      <LineId Id="467" Count="0" />
+      <LineId Id="553" Count="4" />
+      <LineId Id="569" Count="2" />
+      <LineId Id="561" Count="7" />
+      <LineId Id="424" Count="0" />
+      <LineId Id="597" Count="0" />
+      <LineId Id="599" Count="0" />
+      <LineId Id="605" Count="0" />
+      <LineId Id="600" Count="0" />
+      <LineId Id="598" Count="0" />
+      <LineId Id="425" Count="0" />
+      <LineId Id="408" Count="0" />
+      <LineId Id="405" Count="1" />
+      <LineId Id="330" Count="0" />
       <LineId Id="5" Count="0" />
       <LineId Id="13" Count="0" />
     </LineIds>
@@ -1151,6 +1523,31 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="277" Count="0" />
       <LineId Id="347" Count="0" />
       <LineId Id="280" Count="2" />
+      <LineId Id="469" Count="1" />
+      <LineId Id="489" Count="1" />
+      <LineId Id="477" Count="0" />
+      <LineId Id="488" Count="0" />
+      <LineId Id="484" Count="1" />
+      <LineId Id="483" Count="0" />
+      <LineId Id="486" Count="0" />
+      <LineId Id="492" Count="1" />
+      <LineId Id="491" Count="0" />
+      <LineId Id="494" Count="0" />
+      <LineId Id="496" Count="0" />
+      <LineId Id="506" Count="0" />
+      <LineId Id="497" Count="0" />
+      <LineId Id="495" Count="0" />
+      <LineId Id="498" Count="0" />
+      <LineId Id="500" Count="0" />
+      <LineId Id="507" Count="0" />
+      <LineId Id="501" Count="0" />
+      <LineId Id="499" Count="0" />
+      <LineId Id="502" Count="0" />
+      <LineId Id="504" Count="1" />
+      <LineId Id="503" Count="0" />
+      <LineId Id="487" Count="0" />
+      <LineId Id="478" Count="0" />
+      <LineId Id="471" Count="0" />
       <LineId Id="351" Count="1" />
       <LineId Id="458" Count="8" />
       <LineId Id="456" Count="1" />
@@ -1269,11 +1666,13 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="32" Count="0" />
     </LineIds>
     <LineIds Name="CM_AX5000.m_MC_MoveAbsolute">
-      <LineId Id="226" Count="0" />
+      <LineId Id="262" Count="0" />
       <LineId Id="210" Count="15" />
-      <LineId Id="243" Count="0" />
+      <LineId Id="259" Count="0" />
       <LineId Id="227" Count="0" />
       <LineId Id="244" Count="0" />
+      <LineId Id="268" Count="0" />
+      <LineId Id="266" Count="0" />
       <LineId Id="242" Count="0" />
       <LineId Id="228" Count="0" />
       <LineId Id="12" Count="0" />
@@ -1322,10 +1721,30 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="42" Count="0" />
       <LineId Id="44" Count="0" />
     </LineIds>
+    <LineIds Name="CM_AX5000.m_MoveAbsolute">
+      <LineId Id="294" Count="0" />
+      <LineId Id="285" Count="0" />
+      <LineId Id="297" Count="0" />
+      <LineId Id="289" Count="3" />
+      <LineId Id="288" Count="0" />
+      <LineId Id="295" Count="1" />
+      <LineId Id="293" Count="0" />
+      <LineId Id="227" Count="0" />
+      <LineId Id="244" Count="0" />
+      <LineId Id="268" Count="0" />
+      <LineId Id="266" Count="0" />
+      <LineId Id="242" Count="0" />
+      <LineId Id="228" Count="0" />
+      <LineId Id="12" Count="0" />
+    </LineIds>
     <LineIds Name="CM_AX5000.p_bActive.Get">
       <LineId Id="5" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_AX5000.p_bAtPosition.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
     </LineIds>
     <LineIds Name="CM_AX5000.p_bBusy.Get">
       <LineId Id="5" Count="0" />

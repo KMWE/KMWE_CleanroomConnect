@@ -56,12 +56,12 @@ VAR
 	//--s_diPower48VdcOk : FB_DigInput;
 	
 	axisLift : AXIS_REF; //??AXIS_REF; TC2_MC2.AXIS_REF;
-	s_cmLift : CM_AX5000; // Including 2 limit switched and 1 reference switch
+	s_cmLift : CM_Servo; // Including 2 limit switched and 1 reference switch
 
 	//fbMoveAbsolute : Tc2_MC2.MC_MoveAbsolute;
 	
 	axisTransport : AXIS_REF; //??AXIS_REF TC2_MC2.AXIS_REF;
-	s_cmTransport : CM_AX5000; // Including 2 limit switched and 1 reference switch
+	s_cmTransport : CM_Servo; // Including 2 limit switched and 1 reference switch
 	
 //------------------------------------------//
 
@@ -644,8 +644,8 @@ fbIlckHandlerTransportRetract();
 
 fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckTransportExtract.p_bInterlocked;
 fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckTransportExtract.p_sReason;
-fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[1].bState := FALSE;
-fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[1].sReason := 'Lift not at upper position';
+fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[1].bState := NOT(F_InRange(i_ref_stSettings.arr_LiftPositioningProfile[1].fPosition, s_cmLift.p_fPosition, 0.5)); 
+fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[1].sReason := 'Lift not high enough';
 fbIlckHandlerTransportExtract();
 
 s_bIlckTransportRetract := fbIlckHandlerTransportRetract.p_bInterlocked;
@@ -699,80 +699,6 @@ END_IF
 
 _m_Inputs := TRUE;
 ]]></ST>
-      </Implementation>
-    </Method>
-    <Method Name="_m_MoveAbsolute" Id="{7f8f7561-70c1-4897-9a57-d3b7b8c51729}">
-      <Declaration><![CDATA[METHOD _m_MoveAbsolute : BOOL
-VAR_INPUT
-	i_bExecute : BOOL;
-	i_ref_axis : REFERENCE TO AXIS_REF; //TC2_MC2.AXIS_REF;
-	i_ref_stProfile : ST_PositioningProfile;
-//--	i_fAlternativePosition : LREAL := 0.0;
-END_VAR
-
-VAR_OUTPUT
-	o_bError : BOOL;
-	o_nErrorID : UDINT;
-END_VAR
-
-VAR_INST
-	s_MC_MoveAbsolute : TC2_MC2.MC_MoveAbsolute;
-	s_bDone : BOOL := FALSE;
-END_VAR
-
-VAR
-	test : TC2_MC2.AXIS_REF;
-	adres : ST_AdsAddress;
-END_VAR
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[
-IF NOT(__ISVALIDREF(i_ref_axis)) THEN
-	// Message invalid reference
-	RETURN;
-END_IF
-
-//--i_ref_axis REF= test; 
-
-//--adres := i_ref_axis.ADS; 
-
-//IF i_ref_axis = axisLift THEN
-//??IF FALSE THEN
-//??	s_MC_MoveAbsolute.Position := i_ref_stProfile.fPosition; //from profile
-//??ELSE
-//??	s_MC_MoveAbsolute.Position := _m_ConvertLiftToSpindlePosition(i_ref_stProfile.fPosition); //coverted
-//??END_IF
-
-//--IF i_fAlternativePosition = 0.0 THEN
-//--	s_MC_MoveAbsolute.Position := i_ref_stProfile.fPosition; //from profile
-//--ELSE
-//--	s_MC_MoveAbsolute.Position := i_fAlternativePosition; //from input
-//--END_IF
-
-
-s_MC_MoveAbsolute(
-	Axis := i_ref_axis,
-	Execute := i_bExecute, //TRUE AND NOT(s_MC_MoveAbsolute.Busy OR s_MC_MoveAbsolute.Done OR s_MC_MoveAbsolute.Error),
-	Position := i_ref_stProfile.fPosition,
-	Velocity := i_ref_stProfile.fVelocity,
-	Acceleration := i_ref_stProfile.fAcceleration,
-	Deceleration := i_ref_stProfile.fDeceleration,
-	Jerk := i_ref_stProfile.fJerk,
-	BufferMode := TC2_MC2.MC_BufferMode.MC_Aborting,
-	Options := ,
-	Done => ,
-	Busy => ,
-	Active => ,
-	CommandAborted => ,
-	Error => o_bError,
-	ErrorID => o_nErrorID);
-	
-	s_bDone S= s_MC_MoveAbsolute.Done;
-	
-_m_MoveAbsolute := s_bDone;
-	
-//--_m_MoveAbsolute := s_MC_MoveAbsolute.Done;
- ]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_Outputs" Id="{0027b51b-0e3b-4c47-b79c-c262d8cada1b}" FolderPath="Base\">
@@ -842,33 +768,6 @@ END_IF
 
 _m_Params := TRUE;
 ]]></ST>
-      </Implementation>
-    </Method>
-    <Method Name="_m_PowerAxes" Id="{b3649590-c32d-4573-996f-0fb561be337e}">
-      <Declaration><![CDATA[///Enable power of all drives on/off, returns TRUE if all powered
-METHOD PRIVATE _m_PowerAxes : BOOL
-VAR_INPUT
-	i_bEnable : BOOL; ///FALSE = power off, TRUE = power on
-END_VAR
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[
-s_cmLift.m_MC_Power(
-	i_bEnable := i_bEnable,
-	i_bEnablePositive := TRUE,
-	i_bEnableNegative := TRUE,
-	i_fOverride := 100.0,
-	i_eBufferMode := TC2_MC2.MC_BufferMode.MC_Aborting);
-			
-s_cmTransport.m_MC_Power(
-	i_bEnable := i_bEnable,
-	i_bEnablePositive := TRUE,
-	i_bEnableNegative := TRUE,
-	i_fOverride := 100.0,
-	i_eBufferMode := TC2_MC2.MC_BufferMode.MC_Aborting);
-
-_m_PowerAxes := s_cmLift.p_bDone AND s_cmTransport.p_bDone;
-	]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_SeqLiftingTransport" Id="{adfb5128-2b00-4a29-b7de-b50ba035879a}">
@@ -1439,25 +1338,6 @@ END_CASE
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_StopLiftAndTransport" Id="{51cd2b95-af32-4ec5-bc42-92dbd4c31be4}">
-      <Declaration><![CDATA[METHOD PRIVATE _m_StopLiftAndTransport : BOOL
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[
-s_cmLift.m_MC_Stop(
-	i_bExecute := TRUE,
-	i_fDeceleration := i_ref_stSettings.stLiftSpeedProfilePositioning.fDeceleration,
-	i_fJerk := i_ref_stSettings.stLiftSpeedProfilePositioning.fJerk);
-		
-s_cmTransport.m_MC_Stop(
-	i_bExecute := TRUE,
-	i_fDeceleration := i_ref_stSettings.stTransportSpeedProfilePositioning.fDeceleration,
-	i_fJerk := i_ref_stSettings.stTransportSpeedProfilePositioning.fJerk);
-		
-_m_StopLiftAndTransport := s_cmLift.p_bDone AND s_cmTransport.p_bDone; 
-]]></ST>
-      </Implementation>
-    </Method>
     <Method Name="m_Main" Id="{7d708d4c-1fee-4511-a8d0-db3dbe3fd7e6}" FolderPath="Base\">
       <Declaration><![CDATA[METHOD PUBLIC m_Main : BOOL
 ]]></Declaration>
@@ -1947,28 +1827,6 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="5" Count="0" />
       <LineId Id="218" Count="0" />
     </LineIds>
-    <LineIds Name="EM_LiftingTransport._m_MoveAbsolute">
-      <LineId Id="11" Count="0" />
-      <LineId Id="5" Count="0" />
-      <LineId Id="46" Count="0" />
-      <LineId Id="12" Count="1" />
-      <LineId Id="87" Count="1" />
-      <LineId Id="90" Count="1" />
-      <LineId Id="72" Count="1" />
-      <LineId Id="82" Count="0" />
-      <LineId Id="79" Count="2" />
-      <LineId Id="75" Count="0" />
-      <LineId Id="66" Count="1" />
-      <LineId Id="76" Count="2" />
-      <LineId Id="69" Count="0" />
-      <LineId Id="118" Count="0" />
-      <LineId Id="23" Count="0" />
-      <LineId Id="31" Count="14" />
-      <LineId Id="29" Count="1" />
-      <LineId Id="114" Count="3" />
-      <LineId Id="25" Count="0" />
-      <LineId Id="55" Count="0" />
-    </LineIds>
     <LineIds Name="EM_LiftingTransport._m_Outputs">
       <LineId Id="424" Count="0" />
       <LineId Id="377" Count="11" />
@@ -2002,13 +1860,6 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="301" Count="0" />
       <LineId Id="282" Count="0" />
       <LineId Id="292" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_LiftingTransport._m_PowerAxes">
-      <LineId Id="6" Count="12" />
-      <LineId Id="5" Count="0" />
-      <LineId Id="23" Count="0" />
-      <LineId Id="22" Count="0" />
-      <LineId Id="21" Count="0" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport._m_SeqLiftingTransport">
       <LineId Id="2170" Count="0" />
@@ -2334,12 +2185,6 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="3678" Count="0" />
       <LineId Id="2102" Count="0" />
       <LineId Id="89" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_LiftingTransport._m_StopLiftAndTransport">
-      <LineId Id="6" Count="8" />
-      <LineId Id="5" Count="0" />
-      <LineId Id="15" Count="1" />
-      <LineId Id="19" Count="0" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport.m_Main">
       <LineId Id="2905" Count="0" />

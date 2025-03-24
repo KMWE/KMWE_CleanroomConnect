@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
-  <POU Name="CM_AX5000" Id="{29dfdbae-f16d-497a-b262-2baea4701d77}" SpecialFunc="None">
-    <Declaration><![CDATA[FUNCTION_BLOCK CM_AX5000 EXTENDS CM_Base //IMPLEMENTS I_AX5000
+  <POU Name="CM_Servo" Id="{29dfdbae-f16d-497a-b262-2baea4701d77}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK CM_Servo EXTENDS CM_Base //IMPLEMENTS I_Servo
 VAR_INPUT
 	i_refAxis : REFERENCE TO Tc2_MC2.AXIS_REF;
 	i_mcHomingMode : Tc2_MC2.MC_HomingMode := Tc2_MC2.MC_HomingMode.MC_Direct;
@@ -107,7 +107,7 @@ VAR
 	s_fbHmiLedDriveError : FB_HmiLed;
 	
 	//Sequence
-	s_eSeqNcTask : E_SeqNcTask;
+	s_eSeqNcTask : E_SeqServo;
 	s_fbSeqNcTaskControl : FB_SeqControl;
 	s_mcDirection : Tc2_MC2.MC_Direction;
 	
@@ -237,53 +237,53 @@ s_fbSeqNcTaskControl(
 	i_bStaError := FALSE);
 
 	IF s_bReqNcStop THEN 
-		s_eSeqNcTask := E_SeqNcTask.STOP;
+		s_eSeqNcTask := E_SeqServo.STOP;
 	END_IF		
 	
 CASE s_eSeqNcTask OF
 
-	E_SeqNcTask.IDLE:
+	E_SeqServo.IDLE:
 		
 		IF s_bReqNcStop THEN 
-			s_eSeqNcTask := E_SeqNcTask.STOP;
+			s_eSeqNcTask := E_SeqServo.STOP;
 		ELSIF s_bReqNcReset THEN
-			s_eSeqNcTask := E_SeqNcTask.RESET;
+			s_eSeqNcTask := E_SeqServo.RESET;
 		ELSIF s_bReqNcHome THEN
-			s_eSeqNcTask := E_SeqNcTask.HOME;
+			s_eSeqNcTask := E_SeqServo.HOME;
 		ELSIF s_bReqNcJog THEN
-			s_eSeqNcTask := E_SeqNcTask.JOG;
+			s_eSeqNcTask := E_SeqServo.JOG;
 		ELSIF s_bReqNcMoveAbs THEN
-			s_eSeqNcTask := E_SeqNcTask.MOVE_ABS;	
+			s_eSeqNcTask := E_SeqServo.MOVE_ABS;	
 		END_IF
 		
-	E_SeqNcTask.STOP:
+	E_SeqServo.STOP:
 		IF fbStop.Done THEN
 			s_bReqNcStop := FALSE;
-			s_eSeqNcTask := E_SeqNcTask.IDLE;
+			s_eSeqNcTask := E_SeqServo.IDLE;
 		END_IF
 			
-	E_SeqNcTask.RESET:
+	E_SeqServo.RESET:
 		IF fbReset.Done THEN
 			s_bReqNcReset := FALSE;
-			s_eSeqNcTask := E_SeqNcTask.IDLE;
+			s_eSeqNcTask := E_SeqServo.IDLE;
 		END_IF
 			
-	E_SeqNcTask.HOME:
+	E_SeqServo.HOME:
 		IF fbHome.Done THEN
 			s_bReqNcHome := FALSE;
-			s_eSeqNcTask := E_SeqNcTask.IDLE;
+			s_eSeqNcTask := E_SeqServo.IDLE;
 		END_IF
 	
-	E_SeqNcTask.JOG:
+	E_SeqServo.JOG:
 			IF NOT(s_fbHmiBtnJogPos.p_bStaBtn OR s_fbHmiBtnJogNeg.p_bStaBtn) OR fbJog.Error OR fbJog.CommandAborted THEN
 				s_bReqNcJog := FALSE;
-				s_eSeqNcTask := E_SeqNcTask.IDLE;
+				s_eSeqNcTask := E_SeqServo.IDLE;
 			END_IF
 			
-	E_SeqNcTask.MOVE_ABS:
+	E_SeqServo.MOVE_ABS:
 		IF fbMoveAbsolute.Done OR fbMoveAbsolute.Error OR fbMoveAbsolute.CommandAborted THEN
 			s_bReqNcMoveAbs := FALSE;
-			s_eSeqNcTask := E_SeqNcTask.IDLE;
+			s_eSeqNcTask := E_SeqServo.IDLE;
 		END_IF
 		
 END_CASE
@@ -915,14 +915,14 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
         </Implementation>
       </Set>
     </Property>
-    <LineIds Name="CM_AX5000">
+    <LineIds Name="CM_Servo">
       <LineId Id="907" Count="0" />
       <LineId Id="909" Count="12" />
       <LineId Id="410" Count="0" />
       <LineId Id="47" Count="0" />
       <LineId Id="633" Count="0" />
     </LineIds>
-    <LineIds Name="CM_AX5000._m_Alarms">
+    <LineIds Name="CM_Servo._m_Alarms">
       <LineId Id="28" Count="0" />
       <LineId Id="19" Count="2" />
       <LineId Id="103" Count="0" />
@@ -980,7 +980,7 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="10" Count="0" />
       <LineId Id="29" Count="0" />
     </LineIds>
-    <LineIds Name="CM_AX5000._m_Devices">
+    <LineIds Name="CM_Servo._m_Devices">
       <LineId Id="732" Count="32" />
       <LineId Id="767" Count="19" />
       <LineId Id="790" Count="18" />
@@ -995,7 +995,7 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="886" Count="0" />
       <LineId Id="13" Count="0" />
     </LineIds>
-    <LineIds Name="CM_AX5000._m_Hmi">
+    <LineIds Name="CM_Servo._m_Hmi">
       <LineId Id="17" Count="3" />
       <LineId Id="127" Count="0" />
       <LineId Id="129" Count="0" />
@@ -1053,7 +1053,7 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="15" Count="0" />
       <LineId Id="87" Count="0" />
     </LineIds>
-    <LineIds Name="CM_AX5000._m_Init">
+    <LineIds Name="CM_Servo._m_Init">
       <LineId Id="21" Count="0" />
       <LineId Id="15" Count="2" />
       <LineId Id="128" Count="1" />
@@ -1093,7 +1093,7 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="5" Count="0" />
       <LineId Id="23" Count="0" />
     </LineIds>
-    <LineIds Name="CM_AX5000._m_Inputs">
+    <LineIds Name="CM_Servo._m_Inputs">
       <LineId Id="13" Count="0" />
       <LineId Id="5" Count="2" />
       <LineId Id="97" Count="1" />
@@ -1114,14 +1114,14 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="8" Count="0" />
       <LineId Id="17" Count="0" />
     </LineIds>
-    <LineIds Name="CM_AX5000._m_Outputs">
+    <LineIds Name="CM_Servo._m_Outputs">
       <LineId Id="29" Count="0" />
       <LineId Id="7" Count="2" />
       <LineId Id="212" Count="0" />
       <LineId Id="10" Count="0" />
       <LineId Id="39" Count="0" />
     </LineIds>
-    <LineIds Name="CM_AX5000.m_MoveAbsolute">
+    <LineIds Name="CM_Servo.m_MoveAbsolute">
       <LineId Id="314" Count="1" />
       <LineId Id="294" Count="0" />
       <LineId Id="285" Count="0" />
@@ -1136,7 +1136,7 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="228" Count="0" />
       <LineId Id="12" Count="0" />
     </LineIds>
-    <LineIds Name="CM_AX5000.m_Reset">
+    <LineIds Name="CM_Servo.m_Reset">
       <LineId Id="294" Count="0" />
       <LineId Id="296" Count="0" />
       <LineId Id="293" Count="0" />
@@ -1148,7 +1148,7 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="228" Count="0" />
       <LineId Id="12" Count="0" />
     </LineIds>
-    <LineIds Name="CM_AX5000.m_Stop">
+    <LineIds Name="CM_Servo.m_Stop">
       <LineId Id="315" Count="0" />
       <LineId Id="294" Count="0" />
       <LineId Id="316" Count="0" />
@@ -1164,88 +1164,88 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="228" Count="0" />
       <LineId Id="12" Count="0" />
     </LineIds>
-    <LineIds Name="CM_AX5000.p_bActive.Get">
+    <LineIds Name="CM_Servo.p_bActive.Get">
       <LineId Id="5" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="6" Count="0" />
     </LineIds>
-    <LineIds Name="CM_AX5000.p_bAtPosition.Get">
+    <LineIds Name="CM_Servo.p_bAtPosition.Get">
       <LineId Id="5" Count="0" />
       <LineId Id="2" Count="0" />
     </LineIds>
-    <LineIds Name="CM_AX5000.p_bBusy.Get">
-      <LineId Id="5" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="6" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_AX5000.p_bCommandAborted.Get">
+    <LineIds Name="CM_Servo.p_bBusy.Get">
       <LineId Id="5" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="6" Count="0" />
     </LineIds>
-    <LineIds Name="CM_AX5000.p_bDone.Get">
+    <LineIds Name="CM_Servo.p_bCommandAborted.Get">
       <LineId Id="5" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="6" Count="0" />
     </LineIds>
-    <LineIds Name="CM_AX5000.p_bError.Get">
+    <LineIds Name="CM_Servo.p_bDone.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_Servo.p_bError.Get">
       <LineId Id="3" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="4" Count="0" />
     </LineIds>
-    <LineIds Name="CM_AX5000.p_bHomed.Get">
+    <LineIds Name="CM_Servo.p_bHomed.Get">
       <LineId Id="5" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="6" Count="0" />
     </LineIds>
-    <LineIds Name="CM_AX5000.p_bStandstill.Get">
+    <LineIds Name="CM_Servo.p_bStandstill.Get">
       <LineId Id="5" Count="0" />
       <LineId Id="2" Count="0" />
     </LineIds>
-    <LineIds Name="CM_AX5000.p_bWarning.Get">
+    <LineIds Name="CM_Servo.p_bWarning.Get">
       <LineId Id="3" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="4" Count="0" />
     </LineIds>
-    <LineIds Name="CM_AX5000.p_fPosition.Get">
+    <LineIds Name="CM_Servo.p_fPosition.Get">
       <LineId Id="3" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="4" Count="0" />
     </LineIds>
-    <LineIds Name="CM_AX5000.p_fSetTargetPosition.Get">
+    <LineIds Name="CM_Servo.p_fSetTargetPosition.Get">
       <LineId Id="3" Count="2" />
     </LineIds>
-    <LineIds Name="CM_AX5000.p_fSetTargetPosition.Set">
+    <LineIds Name="CM_Servo.p_fSetTargetPosition.Set">
       <LineId Id="6" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="7" Count="0" />
     </LineIds>
-    <LineIds Name="CM_AX5000.p_fVelocity.Get">
+    <LineIds Name="CM_Servo.p_fVelocity.Get">
       <LineId Id="3" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="4" Count="0" />
     </LineIds>
-    <LineIds Name="CM_AX5000.p_nErrorID.Get">
+    <LineIds Name="CM_Servo.p_nErrorID.Get">
       <LineId Id="5" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="6" Count="0" />
     </LineIds>
-    <LineIds Name="CM_AX5000.p_sInterlockedReasonBackward.Get">
+    <LineIds Name="CM_Servo.p_sInterlockedReasonBackward.Get">
       <LineId Id="5" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="6" Count="0" />
     </LineIds>
-    <LineIds Name="CM_AX5000.p_sInterlockedReasonBackward.Set">
+    <LineIds Name="CM_Servo.p_sInterlockedReasonBackward.Set">
       <LineId Id="6" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="7" Count="0" />
     </LineIds>
-    <LineIds Name="CM_AX5000.p_sInterlockedReasonForward.Get">
+    <LineIds Name="CM_Servo.p_sInterlockedReasonForward.Get">
       <LineId Id="5" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="6" Count="0" />
     </LineIds>
-    <LineIds Name="CM_AX5000.p_sInterlockedReasonForward.Set">
+    <LineIds Name="CM_Servo.p_sInterlockedReasonForward.Set">
       <LineId Id="6" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="7" Count="0" />

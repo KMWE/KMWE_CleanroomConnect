@@ -31,7 +31,7 @@ VAR
 	s_bSetPoweOn : BOOL;
 	s_bStaAbsPosBusy : BOOL;
 	s_fSetTargetPosition : LREAL;
-	
+	s_bTest : BOOL;
 	// Inputs
 	I_bEnable AT %I* : BOOL; //Enable from safety controller
 	I_bDetReferenceSwitch AT %I* : BOOL; //Reference-/home switch
@@ -339,10 +339,10 @@ CASE s_eSeqNcTask OF
 			s_eSeqNcTask := E_SeqNcTask.POWER;
 		ELSIF s_bReqNcHome THEN
 			s_eSeqNcTask := E_SeqNcTask.HOME;
-		ELSIF s_bReqNcMoveAbs THEN
-			s_eSeqNcTask := E_SeqNcTask.MOVE_ABS;
 		ELSIF s_bReqNcMoveVel THEN
-			s_eSeqNcTask := E_SeqNcTask.MOVE_VEL;	
+			s_eSeqNcTask := E_SeqNcTask.MOVE_VEL;
+		ELSIF s_bReqNcMoveAbs THEN
+			s_eSeqNcTask := E_SeqNcTask.MOVE_ABS;	
 		END_IF
 		
 				
@@ -354,10 +354,10 @@ CASE s_eSeqNcTask OF
 		//--s_bReqNcMoveVel := FALSE;
 		
 	E_SeqNcTask.STOP:
-		fbStop(
+(*		fbStop(
 			Axis := i_refAxis,
 			Execute := NOT(s_fbSeqNcTaskControl.q_bStaEntry),
-			Deceleration := 100.0, //i_ref_setting.fDeceleration,
+			Deceleration := i_ref_setting.fDeceleration,
 			Jerk := i_ref_setting.fJerk,
 			Options := ,
 			Done => s_bDone,
@@ -366,21 +366,21 @@ CASE s_eSeqNcTask OF
 			CommandAborted => s_bCommandAborted,
 			Error => s_bError,
 			ErrorID => s_nErrorID);	
-			
+*)			
 		IF fbStop.Done THEN
 			s_bReqNcStop := FALSE;
 			s_eSeqNcTask := E_SeqNcTask.IDLE;
 		END_IF
 			
 	E_SeqNcTask.RESET:
-		fbReset(
+(*		fbReset(
 			Axis := i_refAxis,
 			Execute := NOT(s_fbSeqNcTaskControl.q_bStaEntry),
 			Done => s_bDone,
 			Busy => s_bBusy,
 			Error => s_bError,
 			ErrorID => s_nErrorID);
-			
+*)			
 		IF fbReset.Done THEN
 			s_bReqNcReset := FALSE;
 			s_eSeqNcTask := E_SeqNcTask.IDLE;
@@ -390,7 +390,7 @@ CASE s_eSeqNcTask OF
 		s_eSeqNcTask := E_SeqNcTask.IDLE;
 			
 	E_SeqNcTask.HOME:
-		fbHome(
+(*		fbHome(
 			Axis := i_refAxis,
 			Execute := NOT(s_fbSeqNcTaskControl.q_bStaEntry),
 			Position := i_ref_setting.fPosition,
@@ -404,14 +404,14 @@ CASE s_eSeqNcTask OF
 			CommandAborted => s_bCommandAborted,
 			Error => s_bError,
 			ErrorID => s_nErrorID);
-			
+*)			
 		IF fbHome.Done THEN
 			s_bReqNcHome := FALSE;
 			s_eSeqNcTask := E_SeqNcTask.IDLE;
 		END_IF
 	
 	E_SeqNcTask.MOVE_VEL:
-		fbJog(
+(*		fbJog(
 			Axis := i_refAxis,
 			JogForward := s_fbHmiBtnJogPos.p_bStaBtn,
 			JogBackwards := s_fbHmiBtnJogNeg.p_bStaBtn,
@@ -427,7 +427,7 @@ CASE s_eSeqNcTask OF
 			CommandAborted => s_bCommandAborted,
 			Error => s_bError,
 			ErrorID => s_nErrorID);
-
+*)
 			IF NOT(s_fbHmiBtnJogPos.p_bStaBtn OR s_fbHmiBtnJogNeg.p_bStaBtn) OR fbJog.Error OR fbJog.CommandAborted THEN
 				s_bReqNcMoveVel := FALSE;
 				s_eSeqNcTask := E_SeqNcTask.IDLE;
@@ -457,10 +457,10 @@ CASE s_eSeqNcTask OF
 //--		END_IF	
 	
 	E_SeqNcTask.MOVE_ABS:
-		fbMoveAbsolute(
+(*		fbMoveAbsolute(
 			Axis := i_refAxis,
-			Execute := NOT(s_fbSeqNcTaskControl.q_bStaEntry), 
-			Position := i_ref_setting.fPosition,
+			Execute := s_bReqNcMoveAbs, //NOT(s_fbSeqNcTaskControl.q_bStaEntry), 
+			Position := s_fSetTargetPosition, //i_ref_setting.fPosition,
 			Velocity := i_ref_setting.fVelocity,
 			Acceleration := i_ref_setting.fAcceleration,
 			Deceleration := i_ref_setting.fDeceleration,
@@ -473,7 +473,7 @@ CASE s_eSeqNcTask OF
 			CommandAborted => s_bCommandAborted,
 			Error => s_bError,
 			ErrorID => s_nErrorID);
-		
+*)		
 		IF fbMoveAbsolute.Done OR fbMoveAbsolute.Error OR fbMoveAbsolute.CommandAborted THEN
 			s_bReqNcMoveAbs := FALSE;
 			s_eSeqNcTask := E_SeqNcTask.IDLE;
@@ -481,8 +481,83 @@ CASE s_eSeqNcTask OF
 		
 END_CASE
 
+fbReset(
+	Axis := i_refAxis,
+	Execute := s_bReqNcReset,
+	Done => s_bDone,
+	Busy => s_bBusy,
+	Error => s_bError,
+	ErrorID => s_nErrorID);
+
+fbHome(
+	Axis := i_refAxis,
+	Execute := s_bReqNcHome,
+	Position := i_ref_setting.fPosition,
+	HomingMode := i_mcHomingMode,
+	BufferMode := i_mcBufferMode,
+	Options := ,
+	bCalibrationCam := I_bDetReferenceSwitch,
+	Done => s_bDone,
+	Busy => s_bBusy,
+	Active => s_bActive,
+	CommandAborted => s_bCommandAborted,
+	Error => s_bError,
+	ErrorID => s_nErrorID);	
+	
+fbStop(
+	Axis := i_refAxis,
+	Execute := s_bReqNcStop,
+	Deceleration := i_ref_setting.fDeceleration,
+	Jerk := i_ref_setting.fJerk,
+	Options := ,
+	Done => s_bDone,
+	Busy => s_bBusy,
+	Active => s_bActive,
+	CommandAborted => s_bCommandAborted,
+	Error => s_bError,
+	ErrorID => s_nErrorID);
+
+fbJog(
+	Axis := i_refAxis,
+	JogForward := s_fbHmiBtnJogPos.p_bStaBtn,
+	JogBackwards := s_fbHmiBtnJogNeg.p_bStaBtn,
+	Mode := MC_JOGMODE_STANDARD_SLOW,
+	Position := i_ref_setting.fPosition,
+	Velocity := i_ref_setting.fVelocity,
+	Acceleration := i_ref_setting.fAcceleration,
+	Deceleration := i_ref_setting.fDeceleration,
+	Jerk := i_ref_setting.fJerk,
+	Done => s_bDone,
+	Busy => s_bBusy,
+	Active => s_bActive,
+	CommandAborted => s_bCommandAborted,
+	Error => s_bError,
+	ErrorID => s_nErrorID);
 
 	
+	IF i_eCtrlMode = E_CtrlMode.MAINTENANCE THEN
+		fbMoveAbsolute.Position := s_fSetTargetPosition;
+	ELSE 
+		i_ref_setting.fPosition := i_ref_setting.fPosition;
+	END_IF
+	
+fbMoveAbsolute(
+	Axis := i_refAxis,
+	Execute := s_bReqNcMoveAbs, //NOT(s_fbSeqNcTaskControl.q_bStaEntry), 
+	Position := ,
+	Velocity := i_ref_setting.fVelocity,
+	Acceleration := i_ref_setting.fAcceleration,
+	Deceleration := i_ref_setting.fDeceleration,
+	Jerk := i_ref_setting.fJerk,
+	BufferMode := i_mcBufferMode,
+	Options := ,
+	Done => s_bDone,
+	Busy => s_bBusy,
+	Active => s_bActive,
+	CommandAborted => s_bCommandAborted,
+	Error => s_bError,
+	ErrorID => s_nErrorID);
+
 _m_Devices := TRUE;
 ]]></ST>
       </Implementation>
@@ -892,6 +967,8 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
+
+
 fbMoveAbsolute(
 	Axis := i_refAxis,
 	Execute := i_bExecute,// AND NOT(fbMoveAbsolute.Done OR fbMoveAbsolute.Busy OR fbMoveAbsolute.Error), 
@@ -1093,7 +1170,7 @@ m_MC_WriteParameter := s_bDone;
       <Declaration><![CDATA[//Returms TRUE if move absolute is done
 METHOD PUBLIC m_MoveAbsolute : BOOL
 VAR_INPUT
-	i_bExecute : BOOL;
+//--	i_bExecute : BOOL;
 	i_fPosition : LREAL; 
 	i_fVelocity : LREAL; 
 	i_fAcceleration : LREAL; 
@@ -1110,14 +1187,14 @@ END_VAR
       <Implementation>
         <ST><![CDATA[
 //Inputs
-fbMoveAbsolute.Execute := i_bExecute;
+//--fbMoveAbsolute.Execute := i_bExecute;
 fbMoveAbsolute.Position := i_fPosition;
 fbMoveAbsolute.Velocity := i_fVelocity;
 fbMoveAbsolute.Acceleration := i_fAcceleration;
 fbMoveAbsolute.Deceleration := i_fDeceleration;
 fbMoveAbsolute.Jerk := i_fJerk;
 
-s_bReqNcMoveAbs S= i_bExecute;
+s_bReqNcMoveAbs := TRUE;
 
 //Outputs
 o_Busy := fbMoveAbsolute.Busy;
@@ -1427,11 +1504,10 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="511" Count="1" />
       <LineId Id="514" Count="0" />
       <LineId Id="513" Count="0" />
-      <LineId Id="516" Count="0" />
-      <LineId Id="515" Count="0" />
-      <LineId Id="518" Count="0" />
-      <LineId Id="517" Count="0" />
+      <LineId Id="516" Count="1" />
       <LineId Id="510" Count="0" />
+      <LineId Id="720" Count="0" />
+      <LineId Id="719" Count="0" />
       <LineId Id="508" Count="0" />
       <LineId Id="574" Count="0" />
       <LineId Id="608" Count="0" />
@@ -1492,7 +1568,27 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="598" Count="0" />
       <LineId Id="425" Count="0" />
       <LineId Id="408" Count="0" />
-      <LineId Id="405" Count="1" />
+      <LineId Id="696" Count="0" />
+      <LineId Id="698" Count="5" />
+      <LineId Id="697" Count="0" />
+      <LineId Id="705" Count="13" />
+      <LineId Id="704" Count="0" />
+      <LineId Id="684" Count="11" />
+      <LineId Id="665" Count="0" />
+      <LineId Id="667" Count="0" />
+      <LineId Id="669" Count="14" />
+      <LineId Id="668" Count="0" />
+      <LineId Id="721" Count="0" />
+      <LineId Id="648" Count="0" />
+      <LineId Id="722" Count="0" />
+      <LineId Id="724" Count="0" />
+      <LineId Id="727" Count="1" />
+      <LineId Id="725" Count="0" />
+      <LineId Id="723" Count="0" />
+      <LineId Id="650" Count="12" />
+      <LineId Id="666" Count="0" />
+      <LineId Id="664" Count="0" />
+      <LineId Id="649" Count="0" />
       <LineId Id="330" Count="0" />
       <LineId Id="5" Count="0" />
       <LineId Id="13" Count="0" />
@@ -1666,6 +1762,7 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="32" Count="0" />
     </LineIds>
     <LineIds Name="CM_AX5000.m_MC_MoveAbsolute">
+      <LineId Id="285" Count="1" />
       <LineId Id="262" Count="0" />
       <LineId Id="210" Count="15" />
       <LineId Id="259" Count="0" />

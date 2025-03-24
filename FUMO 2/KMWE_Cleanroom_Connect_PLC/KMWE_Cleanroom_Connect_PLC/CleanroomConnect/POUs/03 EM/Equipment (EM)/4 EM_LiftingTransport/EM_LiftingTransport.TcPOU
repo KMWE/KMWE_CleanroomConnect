@@ -123,12 +123,11 @@ VAR
 //Alarms
 	s_sReason : STRING;
 	
-	//??s_fbAlarmHandlerTest : FB_AlarmHandler;
-	//??s_fbAlarmHandlerLiftDrive : FB_AlarmHandler;
-	//??s_fbAlarmHandlerTransportDrive : FB_AlarmHandler;
+	s_fbAlarmHandlerLiftDrive : FB_AlarmHandler;
+	s_fbAlarmHandlerTransportDrive : FB_AlarmHandler;
 	
-	//??s_bErrLiftDrive : BOOL;
-	//??s_bErrTransportDrive : BOOL;
+	s_bErrLiftDrive : BOOL;
+	s_bErrTransportDrive : BOOL;
 	
 	//Warnings
 	s_fbAlarmHandlerSafetyDoorNotClosed : FB_AlarmHandler;
@@ -143,7 +142,7 @@ VAR
 	s_fbSeqLiftingTransportControl : FB_SeqControl;
 
 	//--s_ReqMoveAbs : BOOL := FALSE;
-	s_ReqStop : BOOL := FALSE;
+	//--s_ReqStop : BOOL := FALSE;
 	
 	s_bActionDone : BOOL := FALSE;
 	s_bNextStep : BOOL := FALSE;
@@ -204,20 +203,18 @@ IF NOT SUPER^._m_Alarms() THEN
 END_IF
 
 //Set alarm bits
-//??s_bErrLiftDrive := s_cmLift.p_bError;
-//??s_bErrTransportDrive := s_cmTransport.p_bError;
+s_bErrLiftDrive S= s_cmLift.p_bError;
+s_bErrTransportDrive S= s_cmTransport.p_bError;
 
 
 // Alarm Handlers
-//s_fbAlarmHandlerTest(i_bStaActive := s_bErrLiftDrive, i_sAlarmText := 'asdadadasda');
-
-//??s_fbAlarmHandlerLiftDrive(
-//??	i_bStaActive := s_bErrLiftDrive, 
-//??	i_sAlarmText := CONCAT(i_sEmName, CONCAT( ': Scissor Lift Drive error: ', s_sReason)));
+s_fbAlarmHandlerLiftDrive(
+	i_bStaActive := s_bErrLiftDrive, 
+	i_sAlarmText := CONCAT(i_sEmName, CONCAT( ': Scissor Lift Drive error: ', s_sReason)));
 	
-//??s_fbAlarmHandlerTransportDrive(
-//??	i_bStaActive := s_bErrTransportDrive, 
-//??	i_sAlarmText := CONCAT(i_sEmName, CONCAT( ': Transport Unit Drive error: ', s_sReason)));
+s_fbAlarmHandlerTransportDrive(
+	i_bStaActive := s_bErrTransportDrive, 
+	i_sAlarmText := CONCAT(i_sEmName, CONCAT( ': Transport Unit Drive error: ', s_sReason)));
 
 // Reset warnings
 IF i_bCmdReset THEN
@@ -232,7 +229,9 @@ s_bStaError :=
 //??	OR s_fbAlarmHandlerTransportDrive.q_bStaActive;
 	
 s_bStaWarning :=
-	s_fbAlarmHandlerSafetyDoorNotClosed.q_bStaActive;
+	s_fbAlarmHandlerSafetyDoorNotClosed.q_bStaActive
+	OR s_cmLift.p_bWarning
+	OR s_cmTransport.p_bWarning;
 	
 _m_Alarms := TRUE;
 ]]></ST>
@@ -1400,34 +1399,19 @@ CASE s_eSeqLiftingTransport OF
 	
 	E_SeqLiftingTransport.STOP:
 		IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
-			s_ReqStop := FALSE;
-				IF s_ePreviousStep > E_SeqLiftingTransport.START
-					AND s_ePreviousStep < E_SeqLiftingTransport.ERROR THEN
-						s_eResumeStep := s_ePreviousStep;
-				END_IF
-			ELSE
-				s_ReqStop := TRUE;	
+			s_cmLift.m_Stop(
+				i_fDeceleration := i_ref_stSettings.stLiftSpeedProfilePositioning.fDeceleration,
+				i_fJerk := i_ref_stSettings.stLiftSpeedProfilePositioning.fJerk);
+
+			s_cmTransport.m_Stop(
+				i_fDeceleration := i_ref_stSettings.stTransportSpeedProfilePositioning.fDeceleration,
+				i_fJerk := i_ref_stSettings.stTransportSpeedProfilePositioning.fJerk);	
+		
+			IF s_ePreviousStep > E_SeqLiftingTransport.START
+				AND s_ePreviousStep < E_SeqLiftingTransport.ERROR THEN
+					s_eResumeStep := s_ePreviousStep;
+			END_IF
 		END_IF
-	
-		s_cmLift.m_MC_Stop(
-			i_bExecute := s_ReqStop,
-			i_fDeceleration := i_ref_stSettings.stLiftSpeedProfilePositioning.fDeceleration,
-			i_fJerk := i_ref_stSettings.stLiftSpeedProfilePositioning.fJerk);
-		
-		s_cmTransport.m_MC_Stop(
-			i_bExecute := s_ReqStop,
-			i_fDeceleration := i_ref_stSettings.stTransportSpeedProfilePositioning.fDeceleration,
-			i_fJerk := i_ref_stSettings.stTransportSpeedProfilePositioning.fJerk);
-		
-//--		IF _m_StopLiftAndTransport() THEN
-//--			s_eSeqLiftingTransport := E_SeqLiftingTransport.IDLE;
-//--		END_IF
-		
-		//--IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
-//--			_m_StopLiftAndTransport();
-		//--END_IF
-	
-		
 		
 		IF (s_cmLift.p_bStandstill AND s_cmTransport.p_bStandstill) THEN
 			s_eSeqLiftingTransport := E_SeqLiftingTransport.START;
@@ -1444,15 +1428,13 @@ CASE s_eSeqLiftingTransport OF
 	//--	END_IF
 				
 	E_SeqLiftingTransport.ERROR:
-	;
-	//++	IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
-	//++		IF s_ePreviousStep > E_SeqLiftingTransport.START
-	//++			AND s_ePreviousStep < E_SeqLiftingTransport.ERROR THEN
-	//++			s_eResumeStep := s_ePreviousStep;
-	//++		ELSE 
-	//++			s_eResumeStep := E_SeqLiftingTransport.READY;
-	//++		END_IF
-	//++	END_IF
+		IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
+			IF s_ePreviousStep > E_SeqLiftingTransport.START
+				AND s_ePreviousStep < E_SeqLiftingTransport.ERROR THEN
+					s_eResumeStep := s_ePreviousStep;
+			END_IF
+		END_IF
+	
 END_CASE
 ]]></ST>
       </Implementation>
@@ -1578,13 +1560,11 @@ END_IF
 //Stopping control modules
 IF (i_eCtrlMode = E_CtrlMode.MAINTENANCE) AND (i_eCtrlState = E_CtrlState.STOPPING) THEN
 	//Stop both axes
-	s_cmLift.m_MC_Stop(
-		i_bExecute := TRUE,
+	s_cmLift.m_Stop(
 		i_fDeceleration := i_ref_stSettings.stLiftSpeedProfilePositioning.fDeceleration,
 		i_fJerk := i_ref_stSettings.stLiftSpeedProfilePositioning.fJerk);
 		
-	s_cmTransport.m_MC_Stop(
-		i_bExecute := TRUE,
+	s_cmTransport.m_Stop(
 		i_fDeceleration := i_ref_stSettings.stTransportSpeedProfilePositioning.fDeceleration,
 		i_fJerk := i_ref_stSettings.stTransportSpeedProfilePositioning.fJerk);
 END_IF
@@ -1723,14 +1703,12 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="104" Count="0" />
       <LineId Id="93" Count="0" />
       <LineId Id="20" Count="0" />
-      <LineId Id="108" Count="0" />
-      <LineId Id="107" Count="0" />
       <LineId Id="81" Count="0" />
       <LineId Id="46" Count="0" />
       <LineId Id="44" Count="0" />
       <LineId Id="48" Count="0" />
       <LineId Id="82" Count="1" />
-      <LineId Id="49" Count="0" />
+      <LineId Id="110" Count="0" />
       <LineId Id="42" Count="0" />
       <LineId Id="11" Count="0" />
       <LineId Id="33" Count="0" />
@@ -1743,6 +1721,7 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="88" Count="0" />
       <LineId Id="71" Count="0" />
       <LineId Id="73" Count="0" />
+      <LineId Id="111" Count="1" />
       <LineId Id="32" Count="0" />
       <LineId Id="10" Count="0" />
       <LineId Id="14" Count="0" />
@@ -2336,28 +2315,23 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="3230" Count="1" />
       <LineId Id="2091" Count="0" />
       <LineId Id="2432" Count="0" />
-      <LineId Id="3346" Count="0" />
+      <LineId Id="3669" Count="0" />
+      <LineId Id="3671" Count="1" />
+      <LineId Id="3674" Count="2" />
+      <LineId Id="3673" Count="0" />
+      <LineId Id="3670" Count="0" />
       <LineId Id="2433" Count="3" />
-      <LineId Id="3347" Count="1" />
-      <LineId Id="2430" Count="1" />
-      <LineId Id="3336" Count="7" />
-      <LineId Id="3334" Count="1" />
-      <LineId Id="2165" Count="0" />
-      <LineId Id="2167" Count="1" />
-      <LineId Id="2287" Count="0" />
-      <LineId Id="2157" Count="0" />
-      <LineId Id="2159" Count="1" />
-      <LineId Id="2158" Count="0" />
-      <LineId Id="3345" Count="0" />
+      <LineId Id="2430" Count="0" />
       <LineId Id="3344" Count="0" />
       <LineId Id="2162" Count="2" />
       <LineId Id="3268" Count="3" />
       <LineId Id="2095" Count="6" />
       <LineId Id="2417" Count="0" />
+      <LineId Id="3682" Count="0" />
+      <LineId Id="3679" Count="2" />
       <LineId Id="2474" Count="0" />
-      <LineId Id="2419" Count="5" />
-      <LineId Id="2418" Count="0" />
-      <LineId Id="2425" Count="0" />
+      <LineId Id="3683" Count="0" />
+      <LineId Id="3678" Count="0" />
       <LineId Id="2102" Count="0" />
       <LineId Id="89" Count="0" />
     </LineIds>
@@ -2403,8 +2377,9 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="2991" Count="5" />
       <LineId Id="3035" Count="0" />
       <LineId Id="2997" Count="0" />
-      <LineId Id="3024" Count="3" />
-      <LineId Id="3029" Count="2" />
+      <LineId Id="3025" Count="2" />
+      <LineId Id="3029" Count="0" />
+      <LineId Id="3031" Count="0" />
       <LineId Id="3028" Count="0" />
       <LineId Id="2998" Count="6" />
       <LineId Id="2941" Count="0" />

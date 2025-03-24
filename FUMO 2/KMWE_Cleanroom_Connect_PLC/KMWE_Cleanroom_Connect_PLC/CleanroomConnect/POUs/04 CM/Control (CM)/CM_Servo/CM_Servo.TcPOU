@@ -632,11 +632,12 @@ _m_Outputs := TRUE;
       <Declaration><![CDATA[//Returms TRUE if move absolute is done
 METHOD PUBLIC m_MoveAbsolute : BOOL
 VAR_INPUT
-	i_fPosition : LREAL; 
-	i_fVelocity : LREAL; 
-	i_fAcceleration : LREAL; 
-	i_fDeceleration : LREAL; 
-	i_fJerk : LREAL;
+	i_stPositioningProfile : ST_PositioningProfile;
+//**	i_fPosition : LREAL; 
+//**	i_fVelocity : LREAL; 
+//**	i_fAcceleration : LREAL; 
+//**	i_fDeceleration : LREAL; 
+//**	i_fJerk : LREAL;
 END_VAR
 VAR_OUTPUT
 	o_Busy : BOOL;
@@ -649,11 +650,11 @@ END_VAR
 s_bReqNcMoveAbs := TRUE;
 
 //Inputs
-fbMoveAbsolute.Position := i_fPosition;
-fbMoveAbsolute.Velocity := i_fVelocity;
-fbMoveAbsolute.Acceleration := i_fAcceleration;
-fbMoveAbsolute.Deceleration := i_fDeceleration;
-fbMoveAbsolute.Jerk := i_fJerk;
+fbMoveAbsolute.Position := i_stPositioningProfile.fPosition; //i_fPosition;
+fbMoveAbsolute.Velocity := i_stPositioningProfile.fVelocity; //i_fVelocity;
+fbMoveAbsolute.Acceleration := i_stPositioningProfile.fAcceleration; //i_fAcceleration;
+fbMoveAbsolute.Deceleration := i_stPositioningProfile.fDeceleration; //i_fDeceleration;
+fbMoveAbsolute.Jerk := i_stPositioningProfile.fJerk; //i_fJerk;
 
 //Outputs
 o_Busy := fbMoveAbsolute.Busy;

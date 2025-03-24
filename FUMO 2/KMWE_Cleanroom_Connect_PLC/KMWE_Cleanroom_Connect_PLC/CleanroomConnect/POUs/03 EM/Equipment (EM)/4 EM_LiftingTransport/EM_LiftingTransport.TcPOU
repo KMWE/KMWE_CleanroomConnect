@@ -26,7 +26,6 @@ VAR_INPUT
 	s_arr_bTest : ARRAY[0..15] OF BOOL;
 	s_arr_fTest : ARRAY[0..7] OF LREAL; 
 	
-	
 	fSetLiftHeight : LREAL;
 	fSetSpindPos : LREAL;
 	
@@ -284,7 +283,8 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF NOT i_bReqEnable THEN 
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
 	RETURN;
 END_IF
 
@@ -312,7 +312,8 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF NOT i_bReqEnable THEN 
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
 	RETURN;
 END_IF
 
@@ -607,7 +608,9 @@ s_cmTransport.p_fSetTargetPosition := s_fSetTransportPosition;
 //Lift
 fbIlckHandlerLiftDown.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckLiftDown.p_bInterlocked;
 fbIlckHandlerLiftDown.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckLiftDown.p_sReason;
-fbIlckHandlerLiftDown.i_stInterlockList.arr_Interlocks[1].bState := FALSE;//NOT F_InRange(i_ref_stSettings.fTransportRetracted, s_cmTransport.p_fPosition, 1.0); //Is transport at safe position to move down.
+fbIlckHandlerLiftDown.i_stInterlockList.arr_Interlocks[1].bState := 
+	( (i_eCtrlMode <> E_CtrlMode.MANUAL) AND (i_eCtrlMode <> E_CtrlMode.AUTOMATIC) )
+	AND NOT(F_InRange(i_ref_stSettings.arr_TransportPositioningProfile[0].fPosition, s_cmTransport.p_fPosition, 0.5));
 fbIlckHandlerLiftDown.i_stInterlockList.arr_Interlocks[1].sReason := 'Transport not at retracted position';
 fbIlckHandlerLiftDown();
 
@@ -644,7 +647,10 @@ fbIlckHandlerTransportRetract();
 
 fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckTransportExtract.p_bInterlocked;
 fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckTransportExtract.p_sReason;
-fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[1].bState := NOT(F_InRange(i_ref_stSettings.arr_LiftPositioningProfile[1].fPosition, s_cmLift.p_fPosition, 0.5)); 
+//fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[1].bState := NOT(F_InRange(i_ref_stSettings.arr_LiftPositioningProfile[1].fPosition, s_cmLift.p_fPosition, 0.5));
+fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[1].bState := 
+	( (i_eCtrlMode <> E_CtrlMode.MANUAL) AND (i_eCtrlMode <> E_CtrlMode.AUTOMATIC) )
+	AND s_cmLift.p_fPosition < i_ref_stSettings.arr_LiftPositioningProfile[1].fPosition; 
 fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[1].sReason := 'Lift not high enough';
 fbIlckHandlerTransportExtract();
 
@@ -776,11 +782,7 @@ VAR
 	fTargetPosition : LREAL := 0.0;
 	s_bError : BOOL;
 	s_nError : UDINT;
-	
-	s_nProfile : USINT ;
-	
 END_VAR
-
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
@@ -834,21 +836,19 @@ CASE s_eSeqLiftingTransport OF
 // READY //////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqLiftingTransport.READY:
 		IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
-			;//--_m_PowerAxes(FALSE);
+			;
 		END_IF
 		
 		IF s_bReqGoToIdle THEN
 			IF _m_CmdGoToIdle(i_refReason := s_sMessage) THEN
-				//--IF _m_PowerAxes(TRUE) THEN
-					s_eSeqLiftingTransport := E_SeqLiftingTransport.TRANSPORT_TO_IDLE;
-				//--END_IF	
+				s_eSeqLiftingTransport := E_SeqLiftingTransport.TRANSPORT_TO_IDLE;
 			//ELSE	If failed (command not allowed): the message will be written with the interlock reason
 			END_IF
 			s_bReqGoToIdle := FALSE;
 		
 		ELSIF s_bReqPickTrolleyFromTB THEN
 			IF _m_CmdPickTrolleyFromTB(i_refReason := s_sMessage) THEN
-				s_eSeqLiftingTransport := E_SeqLiftingTransport.LIFT_PRE_PICK_FROM_TB;
+				
 			//ELSE	If failed (command not allowed): the message will be written with the interlock reason
 			END_IF
 						
@@ -864,13 +864,7 @@ CASE s_eSeqLiftingTransport OF
 
 	E_SeqLiftingTransport.TRANSPORT_TO_IDLE:
 		IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
-			s_nProfile := 0;
-			s_cmTransport.m_MoveAbsolute(
-				i_fPosition := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fPosition,
-				i_fVelocity := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fVelocity,
-				i_fAcceleration := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fAcceleration,
-				i_fDeceleration := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fDeceleration,
-				i_fJerk := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fJerk);
+			s_cmTransport.m_MoveAbsolute(i_stPositioningProfile := i_ref_stSettings.arr_TransportPositioningProfile[0]);
 		END_IF
 					
 		s_bActionDone S= s_cmTransport.p_bDone;
@@ -885,13 +879,7 @@ CASE s_eSeqLiftingTransport OF
 			
 	E_SeqLiftingTransport.LIFT_TO_IDLE:	
 		IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
-			s_nProfile := 0;
-			s_cmLift.m_MoveAbsolute(
-				i_fPosition := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fPosition,
-				i_fVelocity := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fVelocity,
-				i_fAcceleration := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fAcceleration,
-				i_fDeceleration := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fDeceleration,
-				i_fJerk := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fJerk);
+			s_cmLift.m_MoveAbsolute(i_stPositioningProfile := i_ref_stSettings.arr_LiftPositioningProfile[0]); 
 		END_IF
 		
 		s_bActionDone S= s_cmLift.p_bDone;
@@ -907,36 +895,24 @@ CASE s_eSeqLiftingTransport OF
 /// PICK TROLLEY FROM TB /////////////////////////////////////////////////////////
 	E_SeqLiftingTransport.LIFT_PRE_PICK_FROM_TB:
 		IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
-			s_nProfile := 1;	
-			s_cmLift.m_MoveAbsolute(
-				i_fPosition := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fPosition,
-				i_fVelocity := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fVelocity,
-				i_fAcceleration := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fAcceleration,
-				i_fDeceleration := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fDeceleration,
-				i_fJerk := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fJerk);
-
+			s_cmLift.m_MoveAbsolute(i_stPositioningProfile := i_ref_stSettings.arr_LiftPositioningProfile[1]);
 				s_bStaTrolleyPlacedInTB := FALSE;
 		END_IF
 					
 		s_bActionDone S= s_cmLift.p_bDone;
 			
-		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
+		{warning 'TODO: Added collision avoidance sensor, first check ik transport is allowed to move forward'}
+		//Generate warning if not the case, think about what action should be possible for the operator to solve the problem 
+		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) AND NOT(s_bStaCollisionAvoidanceSensor) THEN
 			s_bNextStep := FALSE;
-			s_eSeqLiftingTransport := E_SeqLiftingTransport.TRANSPORT_PRE_PICK_FROM_TB;
-		
+			s_eSeqLiftingTransport := E_SeqLiftingTransport.TRANSPORT_PRE_PICK_FROM_TB;	
 		ELSIF s_bError THEN
 			s_eSeqLiftingTransport := E_SeqLiftingTransport.ERROR;
 		END_IF
 			
 	E_SeqLiftingTransport.TRANSPORT_PRE_PICK_FROM_TB:
 		IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
-			s_nProfile := 1;		
-			s_cmTransport.m_MoveAbsolute(
-				i_fPosition := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fPosition,
-				i_fVelocity := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fVelocity,
-				i_fAcceleration := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fAcceleration,
-				i_fDeceleration := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fDeceleration,
-				i_fJerk := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fJerk);
+			s_cmTransport.m_MoveAbsolute(i_stPositioningProfile := i_ref_stSettings.arr_TransportPositioningProfile[1]);
 		END_IF
 			
 		s_bActionDone S= s_cmTransport.p_bDone;
@@ -951,13 +927,7 @@ CASE s_eSeqLiftingTransport OF
 		
 	E_SeqLiftingTransport.TRANSPORT_PICK_FROM_TB:
 		IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
-			s_nProfile := 2;
-			s_cmTransport.m_MoveAbsolute(
-				i_fPosition := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fPosition,
-				i_fVelocity := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fVelocity,
-				i_fAcceleration := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fAcceleration,
-				i_fDeceleration := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fDeceleration,
-				i_fJerk := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fJerk);
+			s_cmTransport.m_MoveAbsolute(i_stPositioningProfile := i_ref_stSettings.arr_TransportPositioningProfile[2]);
 		END_IF
 	
 		s_bActionDone S= s_cmTransport.p_bDone;
@@ -972,13 +942,7 @@ CASE s_eSeqLiftingTransport OF
 	
 	E_SeqLiftingTransport.LIFT_PICK_FROM_TB:
 		IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
-			s_nProfile := 2;
-			s_cmLift.m_MoveAbsolute(
-				i_fPosition := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fPosition,
-				i_fVelocity := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fVelocity,
-				i_fAcceleration := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fAcceleration,
-				i_fDeceleration := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fDeceleration,
-				i_fJerk := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fJerk);
+			s_cmLift.m_MoveAbsolute(i_stPositioningProfile := i_ref_stSettings.arr_LiftPositioningProfile[2]);
 		END_IF
 	
 		s_bActionDone S= s_cmLift.p_bDone;
@@ -1003,13 +967,7 @@ CASE s_eSeqLiftingTransport OF
 			
 	E_SeqLiftingTransport.LIFT_RAISE_FROM_TB:
 		IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
-			s_nProfile := 3;
-			s_cmLift.m_MoveAbsolute(
-				i_fPosition := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fPosition,
-				i_fVelocity := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fVelocity,
-				i_fAcceleration := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fAcceleration,
-				i_fDeceleration := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fDeceleration,
-				i_fJerk := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fJerk);
+			s_cmLift.m_MoveAbsolute(i_stPositioningProfile := i_ref_stSettings.arr_LiftPositioningProfile[3]);
 		END_IF
 		
 		s_bActionDone S= s_cmLift.p_bDone;
@@ -1025,13 +983,7 @@ CASE s_eSeqLiftingTransport OF
 /// PLACE TROLLEY CABIN ////////////////////////////////////////////////////////	
 	E_SeqLiftingTransport.TRANSPORT_PLACE_IN_CABIN:
 		IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
-			s_nProfile := 3;
-			s_cmTransport.m_MoveAbsolute(
-				i_fPosition := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fPosition,
-				i_fVelocity := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fVelocity,
-				i_fAcceleration := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fAcceleration,
-				i_fDeceleration := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fDeceleration,
-				i_fJerk := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fJerk);
+			s_cmTransport.m_MoveAbsolute(i_stPositioningProfile := i_ref_stSettings.arr_TransportPositioningProfile[3]);
 		END_IF
 		
 		s_bActionDone S= s_cmTransport.p_bDone;
@@ -1046,13 +998,7 @@ CASE s_eSeqLiftingTransport OF
 		
 	E_SeqLiftingTransport.LIFT_PRE_PLACE_IN_CABIN:
 		IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
-			s_nProfile := 4;
-			s_cmLift.m_MoveAbsolute(
-				i_fPosition := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fPosition,
-				i_fVelocity := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fVelocity,
-				i_fAcceleration := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fAcceleration,
-				i_fDeceleration := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fDeceleration,
-				i_fJerk := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fJerk);
+			s_cmLift.m_MoveAbsolute(i_stPositioningProfile := i_ref_stSettings.arr_LiftPositioningProfile[4]);
 		END_IF
 	
 		s_bActionDone S= s_cmLift.p_bDone;
@@ -1067,13 +1013,7 @@ CASE s_eSeqLiftingTransport OF
 		
 	E_SeqLiftingTransport.LIFT_PLACE_IN_CABIN:
 		IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
-			s_nProfile := 5;
-			s_cmLift.m_MoveAbsolute(
-				i_fPosition := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fPosition,
-				i_fVelocity := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fVelocity,
-				i_fAcceleration := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fAcceleration,
-				i_fDeceleration := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fDeceleration,
-				i_fJerk := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fJerk);
+			s_cmLift.m_MoveAbsolute(i_stPositioningProfile := i_ref_stSettings.arr_LiftPositioningProfile[5]);
 		END_IF
 	
 		s_bActionDone S= s_cmLift.p_bDone;
@@ -1095,14 +1035,7 @@ CASE s_eSeqLiftingTransport OF
 /// PICK TROLLEY FROM CABIN //////////////////////////////////////////////////////		
 	E_SeqLiftingTransport.LIFT_PRE_PICK_FROM_CABIN:
 		IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
-			s_nProfile := 6;
-		s_cmLift.m_MoveAbsolute(
-			i_fPosition := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fPosition,
-			i_fVelocity := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fVelocity,
-			i_fAcceleration := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fAcceleration,
-			i_fDeceleration := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fDeceleration,
-			i_fJerk := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fJerk);
-		
+			s_cmLift.m_MoveAbsolute(i_stPositioningProfile := i_ref_stSettings.arr_LiftPositioningProfile[6]);
 			s_bStaTrolleyPickedFromTB := FALSE;
 		END_IF
 	
@@ -1118,13 +1051,7 @@ CASE s_eSeqLiftingTransport OF
 		
 	E_SeqLiftingTransport.LIFT_PICK_FROM_CABIN:
 		IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
-			s_nProfile := 7;
-		s_cmLift.m_MoveAbsolute(
-			i_fPosition := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fPosition,
-			i_fVelocity := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fVelocity,
-			i_fAcceleration := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fAcceleration,
-			i_fDeceleration := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fDeceleration,
-			i_fJerk := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fJerk);
+			s_cmLift.m_MoveAbsolute(i_stPositioningProfile := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile]);
 		END_IF
 	
 		s_bActionDone S= s_cmLift.p_bDone;
@@ -1139,13 +1066,7 @@ CASE s_eSeqLiftingTransport OF
 		
 	E_SeqLiftingTransport.LIFT_RAISE_FROM_CABIN:
 		IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
-			s_nProfile := 8;
-			s_cmLift.m_MoveAbsolute(
-				i_fPosition := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fPosition,
-				i_fVelocity := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fVelocity,
-				i_fAcceleration := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fAcceleration,
-				i_fDeceleration := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fDeceleration,
-				i_fJerk := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fJerk);
+			s_cmLift.m_MoveAbsolute(i_stPositioningProfile := i_ref_stSettings.arr_LiftPositioningProfile[8]); 
 		END_IF
 	
 		s_bActionDone S= s_cmLift.p_bDone;
@@ -1161,13 +1082,7 @@ CASE s_eSeqLiftingTransport OF
 /// PLACE TROLLEY IN TB //////////////////////////////////////////////////////
 	E_SeqLiftingTransport.TRANSPORT_PRE_PLACE_IN_TB:
 		IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
-			s_nProfile := 4;
-			s_cmTransport.m_MoveAbsolute(
-				i_fPosition := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fPosition,
-				i_fVelocity := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fVelocity,
-				i_fAcceleration := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fAcceleration,
-				i_fDeceleration := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fDeceleration,
-				i_fJerk := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fJerk);
+			s_cmTransport.m_MoveAbsolute(i_stPositioningProfile := i_ref_stSettings.arr_TransportPositioningProfile[4]);
 		END_IF
 	
 		s_bActionDone S= s_cmTransport.p_bDone;
@@ -1182,13 +1097,7 @@ CASE s_eSeqLiftingTransport OF
 	
 	E_SeqLiftingTransport.TRANSPORT_PLACE_IN_TB:
 		IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
-			s_nProfile := 5;
-			s_cmTransport.m_MoveAbsolute(
-				i_fPosition := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fPosition,
-				i_fVelocity := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fVelocity,
-				i_fAcceleration := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fAcceleration,
-				i_fDeceleration := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fDeceleration,
-				i_fJerk := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fJerk);
+			s_cmTransport.m_MoveAbsolute(i_stPositioningProfile := i_ref_stSettings.arr_TransportPositioningProfile[5]);
 		END_IF
 	
 		s_bActionDone S= s_cmTransport.p_bDone;
@@ -1203,13 +1112,7 @@ CASE s_eSeqLiftingTransport OF
 
 	E_SeqLiftingTransport.LIFT_PRE_PLACE_IN_TB:
 		IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
-			s_nProfile := 9;
-			s_cmLift.m_MoveAbsolute(
-				i_fPosition := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fPosition,
-				i_fVelocity := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fVelocity,
-				i_fAcceleration := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fAcceleration,
-				i_fDeceleration := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fDeceleration,
-				i_fJerk := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fJerk);
+			s_cmLift.m_MoveAbsolute(i_stPositioningProfile := i_ref_stSettings.arr_LiftPositioningProfile[9]);
 		END_IF
 	
 		s_bActionDone S= s_cmLift.p_bDone;
@@ -1224,13 +1127,7 @@ CASE s_eSeqLiftingTransport OF
 			
 	E_SeqLiftingTransport.LIFT_PLACE_IN_TB:
 		IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
-			s_nProfile := 10;
-			s_cmLift.m_MoveAbsolute(
-				i_fPosition := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fPosition,
-				i_fVelocity := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fVelocity,
-				i_fAcceleration := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fAcceleration,
-				i_fDeceleration := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fDeceleration,
-				i_fJerk := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fJerk);
+			s_cmLift.m_MoveAbsolute(i_stPositioningProfile := i_ref_stSettings.arr_LiftPositioningProfile[10]); 
 		END_IF
 	
 		s_bActionDone S= s_cmLift.p_bDone;
@@ -1255,13 +1152,7 @@ CASE s_eSeqLiftingTransport OF
 	
 	E_SeqLiftingTransport.TRANSPORT_RETURN_IN_CABIN:
 		IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
-			s_nProfile := 0; // als [0] en [5] hetzelfde zijn dan [0] gebruiken
-			s_cmTransport.m_MoveAbsolute(
-				i_fPosition := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fPosition,
-				i_fVelocity := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fVelocity,
-				i_fAcceleration := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fAcceleration,
-				i_fDeceleration := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fDeceleration,
-				i_fJerk := i_ref_stSettings.arr_TransportPositioningProfile[s_nProfile].fJerk);
+			s_cmTransport.m_MoveAbsolute(i_stPositioningProfile := i_ref_stSettings.arr_TransportPositioningProfile[0]);
 		END_IF
 			
 		s_bActionDone S= s_cmTransport.p_bDone;
@@ -1276,13 +1167,7 @@ CASE s_eSeqLiftingTransport OF
 
 	E_SeqLiftingTransport.LIFT_RETURN_IN_CABIN:
 		IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
-			s_nProfile := 0; // als [0] en [11] hetzelfde zijn dan [0] gebruiken
-			s_cmLift.m_MoveAbsolute(
-				i_fPosition := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fPosition,
-				i_fVelocity := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fVelocity,
-				i_fAcceleration := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fAcceleration,
-				i_fDeceleration := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fDeceleration,
-				i_fJerk := i_ref_stSettings.arr_LiftPositioningProfile[s_nProfile].fJerk);
+			s_cmLift.m_MoveAbsolute(i_stPositioningProfile := i_ref_stSettings.arr_LiftPositioningProfile[0]);
 		END_IF
 	
 		s_bActionDone S= s_cmLift.p_bDone;
@@ -1320,12 +1205,6 @@ CASE s_eSeqLiftingTransport OF
 			s_eSeqLiftingTransport := E_SeqLiftingTransport.IDLE;
 		END_IF
 			
-	//--E_SeqLiftingTransport.READY:
-	//--	IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
-	//--		i_refTB.p_eActLocation := s_eTmpLocation;
-	//--		s_eTmpLocation := E_Location.UNKNOWN;
-	//--	END_IF
-				
 	E_SeqLiftingTransport.ERROR:
 		IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
 			IF s_ePreviousStep > E_SeqLiftingTransport.START
@@ -1407,25 +1286,25 @@ IF i_bReqEnable AND (i_eCtrlMode = E_CtrlMode.MANUAL) AND (i_eCtrlState = E_Ctrl
 	//Lift/Transport
 	s_fbHmiBtnGoToIdle.p_bStaEnabled :=
 		NOT(s_bIlckLiftDown)
-		AND NOT(s_bIlckLiftUp)
+		//--AND NOT(s_bIlckLiftUp)
 		AND NOT(s_bIlckTransportRetract)
-		AND NOT(s_bIlckTransportExtract)
+		//--AND NOT(s_bIlckTransportExtract)
 		AND NOT(s_cmLift.p_bStaError)
 		AND NOT(s_cmTransport.p_bStaError);
 	
 	s_fbHmiBtnPickTrolleyFromTB.p_bStaEnabled :=
-		NOT(s_bIlckLiftDown)
-		AND NOT(s_bIlckLiftUp)
-		AND NOT(s_bIlckTransportRetract)
-		AND NOT(s_bIlckTransportExtract)
+		//--NOT(s_bIlckLiftDown)
+		NOT(s_bIlckLiftUp)
+		//--AND NOT(s_bIlckTransportRetract)
+		//--AND NOT(s_bIlckTransportExtract)
 		AND NOT(s_cmLift.p_bStaError)
 		AND NOT(s_cmTransport.p_bStaError);
 
 	s_fbHmiBtnPlaceTrolleyInTB.p_bStaEnabled :=
-		NOT(s_bIlckLiftDown)
-		AND NOT(s_bIlckLiftUp)
-		AND NOT(s_bIlckTransportRetract)
-		AND NOT(s_bIlckTransportExtract)
+		//--NOT(s_bIlckLiftDown)
+		NOT(s_bIlckLiftUp)
+		//--AND NOT(s_bIlckTransportRetract)
+		//--AND NOT(s_bIlckTransportExtract)
 		AND NOT(s_cmLift.p_bStaError)
 		AND NOT(s_cmTransport.p_bStaError);	
 		
@@ -1621,10 +1500,12 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="100" Count="0" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport._m_CmdPickTrolleyFromTB">
+      <LineId Id="202" Count="0" />
       <LineId Id="180" Count="17" />
       <LineId Id="77" Count="0" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport._m_CmdPlaceTrolleyInTB">
+      <LineId Id="181" Count="0" />
       <LineId Id="159" Count="17" />
       <LineId Id="100" Count="0" />
     </LineIds>
@@ -1779,6 +1660,8 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="250" Count="1" />
       <LineId Id="130" Count="0" />
       <LineId Id="132" Count="4" />
+      <LineId Id="265" Count="0" />
+      <LineId Id="264" Count="0" />
       <LineId Id="229" Count="0" />
       <LineId Id="138" Count="0" />
       <LineId Id="152" Count="2" />
@@ -1807,6 +1690,9 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="233" Count="0" />
       <LineId Id="162" Count="1" />
       <LineId Id="167" Count="2" />
+      <LineId Id="263" Count="0" />
+      <LineId Id="267" Count="0" />
+      <LineId Id="266" Count="0" />
       <LineId Id="235" Count="0" />
       <LineId Id="158" Count="0" />
       <LineId Id="170" Count="1" />
@@ -1892,14 +1778,14 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="2442" Count="0" />
       <LineId Id="2429" Count="0" />
       <LineId Id="2507" Count="0" />
-      <LineId Id="1973" Count="3" />
+      <LineId Id="1973" Count="1" />
+      <LineId Id="3684" Count="0" />
+      <LineId Id="1976" Count="0" />
       <LineId Id="1987" Count="0" />
       <LineId Id="2108" Count="0" />
       <LineId Id="1989" Count="0" />
-      <LineId Id="2131" Count="0" />
-      <LineId Id="1990" Count="0" />
-      <LineId Id="2132" Count="0" />
-      <LineId Id="2103" Count="0" />
+      <LineId Id="3686" Count="0" />
+      <LineId Id="3685" Count="0" />
       <LineId Id="2105" Count="1" />
       <LineId Id="2113" Count="0" />
       <LineId Id="2115" Count="0" />
@@ -1915,19 +1801,13 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="1994" Count="0" />
       <LineId Id="3283" Count="0" />
       <LineId Id="3285" Count="1" />
-      <LineId Id="3391" Count="0" />
       <LineId Id="3375" Count="0" />
-      <LineId Id="3377" Count="3" />
-      <LineId Id="3374" Count="0" />
       <LineId Id="3290" Count="1" />
       <LineId Id="3398" Count="0" />
       <LineId Id="3401" Count="0" />
       <LineId Id="3396" Count="0" />
       <LineId Id="3303" Count="8" />
-      <LineId Id="3390" Count="0" />
       <LineId Id="3383" Count="0" />
-      <LineId Id="3385" Count="3" />
-      <LineId Id="3312" Count="0" />
       <LineId Id="3389" Count="0" />
       <LineId Id="3318" Count="0" />
       <LineId Id="3406" Count="1" />
@@ -1940,28 +1820,22 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="3284" Count="0" />
       <LineId Id="2012" Count="1" />
       <LineId Id="2148" Count="0" />
-      <LineId Id="3442" Count="0" />
-      <LineId Id="3437" Count="4" />
-      <LineId Id="3436" Count="0" />
-      <LineId Id="3445" Count="0" />
+      <LineId Id="3437" Count="0" />
       <LineId Id="3443" Count="0" />
       <LineId Id="2748" Count="0" />
       <LineId Id="2518" Count="0" />
       <LineId Id="3446" Count="1" />
+      <LineId Id="3688" Count="1" />
       <LineId Id="3350" Count="0" />
       <LineId Id="2746" Count="0" />
       <LineId Id="2764" Count="0" />
-      <LineId Id="2767" Count="0" />
       <LineId Id="2769" Count="0" />
       <LineId Id="2768" Count="0" />
       <LineId Id="2740" Count="0" />
       <LineId Id="2749" Count="0" />
       <LineId Id="2018" Count="0" />
       <LineId Id="2770" Count="0" />
-      <LineId Id="3420" Count="0" />
       <LineId Id="3449" Count="0" />
-      <LineId Id="3451" Count="3" />
-      <LineId Id="3448" Count="0" />
       <LineId Id="2885" Count="0" />
       <LineId Id="2538" Count="0" />
       <LineId Id="3455" Count="1" />
@@ -1971,8 +1845,7 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="2778" Count="1" />
       <LineId Id="2023" Count="0" />
       <LineId Id="2798" Count="0" />
-      <LineId Id="3457" Count="1" />
-      <LineId Id="3461" Count="4" />
+      <LineId Id="3458" Count="0" />
       <LineId Id="2799" Count="0" />
       <LineId Id="2801" Count="0" />
       <LineId Id="3466" Count="1" />
@@ -1982,8 +1855,7 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="2228" Count="0" />
       <LineId Id="2027" Count="1" />
       <LineId Id="2820" Count="0" />
-      <LineId Id="3468" Count="1" />
-      <LineId Id="3472" Count="4" />
+      <LineId Id="3469" Count="0" />
       <LineId Id="2821" Count="0" />
       <LineId Id="2823" Count="0" />
       <LineId Id="3477" Count="1" />
@@ -2000,9 +1872,8 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="2485" Count="0" />
       <LineId Id="2896" Count="0" />
       <LineId Id="2033" Count="0" />
-      <LineId Id="3490" Count="1" />
+      <LineId Id="3490" Count="0" />
       <LineId Id="3481" Count="0" />
-      <LineId Id="3483" Count="4" />
       <LineId Id="2860" Count="0" />
       <LineId Id="2872" Count="0" />
       <LineId Id="3493" Count="1" />
@@ -2012,8 +1883,7 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="2235" Count="0" />
       <LineId Id="2037" Count="2" />
       <LineId Id="2903" Count="0" />
-      <LineId Id="3495" Count="1" />
-      <LineId Id="3499" Count="4" />
+      <LineId Id="3496" Count="0" />
       <LineId Id="2907" Count="0" />
       <LineId Id="2918" Count="0" />
       <LineId Id="3505" Count="1" />
@@ -2023,9 +1893,7 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="2240" Count="0" />
       <LineId Id="2043" Count="1" />
       <LineId Id="2927" Count="0" />
-      <LineId Id="3507" Count="0" />
       <LineId Id="3509" Count="0" />
-      <LineId Id="3511" Count="4" />
       <LineId Id="2931" Count="1" />
       <LineId Id="3516" Count="1" />
       <LineId Id="2942" Count="0" />
@@ -2034,9 +1902,7 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="2244" Count="0" />
       <LineId Id="2048" Count="1" />
       <LineId Id="2954" Count="0" />
-      <LineId Id="3539" Count="0" />
       <LineId Id="3541" Count="0" />
-      <LineId Id="3543" Count="4" />
       <LineId Id="2958" Count="1" />
       <LineId Id="3548" Count="1" />
       <LineId Id="2969" Count="0" />
@@ -2051,10 +1917,7 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="2951" Count="0" />
       <LineId Id="2053" Count="2" />
       <LineId Id="3041" Count="0" />
-      <LineId Id="3552" Count="0" />
       <LineId Id="3554" Count="0" />
-      <LineId Id="3556" Count="4" />
-      <LineId Id="3551" Count="0" />
       <LineId Id="3282" Count="0" />
       <LineId Id="3045" Count="1" />
       <LineId Id="3561" Count="1" />
@@ -2066,9 +1929,7 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="2252" Count="0" />
       <LineId Id="2059" Count="1" />
       <LineId Id="3066" Count="0" />
-      <LineId Id="3564" Count="0" />
       <LineId Id="3566" Count="0" />
-      <LineId Id="3568" Count="4" />
       <LineId Id="3070" Count="1" />
       <LineId Id="3573" Count="1" />
       <LineId Id="3081" Count="0" />
@@ -2080,8 +1941,7 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="2256" Count="0" />
       <LineId Id="2064" Count="1" />
       <LineId Id="3089" Count="0" />
-      <LineId Id="3579" Count="1" />
-      <LineId Id="3583" Count="4" />
+      <LineId Id="3580" Count="0" />
       <LineId Id="3430" Count="0" />
       <LineId Id="3094" Count="0" />
       <LineId Id="3588" Count="1" />
@@ -2091,9 +1951,7 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="2260" Count="0" />
       <LineId Id="2069" Count="2" />
       <LineId Id="3112" Count="0" />
-      <LineId Id="3590" Count="0" />
       <LineId Id="3592" Count="0" />
-      <LineId Id="3594" Count="4" />
       <LineId Id="3116" Count="1" />
       <LineId Id="3600" Count="1" />
       <LineId Id="3599" Count="0" />
@@ -2102,9 +1960,7 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="2264" Count="0" />
       <LineId Id="2075" Count="1" />
       <LineId Id="3135" Count="0" />
-      <LineId Id="3612" Count="0" />
       <LineId Id="3614" Count="0" />
-      <LineId Id="3616" Count="4" />
       <LineId Id="3139" Count="1" />
       <LineId Id="3621" Count="1" />
       <LineId Id="3150" Count="0" />
@@ -2113,9 +1969,7 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="2268" Count="0" />
       <LineId Id="2080" Count="1" />
       <LineId Id="3158" Count="0" />
-      <LineId Id="3623" Count="0" />
       <LineId Id="3625" Count="0" />
-      <LineId Id="3627" Count="4" />
       <LineId Id="3162" Count="1" />
       <LineId Id="3632" Count="1" />
       <LineId Id="3173" Count="0" />
@@ -2124,9 +1978,7 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="2272" Count="0" />
       <LineId Id="2086" Count="0" />
       <LineId Id="3182" Count="0" />
-      <LineId Id="3634" Count="0" />
       <LineId Id="3636" Count="0" />
-      <LineId Id="3638" Count="4" />
       <LineId Id="3186" Count="1" />
       <LineId Id="3643" Count="1" />
       <LineId Id="3197" Count="0" />
@@ -2142,9 +1994,7 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="2492" Count="0" />
       <LineId Id="2140" Count="0" />
       <LineId Id="3207" Count="0" />
-      <LineId Id="3645" Count="0" />
       <LineId Id="3647" Count="0" />
-      <LineId Id="3649" Count="4" />
       <LineId Id="3657" Count="0" />
       <LineId Id="3212" Count="0" />
       <LineId Id="3655" Count="1" />
@@ -2154,9 +2004,7 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="2280" Count="0" />
       <LineId Id="2144" Count="1" />
       <LineId Id="3232" Count="0" />
-      <LineId Id="3658" Count="0" />
       <LineId Id="3660" Count="0" />
-      <LineId Id="3662" Count="4" />
       <LineId Id="3236" Count="1" />
       <LineId Id="3667" Count="1" />
       <LineId Id="3247" Count="0" />
@@ -2176,7 +2024,7 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="3344" Count="0" />
       <LineId Id="2162" Count="2" />
       <LineId Id="3268" Count="3" />
-      <LineId Id="2095" Count="6" />
+      <LineId Id="2095" Count="0" />
       <LineId Id="2417" Count="0" />
       <LineId Id="3682" Count="0" />
       <LineId Id="3679" Count="2" />

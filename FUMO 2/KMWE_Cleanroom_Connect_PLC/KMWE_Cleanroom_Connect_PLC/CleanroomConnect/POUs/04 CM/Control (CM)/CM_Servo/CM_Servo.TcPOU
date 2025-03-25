@@ -110,7 +110,6 @@ VAR
 	s_eSeqNcTask : E_SeqServo;
 	s_fbSeqNcTaskControl : FB_SeqControl;
 	s_mcDirection : Tc2_MC2.MC_Direction;
-	
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -138,7 +137,9 @@ SUPER^();
     <Folder Name="Properties" Id="{c3e008a7-9dfe-49e0-9cc5-18c79327535a}" />
     <Method Name="_m_Alarms" Id="{c522f959-6f84-4a96-b11e-07b34d6dcd1a}" FolderPath="Methods\Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Alarms : BOOL
-]]></Declaration>
+VAR
+	s_bPositiveDirection : BOOL; 
+END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[
 IF NOT SUPER^._m_Alarms() THEN
@@ -149,7 +150,9 @@ END_IF
 s_errDriveError := (i_bReqEnable AND s_bStaDriveError) AND NOT(i_bCmdReset);
 
 // Interlock warnings
-IF s_bIclkForward AND NOT(s_bStaStandstill) THEN	
+s_bPositiveDirection := (i_refAxis.NcToPlc.ActVelo > 0);
+
+IF s_bIclkForward AND NOT(s_bStaStandstill) AND s_bPositiveDirection THEN	
 	s_wrnMotorForwardInterlocked := TRUE;
 	
 	m_Stop(
@@ -160,7 +163,7 @@ ELSIF NOT(s_bIclkForward) OR i_bCmdReset THEN
 	s_wrnMotorForwardInterlocked := FALSE;
 END_IF
 
-IF s_bIclkBackward AND NOT(s_bStaStandstill) THEN
+IF s_bIclkBackward AND NOT(s_bStaStandstill) AND NOT(s_bPositiveDirection) THEN
 	s_wrnMotorBackwardInterlocked := TRUE;
 	
 	m_Stop(
@@ -349,7 +352,7 @@ END_IF
 	
 fbMoveAbsolute(
 	Axis := i_refAxis,
-	Execute := s_bReqNcMoveAbs, 
+	Execute := s_bReqNcMoveAbs AND s_Flash.o_bQ, 
 	Position := ,
 	Velocity := i_ref_setting.fVelocity,
 	Acceleration := i_ref_setting.fAcceleration,
@@ -363,8 +366,6 @@ fbMoveAbsolute(
 	CommandAborted => s_bCommandAborted,
 	Error => s_bError,
 	ErrorID => s_nErrorID);
-
-	s_bStaAbsPosBusy := s_bBusy; 
 	
 _m_Devices := TRUE;
 ]]></ST>
@@ -633,11 +634,6 @@ _m_Outputs := TRUE;
 METHOD PUBLIC m_MoveAbsolute : BOOL
 VAR_INPUT
 	i_stPositioningProfile : ST_PositioningProfile;
-//**	i_fPosition : LREAL; 
-//**	i_fVelocity : LREAL; 
-//**	i_fAcceleration : LREAL; 
-//**	i_fDeceleration : LREAL; 
-//**	i_fJerk : LREAL;
 END_VAR
 VAR_OUTPUT
 	o_Busy : BOOL;
@@ -650,11 +646,11 @@ END_VAR
 s_bReqNcMoveAbs := TRUE;
 
 //Inputs
-fbMoveAbsolute.Position := i_stPositioningProfile.fPosition; //i_fPosition;
-fbMoveAbsolute.Velocity := i_stPositioningProfile.fVelocity; //i_fVelocity;
-fbMoveAbsolute.Acceleration := i_stPositioningProfile.fAcceleration; //i_fAcceleration;
-fbMoveAbsolute.Deceleration := i_stPositioningProfile.fDeceleration; //i_fDeceleration;
-fbMoveAbsolute.Jerk := i_stPositioningProfile.fJerk; //i_fJerk;
+fbMoveAbsolute.Position := i_stPositioningProfile.fPosition;
+fbMoveAbsolute.Velocity := i_stPositioningProfile.fVelocity;
+fbMoveAbsolute.Acceleration := i_stPositioningProfile.fAcceleration;
+fbMoveAbsolute.Deceleration := i_stPositioningProfile.fDeceleration;
+fbMoveAbsolute.Jerk := i_stPositioningProfile.fJerk;
 
 //Outputs
 o_Busy := fbMoveAbsolute.Busy;
@@ -919,7 +915,7 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
     <LineIds Name="CM_Servo">
       <LineId Id="907" Count="0" />
       <LineId Id="909" Count="12" />
-      <LineId Id="410" Count="0" />
+      <LineId Id="1036" Count="0" />
       <LineId Id="47" Count="0" />
       <LineId Id="633" Count="0" />
     </LineIds>
@@ -929,8 +925,10 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="103" Count="0" />
       <LineId Id="79" Count="0" />
       <LineId Id="86" Count="0" />
-      <LineId Id="208" Count="0" />
+      <LineId Id="224" Count="0" />
       <LineId Id="155" Count="0" />
+      <LineId Id="226" Count="0" />
+      <LineId Id="225" Count="0" />
       <LineId Id="170" Count="0" />
       <LineId Id="157" Count="0" />
       <LineId Id="194" Count="0" />
@@ -990,8 +988,6 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="888" Count="0" />
       <LineId Id="809" Count="23" />
       <LineId Id="846" Count="38" />
-      <LineId Id="900" Count="0" />
-      <LineId Id="885" Count="0" />
       <LineId Id="901" Count="0" />
       <LineId Id="886" Count="0" />
       <LineId Id="13" Count="0" />

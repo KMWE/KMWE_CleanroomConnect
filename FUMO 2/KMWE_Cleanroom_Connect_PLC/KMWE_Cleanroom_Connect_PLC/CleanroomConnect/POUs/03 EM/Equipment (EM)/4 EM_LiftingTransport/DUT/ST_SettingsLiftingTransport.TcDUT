@@ -4,18 +4,27 @@
     <Declaration><![CDATA[TYPE ST_SettingsLiftingTransport :
 STRUCT
 	//Lift
-	stLiftSpeedProfileJogging : ST_SpeedProfile;
-	stLiftSpeedProfilePositioning : ST_SpeedProfile;   
-	arr_LiftPositioningProfile : ARRAY[0..16] OF ST_PositioningProfile;
-	
+	//--stLiftSpeedProfileJogging : ST_SpeedProfile;
+	//--stLiftSpeedProfilePositioning : ST_SpeedProfile;
+	stLiftPositioningProfileMaintenance : ST_PositioningProfile;
+	arr_stLiftPositioningProfile : ARRAY[0..11] OF ST_PositioningProfile;
+
+	fLiftStoppingDeceleration : LREAL := 100.0;
+	fLiftStoppingJerk : LREAL := 1000.0;
+
 	//Transport
-	stTransportSpeedProfileJogging : ST_SpeedProfile;
-	stTransportSpeedProfilePositioning : ST_SpeedProfile;
-	arr_TransportPositioningProfile : ARRAY[0..7] OF ST_PositioningProfile;
-	
+	//--stTransportSpeedProfileJogging : ST_SpeedProfile;
+	//--stTransportSpeedProfilePositioning : ST_SpeedProfile;
+	//--stTransportPositioningProfilePositioning : ST_SpeedProfile;
+	stTransportPositioningProfileMaintenance : ST_PositioningProfile;
+	arr_stTransportPositioningProfile : ARRAY[0..6] OF ST_PositioningProfile;
+
+	fTransportStoppingDeceleration : LREAL := 100.0;
+	fTransportStoppingJerk : LREAL := 1000.0;
+
 	bAutoRecoveryToIdle : BOOL;	//Auto recovery to Idle-position in case of failure e.g.: (un)locking trolley failed
 	bWaitForNextStep : BOOL; //Wait for next button to be pressed before starting new positioning step
-	
+
 	END_STRUCT
 END_TYPE
 ]]></Declaration>

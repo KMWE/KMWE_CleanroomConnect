@@ -285,8 +285,7 @@ GVL.g_fbHmiBtnSimulation();
       <Declaration><![CDATA[METHOD PROTECTED _m_Init : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[
-IF NOT SUPER^._m_Init() THEN
+        <ST><![CDATA[IF NOT SUPER^._m_Init() THEN
 	RETURN;
 END_IF
 
@@ -363,171 +362,183 @@ GVL_Modules.g_emLiftingTransport.i_eCtrlMode := E_CtrlMode.IDLE;
 GVL_Modules.g_emLiftingTransport.i_bCmdReset := FALSE;
 GVL_Modules.g_emLiftingTransport.i_sEmName := 'EM Lifting Transport';
 
-//Manual-Jogging
-s_stSettings.stSettingsLiftingTransport.stLiftSpeedProfileJogging.fVelocity := 25.0; //mm/s
-s_stSettings.stSettingsLiftingTransport.stLiftSpeedProfileJogging.fAcceleration := 25.0; //mm/s^2
-s_stSettings.stSettingsLiftingTransport.stLiftSpeedProfileJogging.fDeceleration	:= 25.0; //mm/s^2
-s_stSettings.stSettingsLiftingTransport.stLiftSpeedProfileJogging.fJerk	:= 250.0; //mm/s^3
+//Mainteneance-mode, positioning
+s_stSettings.stSettingsLiftingTransport.stLiftPositioningProfileMaintenance.fPosition := 0.0; //mm/s
+s_stSettings.stSettingsLiftingTransport.stLiftPositioningProfileMaintenance.fVelocity := 10.0; //mm/s	(jog speed is configured in the NC-Task)
+s_stSettings.stSettingsLiftingTransport.stLiftPositioningProfileMaintenance.fAcceleration := 10.0; //mm/s^2
+s_stSettings.stSettingsLiftingTransport.stLiftPositioningProfileMaintenance.fDeceleration := 10.0; //mm/s^2
+s_stSettings.stSettingsLiftingTransport.stLiftPositioningProfileMaintenance.fJerk := 100.0; //mm/s^3
+
+s_stSettings.stSettingsLiftingTransport.stTransportPositioningProfileMaintenance.fPosition := 0.0; //mm/s
+s_stSettings.stSettingsLiftingTransport.stTransportPositioningProfileMaintenance.fVelocity := 10.0; //mm/s
+s_stSettings.stSettingsLiftingTransport.stTransportPositioningProfileMaintenance.fAcceleration := 10.0; //mm/s^2
+s_stSettings.stSettingsLiftingTransport.stTransportPositioningProfileMaintenance.fDeceleration := 10.0; //mm/s^2
+s_stSettings.stSettingsLiftingTransport.stTransportPositioningProfileMaintenance.fJerk := 100.0; //mm/s^3
+
+//--s_stSettings.stSettingsLiftingTransport.stLiftSpeedProfileJogging.fVelocity := 25.0; //mm/s
+//--s_stSettings.stSettingsLiftingTransport.stLiftSpeedProfileJogging.fAcceleration := 25.0; //mm/s^2
+//--s_stSettings.stSettingsLiftingTransport.stLiftSpeedProfileJogging.fDeceleration	:= 25.0; //mm/s^2
+//--s_stSettings.stSettingsLiftingTransport.stLiftSpeedProfileJogging.fJerk	:= 250.0; //mm/s^3
 
 //Manual-Positioning
-s_stSettings.stSettingsLiftingTransport.stLiftSpeedProfilePositioning.fVelocity	:= 25.0; //mm/s
-s_stSettings.stSettingsLiftingTransport.stLiftSpeedProfilePositioning.fAcceleration	:= 25.0; //mm/s^2
-s_stSettings.stSettingsLiftingTransport.stLiftSpeedProfilePositioning.fDeceleration	:= 25.0; //mm/s^2
-s_stSettings.stSettingsLiftingTransport.stLiftSpeedProfilePositioning.fJerk	:= 250.0; //mm/s^3
+//--s_stSettings.stSettingsLiftingTransport.stLiftSpeedProfilePositioning.fVelocity	:= 25.0; //mm/s
+//--s_stSettings.stSettingsLiftingTransport.stLiftSpeedProfilePositioning.fAcceleration	:= 25.0; //mm/s^2
+//--s_stSettings.stSettingsLiftingTransport.stLiftSpeedProfilePositioning.fDeceleration	:= 25.0; //mm/s^2
+//--s_stSettings.stSettingsLiftingTransport.stLiftSpeedProfilePositioning.fJerk	:= 250.0; //mm/s^3
 
-//Automatic-Positioning Lift
+//Manual- and Automatic-mode, positioning
 // [0] = Idle
 //-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[0].sName	:= 'Idle';
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[0].fPosition := 0.0; //[mm]			was 50
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[0].fVelocity := 100.0; //[mm/s] 
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[0].fAcceleration := 10.0;  //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[0].fDeceleration	:= 10.0; //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[0].fJerk := 100.0; //[mm/s^3]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[0].fPosition := 0.0; //[mm]			was 50
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[0].fVelocity := 10.0; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[0].fAcceleration := 10.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[0].fDeceleration	:= 10.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[0].fJerk := 100.0; //[mm/s^3]
 
 // [1] = Pre Pick From TB
 //--s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[1].sName	:= 'PrePickFromTB';
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[1].fPosition := 306.0; //[mm]		was 300
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[1].fVelocity := 100.0; //[mm/s] 
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[1].fAcceleration := 10.0;  //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[1].fDeceleration := 10.0; //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[1].fJerk := 100.0; //[mm/s^3]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[1].fPosition := 306.0; //[mm]		was 300
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[1].fVelocity := 10.01; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[1].fAcceleration := 10.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[1].fDeceleration := 10.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[1].fJerk := 100.0; //[mm/s^3]
 
 // [2] = Pick From TB
 //--s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[2].sName	:= 'PickFromTB';
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[2].fPosition := 331.0; //[mm]		was 325
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[2].fVelocity := 10.0; //[mm/s] 
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[2].fAcceleration := 10.0;  //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[2].fDeceleration := 10.0; //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[2].fJerk := 100.0; //[mm/s^3]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[2].fPosition := 331.0; //[mm]		was 325
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[2].fVelocity := 10.02; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[2].fAcceleration := 1.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[2].fDeceleration := 1.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[2].fJerk := 10.0; //[mm/s^3]
 
 // [3] = Raise From TB
 //--s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[3].sName	:= 'RaiseFromTB';
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[3].fPosition := 404.0; //[mm]		was 350
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[3].fVelocity := 10.0; //[mm/s] 
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[3].fAcceleration := 10.0;  //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[3].fDeceleration := 10.0; //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[3].fJerk := 100.0; //[mm/s^3]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[3].fPosition := 404.0; //[mm]		was 350
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[3].fVelocity := 10.03; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[3].fAcceleration := 5.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[3].fDeceleration := 5.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[3].fJerk := 50.0; //[mm/s^3]
 
 // [4] = Pre Place In Cabin
 //--s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[4].sName	:= 'PrePlaceInCabin';
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[4].fPosition := 45.0; //[mm]			was 75
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[4].fVelocity := 100.0; //[mm/s] 
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[4].fAcceleration := 10.0;  //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[4].fDeceleration := 10.0; //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[4].fJerk := 100.0; //[mm/s^3]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[4].fPosition := 45.0; //[mm]			was 75
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[4].fVelocity := 10.04; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[4].fAcceleration := 10.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[4].fDeceleration := 10.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[4].fJerk := 100.0; //[mm/s^3]
 
 // [5] = Place In Cabin
 //--s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[5].sName	:= 'PlaceInCabin';
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[5].fPosition := 0.0; //[mm]			was 0
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[5].fVelocity := 10.0; //[mm/s] 
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[5].fAcceleration := 10.0;  //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[5].fDeceleration := 10.0; //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[5].fJerk := 100.0; //[mm/s^3]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[5].fPosition := 0.0; //[mm]			was 0
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[5].fVelocity := 10.05; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[5].fAcceleration := 1.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[5].fDeceleration := 1.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[5].fJerk := 10.0; //[mm/s^3]
 
 // [6] = Pre Pick From Cabin
 //--s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[6].sName	:= 'PrePickFromCabin';
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[6].fPosition := 10.0; //[mm]			was 100
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[6].fVelocity := 10.0; //[mm/s] 
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[6].fAcceleration := 10.0;  //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[6].fDeceleration := 10.0; //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[6].fJerk := 100.0; //[mm/s^3]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[6].fPosition := 10.0; //[mm]			was 100
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[6].fVelocity := 10.06; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[6].fAcceleration := 1.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[6].fDeceleration := 1.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[6].fJerk := 10.0; //[mm/s^3]
 
 // [7] = Pick From Cabin
 //--s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[7].sName	:= 'PickFromCabin';
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[7].fPosition := 45.0; //[mm]			was 125
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[7].fVelocity := 10.0; //[mm/s] 
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[7].fAcceleration := 10.0;  //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[7].fDeceleration := 10.0; //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[7].fJerk := 100.0; //[mm/s^3]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[7].fPosition := 45.0; //[mm]			was 125
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[7].fVelocity := 10.07; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[7].fAcceleration := 1.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[7].fDeceleration := 1.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[7].fJerk := 10.0; //[mm/s^3]
 
 // [8] = Raise From Cabin
 //--s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[8].sName	:= 'RaiseFromCabin';
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[8].fPosition := 404.0; //[mm]		was 350
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[8].fVelocity := 100.0; //[mm/s] 
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[8].fAcceleration := 10.0;  //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[8].fDeceleration := 10.0; //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[8].fJerk := 100.0; //[mm/s^3]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[8].fPosition := 404.0; //[mm]		was 350
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[8].fVelocity := 10.08; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[8].fAcceleration := 10.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[8].fDeceleration := 10.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[8].fJerk := 100.0; //[mm/s^3]
 
 // [9] = Pre Place In TB
 //--s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[9].sName	:= 'PrePlaceInTB';
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[9].fPosition := 374.0; //[mm]		was 325
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[9].fVelocity := 10.0; //[mm/s] 
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[9].fAcceleration := 10.0;  //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[9].fDeceleration := 10.0; //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[9].fJerk := 100.0; //[mm/s^3]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[9].fPosition := 374.0; //[mm]		was 325
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[9].fVelocity := 10.09; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[9].fAcceleration := 1.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[9].fDeceleration := 1.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[9].fJerk := 10.0; //[mm/s^3]
 
 // [10] = Place In TB
 //--s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[10].sName := 'PlaceInTB';
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[10].fPosition := 331.0; //[mm]		was 300
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[10].fVelocity := 10.0; //[mm/s] 
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[10].fAcceleration := 10.0;  //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[10].fDeceleration := 10.0; //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[10].fJerk := 100.0; //[mm/s^3]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[10].fPosition := 331.0; //[mm]		was 300
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[10].fVelocity := 10.10; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[10].fAcceleration := 1.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[10].fDeceleration := 1.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[10].fJerk := 10.0; //[mm/s^3]
 
 // [11] = Return In Cabin
 //--s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[11].sName	:= 'ReturnInCabin';
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[11].fPosition := 0.0; //[mm]		was 50 (als zefde als [0] dan die gebruiken)
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[11].fVelocity := 100.0; //[mm/s] 
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[11].fAcceleration := 10.0;  //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[11].fDeceleration	:= 10.0; //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_LiftPositioningProfile[11].fJerk := 100.0; //[mm/s^3]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[11].fPosition := 0.0; //[mm]		was 50 (als zefde als [0] dan die gebruiken)
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[11].fVelocity := 10.11; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[11].fAcceleration := 10.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[11].fDeceleration := 10.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[11].fJerk := 100.0; //[mm/s^3]
 
 //Automatic-Positioning Transport
 // [0] = Idle
 //--s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[0].sName := 'Idle';
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[0].fPosition := 0.0; //[mm]		was 50
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[0].fVelocity := 100.0; //[mm/s] 
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[0].fAcceleration := 10.0;  //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[0].fDeceleration := 10.0; //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[0].fJerk := 100.0; //[mm/s^3]
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[0].fPosition := 0.0; //[mm]		was 50
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[0].fVelocity := 10.0; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[0].fAcceleration := 10.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[0].fDeceleration := 10.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[0].fJerk := 100.0; //[mm/s^3]
 
 // [1] = Pre Pick From TB
 //--s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[1].sName := 'PrePickFromTB';
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[1].fPosition := 1690.0; //[mm]	was 400
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[1].fVelocity := 100.0; //[mm/s] 
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[1].fAcceleration := 10.0;  //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[1].fDeceleration := 10.0; //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[1].fJerk := 100.0; //[mm/s^3]
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[1].fPosition := 1690.0; //[mm]	was 400
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[1].fVelocity := 10.02; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[1].fAcceleration := 10.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[1].fDeceleration := 10.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[1].fJerk := 100.0; //[mm/s^3]
 
 // [2] = Pick From TB
 //--s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[2].sName := 'PickFromTB';
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[2].fPosition := 1715.0; //[mm]	was 425
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[2].fVelocity := 10.0; //[mm/s] 
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[2].fAcceleration := 10.0;  //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[2].fDeceleration := 10.0; //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[2].fJerk := 100.0; //[mm/s^3]
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[2].fPosition := 1715.0; //[mm]	was 425
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[2].fVelocity := 10.04; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[2].fAcceleration := 1.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[2].fDeceleration := 1.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[2].fJerk := 10.0; //[mm/s^3]
 
 // [3] = Place In Cabin
 //--s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[3].sName := 'PlaceInCabin';
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[3].fPosition := 0.0; //[mm]		was 50
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[3].fVelocity := 100.0; //[mm/s] 
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[3].fAcceleration := 10.0;  //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[3].fDeceleration := 10.0; //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[3].fJerk := 100.0; //[mm/s^3]
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[3].fPosition := 0.0; //[mm]		was 50
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[3].fVelocity := 10.06; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[3].fAcceleration := 10.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[3].fDeceleration := 10.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[3].fJerk := 100.0; //[mm/s^3]
 
 // [4] = Pre Place In TB
 //--s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[4].sName := 'PrePlaceInTB';
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[4].fPosition := 1690.0; //[mm]	was 400
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[4].fVelocity := 100.0; //[mm/s] 
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[4].fAcceleration := 10.0;  //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[4].fDeceleration := 10.0; //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[4].fJerk := 100.0; //[mm/s^3]
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[4].fPosition := 1690.0; //[mm]	was 400
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[4].fVelocity := 10.08; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[4].fAcceleration := 10.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[4].fDeceleration := 10.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[4].fJerk := 100.0; //[mm/s^3]
 
 // [5] = Place In TB
 //--s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[5].sName := 'PlaceInTB';
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[5].fPosition := 1710.0; //[mm]	was 425
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[5].fVelocity := 10.0; //[mm/s] 
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[5].fAcceleration := 10.0;  //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[5].fDeceleration := 10.0; //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[5].fJerk := 100.0; //[mm/s^3]
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[5].fPosition := 1710.0; //[mm]	was 425
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[5].fVelocity := 10.10; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[5].fAcceleration := 1.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[5].fDeceleration := 1.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[5].fJerk := 10.0; //[mm/s^3]
 
 // [6] = Return In Cabin
 //--s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[6].sName := 'ReturnInCabin';
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[6].fPosition := 0.0; //[mm]		was 50 (als zefde als [0] dan die gebruiken)
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[6].fVelocity := 10.0; //[mm/s] 
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[6].fAcceleration := 10.0;  //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[6].fDeceleration := 10.0; //[mm/s^2]
-s_stSettings.stSettingsLiftingTransport.arr_TransportPositioningProfile[6].fJerk := 100.0; //[mm/s^3]
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[6].fPosition := 0.0; //[mm]		was 50 (als zefde als [0] dan die gebruiken)
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[6].fVelocity := 10.12; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[6].fAcceleration := 1.0;  //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[6].fDeceleration := 1.0; //[mm/s^2]
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[6].fJerk := 10.0; //[mm/s^3]
 
 GVL_Modules.g_emPalletConveyor.i_ref_stSettings REF= s_stSettings.stSettingsPalletConveyor;
 GVL_Modules.g_emDockingInterface.i_ref_stSettings REF= s_stSettings.stSettingsDockingInterface;
@@ -1292,84 +1303,15 @@ GVL_Modules.g_emPalletConveyor._m_CmdTB_ToInfeed(i_refReason := sReason);
       <LineId Id="8" Count="0" />
     </LineIds>
     <LineIds Name="UN_CleanroomConnect._m_Init">
-      <LineId Id="1923" Count="0" />
-      <LineId Id="1635" Count="21" />
-      <LineId Id="1949" Count="0" />
-      <LineId Id="1951" Count="0" />
-      <LineId Id="1953" Count="0" />
-      <LineId Id="1965" Count="0" />
-      <LineId Id="1955" Count="0" />
-      <LineId Id="1950" Count="0" />
-      <LineId Id="1956" Count="0" />
-      <LineId Id="1960" Count="0" />
-      <LineId Id="1959" Count="0" />
-      <LineId Id="1961" Count="2" />
-      <LineId Id="1967" Count="0" />
-      <LineId Id="1658" Count="11" />
-      <LineId Id="1969" Count="0" />
-      <LineId Id="1670" Count="3" />
-      <LineId Id="1946" Count="0" />
-      <LineId Id="1674" Count="14" />
-      <LineId Id="1945" Count="0" />
-      <LineId Id="1690" Count="1" />
-      <LineId Id="1970" Count="0" />
-      <LineId Id="1693" Count="3" />
-      <LineId Id="1947" Count="0" />
-      <LineId Id="1698" Count="12" />
-      <LineId Id="1972" Count="0" />
-      <LineId Id="1711" Count="5" />
-      <LineId Id="1973" Count="0" />
-      <LineId Id="1717" Count="6" />
-      <LineId Id="1974" Count="0" />
-      <LineId Id="1724" Count="6" />
-      <LineId Id="1975" Count="0" />
-      <LineId Id="1731" Count="6" />
-      <LineId Id="1976" Count="0" />
-      <LineId Id="1738" Count="1" />
-      <LineId Id="1911" Count="0" />
-      <LineId Id="1741" Count="3" />
-      <LineId Id="1977" Count="0" />
-      <LineId Id="1745" Count="6" />
-      <LineId Id="1978" Count="0" />
-      <LineId Id="1752" Count="6" />
-      <LineId Id="1979" Count="0" />
-      <LineId Id="1759" Count="6" />
-      <LineId Id="1980" Count="0" />
-      <LineId Id="1766" Count="6" />
-      <LineId Id="1981" Count="0" />
-      <LineId Id="1773" Count="6" />
-      <LineId Id="1982" Count="0" />
-      <LineId Id="1780" Count="6" />
-      <LineId Id="1983" Count="0" />
-      <LineId Id="1928" Count="0" />
-      <LineId Id="1930" Count="4" />
-      <LineId Id="1929" Count="0" />
-      <LineId Id="1787" Count="1" />
-      <LineId Id="1984" Count="0" />
-      <LineId Id="1789" Count="5" />
-      <LineId Id="1985" Count="0" />
-      <LineId Id="1795" Count="6" />
-      <LineId Id="1986" Count="0" />
-      <LineId Id="1802" Count="6" />
-      <LineId Id="1987" Count="0" />
-      <LineId Id="1809" Count="6" />
-      <LineId Id="1988" Count="0" />
-      <LineId Id="1816" Count="6" />
-      <LineId Id="1989" Count="0" />
-      <LineId Id="1823" Count="6" />
-      <LineId Id="1990" Count="0" />
-      <LineId Id="1936" Count="5" />
-      <LineId Id="1935" Count="0" />
-      <LineId Id="1913" Count="0" />
-      <LineId Id="1830" Count="0" />
-      <LineId Id="1914" Count="0" />
-      <LineId Id="1832" Count="0" />
-      <LineId Id="1834" Count="0" />
-      <LineId Id="1836" Count="28" />
-      <LineId Id="1875" Count="18" />
-      <LineId Id="1924" Count="1" />
-      <LineId Id="1894" Count="0" />
-      <LineId Id="1905" Count="0" />
+      <LineId Id="2291" Count="77" />
+      <LineId Id="2591" Count="0" />
+      <LineId Id="2593" Count="2" />
+      <LineId Id="2592" Count="0" />
+      <LineId Id="2596" Count="0" />
+      <LineId Id="2598" Count="3" />
+      <LineId Id="2597" Count="0" />
+      <LineId Id="2590" Count="0" />
+      <LineId Id="2369" Count="220" />
       <LineId Id="78" Count="0" />
     </LineIds>
     <LineIds Name="UN_CleanroomConnect._m_Modules">

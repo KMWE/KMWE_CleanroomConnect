@@ -389,7 +389,7 @@ END_VAR
         <ST><![CDATA[// Calculate required motor position as function of desired lift position
 
 _m_ConvLiftToMotorPos := i_stPosProf;
-_m_ConvLiftToMotorPos.fPosition := _m_ConvLiftHeightToSpindPos(i_stPosProf.fPosition);
+_m_ConvLiftToMotorPos.fPos := _m_ConvLiftHeightToSpindPos(i_stPosProf.fPos);
 //--_m_ConvLiftToMotorPos.fVelocity := i_stPosProf.fVelocity;
 //--_m_ConvLiftToMotorPos.fAcceleration := i_stPosProf.fAcceleration;
 //--_m_ConvLiftToMotorPos.fDeceleration := i_stPosProf.fDeceleration;
@@ -444,11 +444,11 @@ END_VAR
 
 s_fConvFactor := 0.5;
 
-_m_ConvTranspToMotorPos.fPosition := i_stPosProf.fPosition * s_fConvFactor;
-_m_ConvTranspToMotorPos.fVelocity := i_stPosProf.fVelocity * s_fConvFactor;
-_m_ConvTranspToMotorPos.fAcceleration := i_stPosProf.fAcceleration * s_fConvFactor;
-_m_ConvTranspToMotorPos.fDeceleration := i_stPosProf.fDeceleration * s_fConvFactor;
-_m_ConvTranspToMotorPos.fJerk := i_stPosProf.fJerk * s_fConvFactor;
+_m_ConvTranspToMotorPos.fPos := i_stPosProf.fPos * s_fConvFactor;
+_m_ConvTranspToMotorPos.fVel := i_stPosProf.fVel * s_fConvFactor;
+_m_ConvTranspToMotorPos.fAcc := i_stPosProf.fAcc * s_fConvFactor;
+_m_ConvTranspToMotorPos.fDec := i_stPosProf.fDec * s_fConvFactor;
+_m_ConvTranspToMotorPos.fJrk := i_stPosProf.fJrk * s_fConvFactor;
 ]]></ST>
       </Implementation>
     </Method>
@@ -466,7 +466,7 @@ s_cmLift(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
 	i_ref_eCtrlState := i_eCtrlState,
-	i_ref_setting := i_ref_stSettings.stLiftPositioningProfileMaintenance,
+	i_ref_setting := i_ref_stSettings.stSettingsServoLift,
 	i_bCmdReset := i_bCmdReset,
 	i_refAxis := axisLift,
 	i_bIclkForward := s_bIlckLiftUp,
@@ -478,7 +478,7 @@ s_cmTransport(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
 	i_ref_eCtrlState := i_eCtrlState,
-	i_ref_setting := i_ref_stSettings.stTransportPositioningProfileMaintenance,
+	i_ref_setting := i_ref_stSettings.stSettingsServoTransport,
 	i_bCmdReset := i_bCmdReset,
 	i_refAxis := axisTransport,
 	i_bIclkForward := s_bIlckTransportExtract, 
@@ -511,8 +511,8 @@ s_bStaTrolleyLocked := s_diStaTrolleyLocked.p_bStaInputDelayed;
 
 
 //Statusses written to TRUE by sequencer
-s_bStaAtIdlePosition := F_InRange(i_ref_stSettings.arr_stLiftPositioningProfile[0].fPosition, s_fActLiftPosition, 0.5)
-						AND	F_InRange(i_ref_stSettings.arr_stTransportPositioningProfile[0].fPosition, s_fActTransportPosition, 0.5);
+s_bStaAtIdlePosition := F_InRange(i_ref_stSettings.arr_stLiftPositioningProfile[0].fPos, s_fActLiftPosition, 0.5)
+						AND	F_InRange(i_ref_stSettings.arr_stTransportPositioningProfile[0].fPos, s_fActTransportPosition, 0.5);
 
 _m_Devices := TRUE;
 ]]></ST>
@@ -1280,12 +1280,12 @@ CASE s_eSeqLiftingTransport OF
 	E_SeqLiftingTransport.STOP:
 		IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
 			s_cmLift.m_Stop(
-				i_fDeceleration := i_ref_stSettings.fLiftStoppingDeceleration,
-				i_fJerk := i_ref_stSettings.fLiftStoppingJerk);
+				i_fDec := i_ref_stSettings.stSettingsServoLift.fStopDec,
+				i_fJrk := i_ref_stSettings.stSettingsServoLift.fStopJrk);
 
 			s_cmTransport.m_Stop(
-				i_fDeceleration := i_ref_stSettings.fTransportStoppingDeceleration,
-				i_fJerk := i_ref_stSettings.fTransportStoppingJerk);
+				i_fDec := i_ref_stSettings.stSettingsServoTransport.fStopDec,
+				i_fJrk := i_ref_stSettings.stSettingsServoTransport.fStopJrk);
 		
 			IF s_ePreviousStep > E_SeqLiftingTransport.START
 				AND s_ePreviousStep < E_SeqLiftingTransport.ERROR THEN
@@ -1350,9 +1350,9 @@ CASE i_eCtrlMode OF
 		//Reset automatic/manual sequencer
 		s_eSeqLiftingTransport := E_SeqTransport.IDLE;
 	
-		//Load setting for movements in Maintenance-mode
-		s_cmLift.i_ref_setting := i_ref_stSettings.stLiftPositioningProfileMaintenance;
-		s_cmTransport.i_ref_setting := i_ref_stSettings.stTransportPositioningProfileMaintenance;
+		//--//Load setting for movements in Maintenance-mode
+		//--s_cmLift.i_ref_setting := i_ref_stSettings.stLiftPositioningProfileMaintenance;
+		//--s_cmTransport.i_ref_setting := i_ref_stSettings.stTransportPositioningProfileMaintenance;
 		
 		; 	//Maintenance control is implemented in lower-layer control modules
 	
@@ -1422,12 +1422,12 @@ END_IF
 IF (i_eCtrlMode = E_CtrlMode.MAINTENANCE) AND (i_eCtrlState = E_CtrlState.STOPPING) THEN
 	//Stop both axes
 	s_cmLift.m_Stop(
-		i_fDeceleration := i_ref_stSettings.fLiftStoppingDeceleration,
-		i_fJerk := i_ref_stSettings.fLiftStoppingJerk);
+		i_fDec := i_ref_stSettings.stSettingsServoLift.fStopDec,
+		i_fJrk := i_ref_stSettings.stSettingsServoLift.fStopJrk);
 		
 	s_cmTransport.m_Stop(
-		i_fDeceleration := i_ref_stSettings.fTransportStoppingDeceleration,
-		i_fJerk := i_ref_stSettings.fTransportStoppingJerk);
+		i_fDec := i_ref_stSettings.stSettingsServoTransport.fStopDec,
+		i_fJrk := i_ref_stSettings.stSettingsServoTransport.fStopJrk);
 END_IF
 
 //IO-mode /////////////////////////////////////////////////////////////////////////////////////////
@@ -2182,7 +2182,8 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="3669" Count="0" />
       <LineId Id="3833" Count="1" />
       <LineId Id="3674" Count="1" />
-      <LineId Id="3835" Count="1" />
+      <LineId Id="3835" Count="0" />
+      <LineId Id="3842" Count="0" />
       <LineId Id="3670" Count="0" />
       <LineId Id="2433" Count="3" />
       <LineId Id="2430" Count="0" />
@@ -2202,52 +2203,8 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="89" Count="0" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport.m_Main">
-      <LineId Id="2905" Count="0" />
-      <LineId Id="2483" Count="3" />
-      <LineId Id="2530" Count="2" />
-      <LineId Id="2534" Count="2" />
-      <LineId Id="2899" Count="2" />
-      <LineId Id="2906" Count="0" />
-      <LineId Id="2908" Count="1" />
-      <LineId Id="2920" Count="4" />
-      <LineId Id="2910" Count="0" />
-      <LineId Id="2907" Count="0" />
-      <LineId Id="2925" Count="0" />
-      <LineId Id="2843" Count="1" />
-      <LineId Id="2928" Count="1" />
-      <LineId Id="2845" Count="1" />
-      <LineId Id="3041" Count="0" />
-      <LineId Id="3048" Count="0" />
-      <LineId Id="3046" Count="0" />
-      <LineId Id="3049" Count="0" />
-      <LineId Id="2930" Count="0" />
-      <LineId Id="2894" Count="0" />
-      <LineId Id="2933" Count="6" />
-      <LineId Id="2931" Count="1" />
-      <LineId Id="2887" Count="0" />
-      <LineId Id="2940" Count="0" />
-      <LineId Id="2942" Count="8" />
-      <LineId Id="2952" Count="3" />
-      <LineId Id="2957" Count="7" />
-      <LineId Id="3005" Count="2" />
-      <LineId Id="2965" Count="0" />
-      <LineId Id="2967" Count="1" />
-      <LineId Id="3010" Count="5" />
-      <LineId Id="3008" Count="0" />
-      <LineId Id="3017" Count="6" />
-      <LineId Id="3016" Count="0" />
-      <LineId Id="3009" Count="0" />
-      <LineId Id="2986" Count="3" />
-      <LineId Id="2991" Count="5" />
-      <LineId Id="3035" Count="0" />
-      <LineId Id="2997" Count="0" />
-      <LineId Id="3037" Count="1" />
-      <LineId Id="3027" Count="0" />
-      <LineId Id="3029" Count="0" />
-      <LineId Id="3039" Count="1" />
-      <LineId Id="2998" Count="6" />
-      <LineId Id="2941" Count="0" />
-      <LineId Id="2888" Count="1" />
+      <LineId Id="3287" Count="0" />
+      <LineId Id="3169" Count="117" />
       <LineId Id="179" Count="0" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport.m_ReqGoToIdle">

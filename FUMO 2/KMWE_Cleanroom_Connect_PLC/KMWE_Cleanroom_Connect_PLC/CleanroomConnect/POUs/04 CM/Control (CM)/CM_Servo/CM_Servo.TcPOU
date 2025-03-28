@@ -9,7 +9,9 @@ VAR_INPUT
 	i_bIclkForward : BOOL := TRUE; //TRUE = interlocked
 	i_bIclkBackward : BOOL := TRUE; //TRUE = interlocked
 	
-	i_ref_setting : REFERENCE TO ST_PositioningProfile;
+	//--i_ref_setting : REFERENCE TO ST_PositioningProfile;
+	i_ref_setting : REFERENCE TO ST_SettingsServo;
+	
 	
 	i_ref_eCtrlState : REFERENCE TO E_CtrlState;
 END_VAR
@@ -156,8 +158,8 @@ IF s_bIclkForward AND NOT(s_bStaStandstill) AND s_bPositiveDirection THEN
 	s_wrnMotorForwardInterlocked := TRUE;
 	
 	m_Stop(
-		i_fDeceleration := i_ref_setting. fDeceleration,
-		i_fJerk := i_ref_setting.fJerk);
+		i_fDec := i_ref_setting.fStopDec,
+		i_fJrk := i_ref_setting.fStopJrk);
 	
 ELSIF NOT(s_bIclkForward) OR i_bCmdReset THEN
 	s_wrnMotorForwardInterlocked := FALSE;
@@ -167,8 +169,8 @@ IF s_bIclkBackward AND NOT(s_bStaStandstill) AND NOT(s_bPositiveDirection) THEN
 	s_wrnMotorBackwardInterlocked := TRUE;
 	
 	m_Stop(
-		i_fDeceleration := i_ref_setting. fDeceleration,
-		i_fJerk := i_ref_setting.fJerk);
+		i_fDec := i_ref_setting.fStopDec,
+		i_fJrk := i_ref_setting.fJogJrk);
 		
 ELSIF NOT(s_bIclkBackward) OR i_bCmdReset THEN
 	s_wrnMotorBackwardInterlocked := FALSE;
@@ -294,8 +296,8 @@ END_CASE
 fbStop(
 	Axis := i_refAxis,
 	Execute := s_bReqNcStop,
-	Deceleration := i_ref_setting.fDeceleration,
-	Jerk := i_ref_setting.fJerk,
+	Deceleration := i_ref_setting.fStopDec,
+	Jerk := i_ref_setting.fStopJrk,
 	Options := ,
 	Done => s_bDone,
 	Busy => s_bBusy,
@@ -315,7 +317,7 @@ fbReset(
 fbHome(
 	Axis := i_refAxis,
 	Execute := s_bReqNcHome,
-	Position := i_ref_setting.fPosition,
+	Position := i_ref_setting.fHomeOffset,
 	HomingMode := i_mcHomingMode,
 	BufferMode := i_mcBufferMode,
 	Options := ,
@@ -332,11 +334,11 @@ fbJog(
 	JogForward := s_fbHmiBtnJogPos.p_bStaBtn,
 	JogBackwards := s_fbHmiBtnJogNeg.p_bStaBtn,
 	Mode := MC_JOGMODE_STANDARD_SLOW,
-	Position := i_ref_setting.fPosition,
-	Velocity := i_ref_setting.fVelocity,
-	Acceleration := i_ref_setting.fAcceleration,
-	Deceleration := i_ref_setting.fDeceleration,
-	Jerk := i_ref_setting.fJerk,
+	Position := ,
+	Velocity := i_ref_setting.fJogVel,
+	Acceleration := i_ref_setting.fJogAcc,
+	Deceleration := i_ref_setting.fJogDec,
+	Jerk := i_ref_setting.fJogJrk,
 	Done => s_bDone,
 	Busy => s_bBusy,
 	Active => s_bActive,
@@ -344,11 +346,15 @@ fbJog(
 	Error => s_bError,
 	ErrorID => s_nErrorID);
 	
-IF i_eCtrlMode = E_CtrlMode.MAINTENANCE THEN
+IF (i_eCtrlMode <> E_CtrlMode.AUTOMATIC) AND (i_eCtrlMode <> E_CtrlMode.MANUAL) THEN
+	//--fbMoveAbsolute.Position := i_ref_setting.fAbsPosPos;
 	fbMoveAbsolute.Position := s_fSetTargetPosition;
+	fbMoveAbsolute.Velocity := i_ref_setting.fAbsPosVel;
+	fbMoveAbsolute.Acceleration := i_ref_setting.fAbsPosAcc;
+	fbMoveAbsolute.Deceleration := i_ref_setting.fAbsPosDec;
+	fbMoveAbsolute.Jerk := i_ref_setting.fAbsPosJrk;
 ELSE
-	//--i_ref_setting.fPosition := i_ref_setting.fPosition;
-	i_ref_setting := i_ref_setting;
+	; //positining settings are written from the sequence (this could be different in each case)
 END_IF
 	
 fbMoveAbsolute(
@@ -647,11 +653,11 @@ END_VAR
 s_bReqNcMoveAbs := TRUE;
 
 //Inputs
-fbMoveAbsolute.Position := i_stPositioningProfile.fPosition;
-fbMoveAbsolute.Velocity := i_stPositioningProfile.fVelocity;
-fbMoveAbsolute.Acceleration := i_stPositioningProfile.fAcceleration;
-fbMoveAbsolute.Deceleration := i_stPositioningProfile.fDeceleration;
-fbMoveAbsolute.Jerk := i_stPositioningProfile.fJerk;
+fbMoveAbsolute.Position := i_stPositioningProfile.fPos;
+fbMoveAbsolute.Velocity := i_stPositioningProfile.fVel;
+fbMoveAbsolute.Acceleration := i_stPositioningProfile.fAcc;
+fbMoveAbsolute.Deceleration := i_stPositioningProfile.fDec;
+fbMoveAbsolute.Jerk := i_stPositioningProfile.fJrk;
 
 //Outputs
 o_Busy := fbMoveAbsolute.Busy;
@@ -688,8 +694,8 @@ m_Reset := s_bDone;
       <Declaration><![CDATA[//Returms TRUE if stop is done
 METHOD PUBLIC m_Stop : BOOL
 VAR_INPUT
-	i_fDeceleration : LREAL; 
-	i_fJerk : LREAL;
+	i_fDec : LREAL; 
+	i_fJrk : LREAL;
 END_VAR
 VAR_OUTPUT
 	o_Busy : BOOL;
@@ -702,8 +708,8 @@ END_VAR
 s_bReqNcStop := TRUE;
 
 //Inputs
-fbStop.Deceleration := i_fDeceleration;
-fbStop.Jerk := i_fJerk;
+fbStop.Deceleration := i_fDec;
+fbStop.Jerk := i_fJrk;
 
 //Outputs
 o_Busy := fbStop.Busy;
@@ -990,8 +996,8 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="809" Count="23" />
       <LineId Id="846" Count="17" />
       <LineId Id="911" Count="0" />
-      <LineId Id="865" Count="1" />
-      <LineId Id="912" Count="0" />
+      <LineId Id="922" Count="0" />
+      <LineId Id="916" Count="5" />
       <LineId Id="867" Count="17" />
       <LineId Id="901" Count="0" />
       <LineId Id="886" Count="0" />

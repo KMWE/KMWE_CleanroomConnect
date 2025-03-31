@@ -14,6 +14,11 @@ VAR
 	fbIlckHandlerConvBwd : FB_InterlockHandler;
 	fbIlckHandlerConvFwd : FB_InterlockHandler;
 	
+	fbIlckHandlerClampsToClose : FB_InterlockHandler;
+	fbIlckHandlerClampsToOpen : FB_InterlockHandler;
+	
+	fbIlckHandlerTranportExtract : FB_InterlockHandler;
+		
 //------------------------------------------//
 
 //------------------------------------------//
@@ -338,6 +343,11 @@ GVL_Modules.g_emDockingInterface.i_eCtrlMode := E_CtrlMode.IDLE;
 GVL_Modules.g_emDockingInterface.i_bCmdReset := FALSE;
 GVL_Modules.g_emDockingInterface.i_sEmName  := 'EM Docking Interface';
 
+fbIlckHandlerClampsToClose.i_stInterlockList.arr_Interlocks[0].sReason := 'No TB Detected';
+
+fbIlckHandlerClampsToOpen.i_stInterlockList.arr_Interlocks[0].sReason := 'Cleanroom Door Not Closed';
+fbIlckHandlerClampsToOpen.i_stInterlockList.arr_Interlocks[1].sReason := 'Inner Speed Door Not Closed';
+
 //Settings CM Docking Interface (via paramter file)
 //--20240924 s_stSettings.stSettingsDockingInterface.tTimeoutDockingClamps := T#5S;
 //--20240924 s_stSettings.stSettingsDockingInterface.tTimeoutUnlockingPins := T#5S;
@@ -361,6 +371,13 @@ GVL_Modules.g_emLiftingTransport.i_bReqEnable := FALSE;
 GVL_Modules.g_emLiftingTransport.i_eCtrlMode := E_CtrlMode.IDLE;
 GVL_Modules.g_emLiftingTransport.i_bCmdReset := FALSE;
 GVL_Modules.g_emLiftingTransport.i_sEmName := 'EM Lifting Transport';
+
+//Iterlockss
+fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[0].sReason := CONCAT(GVL_Modules.g_emDockingInterface.i_sEmName, ' - Door-Opener Not Opened');
+fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[1].sReason := CONCAT(GVL_Modules.g_emDockingInterface.i_sEmName, ' - Door-Shutter Not Opened');
+{warning: '#TODO: In the future also the opened state of both speed doors should be included'}
+//++fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[2].sReason := CONCAT(GVL_Modules.g_emDoors.i_sEmName, ' - Outer Speed Door Is Not Closed');
+//++fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[3].sReason := CONCAT(GVL_Modules.g_emDoors.i_sEmName, ' - Inner Speed Door Is Not Opened');
 
 //General behavioir
 s_stSettings.stSettingsLiftingTransport.bWaitForNextStep := FALSE;
@@ -604,8 +621,6 @@ VAR
 	//External interlocks for EM_PalletConveyor
 	s_fbExtIlckConvFwd : FB_Interlock;
 	s_fbExtIlckConvBwd : FB_Interlock;
-	//--s_fbExtIlckCenteringCenter : FB_Interlock;
-	//--s_fbExtIlckCenteringRest : FB_Interlock;
 	
 	//External interlocks for EM_DockingInterface
 	s_fbExtIlckDockingClampsToClose : FB_Interlock;
@@ -696,17 +711,40 @@ GVL_Modules.g_emPalletConveyor(
 	i_fbExtIlckConvBwd := s_fbExtIlckConvBwd,
 	i_refTB := GVL_Modules.g_objCarrier);
 
-s_fbExtIlckDockingClampsToClose(i_bInterlocked := NOT(GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking) AND FALSE); // NOT(GVL_Modules.g_emDockingInterface.p_bStaUndocked));
-s_fbExtIlckDockingClampsToClose.p_sReason := 'No TB detected';
+//OLD 2025-03-31
+//--s_fbExtIlckDockingClampsToClose(i_bInterlocked := NOT(GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking) AND FALSE); // NOT(GVL_Modules.g_emDockingInterface.p_bStaUndocked));
+//--s_fbExtIlckDockingClampsToClose.p_sReason := 'No TB detected';
 
-s_fbExtIlckDockingClampsToOpen(i_bInterlocked := NOT(s_bSimCleanroomDoorClosed));
-s_fbExtIlckDockingClampsToOpen.p_sReason := 'Cleanroon Door not closed';
+//--s_fbExtIlckDockingClampsToOpen(i_bInterlocked := NOT(s_bSimCleanroomDoorClosed));
+//--s_fbExtIlckDockingClampsToOpen.p_sReason := 'Cleanroon Door not closed';
+//OLD	
+	
+/// NEW 2025-03-31
+fbIlckHandlerClampsToClose();
+fbIlckHandlerClampsToOpen();
+	
+fbIlckHandlerClampsToClose.i_stInterlockList.arr_Interlocks[0].bState := NOT(GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking);
 
-//--s_fbExtIlckUnlockingPinsToLock;
-//--s_fbExtIlckUnlockingPinsToLock;
+fbIlckHandlerClampsToOpen.i_stInterlockList.arr_Interlocks[0].bState := FALSE; //++NOT(GVL_Modules.g_emDoors.p_bStaCleanroomDoorNotClosedAndLocked);
+fbIlckHandlerClampsToOpen.i_stInterlockList.arr_Interlocks[1].bState := FALSE; //++NOT(GVL_Modules.g_emDoors.p_bStaInnerSpeedDoorClosed);
 
-//--s_fbExtIlckUnlockingPinsToRelease;
-//--s_fbExtIlckUnlockingPinsToRelease;	
+s_fbExtIlckDockingClampsToClose();
+s_fbExtIlckDockingClampsToClose.i_bInterlocked := fbIlckHandlerClampsToClose.p_bInterlocked; 
+IF fbIlckHandlerClampsToClose.p_bInterlocked THEN
+	s_fbExtIlckDockingClampsToClose.p_sReason := fbIlckHandlerClampsToClose.p_sReason;
+ELSE
+	s_fbExtIlckDockingClampsToClose.p_sReason := '-';	
+END_IF
+
+s_fbExtIlckDockingClampsToOpen();
+s_fbExtIlckDockingClampsToOpen.i_bInterlocked := fbIlckHandlerClampsToOpen.p_bInterlocked; 
+IF fbIlckHandlerClampsToOpen.p_bInterlocked THEN
+	s_fbExtIlckDockingClampsToOpen.p_sReason := fbIlckHandlerClampsToOpen.p_sReason;
+ELSE
+	s_fbExtIlckDockingClampsToOpen.p_sReason := '-';	
+END_IF
+
+///	NEW 
 	
 GVL_Modules.g_emDockingInterface(
 	i_bReqEnable := bReqEnable,
@@ -717,10 +755,26 @@ GVL_Modules.g_emDockingInterface(
 	i_fbExtIlckDockingClampsToClose := s_fbExtIlckDockingClampsToClose, 
 	i_refTB := GVL_Modules.g_objCarrier);	
 
-s_fbExtIlckLiftUp(i_bInterlocked := FALSE);
-s_fbExtIlckLiftDown(i_bInterlocked := FALSE);
-s_fbExtIlckTransportExtract(i_bInterlocked := FALSE);
-s_fbExtIlckTransportRetract(i_bInterlocked := FALSE);
+fbIlckHandlerTranportExtract();
+//Wat zijn de externe interelocks voor Lifting Transport?
+// * TB deur moet geoopend zijn voor dat de Transport Unit wordt uitgeschoven
+// * Voor de lift (up/down) zijn er geen externe interlock
+// * Voor het inschuiven van de transport unit is er ook geen externe interlock.
+// Heeft niet veel nut om de niet gebruikte interlocks aan temalken en te verwerke, dit gaat ten koste van de resources
+
+fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[0].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDoorOpenerOpened);
+fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[1].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDoorShutterOpened);
+{warning: '#TODO: In the future also the opened state of both speed doors should be included'}
+fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[2].bState := FALSE; //++NOT(GVL_Modules.g_emDoors _speed_door_not_opened_);
+fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[3].bState := FALSE; //++NOT(GVL_Modules.g_emDoors _speed_door_not_opened_);
+
+s_fbExtIlckTransportExtract();
+s_fbExtIlckTransportExtract.i_bInterlocked := fbIlckHandlerTranportExtract.p_bInterlocked;
+IF fbIlckHandlerTranportExtract.p_bInterlocked THEN
+	s_fbExtIlckTransportExtract.p_sReason := fbIlckHandlerTranportExtract.p_sReason;
+ELSE
+	s_fbExtIlckTransportExtract.p_sReason := '-';	
+END_IF
 
 GVL_Modules.g_emLiftingTransport(
 	i_bReqEnable := bReqEnable,
@@ -1300,7 +1354,17 @@ GVL_Modules.g_emPalletConveyor._m_CmdTB_ToInfeed(i_refReason := sReason);
       <LineId Id="8" Count="0" />
     </LineIds>
     <LineIds Name="UN_CleanroomConnect._m_Init">
-      <LineId Id="3926" Count="79" />
+      <LineId Id="3926" Count="51" />
+      <LineId Id="4260" Count="0" />
+      <LineId Id="4262" Count="1" />
+      <LineId Id="4265" Count="1" />
+      <LineId Id="4250" Count="0" />
+      <LineId Id="3979" Count="22" />
+      <LineId Id="4259" Count="0" />
+      <LineId Id="4251" Count="0" />
+      <LineId Id="4255" Count="3" />
+      <LineId Id="4252" Count="0" />
+      <LineId Id="4002" Count="3" />
       <LineId Id="4246" Count="0" />
       <LineId Id="4245" Count="0" />
       <LineId Id="4247" Count="1" />
@@ -1361,16 +1425,21 @@ GVL_Modules.g_emPalletConveyor._m_CmdTB_ToInfeed(i_refReason := sReason);
       <LineId Id="1057" Count="0" />
       <LineId Id="879" Count="1" />
       <LineId Id="883" Count="0" />
+      <LineId Id="1386" Count="0" />
+      <LineId Id="1347" Count="0" />
+      <LineId Id="1390" Count="3" />
+      <LineId Id="1389" Count="0" />
+      <LineId Id="1388" Count="0" />
+      <LineId Id="1387" Count="0" />
       <LineId Id="922" Count="0" />
-      <LineId Id="924" Count="0" />
-      <LineId Id="927" Count="1" />
-      <LineId Id="925" Count="0" />
-      <LineId Id="929" Count="1" />
-      <LineId Id="926" Count="0" />
-      <LineId Id="931" Count="1" />
-      <LineId Id="884" Count="0" />
-      <LineId Id="933" Count="0" />
-      <LineId Id="923" Count="0" />
+      <LineId Id="1355" Count="3" />
+      <LineId Id="1361" Count="2" />
+      <LineId Id="1365" Count="8" />
+      <LineId Id="1380" Count="5" />
+      <LineId Id="1354" Count="0" />
+      <LineId Id="1353" Count="0" />
+      <LineId Id="1351" Count="0" />
+      <LineId Id="1350" Count="0" />
       <LineId Id="885" Count="2" />
       <LineId Id="1000" Count="0" />
       <LineId Id="1056" Count="0" />
@@ -1378,10 +1447,20 @@ GVL_Modules.g_emPalletConveyor._m_CmdTB_ToInfeed(i_refReason := sReason);
       <LineId Id="961" Count="0" />
       <LineId Id="890" Count="0" />
       <LineId Id="1288" Count="0" />
-      <LineId Id="1089" Count="0" />
-      <LineId Id="1289" Count="0" />
-      <LineId Id="1292" Count="0" />
-      <LineId Id="1291" Count="0" />
+      <LineId Id="1333" Count="0" />
+      <LineId Id="1319" Count="0" />
+      <LineId Id="1322" Count="0" />
+      <LineId Id="1344" Count="2" />
+      <LineId Id="1343" Count="0" />
+      <LineId Id="1326" Count="1" />
+      <LineId Id="1330" Count="1" />
+      <LineId Id="1329" Count="0" />
+      <LineId Id="1334" Count="0" />
+      <LineId Id="1325" Count="0" />
+      <LineId Id="1335" Count="0" />
+      <LineId Id="1337" Count="1" />
+      <LineId Id="1341" Count="1" />
+      <LineId Id="1339" Count="0" />
       <LineId Id="1290" Count="0" />
       <LineId Id="1287" Count="0" />
       <LineId Id="1036" Count="1" />

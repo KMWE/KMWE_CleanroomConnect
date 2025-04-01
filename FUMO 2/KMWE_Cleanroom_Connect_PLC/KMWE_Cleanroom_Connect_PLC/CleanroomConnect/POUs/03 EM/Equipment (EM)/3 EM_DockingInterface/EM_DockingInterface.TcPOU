@@ -95,8 +95,8 @@ VAR
 	s_bStaBoxAtDockedPosition : BOOL := FALSE;
 	s_bStaDockingPositionFree : BOOL := FALSE;
 	
-	s_bStaInnerDoorCloseAndLocked : BOOL := FALSE;
-	s_bStaInnerDoorOpenAndReleased : BOOL := FALSE;
+	s_bStaInnerDoorClosedAndLocked : BOOL := FALSE;
+	s_bStaInnerDoorOpenedAndReleased : BOOL := FALSE;
 	
 	//Interlockes
 	s_bIlckDockingClampsUpperPressureLow : BOOL;
@@ -799,13 +799,14 @@ s_bStaLockingPinLowerLocked := s_cmUnlockingPinLower.p_bStaIsOff;
 s_bStaUnlockingPinsLocked := s_bStaLockingPinUpperLocked AND s_bStaLockingPinLowerLocked;
 s_bStaUnlockingPinsReleased := s_bStaLockingPinUpperReleased AND s_bStaLockingPinLowerReleased;
 
-s_bStaInnerDoorCloseAndLocked := 
+s_bStaInnerDoorClosedAndLocked := 
 	s_bStaLockingPinLowerLocked
 	AND s_bStaLockingPinUpperLocked
 	AND s_bStaDoorOpenerClosed
-	AND s_bStaDoorShutterClosed;
+	AND s_bStaDoorShutterOpened;
+//--	AND s_bStaDoorShutterClosed;
 
-s_bStaInnerDoorOpenAndReleased := 
+s_bStaInnerDoorOpenedAndReleased := 
 	s_bStaLockingPinLowerReleased
 	AND s_bStaLockingPinUpperReleased
 	AND s_bStaDoorOpenerOpened
@@ -1941,24 +1942,38 @@ p_bStaDoorShutterOpened := s_bStaDoorShutterOpened;
         </Implementation>
       </Get>
     </Property>
-    <Property Name="p_bStaInnerDoorCloseAndLocked" Id="{dd31784c-49d6-4d32-a02f-66ee1e524851}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaInnerDoorCloseAndLocked : BOOL]]></Declaration>
+    <Property Name="p_bStaInnerDoorClosed" Id="{dd31784c-49d6-4d32-a02f-66ee1e524851}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaInnerDoorClosed : BOOL]]></Declaration>
       <Get Name="Get" Id="{ec81e0aa-07a2-4a59-858a-8a8d7988d797}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaInnerDoorCloseAndLocked := s_bStaInnerDoorCloseAndLocked;
+p_bStaInnerDoorClosed := s_bStaInnerDoorClosedAndLocked;
 ]]></ST>
         </Implementation>
       </Get>
     </Property>
-    <Property Name="p_bStaInnerDoorOpenAndReleased" Id="{38547cf9-5983-403c-914e-3b92e4e4e9d8}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaInnerDoorOpenAndReleased : BOOL]]></Declaration>
+    <Property Name="p_bStaInnerDoorOpened" Id="{38547cf9-5983-403c-914e-3b92e4e4e9d8}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaInnerDoorOpened : BOOL]]></Declaration>
       <Get Name="Get" Id="{c2f8547d-c997-4c85-95f1-ef32b94df578}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaInnerDoorOpenAndReleased := s_bStaInnerDoorOpenAndReleased;
+p_bStaInnerDoorOpened := s_bStaInnerDoorOpenedAndReleased;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaReady" Id="{70848e19-c91a-41af-b75e-c674a90c1f5a}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaReady : BOOL]]></Declaration>
+      <Get Name="Get" Id="{68401e4d-749c-4e8c-94bf-1ef2897db83f}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaReady :=
+	(s_eSeqDockingInterface = E_SeqDockingInterface.READY)
+	OR (s_eSeqDockingInterface = E_SeqDockingInterface.TB_DOCKED)
+	OR (s_eSeqDockingInterface = E_SeqDockingInterface.INNER_DOOR_OPENED);
 ]]></ST>
         </Implementation>
       </Get>
@@ -2363,6 +2378,7 @@ p_bStaUnlockingPinsReleased := s_bStaUnlockingPinsReleased;
       <LineId Id="322" Count="0" />
       <LineId Id="324" Count="3" />
       <LineId Id="323" Count="0" />
+      <LineId Id="343" Count="0" />
       <LineId Id="329" Count="4" />
       <LineId Id="328" Count="0" />
       <LineId Id="198" Count="0" />
@@ -2875,13 +2891,19 @@ p_bStaUnlockingPinsReleased := s_bStaUnlockingPinsReleased;
       <LineId Id="2" Count="0" />
       <LineId Id="6" Count="0" />
     </LineIds>
-    <LineIds Name="EM_DockingInterface.p_bStaInnerDoorCloseAndLocked.Get">
+    <LineIds Name="EM_DockingInterface.p_bStaInnerDoorClosed.Get">
       <LineId Id="5" Count="0" />
       <LineId Id="11" Count="1" />
     </LineIds>
-    <LineIds Name="EM_DockingInterface.p_bStaInnerDoorOpenAndReleased.Get">
+    <LineIds Name="EM_DockingInterface.p_bStaInnerDoorOpened.Get">
       <LineId Id="5" Count="0" />
       <LineId Id="7" Count="1" />
+    </LineIds>
+    <LineIds Name="EM_DockingInterface.p_bStaReady.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="8" Count="2" />
+      <LineId Id="6" Count="0" />
     </LineIds>
     <LineIds Name="EM_DockingInterface.p_bStaUndocked.Get">
       <LineId Id="5" Count="0" />

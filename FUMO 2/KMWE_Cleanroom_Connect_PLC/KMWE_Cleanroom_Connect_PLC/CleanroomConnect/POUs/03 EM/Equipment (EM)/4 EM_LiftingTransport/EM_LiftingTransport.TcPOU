@@ -142,7 +142,7 @@ VAR
 	
 	s_bStaWarning : BOOL;
 	
-	s_sMessage : STRING;
+	s_sMessage : STRING(128);
 
 	//Sequencers
 	s_eSeqLiftingTransport : E_SeqLiftingTransport;
@@ -259,7 +259,7 @@ _m_SeqLiftingTransport();
       <Declaration><![CDATA[{attribute 'TcRpcEnable'}
 METHOD PRIVATE _m_CmdGoToIdle : BOOL
 VAR_INPUT
-	i_refReason : REFERENCE TO STRING;
+	i_refReason : REFERENCE TO STRING(128);
 END_VAR
 ]]></Declaration>
       <Implementation>
@@ -288,7 +288,7 @@ END_IF
     <Method Name="_m_CmdPickTrolleyFromTB" Id="{3a534c15-c636-468b-8b82-6fd59e761d1a}">
       <Declaration><![CDATA[METHOD PRIVATE _m_CmdPickTrolleyFromTB : BOOL
 VAR_INPUT
-	i_refReason : REFERENCE TO STRING;
+	i_refReason : REFERENCE TO STRING(128);
 END_VAR
 ]]></Declaration>
       <Implementation>
@@ -321,7 +321,7 @@ END_IF
     <Method Name="_m_CmdPlaceTrolleyInTB" Id="{fddfe49e-6281-47a3-8534-8abf984608e2}">
       <Declaration><![CDATA[METHOD PRIVATE _m_CmdPlaceTrolleyInTB : BOOL
 VAR_INPUT
-	i_refReason : REFERENCE TO STRING;
+	i_refReason : REFERENCE TO STRING(128);
 END_VAR
 ]]></Declaration>
       <Implementation>
@@ -468,8 +468,8 @@ s_cmLift(
 	i_ref_setting := i_ref_stSettings.stSettingsServoLift,
 	i_bCmdReset := i_bCmdReset,
 	i_refAxis := axisLift,
-	i_bIclkPositive := s_bIlckLiftUp,
-	i_bIclkNegative := s_bIlckLiftDown);
+	i_bIclkPos := s_bIlckLiftUp,
+	i_bIclkNeg := s_bIlckLiftDown);
 
 s_bStaLiftDriveError := s_cmLift.p_bError;
 	
@@ -480,8 +480,8 @@ s_cmTransport(
 	i_ref_setting := i_ref_stSettings.stSettingsServoTransport,
 	i_bCmdReset := i_bCmdReset,
 	i_refAxis := axisTransport,
-	i_bIclkPositive := s_bIlckTransportExtract, 
-	i_bIclkNegative := s_bIlckTransportRetract);
+	i_bIclkPos := s_bIlckTransportExtract, 
+	i_bIclkNeg := s_bIlckTransportRetract);
 
 s_bStaTransportDriveError := s_cmTransport.p_bError;
 
@@ -657,8 +657,7 @@ _m_Init := TRUE;
       <Declaration><![CDATA[METHOD PROTECTED _m_Inputs : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[
-IF NOT SUPER^._m_Inputs() THEN
+        <ST><![CDATA[IF NOT SUPER^._m_Inputs() THEN
 	RETURN;
 END_IF
 
@@ -669,6 +668,7 @@ s_cmTransport.p_fSetTargetPosition := s_fSetTransportPosition * 0.5;
 
 //Interlocks
 //Lift
+i_fbExtIlckLiftDown();
 fbIlckHandlerLiftDown.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckLiftDown.p_bInterlocked;
 fbIlckHandlerLiftDown.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckLiftDown.p_sReason;
 fbIlckHandlerLiftDown.i_stInterlockList.arr_Interlocks[1].bState := 
@@ -678,6 +678,7 @@ fbIlckHandlerLiftDown.i_stInterlockList.arr_Interlocks[1].bState :=
 fbIlckHandlerLiftDown.i_stInterlockList.arr_Interlocks[1].sReason := 'Transport not at retracted position';
 fbIlckHandlerLiftDown();
 
+i_fbExtIlckLiftUp();
 fbIlckHandlerLiftUp.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckLiftUp.p_bInterlocked;
 fbIlckHandlerLiftUp.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckLiftUp.p_sReason;
 fbIlckHandlerLiftUp.i_stInterlockList.arr_Interlocks[1].bState := FALSE;
@@ -698,6 +699,7 @@ s_bIlckLiftDown := fbIlckHandlerLiftDown.p_bInterlocked;
 s_bIlckLiftUp := fbIlckHandlerLiftUp.p_bInterlocked;
 
 //Transport
+i_fbExtIlckTransportRetract();
 fbIlckHandlerTransportRetract.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckTransportRetract.p_bInterlocked;
 fbIlckHandlerTransportRetract.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckTransportRetract.p_sReason;
 //--fbIlckHandlerTransportRetract.i_stInterlockList.arr_Interlocks[1].bState := NOT s_cmLift.p_fPosition >= i_ref_stSettings.;
@@ -705,10 +707,9 @@ fbIlckHandlerTransportRetract.i_stInterlockList.arr_Interlocks[0].sReason := i_f
 
 //OOnderstaande situaties afvangen:
 // - Pick Trolley from TB 
-
-
 fbIlckHandlerTransportRetract();
 
+i_fbExtIlckTransportExtract();
 fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckTransportExtract.p_bInterlocked;
 fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckTransportExtract.p_sReason;
 fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[1].bState := 
@@ -727,28 +728,28 @@ s_bIlckTransportExtract := fbIlckHandlerTransportExtract.p_bInterlocked;
 //Reasons (own reason first: Cm->Em->Un)
 //Lift
 IF s_bIlckLiftDown THEN
-	s_cmLift.p_sInterlockedReasonBackward := fbIlckHandlerLiftDown.p_sReason;
+	s_cmLift.p_sInterlockedReasonNeg := fbIlckHandlerLiftDown.p_sReason;
 ELSE
-	s_cmLift.p_sInterlockedReasonBackward := '-';
+	s_cmLift.p_sInterlockedReasonNeg := '-';
 END_IF
 	
 IF s_bIlckLiftUp THEN
-	s_cmLift.p_sInterlockedReasonForward := fbIlckHandlerLiftUp.p_sReason;
+	s_cmLift.p_sInterlockedReasonPos := fbIlckHandlerLiftUp.p_sReason;
 ELSE
-	s_cmLift.p_sInterlockedReasonForward := '-';
+	s_cmLift.p_sInterlockedReasonPos := '-';
 END_IF
 
 //Transport
 IF s_bIlckTransportRetract THEN
-	s_cmTransport.p_sInterlockedReasonBackward := fbIlckHandlerTransportRetract.p_sReason;
+	s_cmTransport.p_sInterlockedReasonNeg := fbIlckHandlerTransportRetract.p_sReason;
 ELSE
-	s_cmTransport.p_sInterlockedReasonBackward := '-';
+	s_cmTransport.p_sInterlockedReasonNeg := '-';
 END_IF
 	
 IF s_bIlckTransportExtract THEN
-	s_cmTransport.p_sInterlockedReasonForward := fbIlckHandlerTransportExtract.p_sReason;
+	s_cmTransport.p_sInterlockedReasonPos := fbIlckHandlerTransportExtract.p_sReason;
 ELSE
-	s_cmTransport.p_sInterlockedReasonForward := '-';
+	s_cmTransport.p_sInterlockedReasonPos := '-';
 END_IF
 
 {warning '#TODO: Something similar needs to be added for lifting transport'}
@@ -914,7 +915,7 @@ CASE s_eSeqLiftingTransport OF
 			s_cmTransport.m_MoveAbsolute(_m_ConvTranspToMotorPos(i_ref_stSettings.arr_stTransportPositioningProfile[0]));
 		END_IF
 					
-		s_bActionDone S= s_cmTransport.p_bDone;
+		s_bActionDone S= s_cmTransport.p_bMoveAbsDone;
 			
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
@@ -929,7 +930,7 @@ CASE s_eSeqLiftingTransport OF
 			s_cmLift.m_MoveAbsolute(_m_ConvLiftToMotorPos(i_ref_stSettings.arr_stLiftPositioningProfile[0]));
 		END_IF
 		
-		s_bActionDone S= s_cmLift.p_bDone;
+		s_bActionDone S= s_cmLift.p_bMoveAbsDone;
 			
 		IF s_bActionDone THEN
 			//s_bStaAtIdlePosition := TRUE;	will be set based on the actual position(s)						    /////////////////////
@@ -947,7 +948,7 @@ CASE s_eSeqLiftingTransport OF
 			s_bStaTrolleyPlacedInTB := FALSE;
 		END_IF
 					
-		s_bActionDone S= s_cmLift.p_bDone;
+		s_bActionDone S= s_cmLift.p_bMoveAbsDone;
 			
 		{warning 'TODO: Added collision avoidance sensor, first check ik transport is allowed to move forward'}
 		//Generate warning if not the case, think about what action should be possible for the operator to solve the problem 
@@ -963,7 +964,7 @@ CASE s_eSeqLiftingTransport OF
 			s_cmTransport.m_MoveAbsolute(_m_ConvTranspToMotorPos(i_ref_stSettings.arr_stTransportPositioningProfile[1]));
 		END_IF
 			
-		s_bActionDone S= s_cmTransport.p_bDone;
+		s_bActionDone S= s_cmTransport.p_bMoveAbsDone;
 			
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
@@ -978,7 +979,7 @@ CASE s_eSeqLiftingTransport OF
 			s_cmTransport.m_MoveAbsolute(_m_ConvTranspToMotorPos(i_ref_stSettings.arr_stTransportPositioningProfile[2]));
 		END_IF
 	
-		s_bActionDone S= s_cmTransport.p_bDone;
+		s_bActionDone S= s_cmTransport.p_bMoveAbsDone;
 			
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
@@ -993,7 +994,7 @@ CASE s_eSeqLiftingTransport OF
 			s_cmLift.m_MoveAbsolute(_m_ConvLiftToMotorPos(i_ref_stSettings.arr_stLiftPositioningProfile[2]));
 		END_IF
 	
-		s_bActionDone S= s_cmLift.p_bDone;
+		s_bActionDone S= s_cmLift.p_bMoveAbsDone;
 			
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
@@ -1023,7 +1024,7 @@ CASE s_eSeqLiftingTransport OF
 			s_cmLift.m_MoveAbsolute(_m_ConvLiftToMotorPos(i_ref_stSettings.arr_stLiftPositioningProfile[1]));
 		END_IF
 		
-		s_bActionDone S= s_cmLift.p_bDone;
+		s_bActionDone S= s_cmLift.p_bMoveAbsDone;
 			
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
@@ -1038,7 +1039,7 @@ CASE s_eSeqLiftingTransport OF
 			s_cmLift.m_MoveAbsolute(_m_ConvLiftToMotorPos(i_ref_stSettings.arr_stLiftPositioningProfile[3]));
 		END_IF
 		
-		s_bActionDone S= s_cmLift.p_bDone;
+		s_bActionDone S= s_cmLift.p_bMoveAbsDone;
 			
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
@@ -1053,7 +1054,7 @@ CASE s_eSeqLiftingTransport OF
 			s_cmTransport.m_MoveAbsolute(_m_ConvTranspToMotorPos(i_ref_stSettings.arr_stTransportPositioningProfile[3]));
 		END_IF
 		
-		s_bActionDone S= s_cmTransport.p_bDone;
+		s_bActionDone S= s_cmTransport.p_bMoveAbsDone;
 			
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
@@ -1068,7 +1069,7 @@ CASE s_eSeqLiftingTransport OF
 			s_cmLift.m_MoveAbsolute(_m_ConvLiftToMotorPos(i_ref_stSettings.arr_stLiftPositioningProfile[4]));
 		END_IF
 	
-		s_bActionDone S= s_cmLift.p_bDone;
+		s_bActionDone S= s_cmLift.p_bMoveAbsDone;
 			
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
@@ -1083,7 +1084,7 @@ CASE s_eSeqLiftingTransport OF
 			s_cmLift.m_MoveAbsolute(_m_ConvLiftToMotorPos(i_ref_stSettings.arr_stLiftPositioningProfile[5]));
 		END_IF
 	
-		s_bActionDone S= s_cmLift.p_bDone;
+		s_bActionDone S= s_cmLift.p_bMoveAbsDone;
 			
 		IF s_bActionDone THEN
 			//Check if trolley is present
@@ -1107,7 +1108,7 @@ CASE s_eSeqLiftingTransport OF
 			s_bStaTrolleyPickedFromTB := FALSE;
 		END_IF
 	
-		s_bActionDone S= s_cmLift.p_bDone;
+		s_bActionDone S= s_cmLift.p_bMoveAbsDone;
 			
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
@@ -1122,7 +1123,7 @@ CASE s_eSeqLiftingTransport OF
 			s_cmLift.m_MoveAbsolute(_m_ConvLiftToMotorPos(i_ref_stSettings.arr_stLiftPositioningProfile[7]));
 		END_IF
 	
-		s_bActionDone S= s_cmLift.p_bDone;
+		s_bActionDone S= s_cmLift.p_bMoveAbsDone;
 			
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
@@ -1137,7 +1138,7 @@ CASE s_eSeqLiftingTransport OF
 			s_cmLift.m_MoveAbsolute(_m_ConvLiftToMotorPos(i_ref_stSettings.arr_stLiftPositioningProfile[8]));
 		END_IF
 	
-		s_bActionDone S= s_cmLift.p_bDone;
+		s_bActionDone S= s_cmLift.p_bMoveAbsDone;
 			
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
@@ -1152,7 +1153,7 @@ CASE s_eSeqLiftingTransport OF
 			s_cmTransport.m_MoveAbsolute(_m_ConvTranspToMotorPos(i_ref_stSettings.arr_stTransportPositioningProfile[4]));
 		END_IF
 	
-		s_bActionDone S= s_cmTransport.p_bDone;
+		s_bActionDone S= s_cmTransport.p_bMoveAbsDone;
 			
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
@@ -1167,7 +1168,7 @@ CASE s_eSeqLiftingTransport OF
 			s_cmTransport.m_MoveAbsolute(_m_ConvTranspToMotorPos(i_ref_stSettings.arr_stTransportPositioningProfile[5]));
 		END_IF
 	
-		s_bActionDone S= s_cmTransport.p_bDone;
+		s_bActionDone S= s_cmTransport.p_bMoveAbsDone;
 			
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
@@ -1182,7 +1183,7 @@ CASE s_eSeqLiftingTransport OF
 			s_cmLift.m_MoveAbsolute(_m_ConvLiftToMotorPos(i_ref_stSettings.arr_stLiftPositioningProfile[9]));
 		END_IF
 	
-		s_bActionDone S= s_cmLift.p_bDone;
+		s_bActionDone S= s_cmLift.p_bMoveAbsDone;
 			
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
@@ -1197,7 +1198,7 @@ CASE s_eSeqLiftingTransport OF
 			s_cmLift.m_MoveAbsolute(_m_ConvLiftToMotorPos(i_ref_stSettings.arr_stLiftPositioningProfile[10]));
 		END_IF
 	
-		s_bActionDone S= s_cmLift.p_bDone;
+		s_bActionDone S= s_cmLift.p_bMoveAbsDone;
 			
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
@@ -1228,7 +1229,7 @@ CASE s_eSeqLiftingTransport OF
 			s_cmLift.m_MoveAbsolute(_m_ConvLiftToMotorPos(i_ref_stSettings.arr_stLiftPositioningProfile[8]));
 		END_IF
 		
-		s_bActionDone S= s_cmLift.p_bDone;
+		s_bActionDone S= s_cmLift.p_bMoveAbsDone;
 			
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
@@ -1243,7 +1244,7 @@ CASE s_eSeqLiftingTransport OF
 			s_cmTransport.m_MoveAbsolute(_m_ConvTranspToMotorPos(i_ref_stSettings.arr_stTransportPositioningProfile[0]));
 		END_IF
 			
-		s_bActionDone S= s_cmTransport.p_bDone;
+		s_bActionDone S= s_cmTransport.p_bMoveAbsDone;
 			
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
@@ -1258,7 +1259,7 @@ CASE s_eSeqLiftingTransport OF
 			s_cmLift.m_MoveAbsolute(_m_ConvLiftToMotorPos(i_ref_stSettings.arr_stLiftPositioningProfile[0]));
 		END_IF
 	
-		s_bActionDone S= s_cmLift.p_bDone;
+		s_bActionDone S= s_cmLift.p_bMoveAbsDone;
 			
 		IF s_bActionDone THEN
 			s_bNextStep := FALSE;
@@ -1659,7 +1660,7 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="131" Count="4" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport._m_Devices">
-      <LineId Id="189" Count="57" />
+      <LineId Id="306" Count="57" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport._m_Hmi">
@@ -1685,69 +1686,7 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="542" Count="0" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport._m_Inputs">
-      <LineId Id="129" Count="0" />
-      <LineId Id="103" Count="2" />
-      <LineId Id="258" Count="0" />
-      <LineId Id="282" Count="0" />
-      <LineId Id="226" Count="0" />
-      <LineId Id="250" Count="1" />
-      <LineId Id="130" Count="0" />
-      <LineId Id="132" Count="4" />
-      <LineId Id="265" Count="0" />
-      <LineId Id="275" Count="0" />
-      <LineId Id="264" Count="0" />
-      <LineId Id="229" Count="0" />
-      <LineId Id="138" Count="0" />
-      <LineId Id="152" Count="2" />
-      <LineId Id="232" Count="0" />
-      <LineId Id="261" Count="0" />
-      <LineId Id="248" Count="0" />
-      <LineId Id="255" Count="0" />
-      <LineId Id="243" Count="0" />
-      <LineId Id="240" Count="0" />
-      <LineId Id="256" Count="0" />
-      <LineId Id="242" Count="0" />
-      <LineId Id="231" Count="0" />
-      <LineId Id="247" Count="0" />
-      <LineId Id="245" Count="0" />
-      <LineId Id="244" Count="0" />
-      <LineId Id="151" Count="0" />
-      <LineId Id="172" Count="0" />
-      <LineId Id="174" Count="0" />
-      <LineId Id="173" Count="0" />
-      <LineId Id="156" Count="0" />
-      <LineId Id="149" Count="0" />
-      <LineId Id="159" Count="2" />
-      <LineId Id="234" Count="0" />
-      <LineId Id="237" Count="2" />
-      <LineId Id="236" Count="0" />
-      <LineId Id="233" Count="0" />
-      <LineId Id="162" Count="1" />
-      <LineId Id="167" Count="1" />
-      <LineId Id="263" Count="0" />
-      <LineId Id="267" Count="0" />
-      <LineId Id="273" Count="1" />
-      <LineId Id="235" Count="0" />
-      <LineId Id="280" Count="0" />
-      <LineId Id="277" Count="0" />
-      <LineId Id="276" Count="0" />
-      <LineId Id="158" Count="0" />
-      <LineId Id="170" Count="1" />
-      <LineId Id="157" Count="0" />
-      <LineId Id="150" Count="0" />
-      <LineId Id="175" Count="11" />
-      <LineId Id="131" Count="0" />
-      <LineId Id="188" Count="11" />
-      <LineId Id="187" Count="0" />
-      <LineId Id="211" Count="0" />
-      <LineId Id="106" Count="0" />
-      <LineId Id="200" Count="1" />
-      <LineId Id="212" Count="0" />
-      <LineId Id="215" Count="2" />
-      <LineId Id="213" Count="0" />
-      <LineId Id="202" Count="8" />
-      <LineId Id="126" Count="1" />
-      <LineId Id="5" Count="0" />
+      <LineId Id="409" Count="114" />
       <LineId Id="218" Count="0" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport._m_Outputs">

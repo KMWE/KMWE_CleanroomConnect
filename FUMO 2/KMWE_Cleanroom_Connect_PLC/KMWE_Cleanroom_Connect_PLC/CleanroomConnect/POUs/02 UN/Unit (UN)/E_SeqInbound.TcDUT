@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="E_SeqInbound" Id="{d0430e88-cd71-4c58-b316-a4d3432c9066}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'strict'}
+{attribute 'to_string'}
+TYPE E_SeqInbound :
+(
+	IDLE := 0, //Do Nothing
+	START := 1, //First step executed after reset sequence
+	BUSY := 1000, //Module busy
+
+	WAIT_FOR_TB_ON_INFEED,
+	TB_TO_CENTER,
+	CENTERING_TB,
+	TB_TO_DOCKING,
+	DOCK_TB,
+	OPEN_INNER_DOOR,
+	PICK_TROLLEY_FROM_TB,
+	CLOSE_INNER_DOOR,
+	UNDOCK_TB,
+	TB_TO_INFEED,
+
+	STOP,
+	
+	READY := 10000, //Module is ready, only executed once
+	ERROR := 20000 // Module has an error	
+);
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

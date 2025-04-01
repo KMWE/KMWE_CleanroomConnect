@@ -50,7 +50,8 @@ VAR
 	// none
 
 	// Hmi
-	stHmiData : ST_DigOutput_HMI;
+	s_stHmiData : ST_DigOutput_HMI;
+	s_bHmiInit : BOOL := FALSE;
 	
 	s_fbHmiBtnManualOff		: FB_HmiBtn;
 	s_fbHmiBtnManualOn		: FB_HmiBtn;
@@ -76,24 +77,32 @@ m_Main();
 END_IF
 
 //To Hmi
-stHmiData.sDescription := i_sCmName;
-stHmiData.sNameOff := s_fbHmiBtnManualOff.p_sBtnText;
-stHmiData.sNameOn := s_fbHmiBtnManualOn.p_sBtnText;
-stHmiData.bStaOff := NOT(s_bStaOutput);
-stHmiData.bStaOn := s_bStaOutput;
-stHmiData.bBtnOffEnabled := s_fbHmiBtnManualOff.p_bStaEnabled;
-stHmiData.bBtnOnEnabled := s_fbHmiBtnManualOn.p_bStaEnabled;
-stHmiData.sInterlockedReasonOn := s_sInterlockedReasonOn;
-stHmiData.sInterlockedReasonOff := s_sInterlockedReasonOff;
+IF NOT(s_bHmiInit) THEN
+	//General names
+	s_stHmiData.sDescription := i_sCmName;
+	
+	//Button names
+	s_stHmiData.sNameOff := s_fbHmiBtnManualOff.p_sBtnText;
+	s_stHmiData.sNameOn := s_fbHmiBtnManualOn.p_sBtnText;	
+
+	s_bHmiInit := TRUE;
+END_IF
+
+s_stHmiData.bStaOff := NOT(s_bStaOutput);
+s_stHmiData.bStaOn := s_bStaOutput;
+s_stHmiData.bBtnOffEnabled := s_fbHmiBtnManualOff.p_bStaEnabled;
+s_stHmiData.bBtnOnEnabled := s_fbHmiBtnManualOn.p_bStaEnabled;
+s_stHmiData.sInterlockedReasonOn := s_sInterlockedReasonOn;
+s_stHmiData.sInterlockedReasonOff := s_sInterlockedReasonOff;
 
 //From Hmi
-IF stHmiData.bCmdOffPressed THEN
+IF s_stHmiData.bCmdOffPressed THEN
 	s_fbHmiBtnManualOff.m_On();
 ELSE
 	s_fbHmiBtnManualOff.m_Off();	
 END_IF
 
-IF stHmiData.bCmdOnPressed THEN
+IF s_stHmiData.bCmdOnPressed THEN
 	s_fbHmiBtnManualOn.m_On();
 ELSE
 	s_fbHmiBtnManualOn.m_Off();	
@@ -402,7 +411,14 @@ s_sInterlockedReasonOn := p_sInterlockedReasonOn;
       <LineId Id="189" Count="0" />
     </LineIds>
     <LineIds Name="CM_DigOutput._m_Hmi">
-      <LineId Id="260" Count="12" />
+      <LineId Id="260" Count="4" />
+      <LineId Id="329" Count="0" />
+      <LineId Id="335" Count="4" />
+      <LineId Id="330" Count="0" />
+      <LineId Id="333" Count="0" />
+      <LineId Id="332" Count="0" />
+      <LineId Id="331" Count="0" />
+      <LineId Id="267" Count="5" />
       <LineId Id="326" Count="0" />
       <LineId Id="273" Count="52" />
       <LineId Id="87" Count="0" />

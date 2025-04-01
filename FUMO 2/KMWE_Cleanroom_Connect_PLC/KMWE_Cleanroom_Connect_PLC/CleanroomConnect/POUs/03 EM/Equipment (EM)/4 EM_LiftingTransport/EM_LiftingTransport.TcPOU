@@ -456,8 +456,7 @@ _m_ConvTranspToMotorPos.fJrk := i_stPosProf.fJrk * s_fConvFactor;
       <Declaration><![CDATA[METHOD PROTECTED _m_Devices : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[
-IF NOT SUPER^._m_Devices() THEN
+        <ST><![CDATA[IF NOT SUPER^._m_Devices() THEN
 	RETURN;
 END_IF
 
@@ -469,8 +468,8 @@ s_cmLift(
 	i_ref_setting := i_ref_stSettings.stSettingsServoLift,
 	i_bCmdReset := i_bCmdReset,
 	i_refAxis := axisLift,
-	i_bIclkForward := s_bIlckLiftUp,
-	i_bIclkBackward := s_bIlckLiftDown);
+	i_bIclkPositive := s_bIlckLiftUp,
+	i_bIclkNegative := s_bIlckLiftDown);
 
 s_bStaLiftDriveError := s_cmLift.p_bError;
 	
@@ -481,8 +480,8 @@ s_cmTransport(
 	i_ref_setting := i_ref_stSettings.stSettingsServoTransport,
 	i_bCmdReset := i_bCmdReset,
 	i_refAxis := axisTransport,
-	i_bIclkForward := s_bIlckTransportExtract, 
-	i_bIclkBackward := s_bIlckTransportRetract);
+	i_bIclkPositive := s_bIlckTransportExtract, 
+	i_bIclkNegative := s_bIlckTransportRetract);
 
 s_bStaTransportDriveError := s_cmTransport.p_bError;
 
@@ -553,8 +552,7 @@ _m_Hmi := TRUE;
       <Declaration><![CDATA[METHOD PROTECTED _m_Init : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[
-IF NOT SUPER^._m_Init() THEN
+        <ST><![CDATA[IF NOT SUPER^._m_Init() THEN
 	RETURN;
 END_IF
 
@@ -566,12 +564,17 @@ s_cmLift.i_eCtrlMode := E_CtrlMode.IDLE;
 s_cmLift.i_sCmName := 'CM Lift';
 s_cmLift.i_refAxis REF= axisLift;
 s_cmLift.i_mcHomingMode := Tc2_MC2.MC_HomingMode.MC_Direct; //Tc2_MC2.MC_HomingMode.MC_DefaultHoming;
+s_cmLift.p_sCfgPosName := 'Up';
+s_cmLift.p_sCfgNegName := 'Down';
 
 s_cmTransport.i_bReqEnable := FALSE;
 s_cmTransport.i_eCtrlMode := E_CtrlMode.IDLE;
 s_cmTransport.i_sCmName := 'CM Transport Unit';
 s_cmTransport.i_refAxis REF= axisTransport;
-s_cmTransport.i_mcHomingMode := Tc2_MC2.MC_HomingMode.MC_Direct; //Tc2_MC2.MC_HomingMode.MC_DefaultHoming; 
+s_cmTransport.i_mcHomingMode := Tc2_MC2.MC_HomingMode.MC_Direct; //Tc2_MC2.MC_HomingMode.MC_DefaultHoming;
+s_cmTransport.p_sCfgPosName := 'Extract';
+s_cmTransport.p_sCfgNegName := 'Retract';
+ 
 {warning '#TODO: Dot we need to added configuration parameters? Seperate struct or via settings or dedicateed variables'}
 
 s_diStaTrolleyOnPositionLeft.i_stSettings.tmInputDelay := T#100MS;
@@ -1656,43 +1659,7 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="131" Count="4" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport._m_Devices">
-      <LineId Id="41" Count="0" />
-      <LineId Id="6" Count="2" />
-      <LineId Id="113" Count="0" />
-      <LineId Id="115" Count="0" />
-      <LineId Id="53" Count="2" />
-      <LineId Id="93" Count="0" />
-      <LineId Id="95" Count="0" />
-      <LineId Id="56" Count="0" />
-      <LineId Id="58" Count="1" />
-      <LineId Id="52" Count="0" />
-      <LineId Id="71" Count="0" />
-      <LineId Id="9" Count="0" />
-      <LineId Id="72" Count="0" />
-      <LineId Id="63" Count="2" />
-      <LineId Id="94" Count="0" />
-      <LineId Id="96" Count="0" />
-      <LineId Id="66" Count="0" />
-      <LineId Id="68" Count="1" />
-      <LineId Id="62" Count="0" />
-      <LineId Id="73" Count="0" />
-      <LineId Id="39" Count="0" />
-      <LineId Id="75" Count="0" />
-      <LineId Id="80" Count="4" />
-      <LineId Id="86" Count="2" />
-      <LineId Id="110" Count="1" />
-      <LineId Id="89" Count="0" />
-      <LineId Id="102" Count="3" />
-      <LineId Id="100" Count="0" />
-      <LineId Id="108" Count="1" />
-      <LineId Id="107" Count="0" />
-      <LineId Id="106" Count="0" />
-      <LineId Id="90" Count="1" />
-      <LineId Id="117" Count="2" />
-      <LineId Id="125" Count="0" />
-      <LineId Id="129" Count="0" />
-      <LineId Id="122" Count="0" />
-      <LineId Id="40" Count="0" />
+      <LineId Id="189" Count="57" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport._m_Hmi">
@@ -1714,72 +1681,7 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="315" Count="0" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport._m_Init">
-      <LineId Id="203" Count="0" />
-      <LineId Id="5" Count="3" />
-      <LineId Id="10" Count="0" />
-      <LineId Id="563" Count="0" />
-      <LineId Id="562" Count="0" />
-      <LineId Id="461" Count="0" />
-      <LineId Id="463" Count="0" />
-      <LineId Id="466" Count="0" />
-      <LineId Id="465" Count="0" />
-      <LineId Id="582" Count="0" />
-      <LineId Id="467" Count="0" />
-      <LineId Id="471" Count="1" />
-      <LineId Id="469" Count="0" />
-      <LineId Id="473" Count="0" />
-      <LineId Id="581" Count="0" />
-      <LineId Id="334" Count="0" />
-      <LineId Id="477" Count="0" />
-      <LineId Id="479" Count="4" />
-      <LineId Id="488" Count="2" />
-      <LineId Id="495" Count="2" />
-      <LineId Id="543" Count="0" />
-      <LineId Id="545" Count="1" />
-      <LineId Id="544" Count="0" />
-      <LineId Id="500" Count="1" />
-      <LineId Id="506" Count="1" />
-      <LineId Id="499" Count="0" />
-      <LineId Id="548" Count="2" />
-      <LineId Id="547" Count="0" />
-      <LineId Id="565" Count="0" />
-      <LineId Id="567" Count="0" />
-      <LineId Id="576" Count="0" />
-      <LineId Id="580" Count="0" />
-      <LineId Id="484" Count="0" />
-      <LineId Id="38" Count="0" />
-      <LineId Id="396" Count="2" />
-      <LineId Id="395" Count="0" />
-      <LineId Id="388" Count="0" />
-      <LineId Id="400" Count="2" />
-      <LineId Id="399" Count="0" />
-      <LineId Id="390" Count="0" />
-      <LineId Id="404" Count="2" />
-      <LineId Id="403" Count="0" />
-      <LineId Id="453" Count="0" />
-      <LineId Id="414" Count="0" />
-      <LineId Id="424" Count="0" />
-      <LineId Id="538" Count="2" />
-      <LineId Id="425" Count="0" />
-      <LineId Id="415" Count="0" />
-      <LineId Id="426" Count="1" />
-      <LineId Id="416" Count="0" />
-      <LineId Id="428" Count="0" />
-      <LineId Id="417" Count="0" />
-      <LineId Id="429" Count="2" />
-      <LineId Id="445" Count="0" />
-      <LineId Id="541" Count="0" />
-      <LineId Id="443" Count="0" />
-      <LineId Id="554" Count="0" />
-      <LineId Id="558" Count="0" />
-      <LineId Id="556" Count="0" />
-      <LineId Id="555" Count="0" />
-      <LineId Id="559" Count="0" />
-      <LineId Id="557" Count="0" />
-      <LineId Id="552" Count="0" />
-      <LineId Id="560" Count="0" />
-      <LineId Id="553" Count="0" />
-      <LineId Id="4" Count="0" />
+      <LineId Id="687" Count="97" />
       <LineId Id="542" Count="0" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport._m_Inputs">

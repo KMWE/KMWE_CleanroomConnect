@@ -71,7 +71,8 @@ VAR
 	s_tonFeedBackOffTimeout : TON;
 	
 	//Hmi
-	stHmiData : ST_ValveWithFB_HMI;
+	s_stHmiData : ST_ValveWithFB_HMI;
+	s_bHmiInit : BOOL := FALSE;
 	
 	s_fbHmiBtnManualOff		: FB_HmiBtn;
 	s_fbHmiBtnManualOn		: FB_HmiBtn;
@@ -209,26 +210,34 @@ IF NOT SUPER^._m_Hmi() THEN
 END_IF
 
 //To Hmi
-stHmiData.sDescription := i_sCmName;
-stHmiData.sNameOff := s_fbHmiBtnManualOff.p_sBtnText;
-stHmiData.sNameOn := s_fbHmiBtnManualOn.p_sBtnText;
-stHmiData.bStaOff := s_bStaValveIsOff;
-stHmiData.bStaOn := s_bStaValveIsOn;
-stHmiData.bStaOffError := s_fbHmiLedErrorOff.p_bStaLed;
-stHmiData.bStaOnError := s_fbHmiLedErrorOn.p_bStaLed;
-stHmiData.bBtnOffEnabled := s_fbHmiBtnManualOff.p_bStaEnabled;
-stHmiData.bBtnOnEnabled := s_fbHmiBtnManualOn.p_bStaEnabled;
-stHmiData.s_sInterlockedReasonOn := s_sInterlockedReasonOn;
-stHmiData.s_sInterlockedReasonOff := s_sInterlockedReasonOff;
+IF NOT(s_bHmiInit) THEN
+	//General names
+	s_stHmiData.sDescription := i_sCmName;
+	
+	//Button names
+	s_stHmiData.sNameOff := s_fbHmiBtnManualOff.p_sBtnText;
+	s_stHmiData.sNameOn := s_fbHmiBtnManualOn.p_sBtnText;
+
+	s_bHmiInit := TRUE;
+END_IF
+	
+s_stHmiData.bStaOff := s_bStaValveIsOff;
+s_stHmiData.bStaOn := s_bStaValveIsOn;
+s_stHmiData.bStaOffError := s_fbHmiLedErrorOff.p_bStaLed;
+s_stHmiData.bStaOnError := s_fbHmiLedErrorOn.p_bStaLed;
+s_stHmiData.bBtnOffEnabled := s_fbHmiBtnManualOff.p_bStaEnabled;
+s_stHmiData.bBtnOnEnabled := s_fbHmiBtnManualOn.p_bStaEnabled;
+s_stHmiData.s_sInterlockedReasonOn := s_sInterlockedReasonOn;
+s_stHmiData.s_sInterlockedReasonOff := s_sInterlockedReasonOff;
 
 //From Hmi
-IF stHmiData.bCmdOffPressed THEN
+IF s_stHmiData.bCmdOffPressed THEN
 	s_fbHmiBtnManualOff.m_On();
 ELSE
 	s_fbHmiBtnManualOff.m_Off();	
 END_IF
 
-IF stHmiData.bCmdOnPressed THEN
+IF s_stHmiData.bCmdOnPressed THEN
 	s_fbHmiBtnManualOn.m_On();
 ELSE
 	s_fbHmiBtnManualOn.m_Off();	
@@ -680,9 +689,17 @@ s_sInterlockedReasonOn := p_sInterlockedReasonOn;
     </LineIds>
     <LineIds Name="CM_ValveWithFB._m_Hmi">
       <LineId Id="17" Count="3" />
-      <LineId Id="188" Count="0" />
-      <LineId Id="173" Count="1" />
-      <LineId Id="176" Count="3" />
+      <LineId Id="257" Count="0" />
+      <LineId Id="259" Count="1" />
+      <LineId Id="258" Count="0" />
+      <LineId Id="174" Count="0" />
+      <LineId Id="265" Count="1" />
+      <LineId Id="176" Count="1" />
+      <LineId Id="263" Count="0" />
+      <LineId Id="262" Count="0" />
+      <LineId Id="264" Count="0" />
+      <LineId Id="261" Count="0" />
+      <LineId Id="178" Count="1" />
       <LineId Id="181" Count="0" />
       <LineId Id="180" Count="0" />
       <LineId Id="185" Count="0" />

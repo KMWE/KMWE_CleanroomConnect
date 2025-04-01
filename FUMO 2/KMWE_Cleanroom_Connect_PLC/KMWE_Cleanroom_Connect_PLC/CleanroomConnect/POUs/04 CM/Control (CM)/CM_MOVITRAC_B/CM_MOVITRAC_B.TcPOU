@@ -2,6 +2,11 @@
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
   <POU Name="CM_MOVITRAC_B" Id="{fa9a3c02-fb9e-4f0d-9f6f-ce091f3d4d49}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK CM_MOVITRAC_B EXTENDS CM_Base //IMPLEMENTS I_Motor_base
+
+VAR CONSTANT
+	c_MAX_FB_NAME_LENGTH : USINT := 8; //Maximum feedback-name length
+END_VAR
+
 VAR_INPUT
 	i_stSettings : ST_SettingsMOVITRAC_B_WithBrake;
 	i_bIclkForward : BOOL := TRUE; //TRUE = interlocked
@@ -66,6 +71,9 @@ VAR
 	// Setpoints
 	s_fTargetSpeed : LREAL; // Target speed [mm/s]
 	
+	s_sCfgBckName : STRING(c_MAX_FB_NAME_LENGTH) := 'Backward';	
+	s_sCfgFwdName : STRING(c_MAX_FB_NAME_LENGTH) := 'Foreward';
+	
 	// Timers
 	s_tofResetPulse : TOF;
 	s_tonMotorStoppedDelay : TON;
@@ -84,6 +92,9 @@ VAR
 	s_wrnMotorBackwardInterlocked : BOOL;
 	
 	//Hmi
+	s_stHmiData : ST_MoviTrac_B_HMI;
+	s_bHmiInit : BOOL := FALSE;
+	
 	s_fbHmiBtnManualReleaseBrake : FB_HmiBtn;
 	s_fbHmiBtnManualApplyBrake : FB_HmiBtn;
 	s_fbHmiBtnManualForward : FB_HmiBtn;
@@ -322,6 +333,82 @@ _m_Devices := TRUE;
         <ST><![CDATA[
 IF NOT SUPER^._m_Hmi() THEN
 	RETURN;
+END_IF
+
+//To Hmi
+IF NOT(s_bHmiInit) THEN
+	//General names
+	s_stHmiData.sDescription := i_sCmName;
+	s_stHmiData.sNameFwd := s_sCfgFwdName;
+	s_stHmiData.sNameBck := s_sCfgBckName;
+
+	//Button names
+	s_stHmiData.sNameReleaseBrake := s_fbHmiBtnManualReleaseBrake.p_sBtnText;
+	s_stHmiData.sNameApplyBrake := s_fbHmiBtnManualApplyBrake.p_sBtnText;
+	s_stHmiData.sNameJogBck := s_fbHmiBtnManualBackward.p_sBtnText;
+	s_stHmiData.sNameJogFwd := s_fbHmiBtnManualForward.p_sBtnText;
+	s_stHmiData.sNameStop := s_fbHmiBtnManualStop.p_sBtnText;
+	s_stHmiData.sNameReset := s_fbHmiBtnManualReset.p_sBtnText;
+	
+	s_bHmiInit := TRUE;
+END_IF
+
+//Servo State
+s_stHmiData.sState := TO_STRING(eSeqMOVITRAC_B_WithBrake);
+
+//Button enabled
+s_stHmiData.bBtnReleaseBrakeEnabled := s_fbHmiBtnManualReleaseBrake.p_bStaEnabled;
+s_stHmiData.bBtnApplyBrakeEnabled := s_fbHmiBtnManualApplyBrake.p_bStaEnabled;
+s_stHmiData.bBtnJogBckEnabled := s_fbHmiBtnManualBackward.p_bStaEnabled;
+s_stHmiData.bBtnJogFwdEnabled := s_fbHmiBtnManualForward.p_bStaEnabled;
+s_stHmiData.bBtnStopEnabled := s_fbHmiBtnManualStop.p_bStaEnabled;
+s_stHmiData.bBtnResetEnabled := s_fbHmiBtnManualReset.p_bStaEnabled;
+
+s_stHmiData.bStaBrakeReleased := s_bStaBrakeReleased;
+s_stHmiData.bStaMotorStopped := s_bStaMotorStopped;
+s_stHmiData.bStaMotorRunningFwd := s_bStaMotorRunningFwd;
+s_stHmiData.bStaMotorRunningBck := s_bStaMotorRunningBwd;
+s_stHmiData.bStaDriveError := s_bStaDriveError;
+
+s_stHmiData.s_sInterlockedReasonFwd := s_sInterlockedReasonForward;
+s_stHmiData.s_sInterlockedReasonBwd := s_sInterlockedReasonBackward;
+
+//From Hmi
+//Button commands
+IF s_stHmiData.bCmdReleaseBrakePressed THEN
+	s_fbHmiBtnManualReleaseBrake.m_On();
+ELSE
+	s_fbHmiBtnManualReleaseBrake.m_Off();	
+END_IF
+
+IF s_stHmiData.bCmdApplyBrakePressed THEN
+	s_fbHmiBtnManualApplyBrake.m_On();
+ELSE
+	s_fbHmiBtnManualApplyBrake.m_Off();	
+END_IF
+
+IF s_stHmiData.bCmdJogFwdPressed THEN
+	s_fbHmiBtnManualForward.m_On();
+ELSE
+	s_fbHmiBtnManualForward.m_Off();	
+END_IF
+
+IF s_stHmiData.bCmdJogBckPressed THEN
+	s_fbHmiBtnManualBackward.m_On();
+ELSE
+	s_fbHmiBtnManualBackward.m_Off();	
+END_IF
+
+IF s_stHmiData.bCmdStopPressed THEN
+	s_fbHmiBtnManualStop.m_On();
+ELSE
+	s_fbHmiBtnManualStop.m_Off();	
+END_IF
+
+IF s_stHmiData.bCmdResetPressed THEN
+	s_fbHmiBtnManualReset.m_On();
+ELSE
+	s_fbHmiBtnManualReset.m_Off();	
 END_IF
 
 //Buttons
@@ -768,6 +855,46 @@ p_bStaWarning := s_bStaWarning;
         </Implementation>
       </Get>
     </Property>
+    <Property Name="p_sCfgBckName" Id="{19f555b7-20e2-4435-9117-e965ccb52cf2}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_sCfgBckName : STRING(c_MAX_FB_NAME_LENGTH)]]></Declaration>
+      <Get Name="Get" Id="{ab7986d5-4082-4d1a-8e7c-b4e3325490d4}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_sCfgBckName := s_sCfgBckName;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{3222917f-10d8-43d2-9d46-7f9aad7d53a2}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+s_sCfgBckName := p_sCfgBckName;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="p_sCfgFwdName" Id="{d5b7673b-6566-4d61-9351-7ebf9adab4b5}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_sCfgFwdName : STRING(c_MAX_FB_NAME_LENGTH)]]></Declaration>
+      <Get Name="Get" Id="{23baf8b9-78eb-4ff1-8f8a-467330adb995}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_sCfgFwdName := s_sCfgFwdName;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{2365eb35-33a5-4092-83cd-2939f3efde7f}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+s_sCfgFwdName := p_sCfgFwdName;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
     <Property Name="p_sInterlockedReasonBackward" Id="{0c7533b0-6229-4bd7-a6ac-beef68a0441b}" FolderPath="Properties\">
       <Declaration><![CDATA[{attribute 'monitoring':='call'}
 PROPERTY PUBLIC p_sInterlockedReasonBackward : STRING(GVL.g_MAX_LEN_INTERLOCK_REASON)]]></Declaration>
@@ -949,7 +1076,12 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
     </LineIds>
     <LineIds Name="CM_MOVITRAC_B._m_Hmi">
       <LineId Id="17" Count="3" />
-      <LineId Id="127" Count="0" />
+      <LineId Id="312" Count="0" />
+      <LineId Id="314" Count="33" />
+      <LineId Id="356" Count="10" />
+      <LineId Id="393" Count="4" />
+      <LineId Id="392" Count="0" />
+      <LineId Id="367" Count="24" />
       <LineId Id="129" Count="0" />
       <LineId Id="132" Count="3" />
       <LineId Id="128" Count="0" />
@@ -1155,6 +1287,24 @@ s_sInterlockedReasonForward := p_sInterlockedReasonForward;
       <LineId Id="5" Count="0" />
       <LineId Id="7" Count="0" />
       <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_MOVITRAC_B.p_sCfgBckName.Get">
+      <LineId Id="3" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="4" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_MOVITRAC_B.p_sCfgBckName.Set">
+      <LineId Id="7" Count="0" />
+      <LineId Id="5" Count="1" />
+    </LineIds>
+    <LineIds Name="CM_MOVITRAC_B.p_sCfgFwdName.Get">
+      <LineId Id="3" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="4" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_MOVITRAC_B.p_sCfgFwdName.Set">
+      <LineId Id="7" Count="0" />
+      <LineId Id="5" Count="1" />
     </LineIds>
     <LineIds Name="CM_MOVITRAC_B.p_sInterlockedReasonBackward.Get">
       <LineId Id="5" Count="0" />

@@ -3,7 +3,7 @@
   <POU Name="FB_InterlockHandler" Id="{3f803ac0-c811-44d7-bc37-de6385932f87}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK FB_InterlockHandler
 VAR_INPUT
-	i_stInterlockList : ST_InterlockList; 
+	i_stInterlockList : ST_InterlockList;
 END_VAR
 VAR
 	s_bInterlocked : BOOL;
@@ -22,26 +22,25 @@ s_sReason := '';
 s_nInterlockCnt := 0;
 
 //Old code showing only one (first found reson)
-//--FOR i := 0 TO (GVL.g_LEN_INTERLOCK_LIST-1) DO
-//--	IF i_stInterlockList.arr_Interlocks[i].bState THEN
-//--		s_bInterlocked := i_stInterlockList.arr_Interlocks[i].bState;
-//--		s_sReason := i_stInterlockList.arr_Interlocks[i].sReason;
-//--		EXIT;
-//--	END_IF
-//--END_FOR
-
 FOR i := 0 TO (GVL.g_LEN_INTERLOCK_LIST-1) DO
 	IF i_stInterlockList.arr_Interlocks[i].bState THEN
-		s_nInterlockCnt := s_nInterlockCnt + 1;
 		s_bInterlocked := i_stInterlockList.arr_Interlocks[i].bState;
-		//--s_sReason := i_stInterlockList.arr_Interlocks[i].sReason;
-		IF s_nInterlockCnt > 1 THEN
-			s_sReason := CONCAT(s_sReason, CONCAT('; ', i_stInterlockList.arr_Interlocks[i].sReason));
-		ELSE
-			s_sReason := i_stInterlockList.arr_Interlocks[i].sReason;
-		END_IF	
+		s_sReason := i_stInterlockList.arr_Interlocks[i].sReason;
+		EXIT;
 	END_IF
 END_FOR
+
+//**FOR i := 0 TO (GVL.g_LEN_INTERLOCK_LIST-1) DO
+//**	IF i_stInterlockList.arr_Interlocks[i].bState THEN
+//**		s_nInterlockCnt := s_nInterlockCnt + 1;
+//**		s_bInterlocked := i_stInterlockList.arr_Interlocks[i].bState;
+//**		IF s_nInterlockCnt > 1 THEN
+//**			s_sReason := CONCAT(s_sReason, CONCAT('; ', i_stInterlockList.arr_Interlocks[i].sReason));
+//**		ELSE
+//**			s_sReason := i_stInterlockList.arr_Interlocks[i].sReason;
+//**		END_IF	
+//**	END_IF
+//**END_FOR
 
 //New code showing all active interlocks time based
 (*
@@ -100,7 +99,7 @@ p_sReason := s_sReason;
       <LineId Id="32" Count="0" />
       <LineId Id="100" Count="2" />
       <LineId Id="115" Count="0" />
-      <LineId Id="103" Count="1" />
+      <LineId Id="103" Count="0" />
       <LineId Id="116" Count="0" />
       <LineId Id="105" Count="0" />
       <LineId Id="117" Count="2" />

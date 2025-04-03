@@ -130,12 +130,16 @@ VAR
 	s_fbAlarmHandlerTransportDrive : FB_AlarmHandler;
 	s_fbAlarmHandlerLockTrolleyFailed : FB_AlarmHandler;
 	s_fbAlarmHandlerUnlockTRolleyFailed : FB_AlarmHandler;
+	s_fbAlarmHandlerNoTrolleyPlaced : FB_AlarmHandler;
+	s_fbAlarmHandlerCmdNotAllowed : FB_AlarmHandler;
 	
 	s_bErrLiftDrive : BOOL;
 	s_bErrTransportDrive : BOOL;
 	s_bErrLockTrolleyFailed : BOOL;
 	s_bErrUnlockTRolleyFailed : BOOL;
-		
+	s_bErrNoTrolleyPlaced : BOOL;
+	s_bErrCmdNotAllowed : BOOL;	
+	
 	//Warnings
 	s_fbAlarmHandlerSafetyDoorNotClosed : FB_AlarmHandler;
 	s_bWrnSafetyDoorNotClosed : BOOL;
@@ -220,11 +224,21 @@ s_fbAlarmHandlerUnlockTrolleyFailed(
 	i_bStaActive := s_bErrUnlockTrolleyFailed, 
 	i_sAlarmText := CONCAT(i_sEmName, ': Unlocking Trolley Failed.'));
 
+s_fbAlarmHandlerNoTrolleyPlaced(
+	i_bStaActive := s_bErrNoTrolleyPlaced, 
+	i_sAlarmText := CONCAT(i_sEmName, ': No Trolley Placed In Cabin.'));	
+	
+s_fbAlarmHandlerCmdNotAllowed(
+	i_bStaActive := s_bErrCmdNotAllowed,
+	i_sAlarmText := CONCAT(i_sEmName, CONCAT(': ', s_sMessage)));
+	
 // Reset warnings
 IF i_bCmdReset THEN
 	s_bWrnSafetyDoorNotClosed := FALSE;
 	s_bErrLockTrolleyFailed := FALSE;
 	s_bErrUnlockTrolleyFailed := FALSE;
+	s_bErrNoTrolleyPlaced := FALSE;
+	s_bErrCmdNotAllowed := FALSE;
 END_IF
 
 s_bStaError := 
@@ -232,9 +246,11 @@ s_bStaError :=
 	s_cmLift.p_bError
 	OR s_cmTransport.p_bError
 	OR s_fbAlarmHandlerLockTrolleyFailed.q_bStaActive
-	OR s_fbAlarmHandlerUnlockTRolleyFailed.q_bStaActive;
+	OR s_fbAlarmHandlerUnlockTRolleyFailed.q_bStaActive
+	OR s_fbAlarmHandlerNoTrolleyPlaced.q_bStaActive
 //??	OR s_fbAlarmHandlerLiftDrive.q_bStaActive
 //??	OR s_fbAlarmHandlerTransportDrive.q_bStaActive;
+	OR s_fbAlarmHandlerCmdNotAllowed.q_bStaActive;
 	
 s_bStaWarning :=
 	s_fbAlarmHandlerSafetyDoorNotClosed.q_bStaActive
@@ -269,6 +285,7 @@ IF NOT i_bReqEnable THEN
 END_IF
 
 	_m_CmdGoToIdle := FALSE;
+	s_bErrCmdNotAllowed := TRUE;
 
 IF s_bIlckLiftDown THEN
 	i_refReason := CONCAT('Cmd Go To Idle: Lift Interlocked - ', fbIlckHandlerLiftDown.p_sReason);
@@ -281,6 +298,7 @@ ELSIF s_bIlckTransportExtract THEN
 ELSE
 	i_refReason := '-';
 	_m_CmdGoToIdle := TRUE;	
+	s_bErrCmdNotAllowed := FALSE;
 END_IF
 ]]></ST>
       </Implementation>
@@ -298,22 +316,24 @@ IF NOT i_bReqEnable THEN
 END_IF
 
 _m_CmdPickTrolleyFromTB := FALSE;
+s_bErrCmdNotAllowed := TRUE;
 	
 IF NOT(s_bStaCabinAreaFree) THEN
 	i_refReason := 'Cmd Pick Trolley From TB: Interlocked - Cabin Position Not Free';
 ELSIF NOT(s_bStaCollisionAvoidanceSensor) THEN
 	i_refReason := 'Cmd Pick Trolley From TB: Interlocked - No Trolley Detected In TB';
-ELSIF s_bIlckLiftDown THEN
-	i_refReason := CONCAT('Cmd Pick Trolley From TB: Lift Interlocked - ', fbIlckHandlerLiftDown.p_sReason);
-ELSIF s_bIlckLiftUp THEN
-	i_refReason := CONCAT('Cmd Pick Trolley From TB: Lift Interlocked - ', fbIlckHandlerLiftUp.p_sReason);
-ELSIF s_bIlckTransportRetract THEN
-	i_refReason := CONCAT('Cmd Pick Trolley From TB: Transpoort Interlocked - ', fbIlckHandlerTransportRetract.p_sReason);
-ELSIF s_bIlckTransportExtract THEN
-	i_refReason := CONCAT('Cmd Pick Trolley From TB: Transport Interlocked - ', fbIlckHandlerTransportExtract.p_sReason);
+//--ELSIF s_bIlckLiftDown THEN
+//--	i_refReason := CONCAT('Cmd Pick Trolley From TB: Lift Interlocked - ', fbIlckHandlerLiftDown.p_sReason);
+//--ELSIF s_bIlckLiftUp THEN
+//--	i_refReason := CONCAT('Cmd Pick Trolley From TB: Lift Interlocked - ', fbIlckHandlerLiftUp.p_sReason);
+//--ELSIF s_bIlckTransportRetract THEN
+//--	i_refReason := CONCAT('Cmd Pick Trolley From TB: Transpoort Interlocked - ', fbIlckHandlerTransportRetract.p_sReason);
+//--ELSIF s_bIlckTransportExtract THEN
+//--	i_refReason := CONCAT('Cmd Pick Trolley From TB: Transport Interlocked - ', fbIlckHandlerTransportExtract.p_sReason);
 ELSE
 	i_refReason := '-';
-	_m_CmdPickTrolleyFromTB := TRUE;	
+	_m_CmdPickTrolleyFromTB := TRUE;
+	s_bErrCmdNotAllowed := FALSE;	
 END_IF
 ]]></ST>
       </Implementation>
@@ -331,22 +351,24 @@ IF NOT i_bReqEnable THEN
 END_IF
 
 _m_CmdPlaceTrolleyInTB := FALSE;
+s_bErrCmdNotAllowed := TRUE;
 
 IF NOT(s_bStaTrolleyAtLiftPos) THEN
 	i_refReason := 'Cmd Place Trolley In TB: Interlocked - Trolley Not Place (correctly) At Cabin';
 ELSIF s_bStaCollisionAvoidanceSensor THEN
 	i_refReason := 'Cmd Place Trolley In TB: Interlocked - TB Not Free, or Entrance Blocked';	
-ELSIF s_bIlckLiftDown THEN
-	i_refReason := CONCAT('Cmd Place Trolley In TB: Lift Interlocked - ', fbIlckHandlerLiftDown.p_sReason);
-ELSIF s_bIlckLiftUp THEN
-	i_refReason := CONCAT('Cmd Place Trolley In TB: Lift Interlocked - ', fbIlckHandlerLiftUp.p_sReason);
-ELSIF s_bIlckTransportRetract THEN
-	i_refReason := CONCAT('Cmd Place Trolley In TB: Transpoort Interlocked - ', fbIlckHandlerTransportRetract.p_sReason);
-ELSIF s_bIlckTransportExtract THEN
-	i_refReason := CONCAT('Cmd Place Trolley In TB: Transport Interlocked - ', fbIlckHandlerTransportExtract.p_sReason);
+//--ELSIF s_bIlckLiftDown THEN
+//--	i_refReason := CONCAT('Cmd Place Trolley In TB: Lift Interlocked - ', fbIlckHandlerLiftDown.p_sReason);
+//--ELSIF s_bIlckLiftUp THEN
+//--	i_refReason := CONCAT('Cmd Place Trolley In TB: Lift Interlocked - ', fbIlckHandlerLiftUp.p_sReason);
+//--ELSIF s_bIlckTransportRetract THEN
+//--	i_refReason := CONCAT('Cmd Place Trolley In TB: Transpoort Interlocked - ', fbIlckHandlerTransportRetract.p_sReason);
+//--ELSIF s_bIlckTransportExtract THEN
+//--	i_refReason := CONCAT('Cmd Place Trolley In TB: Transport Interlocked - ', fbIlckHandlerTransportExtract.p_sReason);
 ELSE
 	i_refReason := '-';
 	_m_CmdPlaceTrolleyInTB := TRUE;	
+	s_bErrCmdNotAllowed := FALSE;
 END_IF
 ]]></ST>
       </Implementation>
@@ -606,6 +628,13 @@ s_diStaTrolleyLocked.i_stSettings.tmInputDelay := T#100MS;
 //??s_fbAlarmHandlerLiftDrive.i_eAlarmLevel := E_AlarmLevel.Alarm; 
 //??s_fbAlarmHandlerTransportDrive.i_eAlarmLevel := E_AlarmLevel.Alarm;
 
+s_fbAlarmHandlerLiftDrive.i_eAlarmLevel := E_AlarmLevel.Alarm;
+s_fbAlarmHandlerTransportDrive.i_eAlarmLevel := E_AlarmLevel.Alarm;
+s_fbAlarmHandlerLockTrolleyFailed.i_eAlarmLevel := E_AlarmLevel.Alarm;
+s_fbAlarmHandlerUnlockTRolleyFailed.i_eAlarmLevel := E_AlarmLevel.Alarm;
+s_fbAlarmHandlerNoTrolleyPlaced.i_eAlarmLevel := E_AlarmLevel.Alarm;
+s_fbAlarmHandlerCmdNotAllowed.i_eAlarmLevel := E_AlarmLevel.Alarm;
+
 //Hmi
 	s_fbHmiBtnGoToIdle.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnGoToIdle.p_bStaVisible := FALSE;
@@ -672,8 +701,10 @@ i_fbExtIlckLiftDown();
 fbIlckHandlerLiftDown.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckLiftDown.p_bInterlocked;
 fbIlckHandlerLiftDown.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckLiftDown.p_sReason;
 fbIlckHandlerLiftDown.i_stInterlockList.arr_Interlocks[1].bState := 
-	( (i_eCtrlMode <> E_CtrlMode.MANUAL) AND (i_eCtrlMode <> E_CtrlMode.AUTOMATIC) )
-	AND ( (s_fActTransportPosition < c_fMIN_TRANSPORT_POSITION_TO_LOWER_LIFT) OR (s_fActTransportPosition > c_fMAX_TRANSPORT_POSITION_TO_LOWER_LIFT) );
+{warning '#TODO why exclude manual and automatic mode>'}
+//??	( (i_eCtrlMode <> E_CtrlMode.MANUAL) AND (i_eCtrlMode <> E_CtrlMode.AUTOMATIC) )
+//??	AND 
+	( (s_fActTransportPosition < c_fMIN_TRANSPORT_POSITION_TO_LOWER_LIFT) OR (s_fActTransportPosition > c_fMAX_TRANSPORT_POSITION_TO_LOWER_LIFT) );
 //--	AND NOT(F_InRange(i_ref_stSettings.arr_TransportPositioningProfile[0].fPosition, s_cmTransport.p_fPosition, 0.5));
 fbIlckHandlerLiftDown.i_stInterlockList.arr_Interlocks[1].sReason := 'Transport not at retracted position';
 fbIlckHandlerLiftDown();
@@ -713,8 +744,10 @@ i_fbExtIlckTransportExtract();
 fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckTransportExtract.p_bInterlocked;
 fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckTransportExtract.p_sReason;
 fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[1].bState := 
-	( (i_eCtrlMode <> E_CtrlMode.MANUAL) AND (i_eCtrlMode <> E_CtrlMode.AUTOMATIC) )
-	AND ( (s_fActLiftPosition < c_fMIN_LIFT_HEIGHT_TO_EXTRACT_TRANSPORT) OR (s_fActLiftPosition > c_fMAX_LIFT_HEIGHT_TO_EXTRACT_TRANSPORT) );
+{warning '#TODO why exclude manual and automatic mode>'}
+//??	( (i_eCtrlMode <> E_CtrlMode.MANUAL) AND (i_eCtrlMode <> E_CtrlMode.AUTOMATIC) )
+//??	AND 
+(	 (s_fActLiftPosition < c_fMIN_LIFT_HEIGHT_TO_EXTRACT_TRANSPORT) OR (s_fActLiftPosition > c_fMAX_LIFT_HEIGHT_TO_EXTRACT_TRANSPORT) );
 //--	AND s_cmLift.p_fPosition < i_ref_stSettings.arr_LiftPositioningProfile[1].fPosition; 
 fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[1].sReason := 'Lift not at correct position';
 fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[2].bState := s_bStaCollisionAvoidanceSensor AND (s_fActTransportPosition < c_fEND_TRANSPORT_POSITION_COLLISION_CHECK) AND FALSE;
@@ -859,21 +892,22 @@ END_IF
 CASE s_eSeqLiftingTransport OF
 	
 	E_SeqLiftingTransport.IDLE:
-	
-		IF i_eCtrlState = E_CtrlState.RUNNING THEN
-			s_eSeqLiftingTransport := E_SeqLiftingTransport.START;
-		END_IF
+		s_eResumeStep := E_SeqLiftingTransport.READY;
+		s_eSeqLiftingTransport := E_SeqLiftingTransport.START;
 
 	E_SeqLiftingTransport.START:  // Afhankelijk van de voorgaande stap, stappen programma hervatten. Wanneer actie voltooit
+		IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
+			s_sMessage := '***';
+		END_IF
 	
 		//Process busy?
-		IF (s_eResumeStep >= E_SeqLiftingTransport.TRANSPORT_TO_IDLE)
-			AND (s_eResumeStep <= E_SeqLiftingTransport.LIFT_RETURN_IN_CABIN)
-		THEN
-			s_eSeqLiftingTransport := s_eResumeStep;
-		ELSE
-			s_eResumeStep := E_SeqLiftingTransport.READY;
-		END_IF
+//--		IF (s_eResumeStep >= E_SeqLiftingTransport.TRANSPORT_TO_IDLE)
+//--			AND (s_eResumeStep <= E_SeqLiftingTransport.LIFT_RETURN_IN_CABIN)
+//--		THEN
+//--			s_eSeqLiftingTransport := s_eResumeStep;
+//--		ELSE
+//--			s_eResumeStep := E_SeqLiftingTransport.READY;
+//--		END_IF
 			
 		IF i_eCtrlState = E_CtrlState.RUNNING THEN
 			s_eSeqLiftingTransport := s_eResumeStep;
@@ -883,7 +917,7 @@ CASE s_eSeqLiftingTransport OF
 // READY //////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqLiftingTransport.READY:
 		IF s_fbSeqLiftingTransportControl.q_bStaEntry THEN
-			;
+			s_eResumeStep := E_SeqLiftingTransport.READY;
 		END_IF
 		
 		IF s_bReqGoToIdle THEN
@@ -1086,20 +1120,39 @@ CASE s_eSeqLiftingTransport OF
 	
 		s_bActionDone S= s_cmLift.p_bMoveAbsDone;
 			
-		IF s_bActionDone THEN
-			//Check if trolley is present
-			IF NOT(s_bStaCabinAreaFree) THEN
-				s_bStaTrolleyPickedFromTB := TRUE;												/////////////////////
-			ELSE
-				s_bStaTrolleyPickedFromTB := FALSE;
-			END_IF	
-				
-			s_eSeqLiftingTransport := E_SeqLiftingTransport.READY;
+		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
+			s_bNextStep := FALSE;
+			s_eSeqLiftingTransport := E_SeqLiftingTransport.CHECK_TROLLEY_PLACED;
 		
 		ELSIF s_bError THEN
 			s_eSeqLiftingTransport := E_SeqLiftingTransport.ERROR;
 		END_IF
-
+		
+//--		IF s_bActionDone THEN
+//--			//Check if trolley is present
+//--			IF NOT(s_bStaCabinAreaFree) THEN
+//--				s_bStaTrolleyPickedFromTB := TRUE;												/////////////////////
+//--				s_eSeqLiftingTransport := E_SeqLiftingTransport.READY;
+//--			ELSE
+//--				s_bStaTrolleyPickedFromTB := FALSE;
+//--				s_bErrNoTrolleyPlaced := TRUE;
+//--				//--s_eSeqLiftingTransport := E_SeqLiftingTransport.ERROR;
+//--			END_IF	
+			
+//--		ELSIF s_bError THEN
+//--		s_eSeqLiftingTransport := E_SeqLiftingTransport.ERROR;
+//--		END_IF
+		
+	E_SeqLiftingTransport.CHECK_TROLLEY_PLACED:	
+		//Check if trolley is present in cabin
+		IF NOT(s_bStaCabinAreaFree) AND (s_fbSeqLiftingTransportControl.q_tmStepTime > T#3S) THEN
+			s_bStaTrolleyPickedFromTB := TRUE;												/////////////////////
+			s_eSeqLiftingTransport := E_SeqLiftingTransport.READY;
+		ELSE
+			s_bStaTrolleyPickedFromTB := FALSE;
+			s_bErrNoTrolleyPlaced := TRUE;
+		END_IF
+	
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// PICK TROLLEY FROM CABIN ///////////////////////////////////////////////////////////////////////		
 	E_SeqLiftingTransport.LIFT_PRE_PICK_FROM_CABIN:
@@ -1391,11 +1444,11 @@ IF i_bReqEnable AND (i_eCtrlMode = E_CtrlMode.MANUAL) AND (i_eCtrlState = E_Ctrl
 
 	//Lift/Transport
 	s_fbHmiBtnGoToIdle.p_bStaEnabled :=
-		NOT(s_bIlckLiftDown)
+		//**NOT(s_bIlckLiftDown)
 		//--AND NOT(s_bIlckLiftUp)
-		AND NOT(s_bIlckTransportRetract)
+		//**AND NOT(s_bIlckTransportRetract)
 		//--AND NOT(s_bIlckTransportExtract)
-		AND NOT(s_cmLift.p_bStaError)
+		NOT(s_cmLift.p_bStaError)
 		AND NOT(s_cmTransport.p_bStaError);
 	
 	s_fbHmiBtnPickTrolleyFromTB.p_bStaEnabled :=
@@ -1586,18 +1639,28 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="119" Count="0" />
       <LineId Id="121" Count="1" />
       <LineId Id="120" Count="0" />
+      <LineId Id="135" Count="0" />
+      <LineId Id="137" Count="1" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="136" Count="0" />
+      <LineId Id="130" Count="1" />
+      <LineId Id="128" Count="0" />
       <LineId Id="42" Count="0" />
       <LineId Id="11" Count="0" />
       <LineId Id="33" Count="0" />
       <LineId Id="35" Count="0" />
       <LineId Id="123" Count="1" />
+      <LineId Id="134" Count="0" />
+      <LineId Id="132" Count="0" />
       <LineId Id="34" Count="0" />
       <LineId Id="56" Count="1" />
       <LineId Id="91" Count="0" />
       <LineId Id="85" Count="1" />
       <LineId Id="125" Count="1" />
+      <LineId Id="139" Count="0" />
       <LineId Id="87" Count="0" />
       <LineId Id="89" Count="0" />
+      <LineId Id="133" Count="0" />
       <LineId Id="88" Count="0" />
       <LineId Id="71" Count="0" />
       <LineId Id="73" Count="0" />
@@ -1613,32 +1676,41 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="145" Count="0" />
       <LineId Id="134" Count="2" />
       <LineId Id="155" Count="1" />
+      <LineId Id="162" Count="0" />
       <LineId Id="137" Count="2" />
       <LineId Id="147" Count="1" />
       <LineId Id="150" Count="1" />
       <LineId Id="153" Count="1" />
-      <LineId Id="141" Count="3" />
+      <LineId Id="141" Count="2" />
+      <LineId Id="163" Count="0" />
+      <LineId Id="144" Count="0" />
       <LineId Id="100" Count="0" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport._m_CmdPickTrolleyFromTB">
       <LineId Id="202" Count="0" />
       <LineId Id="180" Count="4" />
+      <LineId Id="218" Count="0" />
       <LineId Id="209" Count="0" />
       <LineId Id="211" Count="0" />
       <LineId Id="210" Count="0" />
       <LineId Id="213" Count="0" />
       <LineId Id="212" Count="0" />
-      <LineId Id="186" Count="11" />
+      <LineId Id="186" Count="10" />
+      <LineId Id="219" Count="0" />
+      <LineId Id="197" Count="0" />
       <LineId Id="77" Count="0" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport._m_CmdPlaceTrolleyInTB">
       <LineId Id="181" Count="0" />
       <LineId Id="159" Count="4" />
+      <LineId Id="198" Count="0" />
       <LineId Id="192" Count="1" />
       <LineId Id="188" Count="0" />
       <LineId Id="191" Count="0" />
       <LineId Id="189" Count="0" />
-      <LineId Id="165" Count="11" />
+      <LineId Id="165" Count="10" />
+      <LineId Id="199" Count="0" />
+      <LineId Id="176" Count="0" />
       <LineId Id="100" Count="0" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport._m_ConvLiftHeightToSpindPos">
@@ -1693,11 +1765,23 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="315" Count="0" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport._m_Init">
-      <LineId Id="687" Count="97" />
+      <LineId Id="687" Count="52" />
+      <LineId Id="789" Count="0" />
+      <LineId Id="791" Count="4" />
+      <LineId Id="790" Count="0" />
+      <LineId Id="740" Count="44" />
       <LineId Id="542" Count="0" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport._m_Inputs">
-      <LineId Id="409" Count="114" />
+      <LineId Id="409" Count="14" />
+      <LineId Id="528" Count="0" />
+      <LineId Id="424" Count="1" />
+      <LineId Id="527" Count="0" />
+      <LineId Id="426" Count="38" />
+      <LineId Id="525" Count="0" />
+      <LineId Id="465" Count="1" />
+      <LineId Id="526" Count="0" />
+      <LineId Id="467" Count="56" />
       <LineId Id="218" Count="0" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport._m_Outputs">
@@ -1743,13 +1827,14 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="1895" Count="0" />
       <LineId Id="3400" Count="0" />
       <LineId Id="1896" Count="7" />
-      <LineId Id="1905" Count="0" />
-      <LineId Id="3262" Count="0" />
-      <LineId Id="3258" Count="0" />
+      <LineId Id="3853" Count="0" />
       <LineId Id="3263" Count="0" />
       <LineId Id="2426" Count="0" />
       <LineId Id="1910" Count="0" />
       <LineId Id="2752" Count="0" />
+      <LineId Id="3852" Count="0" />
+      <LineId Id="3850" Count="0" />
+      <LineId Id="3848" Count="0" />
       <LineId Id="2473" Count="0" />
       <LineId Id="2466" Count="2" />
       <LineId Id="2464" Count="0" />
@@ -1905,17 +1990,22 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="3803" Count="0" />
       <LineId Id="2958" Count="1" />
       <LineId Id="3548" Count="1" />
+      <LineId Id="3887" Count="5" />
+      <LineId Id="3885" Count="1" />
       <LineId Id="2969" Count="0" />
       <LineId Id="3274" Count="1" />
       <LineId Id="3272" Count="0" />
+      <LineId Id="3871" Count="0" />
       <LineId Id="2979" Count="0" />
       <LineId Id="3278" Count="0" />
+      <LineId Id="3872" Count="1" />
       <LineId Id="3277" Count="0" />
-      <LineId Id="3279" Count="0" />
-      <LineId Id="3276" Count="0" />
-      <LineId Id="2975" Count="2" />
+      <LineId Id="3857" Count="0" />
+      <LineId Id="2976" Count="1" />
       <LineId Id="2951" Count="0" />
-      <LineId Id="3734" Count="0" />
+      <LineId Id="3874" Count="1" />
+      <LineId Id="3878" Count="6" />
+      <LineId Id="3876" Count="1" />
       <LineId Id="2053" Count="2" />
       <LineId Id="3041" Count="0" />
       <LineId Id="3804" Count="0" />

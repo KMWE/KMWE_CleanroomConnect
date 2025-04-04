@@ -421,7 +421,7 @@ fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[1].sReason := CONC
 
 //General behavioir
 s_stSettings.stSettingsLiftingTransport.bWaitForNextStep := FALSE;
-s_stSettings.stSettingsLiftingTransport.bAutoRecoveryToIdle := TRUE;
+s_stSettings.stSettingsLiftingTransport.bAutoRecoveryToIdle := FALSE;
 
 //Homing
 s_stSettings.stSettingsLiftingTransport.stSettingsServoLift.fHomeOffset := 5.00; // mm
@@ -1576,6 +1576,63 @@ IF s_arr_bBoolTest[0] THEN GVL_Modules.g_emLiftingTransport.m_ReqGoToIdle(); s_a
 IF s_arr_bBoolTest[1] THEN GVL_Modules.g_emLiftingTransport.m_ReqPickTrolleyFromTB(); s_arr_bBoolTest[1] := FALSE; END_IF
 IF s_arr_bBoolTest[2] THEN GVL_Modules.g_emLiftingTransport.m_ReqPlaceTrolleyInTB(); s_arr_bBoolTest[2] := FALSE; END_IF
 
+CASE s_eCtrlMode OF
+
+	E_CtrlMode.IDLE:
+		;	
+	
+	E_CtrlMode.AUTOMATIC:
+		
+		//Wait for commands from 
+		IF s_fbHmiBtnInbound.p_osrBtnPress THEN
+			s_bReqInbound := TRUE;		
+		END_IF
+		
+		IF s_fbHmiBtnOutbound.p_osrBtnPress THEN
+			s_bReqOutbound := TRUE;		
+		END_IF
+		
+		IF s_fbHmiBtnDockTB.p_osrBtnPress THEN
+			s_bReqDockTB := TRUE;		
+		END_IF
+		
+		IF s_fbHmiBtnUndockTB.p_osrBtnPress THEN
+			s_bReqUndockTB := TRUE;		
+		END_IF
+			
+		IF s_fbHmiBtnPickTrolleyFromTB.p_osrBtnPress THEN
+			s_bReqPickTrolleyFromTB := TRUE;		
+		END_IF
+		
+		IF s_fbHmiBtnPlaceTrolleyInTB.p_osrBtnPress THEN
+			s_bReqPlaceTrolleyInTB := TRUE;		
+		END_IF
+		
+	E_CtrlMode.MANUAL:
+		;
+		
+	E_CtrlMode.MAINTENANCE:
+		;
+		
+	E_CtrlMode.IO:
+		;
+		
+	E_CtrlMode.CLEANING;
+		;
+		
+END_CASE
+
+IF s_eCtrlMode <> E_CtrlMode.AUTOMATIC THEN
+	//Reset all commands
+	s_bReqInbound := FALSE;
+	s_bReqOutbound := FALSE;
+	s_bReqDockTB := FALSE;
+	s_bReqUndockTB := FALSE;
+	s_bReqPickTrolleyFromTB := FALSE;
+	s_bReqPlaceTrolleyInTB := FALSE;
+END_IF
+
+
 // Paul Schippers: just a test with the use of interfaces
 //??itfEmDoors.m_CloseOuterDoor();
 
@@ -2088,6 +2145,38 @@ GVL_Modules.g_emPalletConveyor.m_ReqTB_ToInfeed();
       <LineId Id="81" Count="0" />
       <LineId Id="83" Count="0" />
       <LineId Id="80" Count="0" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="90" Count="2" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="114" Count="0" />
+      <LineId Id="97" Count="1" />
+      <LineId Id="116" Count="0" />
+      <LineId Id="115" Count="0" />
+      <LineId Id="130" Count="1" />
+      <LineId Id="137" Count="0" />
+      <LineId Id="139" Count="1" />
+      <LineId Id="138" Count="0" />
+      <LineId Id="141" Count="0" />
+      <LineId Id="143" Count="1" />
+      <LineId Id="142" Count="0" />
+      <LineId Id="145" Count="0" />
+      <LineId Id="147" Count="1" />
+      <LineId Id="146" Count="0" />
+      <LineId Id="149" Count="0" />
+      <LineId Id="154" Count="1" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="156" Count="0" />
+      <LineId Id="158" Count="1" />
+      <LineId Id="157" Count="0" />
+      <LineId Id="123" Count="0" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="103" Count="10" />
+      <LineId Id="87" Count="1" />
+      <LineId Id="117" Count="1" />
+      <LineId Id="125" Count="4" />
+      <LineId Id="124" Count="0" />
+      <LineId Id="119" Count="0" />
+      <LineId Id="89" Count="0" />
       <LineId Id="61" Count="1" />
       <LineId Id="66" Count="3" />
       <LineId Id="64" Count="0" />

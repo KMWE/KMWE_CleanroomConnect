@@ -193,6 +193,101 @@
             ],
             "type": "integer"
         },
+        "PLC1.E_SeqInbound": {
+            "attributes": {
+                "generate_implicit_init_function": "",
+                "qualified_only": "",
+                "strict": "",
+                "to_string": "",
+                "to_string_function": "__TO_STRING__144",
+                "to_wstring_function": "__TO_WSTRING__144"
+            },
+            "enum": [
+                0,
+                1,
+                1000,
+                1001,
+                1002,
+                1003,
+                1004,
+                1005,
+                1006,
+                1007,
+                1008,
+                1009,
+                1010,
+                1011,
+                10000,
+                20000
+            ],
+            "options": [
+                {
+                    "label": "IDLE",
+                    "value": 0
+                },
+                {
+                    "label": "START",
+                    "value": 1
+                },
+                {
+                    "label": "BUSY",
+                    "value": 1000
+                },
+                {
+                    "label": "TB_TO_CENTER",
+                    "value": 1001
+                },
+                {
+                    "label": "CENTERING_TB",
+                    "value": 1002
+                },
+                {
+                    "label": "TB_TO_DOCKING",
+                    "value": 1003
+                },
+                {
+                    "label": "DOCK_TB",
+                    "value": 1004
+                },
+                {
+                    "label": "OPEN_INNER_DOOR",
+                    "value": 1005
+                },
+                {
+                    "label": "PICK_TROLLEY_FROM_TB",
+                    "value": 1006
+                },
+                {
+                    "label": "PLACE_TROLLEY_IN_TB",
+                    "value": 1007
+                },
+                {
+                    "label": "CLOSE_INNER_DOOR",
+                    "value": 1008
+                },
+                {
+                    "label": "UNDOCK_TB",
+                    "value": 1009
+                },
+                {
+                    "label": "TB_TO_INFEED",
+                    "value": 1010
+                },
+                {
+                    "label": "STOP",
+                    "value": 1011
+                },
+                {
+                    "label": "READY",
+                    "value": 10000
+                },
+                {
+                    "label": "ERROR",
+                    "value": 20000
+                }
+            ],
+            "type": "integer"
+        },
         "PLC1.FB_ForceOutput": {
             "properties": {
                 "i_eForceValue": {
@@ -5548,6 +5643,24 @@
             },
             "USEMAPPING": true
         },
+        "PLC1.GVL.g_unCleanroomConnect.s_fbSeqControlInbound.i_sStepName": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL::g_unCleanroomConnect::s_fbSeqControlInbound::i_sStepName",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                    },
+                    {
+                        "comment": "Actual sequence step name, used for logging only",
+                        "propertyOrder": 2
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
         "PLC1.GVL_KMWEGenericLib.g_aParamList": {
             "ACCESS": 3,
             "DOMAIN": "ADS",
@@ -10550,6 +10663,24 @@
             },
             "USEMAPPING": true
         },
+        "PLC1.GVL_Modules.g_emPalletConveyor.s_fbSeqTransportControl.i_sStepName": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_fbSeqTransportControl::i_sStepName",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                    },
+                    {
+                        "comment": "Actual sequence step name, used for logging only",
+                        "propertyOrder": 2
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
         "PLC1.GVL_Modules.g_emPalletConveyor.s_sMessage": {
             "ACCESS": 3,
             "DOMAIN": "ADS",
@@ -12962,6 +13093,7 @@
                 "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnStateStart.s_bFromHmiPressed": 3,
                 "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnStateStop.p_bStaEnabled": 3,
                 "PLC1.GVL.g_unCleanroomConnect.sFbModeStateControl.s_fbHmiBtnStateStop.s_bFromHmiPressed": 3,
+                "PLC1.GVL.g_unCleanroomConnect.s_eSeqInbound": 3,
                 "PLC1.GVL.g_unCleanroomConnect.s_fbHmiBtnAutomatic.p_bStaEnabled": 3,
                 "PLC1.GVL.g_unCleanroomConnect.s_fbHmiBtnAutomatic.p_sBtnText": 3,
                 "PLC1.GVL.g_unCleanroomConnect.s_fbHmiBtnAutomatic.s_bFromHmiPressed": 3,
@@ -12996,6 +13128,7 @@
                 "PLC1.GVL.g_unCleanroomConnect.s_fbHmiBtnUndockTB.p_bStaVisible": 3,
                 "PLC1.GVL.g_unCleanroomConnect.s_fbHmiBtnUndockTB.p_sBtnText": 3,
                 "PLC1.GVL.g_unCleanroomConnect.s_fbHmiBtnUndockTB.s_bFromHmiPressed": 3,
+                "PLC1.GVL.g_unCleanroomConnect.s_fbSeqControlInbound.i_sStepName": 3,
                 "PLC1.GVL_KMWEGenericLib.g_aParamList": 3,
                 "PLC1.GVL_KMWEGenericLib.g_fbAlarmManager.s_aAlarmListHmi": 3,
                 "PLC1.GVL_KMWEGenericLib.g_fbParamManager.i_bResetList": 3,
@@ -13399,6 +13532,7 @@
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_fbParamTimeoutCenteringToIdle.s_stParam": 3,
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_fbParamTravelTollerance.s_stParam": 3,
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_fbSeqCenteringControl.i_sStepName": 3,
+                "PLC1.GVL_Modules.g_emPalletConveyor.s_fbSeqTransportControl.i_sStepName": 3,
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_sMessage": 3,
                 "PLC1.GVL_Modules.g_emUtilities.Q_bStaBeaconLedGreen": 3,
                 "PLC1.GVL_Modules.g_emUtilities.Q_bStaBeaconLedRed": 3,

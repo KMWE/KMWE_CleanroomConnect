@@ -219,7 +219,11 @@ VAR
 	
 	s_bTmpDisableUnlockingPinsRelease : BOOL;
 END_VAR
-]]></Declaration>
+
+VAR PERSISTENT //Variables below will be returned during: Power Cycle, Active Configuration, Download, Cold Restart
+	s_eLastStepPersistent : E_SeqDockingInterface := E_SeqDockingInterface.READY;
+END_VAR
+	]]></Declaration>
     <Implementation>
       <ST><![CDATA[
 SUPER^();
@@ -1291,6 +1295,7 @@ _m_Params := TRUE;
         <ST><![CDATA[
 //Register previous step
 IF s_eSeqDockingInterface <> s_ePreviousStep 
+	AND s_eSeqDockingInterface <> E_SeqDockingInterface.STOP 
 	AND s_eSeqDockingInterface <> E_SeqDockingInterface.ERROR THEN
 	s_ePreviousStep := s_eSeqDockingInterface;
 END_IF
@@ -1304,13 +1309,24 @@ s_fbSeqDockingInterfaceControl(
 	i_bStaError := s_bStaError OR NOT(i_bReqEnable));
 		
 s_tonTimer(PT := T#3600S);
+
+//Force to stop	
+IF (i_eCtrlState = E_CtrlState.STOPPING) THEN
+	s_eSeqDockingInterface := E_SeqDockingInterface.STOP;
+END_IF
+
+//Load last step from persistent memory
+IF (s_eSeqDockingInterface > E_SeqDockingInterface.START) AND (s_eSeqDockingInterface < E_SeqDockingInterface.STOP) THEN
+	s_eLastStepPersistent := s_eSeqDockingInterface;
+END_IF 
 	
 CASE s_eSeqDockingInterface OF
 	
 	E_SeqDockingInterface.IDLE:
 		IF (i_eCtrlState = E_CtrlState.IDLE) THEN
 			s_eSeqDockingInterface := E_SeqDockingInterface.START;
-			s_eResumeStep := E_SeqDockingInterface.OPEN_ALL_DOCKING_CLAMPS;
+			//??s_eResumeStep := E_SeqDockingInterface.OPEN_ALL_DOCKING_CLAMPS;
+			s_eResumeStep := s_eLastStepPersistent;
 		END_IF
 		
 	E_SeqDockingInterface.START:
@@ -1577,13 +1593,26 @@ CASE s_eSeqDockingInterface OF
 			
 			s_eSeqDockingInterface := E_SeqDockingInterface.READY_TB_DOCKED;
 		END_IF
+	
+	E_SeqDockingInterface.STOP:
+		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN
+			IF s_ePreviousStep > E_SeqDockingInterface.START
+				AND s_ePreviousStep < E_SeqDockingInterface.ERROR THEN
+					s_eResumeStep := s_ePreviousStep;
+			END_IF
+		END_IF
 		
+		IF i_eCtrlState = E_CtrlState.IDLE THEN
+			s_eSeqDockingInterface := E_SeqDockingInterface.START;
+		END_IF
+	
 	E_SeqDockingInterface.ERROR:
 		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN
 			IF s_ePreviousStep > E_SeqDockingInterface.START
 				AND s_ePreviousStep < E_SeqDockingInterface.ERROR THEN
 				s_eResumeStep := s_ePreviousStep;
-			ELSE 
+			ELSE
+				{warning 'Is this still the correct way to go'} 
 				s_eResumeStep := E_SeqDockingInterface.OPEN_ALL_DOCKING_CLAMPS;
 			END_IF
 			
@@ -1637,6 +1666,7 @@ s_bReqDockTB :=
 s_bReqUndockTB := 
 s_bReqOpenInnerDoor := 
 s_bReqCloseInnerDoor := FALSE;
+
 ]]></ST>
       </Implementation>
     </Method>
@@ -2611,7 +2641,9 @@ p_bStaUnlockingPinsReleased := s_bStaUnlockingPinsReleased;
     </LineIds>
     <LineIds Name="EM_DockingInterface._m_SeqDockingInterface">
       <LineId Id="754" Count="0" />
-      <LineId Id="500" Count="3" />
+      <LineId Id="500" Count="1" />
+      <LineId Id="769" Count="0" />
+      <LineId Id="502" Count="1" />
       <LineId Id="499" Count="0" />
       <LineId Id="319" Count="0" />
       <LineId Id="7" Count="3" />
@@ -2619,11 +2651,19 @@ p_bStaUnlockingPinsReleased := s_bStaUnlockingPinsReleased;
       <LineId Id="11" Count="0" />
       <LineId Id="708" Count="0" />
       <LineId Id="154" Count="0" />
+      <LineId Id="770" Count="0" />
+      <LineId Id="772" Count="2" />
+      <LineId Id="771" Count="0" />
+      <LineId Id="806" Count="0" />
+      <LineId Id="803" Count="0" />
+      <LineId Id="801" Count="1" />
+      <LineId Id="804" Count="0" />
       <LineId Id="223" Count="0" />
       <LineId Id="19" Count="2" />
       <LineId Id="655" Count="0" />
       <LineId Id="23" Count="0" />
       <LineId Id="650" Count="0" />
+      <LineId Id="805" Count="0" />
       <LineId Id="647" Count="0" />
       <LineId Id="118" Count="0" />
       <LineId Id="120" Count="0" />
@@ -2814,11 +2854,17 @@ p_bStaUnlockingPinsReleased := s_bStaUnlockingPinsReleased;
       <LineId Id="675" Count="0" />
       <LineId Id="671" Count="0" />
       <LineId Id="311" Count="0" />
+      <LineId Id="777" Count="1" />
+      <LineId Id="787" Count="7" />
+      <LineId Id="776" Count="0" />
+      <LineId Id="775" Count="0" />
       <LineId Id="166" Count="0" />
       <LineId Id="326" Count="0" />
       <LineId Id="188" Count="0" />
       <LineId Id="473" Count="0" />
-      <LineId Id="328" Count="3" />
+      <LineId Id="328" Count="1" />
+      <LineId Id="798" Count="0" />
+      <LineId Id="330" Count="1" />
       <LineId Id="344" Count="0" />
       <LineId Id="354" Count="0" />
       <LineId Id="489" Count="0" />
@@ -2859,6 +2905,7 @@ p_bStaUnlockingPinsReleased := s_bStaUnlockingPinsReleased;
       <LineId Id="542" Count="0" />
       <LineId Id="541" Count="0" />
       <LineId Id="543" Count="2" />
+      <LineId Id="799" Count="0" />
       <LineId Id="293" Count="0" />
     </LineIds>
     <LineIds Name="EM_DockingInterface._m_SeqStartup">

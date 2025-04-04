@@ -83,7 +83,7 @@ VAR
 	s_fbAlarmHandlerStartMotorNotAllowed : FB_AlarmHandler;
 	
 	s_fbAlarmHandlerMotorPosInterlocked : FB_AlarmHandler;
-	s_fbAlarmHandlerMotorNogInterlocked : FB_AlarmHandler;
+	s_fbAlarmHandlerMotorNegInterlocked : FB_AlarmHandler;
 	s_fbAlarmHandlerNotEnabled : FB_AlarmHandler;
 	s_fbAlarmHandlerLimitPositiveReached : FB_AlarmHandler;
 	s_fbAlarmHandlerLimitNegativeReached : FB_AlarmHandler;
@@ -209,7 +209,7 @@ s_fbAlarmHandlerMotorPosInterlocked(
 	i_bStaActive := s_wrnMotorPosInterlocked,
 	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move forward, Reason: ',CONCAT(s_sInterlockedReasonPos, '.'))));
 	
-s_fbAlarmHandlerMotorNogInterlocked(
+s_fbAlarmHandlerMotorNegInterlocked(
 	i_bStaActive := s_wrnMotorNegInterlocked,
 	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move backward, Reason: ',CONCAT(s_sInterlockedReasonNeg, '.'))));
 
@@ -229,7 +229,7 @@ s_bStaError :=
 // Warning collector
 s_bStaWarning := 
 	s_fbAlarmHandlerMotorPosInterlocked.q_bStaActive
-	OR s_fbAlarmHandlerMotorNogInterlocked.q_bStaActive
+	OR s_fbAlarmHandlerMotorNegInterlocked.q_bStaActive
 	OR s_fbAlarmHandlerNotEnabled.q_bStaActive
 	OR s_fbAlarmHandlerLimitPositiveReached.q_bStaActive
 	OR s_fbAlarmHandlerLimitNegativeReached.q_bStaActive;
@@ -696,7 +696,7 @@ s_fbAlarmHandlerDriveError.i_eAlarmLevel := E_AlarmLevel.Alarm;
 
 s_fbAlarmHandlerMotorPosInterlocked.i_eAlarmLevel := E_AlarmLevel.Warning;
 
-s_fbAlarmHandlerMotorNogInterlocked.i_eAlarmLevel := E_AlarmLevel.Warning;
+s_fbAlarmHandlerMotorNegInterlocked.i_eAlarmLevel := E_AlarmLevel.Warning;
 
 s_fbAlarmHandlerNotEnabled.i_eAlarmLevel := E_AlarmLevel.Warning;
 s_fbAlarmHandlerNotEnabled.i_sAlarmText := CONCAT(i_sCmName, ' - Not enabled');

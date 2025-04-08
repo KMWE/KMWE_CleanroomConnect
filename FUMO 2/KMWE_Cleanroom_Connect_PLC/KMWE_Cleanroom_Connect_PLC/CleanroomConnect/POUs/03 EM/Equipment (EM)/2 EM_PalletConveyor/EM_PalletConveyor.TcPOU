@@ -132,9 +132,10 @@ VAR
 	s_tMaxTravelTime : TIME;
 	s_tDoorCheckTime : TIME;
 	s_bDoorCheckTimeDisabled : BOOL := FALSE;
-	
-	s_eSeqCentering : E_SeqCentering;
-	s_fbSeqCenteringControl : FB_SeqControl;
+
+//-- Intergrated in Transport sequencer	
+//--	s_eSeqCentering : E_SeqCentering;
+//--	s_fbSeqCenteringControl : FB_SeqControl;
 
 	//Hmi
 	//Buttons
@@ -266,7 +267,8 @@ _m_Alarms := TRUE;
 _m_SeqTransport();
 		
 //Pallet Centering
-_m_SeqCentering();
+//--centering functionality is build into the transport sequencer
+//--_m_SeqCentering();
 ]]></ST>
       </Implementation>
     </Method>
@@ -906,10 +908,12 @@ CASE s_eSeqTransport OF
 		IF (i_eCtrlState = E_CtrlState.IDLE) THEN
 			s_eSeqTransport := E_SeqTransport.START;
 		END_IF
-			
+
+//START////////////////////////////////////////////////////////////////////////////////////////////			
 	E_SeqTransport.START:
 		IF s_fbSeqTransportControl.q_bStaEntry THEN
 			s_cmPalletConveyor.m_Stop();
+			s_cmCenteringUnit.m_Off();
 			s_bCmdHold := FALSE;
 			s_sMessage := '***';
 		END_IF		
@@ -918,13 +922,12 @@ CASE s_eSeqTransport OF
 		//??IF s_cmPalletConveyor.p_bStaMotorStopped AND_THEN NOT(s_cmPalletConveyor.p_bStaBrakeReleased) AND s_fbSeqTransportControl.q_tmStepTime > T#1S 
 		//??	AND NOT(i_bSta2HC_Active) THEN	
 		
-		//-- Added code below wait for state running
-		//--	s_eSeqTransport := E_SeqTransport.READY;
 			IF i_eCtrlState = E_CtrlState.RUNNING THEN
 				s_eSeqTransport := E_SeqTransport.READY;
 			END_IF
 		END_IF
-		
+
+//READY////////////////////////////////////////////////////////////////////////////////////////////		
 	E_SeqTransport.READY:
 		IF s_fbSeqTransportControl.q_bStaEntry THEN
 			i_refTB.p_eActLocation := s_eTmpLocation;
@@ -972,13 +975,22 @@ CASE s_eSeqTransport OF
 			END_IF	
 		
 			s_bReqTB_ToDocking := FALSE;
+
+		ELSIF s_bReqCenteringTB THEN
+
+			IF _m_CmdCenteringTB(i_refReason := s_sMessage) THEN
+				s_eSeqTransport := E_SeqTransport.PUSHER_TO_CENTER;
+			ELSE //If failed (command not allowed): the message will be written with the interlock reason
+				;	
+			END_IF
 			
-		END_IF	
-	
+			s_bReqCenteringTB := FALSE;
+		
+		END_IF		
+
+//MOVE TO INFEED///////////////////////////////////////////////////////////////////////////////////		
 	E_SeqTransport.MOVE_TO_INFEED:
 		IF s_fbSeqTransportControl.q_bStaEntry THEN		
-			//--s_tMaxTravelTime := LREAL_TO_TIME((i_ref_stSettings.fDistanceToInfeed / i_ref_stSettings.fSpeedGoToInfeed) * i_ref_stSettings.fTravelTollerance * 1000);
-			//--Optimized caclulation for max. travel time
 			s_tMaxTravelTime :=
 				_CalcMaxTravelTime(
 					i_fBaseRampTime := 4.0,
@@ -1009,11 +1021,10 @@ CASE s_eSeqTransport OF
 			s_sReason := 'Moving to infeed - timeout';
 			s_eSeqTransport := E_SeqTransport.ERROR;
 		END_IF
-	
+		
+//CENTERING////////////////////////////////////////////////////////////////////////////////////////		
 	E_SeqTransport.MOVE_TO_CENTERING:
 		IF s_fbSeqTransportControl.q_bStaEntry THEN
-			//--s_tMaxTravelTime := LREAL_TO_TIME((i_ref_stSettings.fDistanceToCentering / i_ref_stSettings.fSpeedGoToCentering) * i_ref_stSettings.fTravelTollerance * 1000);
-			//--Optimized caclulation for max. travel time			
 			s_tMaxTravelTime :=
 				_CalcMaxTravelTime(
 					i_fBaseRampTime := 4.0,
@@ -1040,7 +1051,7 @@ CASE s_eSeqTransport OF
 		IF s_bStaAtCenteringPosition THEN
 			s_bDoorCheckTimeDisabled := FALSE;
 			s_eTmpLocation := E_Location.CENTERING;
-			s_eSeqTransport := E_SeqTransport.STOP;
+			s_eSeqTransport := E_SeqTransport.MOVE_TO_CENTERING_STOP;
 		
 		ELSIF s_fbSeqTransportControl.q_tmStepTime < s_tDoorCheckTime 
 			AND NOT(s_bStaDoorOpened) 
@@ -1055,11 +1066,43 @@ CASE s_eSeqTransport OF
 			s_eSeqTransport := E_SeqTransport.ERROR;
 		
 		END_IF
+
+	E_SeqTransport.MOVE_TO_CENTERING_STOP:
+		IF s_fbSeqTransportControl.q_bStaEntry THEN
+			s_cmPalletConveyor.m_Stop();
+		END_IF
+		
+		IF s_cmPalletConveyor.p_bStaMotorStopped THEN
+			s_eSeqTransport := E_SeqTransport.PUSHER_TO_CENTER;
+		END_IF
+		
+	E_SeqTransport.PUSHER_TO_CENTER:
+		IF s_fbSeqTransportControl.q_bStaEntry THEN
+			s_cmCenteringUnit.m_On();
+		END_IF
+		
+		IF s_cmCenteringUnit.p_bStaIsOn THEN
+			s_eSeqTransport := E_SeqTransport.PUSHER_AT_CENTER;
+		END_IF
 	
+	E_SeqTransport.PUSHER_AT_CENTER:
+		IF s_fbSeqTransportControl.q_tmStepTime > i_ref_stSettings.tCenteringDuration THEN
+			s_eTmpCenteringDone := TRUE;
+			s_eSeqTransport := E_SeqTransport.PUSHER_TO_IDLE;
+		END_IF
+	
+	E_SeqTransport.PUSHER_TO_IDLE:
+		IF s_fbSeqTransportControl.q_bStaEntry THEN
+			s_cmCenteringUnit.m_Off();
+		END_IF
+		
+		IF s_cmCenteringUnit.p_bStaIsOff THEN
+			s_eSeqTransport := E_SeqTransport.READY;
+		END_IF
+
+//MOVE TO DOCKING//////////////////////////////////////////////////////////////////////////////////		
 	E_SeqTransport.MOVE_TO_DOCKING:
 		IF s_fbSeqTransportControl.q_bStaEntry THEN
-			//--s_tMaxTravelTime := LREAL_TO_TIME((i_ref_stSettings.fDistanceToDocking / i_ref_stSettings.fSpeedGoToDocking) * i_ref_stSettings.fTravelTollerance * 1000);
-			//--Optimized caclulation for max. travel time
 			s_tMaxTravelTime :=
 				_CalcMaxTravelTime(
 					i_fBaseRampTime := 4.0,
@@ -1089,7 +1132,8 @@ CASE s_eSeqTransport OF
 			s_sReason := 'Moving to docking - timeout';
 			s_eSeqTransport := E_SeqTransport.ERROR;		
 		END_IF
-		
+
+//STOP		
 	E_SeqTransport.STOP:
 		IF s_fbSeqTransportControl.q_bStaEntry THEN
 			s_cmPalletConveyor.m_Stop();
@@ -1101,6 +1145,7 @@ CASE s_eSeqTransport OF
 		
 	E_SeqTransport.ERROR:
 		s_cmPalletConveyor.m_Stop();
+		s_cmCenteringUnit.m_Stop();
 		
 END_CASE
 ]]></ST>
@@ -1118,7 +1163,8 @@ END_IF
 CASE i_eCtrlMode OF
 
 	E_CtrlMode.IDLE:
-		s_eSeqCentering := E_SeqCentering.IDLE;
+	s_eSeqTransport := E_SeqTransport.IDLE;
+//--		s_eSeqCentering := E_SeqCentering.IDLE;
 		
 	E_CtrlMode.AUTOMATIC:
 		//Automatic commands are controlled by higher-layer unit
@@ -1158,7 +1204,7 @@ CASE i_eCtrlMode OF
 		//Execute maintenance control (HMI control module buttons)
 		//Reset automatic/manual sequencer
 		s_eSeqTransport := E_SeqTransport.IDLE;
-		s_eSeqCentering := E_SeqCentering.IDLE;
+//--		s_eSeqCentering := E_SeqCentering.IDLE;
 		; 	//Maintenance control is implemented in lower-layer control modules
 							
 		
@@ -1329,7 +1375,7 @@ p_bCmdHold := s_bCmdHold;
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaReady := (s_eSeqTransport = E_SeqTransport.READY) AND (s_eSeqCentering = E_SeqCentering.READY);
+p_bStaReady := (s_eSeqTransport = E_SeqTransport.READY); //-- AND (s_eSeqCentering = E_SeqCentering.READY);
 ]]></ST>
         </Implementation>
       </Get>
@@ -1437,6 +1483,7 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
     </LineIds>
     <LineIds Name="EM_PalletConveyor._m_AutomaticControl">
       <LineId Id="473" Count="4" />
+      <LineId Id="481" Count="0" />
       <LineId Id="293" Count="0" />
       <LineId Id="479" Count="0" />
     </LineIds>
@@ -1765,27 +1812,30 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="1641" Count="0" />
       <LineId Id="1814" Count="0" />
       <LineId Id="1642" Count="4" />
-      <LineId Id="1809" Count="3" />
+      <LineId Id="1809" Count="2" />
+      <LineId Id="1966" Count="0" />
+      <LineId Id="1812" Count="0" />
       <LineId Id="1649" Count="0" />
       <LineId Id="1654" Count="1" />
+      <LineId Id="1965" Count="0" />
       <LineId Id="1912" Count="0" />
       <LineId Id="1920" Count="0" />
       <LineId Id="1656" Count="2" />
       <LineId Id="1818" Count="0" />
       <LineId Id="1820" Count="0" />
       <LineId Id="1819" Count="0" />
-      <LineId Id="1903" Count="0" />
-      <LineId Id="1659" Count="0" />
       <LineId Id="1901" Count="1" />
       <LineId Id="1899" Count="0" />
-      <LineId Id="1660" Count="9" />
+      <LineId Id="1660" Count="0" />
+      <LineId Id="1967" Count="0" />
+      <LineId Id="1661" Count="8" />
       <LineId Id="1906" Count="1" />
       <LineId Id="1904" Count="1" />
       <LineId Id="1797" Count="0" />
       <LineId Id="1800" Count="0" />
       <LineId Id="1671" Count="2" />
-      <LineId Id="1909" Count="0" />
-      <LineId Id="1914" Count="0" />
+      <LineId Id="1924" Count="0" />
+      <LineId Id="1923" Count="0" />
       <LineId Id="1917" Count="0" />
       <LineId Id="1676" Count="0" />
       <LineId Id="1821" Count="0" />
@@ -1803,9 +1853,16 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="1911" Count="0" />
       <LineId Id="1916" Count="0" />
       <LineId Id="1919" Count="0" />
-      <LineId Id="1708" Count="3" />
-      <LineId Id="1715" Count="4" />
-      <LineId Id="1894" Count="0" />
+      <LineId Id="1708" Count="2" />
+      <LineId Id="1969" Count="1" />
+      <LineId Id="1978" Count="0" />
+      <LineId Id="1971" Count="2" />
+      <LineId Id="1979" Count="0" />
+      <LineId Id="1974" Count="2" />
+      <LineId Id="1980" Count="0" />
+      <LineId Id="1977" Count="0" />
+      <LineId Id="1962" Count="0" />
+      <LineId Id="1716" Count="2" />
       <LineId Id="1866" Count="0" />
       <LineId Id="1871" Count="4" />
       <LineId Id="1867" Count="0" />
@@ -1819,8 +1876,9 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="1822" Count="1" />
       <LineId Id="1723" Count="0" />
       <LineId Id="1864" Count="0" />
-      <LineId Id="1724" Count="10" />
-      <LineId Id="1878" Count="0" />
+      <LineId Id="1724" Count="6" />
+      <LineId Id="1961" Count="0" />
+      <LineId Id="1731" Count="2" />
       <LineId Id="1893" Count="0" />
       <LineId Id="1879" Count="4" />
       <LineId Id="1876" Count="1" />
@@ -1833,8 +1891,22 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="1739" Count="6" />
       <LineId Id="1792" Count="0" />
       <LineId Id="1746" Count="7" />
-      <LineId Id="1760" Count="5" />
-      <LineId Id="1892" Count="0" />
+      <LineId Id="1760" Count="2" />
+      <LineId Id="1927" Count="6" />
+      <LineId Id="1925" Count="0" />
+      <LineId Id="1934" Count="0" />
+      <LineId Id="1936" Count="0" />
+      <LineId Id="1939" Count="5" />
+      <LineId Id="1938" Count="0" />
+      <LineId Id="1945" Count="0" />
+      <LineId Id="1956" Count="3" />
+      <LineId Id="1955" Count="0" />
+      <LineId Id="1954" Count="0" />
+      <LineId Id="1947" Count="6" />
+      <LineId Id="1946" Count="0" />
+      <LineId Id="1960" Count="0" />
+      <LineId Id="1926" Count="0" />
+      <LineId Id="1763" Count="1" />
       <LineId Id="1886" Count="5" />
       <LineId Id="1884" Count="1" />
       <LineId Id="1766" Count="2" />
@@ -1843,13 +1915,18 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="1853" Count="2" />
       <LineId Id="1862" Count="0" />
       <LineId Id="1846" Count="1" />
-      <LineId Id="1769" Count="21" />
+      <LineId Id="1769" Count="7" />
+      <LineId Id="1963" Count="0" />
+      <LineId Id="1777" Count="11" />
+      <LineId Id="1964" Count="0" />
+      <LineId Id="1789" Count="1" />
       <LineId Id="89" Count="0" />
     </LineIds>
     <LineIds Name="EM_PalletConveyor.m_Main">
       <LineId Id="2946" Count="0" />
       <LineId Id="2483" Count="2" />
       <LineId Id="2529" Count="3" />
+      <LineId Id="3154" Count="0" />
       <LineId Id="2534" Count="2" />
       <LineId Id="3070" Count="0" />
       <LineId Id="2900" Count="0" />

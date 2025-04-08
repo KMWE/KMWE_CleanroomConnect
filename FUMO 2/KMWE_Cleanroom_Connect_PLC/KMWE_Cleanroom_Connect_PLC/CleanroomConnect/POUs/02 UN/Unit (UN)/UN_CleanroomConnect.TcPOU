@@ -70,6 +70,8 @@ VAR
 	s_ePreviousStep : E_SeqInbound;
 	s_eResumeStep : E_SeqInbound;
 
+	s_eReqAction : E_ReqAction;
+	
 	s_tonTimer : TON;
 	
 //------------------------------------------//
@@ -1316,7 +1318,7 @@ s_tonTimer(PT := T#3600S);
 //??	s_eSeqInbound := E_SeqInbound.STOP;
 //??END_IF	
 	
-CASE s_eSeqInbound OF 
+CASE s_eSeqInbound OF
 	E_SeqInbound.IDLE:
 		s_eResumeStep := E_SeqInbound.READY;
 		s_eSeqInbound := E_SeqInbound.START;
@@ -1327,7 +1329,8 @@ CASE s_eSeqInbound OF
 			s_eSeqInbound := s_eResumeStep;
 			s_bCmdHold := FALSE;
 		END_IF
-		
+
+//READY////////////////////////////////////////////////////////////////////////////////////////////		
 	E_SeqInbound.READY:
 		IF s_fbSeqControlInbound.q_bStaEntry THEN
 		//??	s_bReqInbound := FALSE;
@@ -1358,6 +1361,20 @@ CASE s_eSeqInbound OF
 			s_eSeqInbound := E_SeqInbound.TB_TO_CENTER;
 		END_IF
 		
+		IF s_bStaAllEmReady AND ( (s_eReqAction = E_ReqAction.INBOUND) OR (s_eReqAction = E_ReqAction.OUTBOUND) OR (s_eReqAction = E_ReqAction.DOCK_TB) ) THEN
+			s_eSeqInbound := E_SeqInbound.TB_TO_CENTER;
+		ELSIF s_bStaAllEmReady AND (s_eReqAction = E_ReqAction.UNOCK_TB) THEN
+			s_eSeqInbound := E_SeqInbound.UNDOCK_TB;
+		ELSIF s_bStaAllEmReady AND (s_eReqAction = E_ReqAction.PICK_TROLLEY_FROM_TB) THEN
+			//TODO check if correct --> Nog bepalen wat hier wenslijk is: of doorgaan va. OPEN INNER SPEED DOOR of direct naar PICK TROLLEY
+			s_eSeqInbound := E_SeqInbound.OPEN_INNER_SPEED_DOOR;
+//??			s_eSeqInbound := E_SeqInbound.PICK_TROLLEY_FROM_TB;
+		ELSIF s_bStaAllEmReady AND (s_eReqAction = E_ReqAction.PLACE_TROLLEY_IN_TB) THEN
+			//TODO check if correct	--> Nog bepalen wat hier wenslijk is: of doorgaan va. OPEN INNER SPEED DOOR of direct naar PLACE TROLLEY
+			s_eSeqInbound := E_SeqInbound.OPEN_INNER_SPEED_DOOR;
+//??			s_eSeqInbound := E_SeqInbound.PLACE_TROLLEY_IN_TB;
+		END_IF
+		
 		IF s_bStaAllEmReady AND FALSE THEN
 			s_eSeqInbound := E_SeqInbound.TB_TO_INFEED;
 		END_IF
@@ -1367,7 +1384,7 @@ CASE s_eSeqInbound OF
 		END_IF
 		
 		IF s_bStaAllEmReady AND (s_bReqUndockTB) THEN
-			s_eSeqInbound := E_SeqInbound.CLOSE_INNER_DOOR;
+			s_eSeqInbound := E_SeqInbound.CLOSE_INNER_TB_DOOR;
 		END_IF
 		
 		IF s_bStaAllEmReady AND s_bReqPickTrolleyFromTB THEN
@@ -1384,25 +1401,14 @@ CASE s_eSeqInbound OF
 		END_IF
 		
 		IF GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering
-			AND GVL_Modules.g_emPalletConveyor.p_bStaReady THEN
-			s_eSeqInbound := E_SeqInbound.CENTERING_TB;
+			AND GVL_Modules.g_emPalletConveyor.p_bStaReady THEN			
+			s_eSeqInbound := E_SeqInbound.OPEN_OUTER_SPEED_DOOR;
 		END_IF
-	
-	E_SeqInbound.CENTERING_TB:
-		IF s_fbSeqControlInbound.q_bStaEntry THEN
-			GVL_Modules.g_emPalletConveyor.m_ReqCenteringTB();
-		END_IF
-		
-		IF GVL_Modules.g_emPalletConveyor.p_bStaTB_CenteringDone 
-			AND GVL_Modules.g_emPalletConveyor.p_bStaReady THEN
 
-			IF (s_bReqInbound OR s_bReqOutbound OR s_bReqDockTB) THEN 
-				s_eSeqInbound := E_SeqInbound.TB_TO_DOCKING;
-			ELSE
-//--				s_eSeqInbound := E_SeqInbound.READY;
-				s_eSeqInbound := E_SeqInbound.STOP;
-			END_IF
-		END_IF
+	E_SeqInbound.OPEN_OUTER_SPEED_DOOR:
+		{warning '#TODO: Add future/FUMO3 code'}
+		s_eSeqInbound := E_SeqInbound.TB_TO_DOCKING;
+
 ////		
 	E_SeqInbound.TB_TO_DOCKING:
 		IF s_fbSeqControlInbound.q_bStaEntry THEN
@@ -1421,10 +1427,20 @@ CASE s_eSeqInbound OF
 		
 		IF GVL_Modules.g_emDockingInterface.p_bStaDocked 
 			AND GVL_Modules.g_emDockingInterface.p_bStaReady THEN
-			s_eSeqInbound := E_SeqInbound.OPEN_INNER_DOOR;
+			
+			IF ( (s_eReqAction = E_ReqAction.INBOUND) OR (s_eReqAction = E_ReqAction.OUTBOUND) ) THEN
+				s_eSeqInbound := E_SeqInbound.OPEN_INNER_SPEED_DOOR;
+				
+			ELSIF (s_eReqAction = E_ReqAction.DOCK_TB) THEN
+				s_eSeqInbound := E_SeqInbound.STOP;
+			END_IF
 		END_IF
 		
-	E_SeqInbound.OPEN_INNER_DOOR:
+	E_SeqInbound.OPEN_INNER_SPEED_DOOR:
+		{warning '#TODO: Add future/FUMO3 code'}
+		s_eSeqInbound := E_SeqInbound.OPEN_INNER_TB_DOOR;	
+		
+	E_SeqInbound.OPEN_INNER_TB_DOOR:
 		IF s_fbSeqControlInbound.q_bStaEntry THEN
 			GVL_Modules.g_emDockingInterface.m_ReqOpenInnerDoor();
 		END_IF
@@ -1432,18 +1448,21 @@ CASE s_eSeqInbound OF
 		IF GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpened
 			AND GVL_Modules.g_emDockingInterface.p_bStaReady THEN
 			
-			IF s_bReqInbound THEN 
-				s_eSeqInbound := E_SeqInbound.PICK_TROLLEY_FROM_TB;
-			ELSIF s_bReqOutbound THEN 
-				s_eSeqInbound := E_SeqInbound.PLACE_TROLLEY_IN_TB;
-			ELSIF s_bReqDockTB THEN
-//--				s_eSeqInbound := E_SeqInbound.READY;
-				s_eSeqInbound := E_SeqInbound.STOP;
-			ELSE
-//--				s_eSeqInbound := E_SeqInbound.READY;
-				s_eSeqInbound := E_SeqInbound.STOP;
-			END_IF
+			s_eSeqInbound := E_SeqInbound.FLUSHING;
 		END_IF
+	
+	E_SeqInbound.FLUSHING:
+		{warning '#TODO: Add future/FUMO3 code'}
+		IF ( (s_eReqAction = E_ReqAction.INBOUND) OR (s_eReqAction = E_ReqAction.PICK_TROLLEY_FROM_TB) ) THEN 
+			s_eSeqInbound := E_SeqInbound.PICK_TROLLEY_FROM_TB;
+		ELSIF ( (s_eReqAction = E_ReqAction.OUTBOUND) OR (s_eReqAction = E_ReqAction.PLACE_TROLLEY_IN_TB) ) THEN 
+			s_eSeqInbound := E_SeqInbound.OPEN_CLEANROOM_DOOR;
+		ELSIF (s_eReqAction = E_ReqAction.DOCK_TB) THEN
+			s_eSeqInbound := E_SeqInbound.STOP;
+		ELSE
+			s_eSeqInbound := E_SeqInbound.STOP;
+		END_IF
+	
 ////		
 	E_SeqInbound.PICK_TROLLEY_FROM_TB:
 		IF s_fbSeqControlInbound.q_bStaEntry THEN
@@ -1452,15 +1471,12 @@ CASE s_eSeqInbound OF
 		
 		IF GVL_Modules.g_emLiftingTransport.p_bStaTrolleyPickedFromTB
 			AND GVL_Modules.g_emLiftingTransport.p_bStaReady THEN
+
+			s_eSeqInbound := E_SeqInbound.OPEN_CLEANROOM_DOOR;
 			
 			IF s_bReqInbound THEN 
 				{warning '#TODO: What is expexted from inbound? Stay Docked or return empty TB to infeed'}
-				s_eSeqInbound := E_SeqInbound.CLOSE_INNER_DOOR;
-//--				s_eSeqInbound := E_SeqInbound.READY;
-				s_eSeqInbound := E_SeqInbound.STOP;				
-			ELSE
-//--				s_eSeqInbound := E_SeqInbound.READY;
-				s_eSeqInbound := E_SeqInbound.STOP;
+				s_eSeqInbound := E_SeqInbound.CLOSE_INNER_TB_DOOR;
 			END_IF
 		END_IF
 ////		
@@ -1472,22 +1488,44 @@ CASE s_eSeqInbound OF
 		IF GVL_Modules.g_emLiftingTransport.p_bStaTrolleyPlacedInTB
 			AND GVL_Modules.g_emLiftingTransport.p_bStaReady THEN
 			
-			IF s_bReqOutbound THEN 
-				s_eSeqInbound := E_SeqInbound.CLOSE_INNER_DOOR;
+			IF (s_eReqAction = E_ReqAction.OUTBOUND) THEN 
+				s_eSeqInbound := E_SeqInbound.CLOSE_CLEANROOM_DOOR;
 			ELSE
-//--				s_eSeqInbound := E_SeqInbound.READY;
 				s_eSeqInbound := E_SeqInbound.STOP;
 			END_IF
 		END_IF
+		
+	E_SeqInbound.OPEN_CLEANROOM_DOOR:
+		;
+		{warning '#TODO: Add future/FUMO3 code'}
+		IF ( (s_eReqAction = E_ReqAction.INBOUND) OR (s_eReqAction = E_ReqAction.PICK_TROLLEY_FROM_TB) ) THEN
+			s_eSeqInbound := E_SeqInbound.CLOSE_CLEANROOM_DOOR;
+		ELSIF (s_eReqAction = E_ReqAction.OUTBOUND) THEN	
+			s_eSeqInbound := E_SeqInbound.PLACE_TROLLEY_IN_TB;
+		END_IF
+
+	E_SeqInbound.CLOSE_CLEANROOM_DOOR:
+		;
+		{warning '#TODO: Add future/FUMO3 code'}
+		s_eSeqInbound := E_SeqInbound.CLOSE_INNER_TB_DOOR;	
+		
 ////		
-	E_SeqInbound.CLOSE_INNER_DOOR:
+	E_SeqInbound.CLOSE_INNER_TB_DOOR:
 		IF s_fbSeqControlInbound.q_bStaEntry THEN
 			GVL_Modules.g_emDockingInterface.m_ReqCloseInnerDoor();
 		END_IF
 		
 		IF GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosed 
 			AND GVL_Modules.g_emDockingInterface.p_bStaReady THEN
-			s_eSeqInbound := E_SeqInbound.UNDOCK_TB;
+			s_eSeqInbound := E_SeqInbound.CLOSE_INNER_SPEED_DOOR;
+		END_IF
+	
+	E_SeqInbound.CLOSE_INNER_SPEED_DOOR:
+		{warning '#TODO: Add future/FUMO3 code'}
+		IF ( (s_eReqAction = E_ReqAction.INBOUND) OR (s_eReqAction = E_ReqAction.OUTBOUND) ) THEN
+			s_eSeqInbound := s_eSeqInbound := E_SeqInbound.UNDOCK_TB;
+		ELSIF ( (s_eReqAction = E_ReqAction.PICK_TROLLEY_FROM_TB) OR (s_eReqAction = E_ReqAction.PLACE_TROLLEY_IN_TB) ) THEN
+			s_eSeqInbound := E_SeqInbound.STOP;
 		END_IF
 		
 	E_SeqInbound.UNDOCK_TB:
@@ -1505,10 +1543,15 @@ CASE s_eSeqInbound OF
 			GVL_Modules.g_emPalletConveyor.m_ReqTB_ToInfeed();
 		END_IF
 		
+		IF NOT(GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking) THEN
+//++			GVL_Modules.g_emDoors.m_ReqOuterSpeedDoorClose();
+			;
+		END_IF
+	
 		IF GVL_Modules.g_emPalletConveyor.p_bStaTB_AtInfeed
 			AND GVL_Modules.g_emPalletConveyor.p_bStaReady THEN
 			
-			s_eSeqInbound := E_SeqInbound.STOP;
+			s_eSeqInbound := E_SeqInbound.CLOSE_OUTER_SPEED_DOOR;
 			
 //--			IF s_bReqUndockTB THEN
 //--				s_eSeqInbound := E_SeqInbound.READY;
@@ -1517,6 +1560,10 @@ CASE s_eSeqInbound OF
 //--			END_IF
 		END_IF
 
+	E_SeqInbound.CLOSE_OUTER_SPEED_DOOR:
+		{warning '#TODO: Add future/FUMO3 code'}
+		s_eSeqInbound := E_SeqInbound.STOP;
+		
 	E_SeqInbound.STOP:
 		//Do not use .qEnrty forced stop doesn't make use of fbSeqControl
 		s_bReqInbound := FALSE;
@@ -1525,6 +1572,8 @@ CASE s_eSeqInbound OF
 		s_bReqUndockTB := FALSE;
 		s_bReqPickTrolleyFromTB := FALSE;
 		s_bReqPlaceTrolleyInTB := FALSE;
+		
+		s_eReqAction := E_ReqAction.NONE;
 				
 		s_eSeqInbound := E_SeqInbound.READY;
 	
@@ -1987,6 +2036,7 @@ GVL_Modules.g_emPalletConveyor.m_ReqTB_ToInfeed();
       <LineId Id="458" Count="0" />
       <LineId Id="500" Count="0" />
       <LineId Id="515" Count="0" />
+      <LineId Id="549" Count="0" />
       <LineId Id="196" Count="0" />
       <LineId Id="178" Count="0" />
       <LineId Id="381" Count="0" />
@@ -2010,7 +2060,18 @@ GVL_Modules.g_emPalletConveyor.m_ReqTB_ToInfeed();
       <LineId Id="332" Count="0" />
       <LineId Id="330" Count="0" />
       <LineId Id="327" Count="0" />
-      <LineId Id="340" Count="0" />
+      <LineId Id="625" Count="1" />
+      <LineId Id="657" Count="0" />
+      <LineId Id="628" Count="0" />
+      <LineId Id="678" Count="1" />
+      <LineId Id="683" Count="0" />
+      <LineId Id="682" Count="0" />
+      <LineId Id="686" Count="0" />
+      <LineId Id="681" Count="0" />
+      <LineId Id="684" Count="0" />
+      <LineId Id="680" Count="0" />
+      <LineId Id="687" Count="0" />
+      <LineId Id="675" Count="1" />
       <LineId Id="342" Count="1" />
       <LineId Id="341" Count="0" />
       <LineId Id="344" Count="0" />
@@ -2031,18 +2092,14 @@ GVL_Modules.g_emPalletConveyor.m_ReqTB_ToInfeed();
       <LineId Id="200" Count="0" />
       <LineId Id="238" Count="2" />
       <LineId Id="294" Count="0" />
-      <LineId Id="242" Count="1" />
-      <LineId Id="241" Count="0" />
-      <LineId Id="181" Count="0" />
-      <LineId Id="244" Count="4" />
-      <LineId Id="295" Count="0" />
-      <LineId Id="369" Count="0" />
-      <LineId Id="363" Count="0" />
-      <LineId Id="365" Count="0" />
-      <LineId Id="367" Count="1" />
-      <LineId Id="537" Count="0" />
-      <LineId Id="366" Count="0" />
-      <LineId Id="202" Count="1" />
+      <LineId Id="550" Count="0" />
+      <LineId Id="243" Count="0" />
+      <LineId Id="558" Count="0" />
+      <LineId Id="556" Count="0" />
+      <LineId Id="559" Count="0" />
+      <LineId Id="557" Count="0" />
+      <LineId Id="555" Count="0" />
+      <LineId Id="203" Count="0" />
       <LineId Id="182" Count="0" />
       <LineId Id="250" Count="4" />
       <LineId Id="296" Count="0" />
@@ -2052,48 +2109,61 @@ GVL_Modules.g_emPalletConveyor.m_ReqTB_ToInfeed();
       <LineId Id="183" Count="0" />
       <LineId Id="256" Count="4" />
       <LineId Id="297" Count="0" />
-      <LineId Id="261" Count="0" />
+      <LineId Id="669" Count="1" />
+      <LineId Id="664" Count="4" />
       <LineId Id="205" Count="0" />
       <LineId Id="207" Count="0" />
-      <LineId Id="184" Count="0" />
-      <LineId Id="262" Count="4" />
-      <LineId Id="298" Count="0" />
-      <LineId Id="370" Count="0" />
-      <LineId Id="372" Count="1" />
-      <LineId Id="386" Count="0" />
-      <LineId Id="388" Count="0" />
-      <LineId Id="396" Count="1" />
-      <LineId Id="535" Count="0" />
-      <LineId Id="374" Count="1" />
-      <LineId Id="536" Count="0" />
-      <LineId Id="371" Count="0" />
-      <LineId Id="208" Count="1" />
+      <LineId Id="560" Count="1" />
+      <LineId Id="553" Count="0" />
+      <LineId Id="688" Count="0" />
+      <LineId Id="566" Count="7" />
+      <LineId Id="585" Count="0" />
+      <LineId Id="565" Count="0" />
+      <LineId Id="564" Count="0" />
+      <LineId Id="588" Count="1" />
+      <LineId Id="633" Count="7" />
+      <LineId Id="631" Count="0" />
+      <LineId Id="586" Count="0" />
+      <LineId Id="209" Count="0" />
       <LineId Id="185" Count="0" />
       <LineId Id="268" Count="4" />
       <LineId Id="299" Count="0" />
+      <LineId Id="641" Count="1" />
       <LineId Id="273" Count="0" />
       <LineId Id="377" Count="0" />
       <LineId Id="405" Count="0" />
       <LineId Id="378" Count="0" />
-      <LineId Id="407" Count="0" />
-      <LineId Id="406" Count="0" />
-      <LineId Id="379" Count="1" />
-      <LineId Id="534" Count="0" />
       <LineId Id="376" Count="0" />
       <LineId Id="210" Count="0" />
       <LineId Id="309" Count="7" />
       <LineId Id="389" Count="0" />
-      <LineId Id="393" Count="0" />
-      <LineId Id="390" Count="2" />
+      <LineId Id="663" Count="0" />
+      <LineId Id="390" Count="1" />
       <LineId Id="533" Count="0" />
       <LineId Id="317" Count="0" />
       <LineId Id="308" Count="0" />
+      <LineId Id="601" Count="1" />
+      <LineId Id="609" Count="0" />
+      <LineId Id="605" Count="0" />
+      <LineId Id="645" Count="0" />
+      <LineId Id="647" Count="0" />
+      <LineId Id="661" Count="1" />
+      <LineId Id="648" Count="0" />
+      <LineId Id="607" Count="1" />
+      <LineId Id="610" Count="0" />
+      <LineId Id="606" Count="0" />
+      <LineId Id="649" Count="0" />
+      <LineId Id="697" Count="0" />
       <LineId Id="211" Count="0" />
       <LineId Id="186" Count="0" />
       <LineId Id="274" Count="4" />
       <LineId Id="300" Count="0" />
       <LineId Id="279" Count="0" />
       <LineId Id="212" Count="1" />
+      <LineId Id="613" Count="1" />
+      <LineId Id="716" Count="1" />
+      <LineId Id="720" Count="1" />
+      <LineId Id="714" Count="1" />
       <LineId Id="187" Count="0" />
       <LineId Id="282" Count="4" />
       <LineId Id="301" Count="0" />
@@ -2101,7 +2171,13 @@ GVL_Modules.g_emPalletConveyor.m_ReqTB_ToInfeed();
       <LineId Id="280" Count="0" />
       <LineId Id="215" Count="0" />
       <LineId Id="188" Count="0" />
-      <LineId Id="288" Count="4" />
+      <LineId Id="288" Count="2" />
+      <LineId Id="619" Count="0" />
+      <LineId Id="621" Count="1" />
+      <LineId Id="624" Count="0" />
+      <LineId Id="623" Count="0" />
+      <LineId Id="620" Count="0" />
+      <LineId Id="292" Count="0" />
       <LineId Id="302" Count="0" />
       <LineId Id="398" Count="0" />
       <LineId Id="531" Count="1" />
@@ -2109,9 +2185,14 @@ GVL_Modules.g_emPalletConveyor.m_ReqTB_ToInfeed();
       <LineId Id="293" Count="0" />
       <LineId Id="402" Count="0" />
       <LineId Id="216" Count="0" />
-      <LineId Id="189" Count="1" />
+      <LineId Id="650" Count="0" />
+      <LineId Id="652" Count="1" />
+      <LineId Id="189" Count="0" />
+      <LineId Id="651" Count="0" />
+      <LineId Id="190" Count="0" />
       <LineId Id="545" Count="0" />
       <LineId Id="523" Count="5" />
+      <LineId Id="654" Count="1" />
       <LineId Id="217" Count="0" />
       <LineId Id="530" Count="0" />
       <LineId Id="191" Count="0" />

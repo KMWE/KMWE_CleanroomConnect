@@ -2,20 +2,39 @@
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
   <POU Name="CM_SpeedDoor" Id="{e2ac819d-166f-472e-93dd-5b172f53ac70}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK CM_SpeedDoor EXTENDS CM_Base IMPLEMENTS I_Door
+
+VAR CONSTANT
+	c_MAX_FB_NAME_LENGTH : USINT := 8; //Maximum feedback-name length
+END_VAR
+
 VAR_INPUT
 	i_stSettings : ST_SettingsSpeedDoor;
+	i_bIclkOpen : BOOL := TRUE; //TRUE = interlocked
+	i_bIclkClose : BOOL := TRUE; //TRUE = interlocked
+	
+	i_ref_eCtrlState : REFERENCE TO E_CtrlState;
 END_VAR
+
 VAR
 	// Inputs
-	I_bStaDoorIsOpended AT %I* : BOOL; // Door is opened
+	I_bStaDoorIsOpened AT %I* : BOOL; // Door is opened
 	I_bStaDoorIsClosed AT %I* : BOOL; // Door is closed
-	I_bStaControllerError AT %I* : BOOL; // Controller has error
+	I_bStaControllerIsReady AT %I* : BOOL; // Controller is ready (no error)
 	
 	// Outputs
-	Q_bCmdOpenDoor AT %Q* : BOOL; // Command to open door
-	Q_bCmdCloseDoor AT %Q* : BOOL; // Command to close door
-	Q_bCmdResetDoor AT %Q* : BOOL; // Command to reset door (controller)
-		
+	Q_bCmdOpen AT %Q* : BOOL; // Command to open door
+	Q_bCmdClose AT %Q* : BOOL; // Command to close door
+	Q_bCmdReset AT %Q* : BOOL; // Command to reset door (controller)
+	
+	// Force outputs (IO-test functions)
+	s_fbForceCmdReset : FB_ForceOutput;
+	s_fbForceCmdOpen : FB_ForceOutput;
+	s_fbForceCmdClose : FB_ForceOutput;
+	
+	// Interlocks
+	s_sInterlockedReasonOpen : STRING(GVL.g_MAX_LEN_INTERLOCK_REASON); //External interlocked reason for clarifying reason
+	s_sInterlockedReasonClose : STRING(GVL.g_MAX_LEN_INTERLOCK_REASON); //External interlocked reason for clarifying reason
+	
 	// Requests
 	s_bReqClose : BOOL;
 	s_bReqOpen : BOOL;
@@ -27,21 +46,44 @@ VAR
 	s_bStaDoorIsOpened : BOOL;
 	s_bStaDoorIsOpening : BOOL;
 	s_bStaDoorControllerError : BOOL;
+	s_bStaDoorReset : BOOL;
+	s_bStaWarning : BOOL;
+	
+	s_sCfgCloseName : STRING(c_MAX_FB_NAME_LENGTH) := 'Close';
+	s_sCfgOpenName : STRING(c_MAX_FB_NAME_LENGTH) := 'Open';
+		
+	// Alarms	
+	s_fbAlarmHandlerOpeningTimeout : FB_AlarmHandler;
+	s_fbAlarmHandlerClosingTimeout : FB_AlarmHandler;
+	s_fbAlarmHandlerDoorController : FB_AlarmHandler;
+	
+	s_fbAlarmHandlerOpenInterlocked : FB_AlarmHandler;
+	s_fbAlarmHandlerCloseInterlocked : FB_AlarmHandler;
+	
+	s_errDoorController : BOOL;
+	s_errOpeningTimeout : BOOL;
+	s_errClosingTimeout : BOOL;
 	
 	// Timers
 	s_tofResetPulse : TOF;
 	s_tonOpeningTimeout : TON;
 	s_tonClosingTimeout : TON;
 	
-	// Alarms
-	s_fbAlarmHandlerSpeeddoorController : FB_AlarmHandler;
-	s_fbAlarmHandlerOpeningTimeout : FB_AlarmHandler;
-	s_fbAlarmHandlerClosingTimeout : FB_AlarmHandler;
+	//Hmi
+	s_stHmiData : ST_SpeedDoor_HMI;
+	s_bHmiInit : BOOL := FALSE;
 	
-	s_errDoorController : BOOL;
-	s_errOpeningTimeout : BOOL;
-	s_errClosingTimeout : BOOL;
-		
+	s_fbHmiBtnManualClose : FB_HmiBtn;
+	s_fbHmiBtnManualOpen : FB_HmiBtn;
+	s_fbHmiBtnManualReset : FB_HmiBtn;
+	
+	s_fbHmiLedIsClose : FB_HmiLed;
+	s_fbHmiLedIsOpen : FB_HmiLed;
+	s_fbHmiLedErrorClose : FB_HmiLed;
+	s_fbHmiLedErrorOpen : FB_HmiLed;
+	s_fbHmiLedErrorController : FB_HmiLed;
+	s_fbHmiLedReset : FB_HmiLed;
+	
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -49,9 +91,11 @@ END_VAR
 SUPER^();
 ]]></ST>
     </Implementation>
-    <Folder Name="Methods" Id="{dd2ef451-5f00-4ad8-b27b-ac26bc262820}" />
+    <Folder Name="Methods" Id="{dd2ef451-5f00-4ad8-b27b-ac26bc262820}">
+      <Folder Name="Base" Id="{64eb2fb7-4e3e-4f52-8667-baf2cc40706f}" />
+    </Folder>
     <Folder Name="Properties" Id="{94c06e33-8c98-4e4c-9eed-8612b89d755c}" />
-    <Method Name="_m_Alarms" Id="{b8083211-2c26-4309-a88e-d066548d2c6f}" FolderPath="Methods\">
+    <Method Name="_m_Alarms" Id="{b8083211-2c26-4309-a88e-d066548d2c6f}" FolderPath="Methods\Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Alarms : BOOL
 ]]></Declaration>
       <Implementation>
@@ -75,7 +119,7 @@ s_errOpeningTimeout := (s_tonOpeningTimeout.Q OR s_errOpeningTimeout) AND NOT(i_
 s_errClosingTimeout := (s_tonClosingTimeout.Q OR s_errClosingTimeout) AND NOT(i_bCmdReset);
 
 // Alarm Handlers
-s_fbAlarmHandlerSpeeddoorController(
+s_fbAlarmHandlerDoorController(
 	i_bStaActive := s_errDoorController, 
 	i_eAlarmLevel := E_AlarmLevel.Alarm,
 	i_sAlarmText := CONCAT(i_sCmName , CONCAT(': Controller - ', 'has error (check DYNACO-system).')) );
@@ -92,7 +136,7 @@ s_fbAlarmHandlerClosingTimeout(
 	
 // Alarm collector	
 s_bStaError := 
-	s_fbAlarmHandlerSpeeddoorController.q_bStaActive
+	s_fbAlarmHandlerDoorController.q_bStaActive
 	OR s_fbAlarmHandlerOpeningTimeout.q_bStaActive
 	OR s_fbAlarmHandlerClosingTimeout.q_bStaActive;
 
@@ -100,7 +144,7 @@ _m_Alarms := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Devices" Id="{19806151-6bfc-4d1c-84d0-f6d34cd7cf25}" FolderPath="Methods\">
+    <Method Name="_m_Devices" Id="{19806151-6bfc-4d1c-84d0-f6d34cd7cf25}" FolderPath="Methods\Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Devices : BOOL
 ]]></Declaration>
       <Implementation>
@@ -123,7 +167,7 @@ _m_Devices := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Hmi" Id="{7840a539-413d-41f3-9ea8-d8dc0b64e9ee}" FolderPath="Methods\">
+    <Method Name="_m_Hmi" Id="{7840a539-413d-41f3-9ea8-d8dc0b64e9ee}" FolderPath="Methods\Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Hmi : BOOL
 ]]></Declaration>
       <Implementation>
@@ -132,11 +176,103 @@ IF NOT SUPER^._m_Hmi() THEN
 	RETURN;
 END_IF
 
+//To Hmi
+IF NOT(s_bHmiInit) THEN
+	//General names
+	s_stHmiData.sDescription := i_sCmName;
+	
+	//Button names
+	s_stHmiData.sNameClose := s_fbHmiBtnManualClose.p_sBtnText;
+	s_stHmiData.sNameOpen := s_fbHmiBtnManualOpen.p_sBtnText;
+
+	s_bHmiInit := TRUE;
+END_IF
+
+s_stHmiData.bStaClose := s_bStaDoorIsClosed;
+s_stHmiData.bStaOpen := s_bStaDoorIsOpened;
+s_stHmiData.bStaCloseError  := s_fbHmiLedErrorClose.p_bStaLed;
+s_stHmiData.bStaOpenError := s_fbHmiLedErrorOpen.p_bStaLed;
+s_stHmiData.bStaError := s_fbHmiLedErrorController.p_bStaLed;
+s_stHmiData.bStaReset := s_fbHmiLedReset.p_bStaLed;
+s_stHmiData.bBtnCloseEnabled := s_fbHmiBtnManualClose.p_bStaEnabled;
+s_stHmiData.bBtnOpenEnabled := s_fbHmiBtnManualOpen.p_bStaEnabled;
+s_stHmiData.s_sInterlockedReasonClose := s_sInterlockedReasonClose;
+s_stHmiData.s_sInterlockedReasonOpen := s_sInterlockedReasonOpen;
+
+//From Hmi
+IF s_stHmiData.bCmdClosePressed THEN
+	s_fbHmiBtnManualClose.m_On();
+ELSE
+	s_fbHmiBtnManualClose.m_Off();	
+END_IF
+
+IF s_stHmiData.bCmdOpenPressed THEN
+	s_fbHmiBtnManualOpen.m_On();
+ELSE
+	s_fbHmiBtnManualOpen.m_Off();	
+END_IF
+
+IF s_stHmiData.bCmdResetPressed THEN
+	s_fbHmiBtnManualReset.m_On();
+ELSE
+	s_fbHmiBtnManualReset.m_Off();	
+END_IF 
+
+//Buttons
+s_fbHmiBtnManualClose();
+s_fbHmiBtnManualOpen();
+s_fbHmiBtnManualReset();
+
+//Led
+s_fbHmiLedIsClose(i_bStaLed := s_bStaDoorIsClosed);
+s_fbHmiLedIsOpen(i_bStaLed := s_bStaDoorIsOpened);
+s_fbHmiLedErrorClose(i_bStaLed := s_errOpeningTimeout);
+s_fbHmiLedErrorOpen(i_bStaLed := s_errClosingTimeout);
+s_fbHmiLedErrorController(i_bStaLed := s_errDoorController);
+s_fbHmiLedReset(i_bStaLed := s_bStaDoorReset);
+	
+IF __ISVALIDREF(i_ref_eCtrlState) THEN
+	//MAINTENANCE-mode is running
+	IF (i_eCtrlMode = E_CtrlMode.MAINTENANCE) AND (i_ref_eCtrlState = E_CtrlState.RUNNING) THEN
+		s_fbHmiBtnManualClose.p_bStaVisible := TRUE;
+		s_fbHmiBtnManualClose.p_bStaEnabled := i_bReqEnable AND NOT(i_bIclkClose);
+		
+		s_fbHmiBtnManualOpen.p_bStaVisible := TRUE;
+		s_fbHmiBtnManualOpen.p_bStaEnabled := i_bReqEnable AND NOT(i_bIclkOpen);
+		
+		s_fbHmiBtnManualReset.p_bStaVisible := TRUE;
+		s_fbHmiBtnManualReset.p_bStaEnabled := i_bReqEnable;
+			
+		IF s_fbHmiBtnManualClose.p_osrBtnPress THEN
+			m_Close();
+		END_IF
+			
+		IF s_fbHmiBtnManualOpen.p_osrBtnPress THEN
+			m_Open();
+		END_IF
+		
+		IF s_fbHmiBtnManualReset.p_osrBtnPress THEN
+			m_Reset();
+		END_IF
+		
+	//other-mode	
+	ELSE
+		s_fbHmiBtnManualClose.p_bStaVisible := FALSE;
+		s_fbHmiBtnManualClose.p_bStaEnabled := FALSE;
+	
+		s_fbHmiBtnManualOpen.p_bStaVisible := FALSE;
+		s_fbHmiBtnManualOpen.p_bStaEnabled := FALSE;
+
+		s_fbHmiBtnManualReset.p_bStaVisible := FALSE;
+		s_fbHmiBtnManualReset.p_bStaEnabled := FALSE;
+	END_IF
+END_IF
+
 _m_Hmi := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Init" Id="{ed9edf80-d019-4069-bda1-c3433fdfc559}" FolderPath="Methods\">
+    <Method Name="_m_Init" Id="{ed9edf80-d019-4069-bda1-c3433fdfc559}" FolderPath="Methods\Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Init : BOOL
 ]]></Declaration>
       <Implementation>
@@ -145,15 +281,53 @@ IF NOT SUPER^._m_Init() THEN
 	RETURN;
 END_IF
 
-{warning '#TODO: Not sure if this control module needs initialzation'}
-//--s_DOValve.i_stSettings.bCfgDelay 		:= FALSE;
-//--s_DOValve.i_stSettings.tmOutputDelay 	:= T#0S;
+//Alarm config
+s_fbAlarmHandlerClosingTimeout(i_eAlarmLevel := E_AlarmLevel.Alarm);
+s_fbAlarmHandlerOpeningTimeout(i_eAlarmLevel := E_AlarmLevel.Alarm);
+s_fbAlarmHandlerDoorController(i_eAlarmLevel := E_AlarmLevel.Alarm);
+
+s_fbAlarmHandlerCloseInterlocked(i_eAlarmLevel := E_AlarmLevel.Warning);
+s_fbAlarmHandlerOpenInterlocked(i_eAlarmLevel := E_AlarmLevel.Warning);
+
+//Hmi 
+	s_fbHmiBtnManualClose.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnManualClose.p_bStaVisible := FALSE;
+	s_fbHmiBtnManualClose.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnManualClose.p_sBtnText := s_sCfgCloseName;
+	
+	s_fbHmiBtnManualOpen.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnManualOpen.p_bStaVisible := FALSE;
+	s_fbHmiBtnManualOpen.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnManualOpen.p_sBtnText := s_sCfgOpenName;
+	
+	s_fbHmiBtnManualReset.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnManualReset.p_bStaVisible := FALSE;
+	s_fbHmiBtnManualReset.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnManualReset.p_sBtnText := 'Reset';
+	
+	s_fbHmiLedIsClose.p_bStaVisible := FALSE;
+	s_fbHmiLedIsClose.p_sToHmiDescriptionLed := CONCAT('Is at: ', s_sCfgCloseName);
+	
+	s_fbHmiLedIsOpen.p_bStaVisible := FALSE;
+	s_fbHmiLedIsOpen.p_sToHmiDescriptionLed := CONCAT('Is at: ', s_sCfgOpenName);
+	
+	s_fbHmiLedErrorClose.p_bStaVisible := FALSE;
+	s_fbHmiLedErrorClose.p_sToHmiDescriptionLed := 'Closing Timeout';
+	
+	s_fbHmiLedErrorOpen.p_bStaVisible := FALSE;
+	s_fbHmiLedErrorOpen.p_sToHmiDescriptionLed := 'Opening Timeout';
+	
+	s_fbHmiLedErrorController.p_bStaVisible := FALSE;
+	s_fbHmiLedErrorController.p_sToHmiDescriptionLed := 'Door Controller Has Error';
+	
+	s_fbHmiLedReset.p_bStaVisible := FALSE;
+	s_fbHmiLedReset.p_sToHmiDescriptionLed := 'Door Controller Reset';
 
 _m_Init := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Inputs" Id="{2072e72c-41a8-4ff9-a497-b847d4491135}" FolderPath="Methods\">
+    <Method Name="_m_Inputs" Id="{2072e72c-41a8-4ff9-a497-b847d4491135}" FolderPath="Methods\Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Inputs : BOOL
 ]]></Declaration>
       <Implementation>
@@ -162,15 +336,15 @@ IF NOT SUPER^._m_Inputs() THEN
 	RETURN;
 END_IF
 
-s_bStaDoorIsOpened := I_bStaDoorIsOpended;
+s_bStaDoorIsOpened := I_bStaDoorIsOpened;
 s_bStaDoorIsClosed := I_bStaDoorIsClosed;
-s_bStaDoorControllerError := I_bStaControllerError;
+s_bStaDoorControllerError := I_bStaControllerIsReady;
 
 _m_Inputs := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_Outputs" Id="{b9720cd4-7d4f-42d3-8c4a-83730026236d}" FolderPath="Methods\">
+    <Method Name="_m_Outputs" Id="{b9720cd4-7d4f-42d3-8c4a-83730026236d}" FolderPath="Methods\Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Outputs : BOOL
 ]]></Declaration>
       <Implementation>
@@ -186,9 +360,9 @@ s_tofResetPulse(
 
 s_bReqReset := FALSE;
 	
-Q_bCmdResetDoor := s_tofResetPulse.Q;
-Q_bCmdOpenDoor := i_bReqEnable AND s_bReqOpen AND NOT(s_bStaDoorIsOpened);
-Q_bCmdCloseDoor := i_bReqEnable AND s_bReqClose AND NOT(s_bStaDoorIsClosed);
+Q_bCmdReset := s_tofResetPulse.Q;
+Q_bCmdOpen := i_bReqEnable AND s_bReqOpen AND NOT(s_bStaDoorIsOpened);
+Q_bCmdClose := i_bReqEnable AND s_bReqClose AND NOT(s_bStaDoorIsClosed);
 	
 _m_Outputs := TRUE;
 ]]></ST>
@@ -301,6 +475,97 @@ p_bStaIsOpening := s_bReqOpen AND NOT s_bStaDoorIsOpened;
         </Implementation>
       </Get>
     </Property>
+    <Property Name="p_bStaWarning" Id="{21701d96-2825-41a8-848a-46f12da00f82}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bStaWarning : BOOL]]></Declaration>
+      <Get Name="Get" Id="{be2521da-c152-4c98-b0b3-70c283314d01}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaWarning := s_bStaWarning;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_sCfgCloseName" Id="{80ab1272-73fd-45ad-bf31-7e9fa30658f0}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_sCfgCloseName : STRING(c_MAX_FB_NAME_LENGTH)]]></Declaration>
+      <Get Name="Get" Id="{f0653086-7e22-40cb-8e24-398094960daf}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_sCfgCloseName := s_sCfgCloseName;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{ac6c8880-1f2b-4819-b18b-1c517b47e40d}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+s_sCfgCloseName := p_sCfgCloseName;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="p_sCfgOpenName" Id="{b54758bf-ffc1-4a6a-9bf6-cd30b163ccb6}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_sCfgOpenName : STRING(c_MAX_FB_NAME_LENGTH)]]></Declaration>
+      <Get Name="Get" Id="{9822d540-29ce-43e4-a1f6-91fc1bbfa3e8}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_sCfgOpenName := s_sCfgOpenName;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{93133cab-8c14-4b17-890e-921647c64646}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+s_sCfgOpenName := p_sCfgOpenName;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="p_sInterlockedReasonClose" Id="{d49da830-0a0f-41b0-b982-a035b2099954}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_sInterlockedReasonClose : STRING(GVL.g_MAX_LEN_INTERLOCK_REASON)]]></Declaration>
+      <Get Name="Get" Id="{612fd05c-fec3-4ce9-a783-80fab72135ad}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_sInterlockedReasonClose := s_sInterlockedReasonClose;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{07feb51c-5a71-418a-b013-80cc34e9028e}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+s_sInterlockedReasonClose := p_sInterlockedReasonClose;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="p_sInterlockedReasonOpen" Id="{6cfd49fe-dbe4-46e6-bdd6-eb158e1278ff}" FolderPath="Properties\">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_sInterlockedReasonOpen : STRING(GVL.g_MAX_LEN_INTERLOCK_REASON)]]></Declaration>
+      <Get Name="Get" Id="{1042dd73-2cee-46e7-b3ac-6d91d1034174}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_sInterlockedReasonOpen := s_sInterlockedReasonOpen;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{db17fa56-c818-418a-80fd-3222ee07cea2}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+s_sInterlockedReasonOpen := p_sInterlockedReasonOpen;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
     <LineIds Name="CM_SpeedDoor">
       <LineId Id="410" Count="0" />
       <LineId Id="47" Count="0" />
@@ -351,6 +616,32 @@ p_bStaIsOpening := s_bReqOpen AND NOT s_bStaDoorIsOpened;
     </LineIds>
     <LineIds Name="CM_SpeedDoor._m_Hmi">
       <LineId Id="17" Count="3" />
+      <LineId Id="89" Count="0" />
+      <LineId Id="91" Count="9" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="103" Count="3" />
+      <LineId Id="165" Count="0" />
+      <LineId Id="182" Count="0" />
+      <LineId Id="107" Count="1" />
+      <LineId Id="110" Count="0" />
+      <LineId Id="163" Count="0" />
+      <LineId Id="111" Count="12" />
+      <LineId Id="167" Count="4" />
+      <LineId Id="166" Count="0" />
+      <LineId Id="124" Count="3" />
+      <LineId Id="172" Count="0" />
+      <LineId Id="128" Count="5" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="183" Count="0" />
+      <LineId Id="134" Count="8" />
+      <LineId Id="174" Count="2" />
+      <LineId Id="143" Count="7" />
+      <LineId Id="177" Count="0" />
+      <LineId Id="179" Count="1" />
+      <LineId Id="178" Count="0" />
+      <LineId Id="151" Count="11" />
+      <LineId Id="102" Count="0" />
       <LineId Id="84" Count="0" />
       <LineId Id="15" Count="0" />
       <LineId Id="87" Count="0" />
@@ -358,11 +649,22 @@ p_bStaIsOpening := s_bReqOpen AND NOT s_bStaDoorIsOpened;
     <LineIds Name="CM_SpeedDoor._m_Init">
       <LineId Id="21" Count="0" />
       <LineId Id="15" Count="2" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="28" Count="2" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="36" Count="9" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="56" Count="2" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="46" Count="7" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="59" Count="5" />
+      <LineId Id="66" Count="2" />
       <LineId Id="24" Count="0" />
-      <LineId Id="22" Count="0" />
-      <LineId Id="10" Count="0" />
-      <LineId Id="19" Count="0" />
-      <LineId Id="11" Count="0" />
       <LineId Id="5" Count="0" />
       <LineId Id="23" Count="0" />
     </LineIds>
@@ -439,6 +741,48 @@ p_bStaIsOpening := s_bReqOpen AND NOT s_bStaDoorIsOpened;
       <LineId Id="5" Count="0" />
       <LineId Id="7" Count="0" />
       <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SpeedDoor.p_bStaWarning.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SpeedDoor.p_sCfgCloseName.Get">
+      <LineId Id="3" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="4" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SpeedDoor.p_sCfgCloseName.Set">
+      <LineId Id="7" Count="0" />
+      <LineId Id="5" Count="1" />
+    </LineIds>
+    <LineIds Name="CM_SpeedDoor.p_sCfgOpenName.Get">
+      <LineId Id="3" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="4" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SpeedDoor.p_sCfgOpenName.Set">
+      <LineId Id="7" Count="0" />
+      <LineId Id="5" Count="1" />
+    </LineIds>
+    <LineIds Name="CM_SpeedDoor.p_sInterlockedReasonClose.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SpeedDoor.p_sInterlockedReasonClose.Set">
+      <LineId Id="6" Count="0" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SpeedDoor.p_sInterlockedReasonOpen.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_SpeedDoor.p_sInterlockedReasonOpen.Set">
+      <LineId Id="6" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="7" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>

@@ -1,0 +1,95 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="SIM_SpeedDoor" Id="{a005a36a-6e3c-443a-9d3a-518e6b70d501}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK SIM_SpeedDoor
+VAR 
+	// Outputs from PLC --> HW
+	I_bCmdReset AT %I* : BOOL;
+	I_bCmdDoorOpen AT %I* : BOOL;
+	I_bCmdDoorClose AT %I* : BOOL;
+	
+	// Inputs from HW --> PLC
+	Q_bStaDoorIsReady AT %Q* : BOOL;
+	Q_bStaDoorIsOpened AT %Q* : BOOL;
+	Q_bStaDoorIsClosed AT %Q* : BOOL;
+
+	s_bCmdOpen : BOOL;
+	s_bCmdClose : BOOL;
+	
+	s_tonOpen : TON;
+	s_tonClose : TON;
+	
+END_VAR
+
+VAR_OUTPUT
+	q_bStaDoorOpen : BOOL;
+	q_bStaDoorClose : BOOL;
+
+	q_bCmdDoorOpen : BOOL;	//Q*
+	q_bCmdDoorClose : BOOL;	//Q*
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF I_bCmdDoorOpen THEN
+	s_bCmdOpen := TRUE;
+	s_bCmdClose := FALSE;
+ELSIF I_bCmdDoorClose THEN
+	s_bCmdOpen := FALSE;
+	s_bCmdClose := TRUE;
+END_IF
+
+//--s_tonOpen(IN := I_bCmdDoorOpen AND NOT(I_bCmdDoorClose), PT := T#2S);
+s_tonOpen(IN := s_bCmdOpen, PT := T#2S);
+
+IF s_tonOpen.Q THEN
+	Q_bStaDoorIsOpened := TRUE;
+//ELSIF I_bCmdDoorClose THEN
+ELSIF s_bCmdClose THEN
+	Q_bStaDoorIsOpened := FALSE;
+END_IF	
+	
+//--s_tonClose(IN := I_bCmdDoorClose AND NOT(I_bCmdDoorOpen), PT := T#2S);
+s_tonClose(IN := s_bCmdClose, PT := T#2S);
+
+IF s_tonClose.Q THEN
+	Q_bStaDoorIsClosed := TRUE;
+//--ELSIF I_bCmdDoorOpen THEN
+ELSIF s_bCmdOpen THEN
+	Q_bStaDoorIsClosed := FALSE;
+END_IF
+
+IF I_bCmdReset THEN
+	Q_bStaDoorIsReady := TRUE;
+END_IF
+
+q_bStaDoorOpen := Q_bStaDoorIsOpened;
+q_bStaDoorClose := Q_bStaDoorIsClosed;
+
+q_bCmdDoorOpen := I_bCmdDoorOpen;
+q_bCmdDoorClose := I_bCmdDoorClose;
+]]></ST>
+    </Implementation>
+    <LineIds Name="SIM_SpeedDoor">
+      <LineId Id="331" Count="1" />
+      <LineId Id="334" Count="0" />
+      <LineId Id="336" Count="0" />
+      <LineId Id="338" Count="1" />
+      <LineId Id="337" Count="0" />
+      <LineId Id="335" Count="0" />
+      <LineId Id="333" Count="0" />
+      <LineId Id="298" Count="0" />
+      <LineId Id="340" Count="0" />
+      <LineId Id="299" Count="3" />
+      <LineId Id="343" Count="0" />
+      <LineId Id="303" Count="3" />
+      <LineId Id="341" Count="0" />
+      <LineId Id="307" Count="3" />
+      <LineId Id="342" Count="0" />
+      <LineId Id="311" Count="1" />
+      <LineId Id="323" Count="3" />
+      <LineId Id="313" Count="5" />
+      <LineId Id="161" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -2070,7 +2070,7 @@ External Setpoint Generation:
 		</Motion>
 		<Plc>
 			<Project GUID="{13F6CD22-9663-4738-8378-3A901949CB98}" Name="CleanroomConnect" PrjFilePath="CleanroomConnect\CleanroomConnect.plcproj" TmcFilePath="CleanroomConnect\CleanroomConnect.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" TmcPath="CleanroomConnect\CleanroomConnect.tmc" TmcHash="{436CC82B-794B-9D70-4A43-9234B5506BC7}">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" TmcPath="CleanroomConnect\CleanroomConnect.tmc" TmcHash="{77B59089-0C54-DF42-D5E8-AC27E3045060}">
 					<Name>CleanroomConnect Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1">
@@ -2702,7 +2702,7 @@ External Setpoint Generation:
 				</Instance>
 			</Project>
 			<Project GUID="{E422F207-C83D-4C9F-9DAA-6F15793ED578}" Name="HardwareSimulator" PrjFilePath="HardwareSimulator\HardwareSimulator.plcproj" TmcFilePath="HardwareSimulator\HardwareSimulator.tmc" ReloadTmc="true" AmsPort="852" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502040" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="HardwareSimulator\HardwareSimulator.tmc" TmcHash="{5CC8FD2B-548A-3CFA-CDB2-ED2DAECE3DA7}">
+				<Instance Id="#x08502040" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="HardwareSimulator\HardwareSimulator.tmc" TmcHash="{59A7FFB8-9B1E-4F43-7E80-2626A33FCC33}">
 					<Name>HardwareSimulator Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1">
@@ -2789,11 +2789,38 @@ External Setpoint Generation:
 						</Var>
 						<Var>
 							<Name>MAIN.simLiftActPosition</Name>
+							<Comment><![CDATA[EM Lifting Transport]]></Comment>
 							<Type>LREAL</Type>
 						</Var>
 						<Var>
 							<Name>MAIN.simTransportUnitActPos</Name>
 							<Type>LREAL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.simOuterSpeedDoor.I_bCmdReset</Name>
+							<Comment><![CDATA[ Outputs from PLC --> HW]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.simOuterSpeedDoor.I_bCmdDoorOpen</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.simOuterSpeedDoor.I_bCmdDoorClose</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.simInnerSpeedDoor.I_bCmdReset</Name>
+							<Comment><![CDATA[ Outputs from PLC --> HW]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.simInnerSpeedDoor.I_bCmdDoorOpen</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.simInnerSpeedDoor.I_bCmdDoorClose</Name>
+							<Type>BOOL</Type>
 						</Var>
 					</Vars>
 					<Vars VarGrpType="2" AreaNo="1">
@@ -2854,11 +2881,6 @@ External Setpoint Generation:
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>MAIN.simDockingClampLower.Q_bStaFeedbackOn</Name>
-							<Comment><![CDATA[ Inputs from HW --> PLC]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
 							<Name>MAIN.simDockingClampLower.Q_bStaFeedbackOff</Name>
 							<Type>BOOL</Type>
 						</Var>
@@ -2877,6 +2899,11 @@ External Setpoint Generation:
 						</Var>
 						<Var>
 							<Name>MAIN.simUnlockPinUpper.Q_bStaFeedbackOff</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.simDockingClampLower.Q_bStaFeedbackOn</Name>
+							<Comment><![CDATA[ Inputs from HW --> PLC]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
@@ -2904,6 +2931,32 @@ External Setpoint Generation:
 						</Var>
 						<Var>
 							<Name>MAIN.simDoorShutter.Q_bStaFeedbackOff</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.simOuterSpeedDoor.Q_bStaDoorIsReady</Name>
+							<Comment><![CDATA[ Inputs from HW --> PLC]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.simOuterSpeedDoor.Q_bStaDoorIsOpened</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.simOuterSpeedDoor.Q_bStaDoorIsClosed</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.simInnerSpeedDoor.Q_bStaDoorIsReady</Name>
+							<Comment><![CDATA[ Inputs from HW --> PLC]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.simInnerSpeedDoor.Q_bStaDoorIsOpened</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.simInnerSpeedDoor.Q_bStaDoorIsClosed</Name>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
@@ -5627,6 +5680,12 @@ Bit 8 - 15 : reserved]]></Comment>
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinUpper.I_bStaValveIsOff" VarB="PlcTask Outputs^MAIN.simUnlockPinUpper.Q_bStaFeedbackOff"/>
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinUpper.I_bStaValveIsOn" VarB="PlcTask Outputs^MAIN.simUnlockPinUpper.Q_bStaFeedbackOn"/>
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_diStaDoorAlmostClosed.I_bStaInput" VarB="PlcTask Outputs^MAIN.simDoorOpenerAlmostClosed"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDoors.s_cmInnerSpeedDoor.I_bStaControllerIsReady" VarB="PlcTask Outputs^MAIN.simInnerSpeedDoor.Q_bStaDoorIsReady"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDoors.s_cmInnerSpeedDoor.I_bStaDoorIsClosed" VarB="PlcTask Outputs^MAIN.simInnerSpeedDoor.Q_bStaDoorIsClosed"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDoors.s_cmInnerSpeedDoor.I_bStaDoorIsOpened" VarB="PlcTask Outputs^MAIN.simInnerSpeedDoor.Q_bStaDoorIsOpened"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDoors.s_cmOuterSpeedDoor.I_bStaControllerIsReady" VarB="PlcTask Outputs^MAIN.simOuterSpeedDoor.Q_bStaDoorIsReady"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDoors.s_cmOuterSpeedDoor.I_bStaDoorIsClosed" VarB="PlcTask Outputs^MAIN.simOuterSpeedDoor.Q_bStaDoorIsClosed"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDoors.s_cmOuterSpeedDoor.I_bStaDoorIsOpened" VarB="PlcTask Outputs^MAIN.simOuterSpeedDoor.Q_bStaDoorIsOpened"/>
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmLift.I_bDetLimitSwitchNeg" VarB="PlcTask Outputs^MAIN.simLiftLimitNeg"/>
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmLift.I_bDetLimitSwitchPos" VarB="PlcTask Outputs^MAIN.simLiftLimitPos"/>
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmLift.I_bEnable" VarB="PlcTask Outputs^MAIN.simLiftEnable"/>
@@ -5663,6 +5722,12 @@ Bit 8 - 15 : reserved]]></Comment>
 				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinLower.Q_bCmdOn" VarB="PlcTask Inputs^MAIN.simUnlockPinLower.I_bCmdValveOn"/>
 				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinUpper.Q_bCmdOff" VarB="PlcTask Inputs^MAIN.simUnlockPinUpper.I_bCmdValveOff"/>
 				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinUpper.Q_bCmdOn" VarB="PlcTask Inputs^MAIN.simUnlockPinUpper.I_bCmdValveOn"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDoors.s_cmInnerSpeedDoor.Q_bCmdClose" VarB="PlcTask Inputs^MAIN.simInnerSpeedDoor.I_bCmdDoorClose"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDoors.s_cmInnerSpeedDoor.Q_bCmdOpen" VarB="PlcTask Inputs^MAIN.simInnerSpeedDoor.I_bCmdDoorOpen"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDoors.s_cmInnerSpeedDoor.Q_bCmdReset" VarB="PlcTask Inputs^MAIN.simInnerSpeedDoor.I_bCmdReset"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDoors.s_cmOuterSpeedDoor.Q_bCmdClose" VarB="PlcTask Inputs^MAIN.simOuterSpeedDoor.I_bCmdDoorClose"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDoors.s_cmOuterSpeedDoor.Q_bCmdOpen" VarB="PlcTask Inputs^MAIN.simOuterSpeedDoor.I_bCmdDoorOpen"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDoors.s_cmOuterSpeedDoor.Q_bCmdReset" VarB="PlcTask Inputs^MAIN.simOuterSpeedDoor.I_bCmdReset"/>
 				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.Q_bCmdOff" VarB="PlcTask Inputs^MAIN.simCentering.I_bCmdValveOff"/>
 				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.Q_bCmdOn" VarB="PlcTask Inputs^MAIN.simCentering.I_bCmdValveOn"/>
 				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdEnable" VarB="PlcTask Inputs^MAIN.sim_MOVITRAC_B.I_bCmdEnable"/>

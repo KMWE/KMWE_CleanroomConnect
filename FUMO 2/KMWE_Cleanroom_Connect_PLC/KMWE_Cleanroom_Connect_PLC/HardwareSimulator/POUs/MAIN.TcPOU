@@ -18,11 +18,17 @@ VAR
 	simDoorOpenerAlmostClosed AT %Q* : BOOL;
 	tonDoorOpenerAlmosClosed : TON;
 	
+	//EM Lifting Transport
 	simLiftActPosition AT %I* : LREAL;
 	simLiftHomed AT %Q* : BOOL;
 	simTransportUnitActPos AT %I* : LREAL;
 	simTransportUnitHomed AT %Q* : BOOL;
 	
+	//EM Doors
+	simOuterSpeedDoor : SIM_SpeedDoor;
+	simInnerSpeedDoor : SIM_SpeedDoor;
+	
+	//Safety
 	bInitDone : BOOL;
 	simSafetyOK AT %Q* : BOOL;
 	simPower400VacOK AT %Q* : BOOL;
@@ -107,7 +113,11 @@ simDoorOpenerAlmostClosed := tonDoorOpenerAlmosClosed.Q;
 //IF (simLiftActPosition > 9999999000 AND simLiftActPosition < 10000000000 THEN
 //simLiftHomed := TRUE;
 
-//simLiftHomed := FALSE;]]></ST>
+//simLiftHomed := FALSE;
+
+//EM Doors
+simOuterSpeedDoor();
+simInnerSpeedDoor();]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
       <LineId Id="320" Count="2" />
@@ -121,6 +131,9 @@ simDoorOpenerAlmostClosed := tonDoorOpenerAlmosClosed.Q;
       <LineId Id="476" Count="1" />
       <LineId Id="325" Count="32" />
       <LineId Id="110" Count="0" />
+      <LineId Id="544" Count="0" />
+      <LineId Id="543" Count="0" />
+      <LineId Id="545" Count="1" />
     </LineIds>
   </POU>
 </TcPlcObject>

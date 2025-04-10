@@ -37,18 +37,18 @@ VAR
 	s_cmDoorShutter : CM_ValveWithFB; // Off = Open, On = Close
 	
 	//Interlocks
-	fbIlckHandlerClampsUpperPressureLow : FB_InterlockHandler;
-	fbIlckHandlerClampsUpperPressureHigh : FB_InterlockHandler;
-	fbIlckHandlerClampsLowerPressureLow : FB_InterlockHandler;
-	fbIlckHandlerClampsLowerPressureHigh : FB_InterlockHandler;	
-	fbIlckHandlerDockingClampsOpen : FB_InterlockHandler;
-	fbIlckHandlerDockingClampsClose : FB_InterlockHandler;
-	fbIlckHandlerUnlockingPinsLock : FB_InterlockHandler;
-	fbIlckHandlerUnlockingPinsRelease : FB_InterlockHandler;
-	fbIlckHandlerDoorOpenerClose : FB_InterlockHandler;
-	fbIlckHandlerDoorOpenerOpen : FB_InterlockHandler;
-	fbIlckHandlerDoorShutterClose : FB_InterlockHandler;
-	fbIlckHandlerDoorShutterOpen : FB_InterlockHandler;
+	s_fbIlckHandlerClampsUpperPressureLow : FB_InterlockHandler;
+	s_fbIlckHandlerClampsUpperPressureHigh : FB_InterlockHandler;
+	s_fbIlckHandlerClampsLowerPressureLow : FB_InterlockHandler;
+	s_fbIlckHandlerClampsLowerPressureHigh : FB_InterlockHandler;	
+	s_fbIlckHandlerDockingClampsOpen : FB_InterlockHandler;
+	s_fbIlckHandlerDockingClampsClose : FB_InterlockHandler;
+	s_fbIlckHandlerUnlockingPinsLock : FB_InterlockHandler;
+	s_fbIlckHandlerUnlockingPinsRelease : FB_InterlockHandler;
+	s_fbIlckHandlerDoorOpenerClose : FB_InterlockHandler;
+	s_fbIlckHandlerDoorOpenerOpen : FB_InterlockHandler;
+	s_fbIlckHandlerDoorShutterClose : FB_InterlockHandler;
+	s_fbIlckHandlerDoorShutterOpen : FB_InterlockHandler;
 	
 	//Inputs
 	s_diStaDoorAlmostClosed : FB_DigInput;
@@ -326,7 +326,7 @@ IF NOT i_bReqEnable THEN
 END_IF
 
 IF s_bIlckDoorOpenerToClose THEN
-	i_refReason := CONCAT('Cmd To Close Inner Door: Interlocked - ', fbIlckHandlerDoorOpenerClose.p_sReason);
+	i_refReason := CONCAT('Cmd To Close Inner Door: Interlocked - ', s_fbIlckHandlerDoorOpenerClose.p_sReason);
 	_m_CmdCloseInnerDoor := FALSE;
 	s_bErrCmdNotAllowed := TRUE;
 ELSE
@@ -349,7 +349,7 @@ IF NOT i_bReqEnable THEN
 END_IF
 
 IF s_bIlckDockingClampsToClose THEN
-	i_refReason := CONCAT('Cmd To Dock: Interlocked - ', fbIlckHandlerDockingClampsClose.p_sReason);
+	i_refReason := CONCAT('Cmd To Dock: Interlocked - ', s_fbIlckHandlerDockingClampsClose.p_sReason);
 	_m_CmdDockTB := FALSE;
 	s_bErrCmdNotAllowed := TRUE;
 ELSE
@@ -372,7 +372,7 @@ IF NOT i_bReqEnable THEN
 END_IF
 
 IF s_bIlckDoorShutterToOpen THEN
-	i_refReason := CONCAT('Cmd To Open Inner Door: Interlocked - ', fbIlckHandlerDoorShutterOpen.p_sReason);
+	i_refReason := CONCAT('Cmd To Open Inner Door: Interlocked - ', s_fbIlckHandlerDoorShutterOpen.p_sReason);
 	_m_CmdOpenInnerDoor := FALSE;
 	s_bErrCmdNotAllowed := TRUE;
 ELSE
@@ -395,7 +395,7 @@ IF NOT i_bReqEnable THEN
 END_IF
 
 IF s_bIlckDockingClampsToOpen THEN
-	i_refReason := CONCAT('Cmd To UnDock: Interlocked - ', fbIlckHandlerDockingClampsOpen.p_sReason);
+	i_refReason := CONCAT('Cmd To UnDock: Interlocked - ', s_fbIlckHandlerDockingClampsOpen.p_sReason);
 	_m_CmdUndockTB := FALSE;
 	s_bErrCmdNotAllowed := TRUE;
 ELSE
@@ -685,33 +685,33 @@ s_cmDoorShutter.p_sCfgOnName := 'Close';
 //Interlocks
 //Clamps upper/lower pressure selection
 //i_stInterlockList.arr_Interlocks[0].sReason --> External, dynamical will be written in m_input
-fbIlckHandlerClampsUpperPressureLow.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
-fbIlckHandlerClampsUpperPressureHigh.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
-fbIlckHandlerClampsLowerPressureLow.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
-fbIlckHandlerClampsLowerPressureHigh.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
+s_fbIlckHandlerClampsUpperPressureLow.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
+s_fbIlckHandlerClampsUpperPressureHigh.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
+s_fbIlckHandlerClampsLowerPressureLow.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
+s_fbIlckHandlerClampsLowerPressureHigh.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
 
 //Docking Clamps
 //i_stInterlockList.arr_Interlocks[0].sReason --> External, dynamical will be written in m_input
-fbIlckHandlerDockingClampsOpen.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
-fbIlckHandlerDockingClampsClose.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
+s_fbIlckHandlerDockingClampsOpen.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
+s_fbIlckHandlerDockingClampsClose.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
 
 //Unlockig Pins
 //i_stInterlockList.arr_Interlocks[0].sReason --> External, dynamical will be written in m_input
-fbIlckHandlerUnlockingPinsRelease.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
-fbIlckHandlerUnlockingPinsLock.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
+s_fbIlckHandlerUnlockingPinsRelease.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
+s_fbIlckHandlerUnlockingPinsLock.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
 
 //Door Opener
 //i_stInterlockList.arr_Interlocks[0].sReason --> External, dynamical will be written in m_input
-fbIlckHandlerDoorOpenerClose.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
-fbIlckHandlerDoorOpenerClose.i_stInterlockList.arr_Interlocks[2].sReason := 'Door Shutter not opened';
-fbIlckHandlerDoorOpenerOpen.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
-fbIlckHandlerDoorOpenerOpen.i_stInterlockList.arr_Interlocks[2].sReason := 'Door Shutter not opened';
+s_fbIlckHandlerDoorOpenerClose.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
+s_fbIlckHandlerDoorOpenerClose.i_stInterlockList.arr_Interlocks[2].sReason := 'Door Shutter not opened';
+s_fbIlckHandlerDoorOpenerOpen.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
+s_fbIlckHandlerDoorOpenerOpen.i_stInterlockList.arr_Interlocks[2].sReason := 'Door Shutter not opened';
 
 //Door Closer
 //i_stInterlockList.arr_Interlocks[0].sReason --> External, dynamical will be written in m_input
-fbIlckHandlerDoorShutterOpen.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
-fbIlckHandlerDoorShutterClose.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
-fbIlckHandlerDoorShutterClose.i_stInterlockList.arr_Interlocks[2].sReason := 'Door Opener not (almost)closed';
+s_fbIlckHandlerDoorShutterOpen.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
+s_fbIlckHandlerDoorShutterClose.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
+s_fbIlckHandlerDoorShutterClose.i_stInterlockList.arr_Interlocks[2].sReason := 'Door Opener not (almost)closed';
 
 //Alarm config
 s_fbAlarmHandlerClosingDoorFailed.i_sAlarmText := CONCAT(i_sEmName, ': Closing inner door failed');
@@ -882,7 +882,8 @@ _m_Init := TRUE;]]></ST>
       <Declaration><![CDATA[METHOD PROTECTED _m_Inputs : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF NOT SUPER^._m_Inputs() THEN
+        <ST><![CDATA[
+IF NOT SUPER^._m_Inputs() THEN
 	RETURN;
 END_IF
 
@@ -890,83 +891,83 @@ END_IF
 
 //Interlocks
 //Clamps upper pressure selection
-fbIlckHandlerClampsUpperPressureLow.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
-fbIlckHandlerClampsUpperPressureLow();
+s_fbIlckHandlerClampsUpperPressureLow.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
+s_fbIlckHandlerClampsUpperPressureLow();
 
-fbIlckHandlerClampsUpperPressureHigh.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
-fbIlckHandlerClampsUpperPressureHigh();
+s_fbIlckHandlerClampsUpperPressureHigh.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
+s_fbIlckHandlerClampsUpperPressureHigh();
 
 //Clamps lower pressure selection
-fbIlckHandlerClampsLowerPressureLow.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
-fbIlckHandlerClampsLowerPressureLow();
+s_fbIlckHandlerClampsLowerPressureLow.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
+s_fbIlckHandlerClampsLowerPressureLow();
 
-fbIlckHandlerClampsLowerPressureHigh.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
-fbIlckHandlerClampsLowerPressureHigh();
+s_fbIlckHandlerClampsLowerPressureHigh.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
+s_fbIlckHandlerClampsLowerPressureHigh();
 
 //Docking Clamps
-fbIlckHandlerDockingClampsOpen.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckDockingClampsToOpen.p_bInterlocked;
-fbIlckHandlerDockingClampsOpen.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckDockingClampsToOpen.p_sReason;
-fbIlckHandlerDockingClampsOpen.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
-fbIlckHandlerDockingClampsOpen();
+s_fbIlckHandlerDockingClampsOpen.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckDockingClampsToOpen.p_bInterlocked;
+s_fbIlckHandlerDockingClampsOpen.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckDockingClampsToOpen.p_sReason;
+s_fbIlckHandlerDockingClampsOpen.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
+s_fbIlckHandlerDockingClampsOpen();
 
-fbIlckHandlerDockingClampsClose.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckDockingClampsToClose.p_bInterlocked;
-fbIlckHandlerDockingClampsClose.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckDockingClampsToClose.p_sReason;
-fbIlckHandlerDockingClampsClose.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
-fbIlckHandlerDockingClampsClose();
+s_fbIlckHandlerDockingClampsClose.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckDockingClampsToClose.p_bInterlocked;
+s_fbIlckHandlerDockingClampsClose.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckDockingClampsToClose.p_sReason;
+s_fbIlckHandlerDockingClampsClose.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
+s_fbIlckHandlerDockingClampsClose();
 
 //Unlocking Pins
-fbIlckHandlerUnlockingPinsLock.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckInnerDoorClose.p_bInterlocked;
-fbIlckHandlerUnlockingPinsLock.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckInnerDoorClose.p_sReason;
-fbIlckHandlerUnlockingPinsLock.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
-fbIlckHandlerUnlockingPinsLock();
+s_fbIlckHandlerUnlockingPinsLock.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckInnerDoorClose.p_bInterlocked;
+s_fbIlckHandlerUnlockingPinsLock.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckInnerDoorClose.p_sReason;
+s_fbIlckHandlerUnlockingPinsLock.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
+s_fbIlckHandlerUnlockingPinsLock();
 
-fbIlckHandlerUnlockingPinsRelease.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckInnerDoorOpen.p_bInterlocked;
-fbIlckHandlerUnlockingPinsRelease.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckInnerDoorOpen.p_sReason;
-fbIlckHandlerUnlockingPinsRelease.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
-fbIlckHandlerUnlockingPinsRelease();
+s_fbIlckHandlerUnlockingPinsRelease.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckInnerDoorOpen.p_bInterlocked;
+s_fbIlckHandlerUnlockingPinsRelease.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckInnerDoorOpen.p_sReason;
+s_fbIlckHandlerUnlockingPinsRelease.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
+s_fbIlckHandlerUnlockingPinsRelease();
 
 //Door Opener
-fbIlckHandlerDoorOpenerClose.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckInnerDoorClose.p_bInterlocked;
-fbIlckHandlerDoorOpenerClose.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckInnerDoorClose.p_sReason;
-fbIlckHandlerDoorOpenerClose.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
-fbIlckHandlerDoorOpenerClose.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_bStaDoorShutterOpened);
-fbIlckHandlerDoorOpenerClose();
+s_fbIlckHandlerDoorOpenerClose.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckInnerDoorClose.p_bInterlocked;
+s_fbIlckHandlerDoorOpenerClose.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckInnerDoorClose.p_sReason;
+s_fbIlckHandlerDoorOpenerClose.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
+s_fbIlckHandlerDoorOpenerClose.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_bStaDoorShutterOpened);
+s_fbIlckHandlerDoorOpenerClose();
 
-fbIlckHandlerDoorOpenerOpen.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckInnerDoorOpen.p_bInterlocked;
-fbIlckHandlerDoorOpenerOpen.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckInnerDoorOpen.p_sReason;
-fbIlckHandlerDoorOpenerOpen.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
-fbIlckHandlerDoorOpenerOpen.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_bStaDoorShutterOpened);
-fbIlckHandlerDoorOpenerOpen();
+s_fbIlckHandlerDoorOpenerOpen.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckInnerDoorOpen.p_bInterlocked;
+s_fbIlckHandlerDoorOpenerOpen.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckInnerDoorOpen.p_sReason;
+s_fbIlckHandlerDoorOpenerOpen.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
+s_fbIlckHandlerDoorOpenerOpen.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_bStaDoorShutterOpened);
+s_fbIlckHandlerDoorOpenerOpen();
 
 //Door Shutter
-fbIlckHandlerDoorShutterOpen.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckInnerDoorOpen.p_bInterlocked;
-fbIlckHandlerDoorShutterOpen.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckInnerDoorOpen.p_sReason;
-fbIlckHandlerDoorShutterOpen.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
-fbIlckHandlerDoorShutterOpen();
+s_fbIlckHandlerDoorShutterOpen.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckInnerDoorOpen.p_bInterlocked;
+s_fbIlckHandlerDoorShutterOpen.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckInnerDoorOpen.p_sReason;
+s_fbIlckHandlerDoorShutterOpen.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
+s_fbIlckHandlerDoorShutterOpen();
 
-fbIlckHandlerDoorShutterClose.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckInnerDoorClose.p_bInterlocked;
-fbIlckHandlerDoorShutterClose.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckInnerDoorClose.p_sReason;
-fbIlckHandlerDoorShutterClose.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
-fbIlckHandlerDoorShutterClose.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_bStaDoorOpenerClosed) AND NOT(s_bStaDoorOpenerAlmostClosed); 
-fbIlckHandlerDoorShutterClose();
+s_fbIlckHandlerDoorShutterClose.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckInnerDoorClose.p_bInterlocked;
+s_fbIlckHandlerDoorShutterClose.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckInnerDoorClose.p_sReason;
+s_fbIlckHandlerDoorShutterClose.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
+s_fbIlckHandlerDoorShutterClose.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_bStaDoorOpenerClosed) AND NOT(s_bStaDoorOpenerAlmostClosed); 
+s_fbIlckHandlerDoorShutterClose();
 
-s_bIlckDockingClampsUpperPressureLow := fbIlckHandlerClampsUpperPressureLow.p_bInterlocked;
-s_bIlckDockingClampsUpperPressureHigh := fbIlckHandlerClampsUpperPressureHigh.p_bInterlocked;
+s_bIlckDockingClampsUpperPressureLow := s_fbIlckHandlerClampsUpperPressureLow.p_bInterlocked;
+s_bIlckDockingClampsUpperPressureHigh := s_fbIlckHandlerClampsUpperPressureHigh.p_bInterlocked;
 
-s_bIlckDockingClampsLowerPressureLow := fbIlckHandlerClampsLowerPressureLow.p_bInterlocked;
-s_bIlckDockingClampsLowerPressureHigh := fbIlckHandlerClampsLowerPressureHigh.p_bInterlocked;
+s_bIlckDockingClampsLowerPressureLow := s_fbIlckHandlerClampsLowerPressureLow.p_bInterlocked;
+s_bIlckDockingClampsLowerPressureHigh := s_fbIlckHandlerClampsLowerPressureHigh.p_bInterlocked;
 
-s_bIlckDockingClampsToOpen := fbIlckHandlerDockingClampsOpen.p_bInterlocked;
-s_bIlckDockingClampsToClose := fbIlckHandlerDockingClampsClose.p_bInterlocked;
+s_bIlckDockingClampsToOpen := s_fbIlckHandlerDockingClampsOpen.p_bInterlocked;
+s_bIlckDockingClampsToClose := s_fbIlckHandlerDockingClampsClose.p_bInterlocked;
 
-s_bIlckUnlockingPinsToLock := fbIlckHandlerUnlockingPinsLock.p_bInterlocked;
-s_bIlckUnlockingPinsToRelease := fbIlckHandlerUnlockingPinsRelease.p_bInterlocked;
+s_bIlckUnlockingPinsToLock := s_fbIlckHandlerUnlockingPinsLock.p_bInterlocked;
+s_bIlckUnlockingPinsToRelease := s_fbIlckHandlerUnlockingPinsRelease.p_bInterlocked;
 
-s_bIlckDoorOpenerToClose := fbIlckHandlerDoorOpenerClose.p_bInterlocked; //NOT(s_bStaDoorShutterOpened);
-s_bIlckDoorOpenerToOpen := fbIlckHandlerDoorOpenerOpen.p_bInterlocked; //NOT(s_bStaDoorShutterOpened);
+s_bIlckDoorOpenerToClose := s_fbIlckHandlerDoorOpenerClose.p_bInterlocked; //NOT(s_bStaDoorShutterOpened);
+s_bIlckDoorOpenerToOpen := s_fbIlckHandlerDoorOpenerOpen.p_bInterlocked; //NOT(s_bStaDoorShutterOpened);
 
-s_bIlckDoorShutterToOpen := fbIlckHandlerDoorShutterOpen.p_bInterlocked; //FALSE;
-s_bIlckDoorShutterToClose := fbIlckHandlerDoorShutterClose.p_bInterlocked; //NOT(s_bStaDoorOpenerClosed) AND NOT(s_bStaDoorOpenerAlmostClosed);
+s_bIlckDoorShutterToOpen := s_fbIlckHandlerDoorShutterOpen.p_bInterlocked; //FALSE;
+s_bIlckDoorShutterToClose := s_fbIlckHandlerDoorShutterClose.p_bInterlocked; //NOT(s_bStaDoorOpenerClosed) AND NOT(s_bStaDoorOpenerAlmostClosed);
 
 //--s_bIlckDockTB := fbIlckHandlerDockingClampsClose.p_bInterlocked;
 //--s_bIlckUnDockTB := fbIlckHandlerDockingClampsOpen.p_bInterlocked;
@@ -982,42 +983,42 @@ s_bIlckDoorShutterToClose := fbIlckHandlerDoorShutterClose.p_bInterlocked; //NOT
 
 //Clamps upper pressure selection
 IF s_bIlckDockingClampsUpperPressureLow THEN
-	s_cmClampsUpperHighPressure.p_sInterlockedReasonOff := fbIlckHandlerClampsUpperPressureLow.p_sReason;
+	s_cmClampsUpperHighPressure.p_sInterlockedReasonOff := s_fbIlckHandlerClampsUpperPressureLow.p_sReason;
 ELSE
 	s_cmClampsUpperHighPressure.p_sInterlockedReasonOff := '-';
 END_IF
 
 IF s_bIlckDockingClampsUpperPressureHigh THEN
-	s_cmClampsUpperHighPressure.p_sInterlockedReasonOn := fbIlckHandlerClampsUpperPressureHigh.p_sReason;
+	s_cmClampsUpperHighPressure.p_sInterlockedReasonOn := s_fbIlckHandlerClampsUpperPressureHigh.p_sReason;
 ELSE
 	s_cmClampsUpperHighPressure.p_sInterlockedReasonOn := '-';
 END_IF
 
 //Clamps lower pressure selection
 IF s_bIlckDockingClampsLowerPressureLow THEN
-	s_cmClampsLowerHighPressure.p_sInterlockedReasonOff := fbIlckHandlerClampsLowerPressureLow.p_sReason;
+	s_cmClampsLowerHighPressure.p_sInterlockedReasonOff := s_fbIlckHandlerClampsLowerPressureLow.p_sReason;
 ELSE
 	s_cmClampsLowerHighPressure.p_sInterlockedReasonOff := '-';
 END_IF
 
 IF s_bIlckDockingClampsLowerPressureHigh THEN
-	s_cmClampsLowerHighPressure.p_sInterlockedReasonOn := fbIlckHandlerClampsLowerPressureHigh.p_sReason;
+	s_cmClampsLowerHighPressure.p_sInterlockedReasonOn := s_fbIlckHandlerClampsLowerPressureHigh.p_sReason;
 ELSE
 	s_cmClampsLowerHighPressure.p_sInterlockedReasonOn := '-';
 END_IF
 
 //Docking Clamps
 IF s_bIlckDockingClampsToOpen THEN
-	s_cmDockingClampsUpper.p_sInterlockedReasonOff := fbIlckHandlerDockingClampsOpen.p_sReason;
-	s_cmDockingClampsLower.p_sInterlockedReasonOff := fbIlckHandlerDockingClampsOpen.p_sReason;
+	s_cmDockingClampsUpper.p_sInterlockedReasonOff := s_fbIlckHandlerDockingClampsOpen.p_sReason;
+	s_cmDockingClampsLower.p_sInterlockedReasonOff := s_fbIlckHandlerDockingClampsOpen.p_sReason;
 ELSE
 	s_cmDockingClampsUpper.p_sInterlockedReasonOff := '-';
 	s_cmDockingClampsLower.p_sInterlockedReasonOff := '-';
 END_IF
 
 IF s_bIlckDockingClampsToClose THEN
-	s_cmDockingClampsUpper.p_sInterlockedReasonOn := fbIlckHandlerDockingClampsClose.p_sReason;
-	s_cmDockingClampsLower.p_sInterlockedReasonOn := fbIlckHandlerDockingClampsClose.p_sReason;
+	s_cmDockingClampsUpper.p_sInterlockedReasonOn := s_fbIlckHandlerDockingClampsClose.p_sReason;
+	s_cmDockingClampsLower.p_sInterlockedReasonOn := s_fbIlckHandlerDockingClampsClose.p_sReason;
 ELSE
 	s_cmDockingClampsUpper.p_sInterlockedReasonOn := '-';
 	s_cmDockingClampsLower.p_sInterlockedReasonOn := '-';
@@ -1025,16 +1026,16 @@ END_IF
 
 //Unlocking Pins
 IF s_bIlckUnlockingPinsToLock THEN
-	s_cmUnlockingPinUpper.p_sInterlockedReasonOff := fbIlckHandlerUnlockingPinsLock.p_sReason;
-	s_cmUnlockingPinLower.p_sInterlockedReasonOff := fbIlckHandlerUnlockingPinsLock.p_sReason;
+	s_cmUnlockingPinUpper.p_sInterlockedReasonOff := s_fbIlckHandlerUnlockingPinsLock.p_sReason;
+	s_cmUnlockingPinLower.p_sInterlockedReasonOff := s_fbIlckHandlerUnlockingPinsLock.p_sReason;
 ELSE
 	s_cmUnlockingPinUpper.p_sInterlockedReasonOff := '-';
 	s_cmUnlockingPinLower.p_sInterlockedReasonOff := '-';
 END_IF
 
 IF s_bIlckUnlockingPinsToRelease THEN
-	s_cmUnlockingPinUpper.p_sInterlockedReasonOn := fbIlckHandlerUnlockingPinsRelease.p_sReason;
-	s_cmUnlockingPinLower.p_sInterlockedReasonOn := fbIlckHandlerUnlockingPinsRelease.p_sReason;
+	s_cmUnlockingPinUpper.p_sInterlockedReasonOn := s_fbIlckHandlerUnlockingPinsRelease.p_sReason;
+	s_cmUnlockingPinLower.p_sInterlockedReasonOn := s_fbIlckHandlerUnlockingPinsRelease.p_sReason;
 ELSE
 	s_cmUnlockingPinUpper.p_sInterlockedReasonOn := '-';
 	s_cmUnlockingPinLower.p_sInterlockedReasonOn := '-';
@@ -1042,26 +1043,26 @@ END_IF
 
 //Door Opener
 IF s_bIlckDoorOpenerToClose THEN
-	s_cmDoorOpener.p_sInterlockedReasonOff := fbIlckHandlerDoorOpenerClose.p_sReason;
+	s_cmDoorOpener.p_sInterlockedReasonOff := s_fbIlckHandlerDoorOpenerClose.p_sReason;
 ELSE
 	s_cmDoorOpener.p_sInterlockedReasonOff := '-';
 END_IF
 
 IF s_bIlckDoorOpenerToOpen THEN
-	s_cmDoorOpener.p_sInterlockedReasonOn := fbIlckHandlerDoorOpenerOpen.p_sReason;
+	s_cmDoorOpener.p_sInterlockedReasonOn := s_fbIlckHandlerDoorOpenerOpen.p_sReason;
 ELSE
 	s_cmDoorOpener.p_sInterlockedReasonOn := '-';
 END_IF
 
 //Door Shutter
 IF s_bIlckDoorShutterToOpen THEN
-	s_cmDoorShutter.p_sInterlockedReasonOff := fbIlckHandlerDoorShutterOpen.p_sReason;
+	s_cmDoorShutter.p_sInterlockedReasonOff := s_fbIlckHandlerDoorShutterOpen.p_sReason;
 ELSE
 	s_cmDoorShutter.p_sInterlockedReasonOff := '-';
 END_IF
 
 IF s_bIlckDoorShutterToClose THEN
-	s_cmDoorShutter.p_sInterlockedReasonOn := fbIlckHandlerDoorShutterClose.p_sReason;
+	s_cmDoorShutter.p_sInterlockedReasonOn := s_fbIlckHandlerDoorShutterClose.p_sReason;
 ELSE
 	s_cmDoorShutter.p_sInterlockedReasonOn := '-';
 END_IF
@@ -1111,7 +1112,8 @@ s_diStaDoorAlmostClosed();
 
 s_bStaDoorOpenerAlmostClosed := s_diStaDoorAlmostClosed.p_bStaInputDelayed;
 
-_m_Inputs := TRUE;]]></ST>
+_m_Inputs := TRUE;
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_MaintenanceControl" Id="{cf85508a-2caa-42ea-a56c-5902a15aaf22}">
@@ -2460,6 +2462,7 @@ p_bStaUnlockingPinsReleased := s_bStaUnlockingPinsReleased;
       <LineId Id="4" Count="0" />
     </LineIds>
     <LineIds Name="EM_DockingInterface._m_Inputs">
+      <LineId Id="503" Count="0" />
       <LineId Id="274" Count="6" />
       <LineId Id="452" Count="0" />
       <LineId Id="458" Count="0" />
@@ -2552,6 +2555,7 @@ p_bStaUnlockingPinsReleased := s_bStaUnlockingPinsReleased;
       <LineId Id="343" Count="1" />
       <LineId Id="241" Count="11" />
       <LineId Id="5" Count="0" />
+      <LineId Id="504" Count="0" />
     </LineIds>
     <LineIds Name="EM_DockingInterface._m_MaintenanceControl">
       <LineId Id="397" Count="1" />

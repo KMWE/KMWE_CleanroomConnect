@@ -35,6 +35,10 @@ VAR
 	s_sInterlockedReasonOpen : STRING(GVL.g_MAX_LEN_INTERLOCK_REASON); //External interlocked reason for clarifying reason
 	s_sInterlockedReasonClose : STRING(GVL.g_MAX_LEN_INTERLOCK_REASON); //External interlocked reason for clarifying reason
 	
+	// Interlocks
+	s_bIclkOpen : BOOL;
+	s_bIclkClose : BOOL;
+	
 	// Requests
 	s_bReqClose : BOOL;
 	s_bReqOpen : BOOL;
@@ -353,6 +357,9 @@ s_bStaDoorIsOpened := I_bStaDoorIsOpened;
 s_bStaDoorIsClosed := I_bStaDoorIsClosed;
 s_bStaDoorControllerError := NOT(I_bStaControllerIsReady);
 
+s_bIclkOpen := i_bIclkOpen;
+s_bIclkClose := i_bIclkClose;
+
 _m_Inputs := TRUE;
 ]]></ST>
       </Implementation>
@@ -379,7 +386,7 @@ END_IF
 //--s_tofResetPulse(
 //--	IN := s_bReqReset AND NOT(s_tofResetPulse.Q),
 //--	PT := i_stSettings.tResetPulseDuration );
-s_tofResetPulse(PT := T#1S, IN := (i_bCmdReset AND s_bStaDoorControllerError) OR s_bReqReset);
+s_tofResetPulse(PT := i_stSettings.tResetPulseDuration , IN := (i_bCmdReset AND s_bStaDoorControllerError) OR s_bReqReset);
 s_bReqReset := FALSE;
 
 s_bCmdReset := s_tofResetPulse.Q;
@@ -724,7 +731,8 @@ s_sInterlockedReasonOpen := p_sInterlockedReasonOpen;
       <LineId Id="10" Count="1" />
       <LineId Id="14" Count="0" />
       <LineId Id="16" Count="0" />
-      <LineId Id="9" Count="0" />
+      <LineId Id="21" Count="2" />
+      <LineId Id="19" Count="0" />
       <LineId Id="8" Count="0" />
       <LineId Id="17" Count="0" />
     </LineIds>

@@ -9,11 +9,23 @@ END_VAR
 VAR_INPUT
 //Inputs
 	i_stSettings : ST_SettingsDoors;
-		
-	i_bIlckOuterSpeedDoorToClose : BOOL; //TRUE = Interlocked
-	i_bIlckOuterSpeedDoorToOpen : BOOL; //TRUE = Interlocked
-	i_bIlckInnerSpeedDoorToClose : BOOL; //TRUE = Interlocked
-	i_bIlckInnerSpeedDoorToOpen : BOOL; //TRUE = Interlocked
+	
+	i_bStaInfeedSealed : BOOL;
+	
+	// External interlocks (from outside this EM)
+	i_fbExtIlckOuterDoorOpen : FB_Interlock;
+	i_fbExtIlckOuterDoorClose : FB_Interlock;
+	
+	i_fbExtIlckInnerDoorOpen : FB_Interlock;
+	i_fbExtIlckInnerDoorClose : FB_Interlock;
+	
+//++	i_fbExtIlckCleanroomDoorToLock : FB_Interlock;
+//++	i_fbExtIlckCleanroomDoorToRelease : FB_Interlock;	
+	
+//--	i_bIlckOuterSpeedDoorToClose : BOOL; //TRUE = Interlocked
+//--	i_bIlckOuterSpeedDoorToOpen : BOOL; //TRUE = Interlocked
+//--	i_bIlckInnerSpeedDoorToClose : BOOL; //TRUE = Interlocked
+//--	i_bIlckInnerSpeedDoorToOpen : BOOL; //TRUE = Interlocked
 //++	i_bIlckCleanroomDoorToLock : BOOL; //TRUE = Interlocked
 //++	i_bIlckCleanroomDoorToRelease : BOOL; //TRUE = Interlocked	
 
@@ -27,12 +39,24 @@ VAR_OUTPUT
 END_VAR
 
 VAR
+	
+	//Interlocks
+	s_fbIlckHandlerOuterDoorOpen : FB_InterlockHandler;
+	s_fbIlckHandlerOuterDoorClose : FB_InterlockHandler;
+	
+	s_fbIlckHandlerInnerDoorOpen : FB_InterlockHandler;
+	s_fbIlckHandlerInnerDoorClose : FB_InterlockHandler;
+	
 //------------------------------------------//
 //Control Modules (Devices)
 	s_cmOuterSpeedDoor : CM_SpeedDoor;
 	s_cmInnerSpeedDoor : CM_SpeedDoor;	
 //++	s_cmCleanroomDoor : CM_DoorLock;
 //------------------------------------------//
+
+
+	
+
 
 //------------------------------------------//
 
@@ -53,6 +77,8 @@ VAR
 //++	s_bReqReleaseCleanroomDoor : BOOL := FALSE;
 //++	s_bReqLockCleanroomDoor : BOOL := FALSE;
 	
+	s_bOverruleInterlocks : BOOL := FALSE;
+
 //Properties
 	s_bStaOuterSpeedDoorOpened : BOOL := FALSE;
 	s_bStaOuterSpeedDoorClosed : BOOL := FALSE;
@@ -135,7 +161,6 @@ VAR
 
 	{warning '#TODO' Het zou beter zijn om dit onder te brengen in de onderstaande control modules}
 	s_bHmiForceOutputEnabled : BOOL;
-	s_bHmiForceOutputStartEnabled : BOOL;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -197,6 +222,20 @@ _m_Alarms := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
+    <Method Name="_m_AutomaticControl" Id="{700eca28-66ce-4dcb-9674-65c1f34a9bce}">
+      <Declaration><![CDATA[METHOD PRIVATE _m_AutomaticControl : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+//Pallet Conveyor
+//--_m_SeqTransport();
+		
+//Pallet Centering
+//--centering functionality is build into the transport sequencer
+//--_m_SeqCentering();
+]]></ST>
+      </Implementation>
+    </Method>
     <Method Name="_m_Devices" Id="{c18c3403-a619-4da8-8c16-d38b3f2bd5db}" FolderPath="Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Devices : BOOL
 ]]></Declaration>
@@ -210,13 +249,17 @@ s_cmOuterSpeedDoor(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
 	i_ref_eCtrlState := i_eCtrlState,
-	i_bCmdReset := i_bCmdReset);
+	i_bCmdReset := i_bCmdReset,
+	i_bIclkOpen := s_bIlckOuterSpeedDoorToOpen AND NOT(s_bOverruleInterlocks), 
+	i_bIclkClose := s_bIlckOuterSpeedDoorToClose AND NOT(s_bOverruleInterlocks));
 
 s_cmInnerSpeedDoor(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
 	i_ref_eCtrlState := i_eCtrlState,
-	i_bCmdReset := i_bCmdReset);
+	i_bCmdReset := i_bCmdReset,
+	i_bIclkOpen := s_bIlckInnerSpeedDoorToOpen AND NOT(s_bOverruleInterlocks), 
+	i_bIclkClose := s_bIlckInnerSpeedDoorToClose AND NOT(s_bOverruleInterlocks));
 	
 //++s_cmCleanroomDoor(
 //++	i_bReqEnable := i_bReqEnable,
@@ -287,15 +330,6 @@ IF NOT SUPER^._m_Init() THEN
 	RETURN;
 END_IF
 
-//Interlock (externala + internal interlock reasons)
-// Waarschijnlijk is het toch beter om de interlock uitsluited extern te verzamelen. Denk bijvoorbeeld aan de situatie dat er een box gedocked is (outer door is dan open), de claenroom deur mag in die sitiuatie geopende worden
-s_bIlckOuterSpeedDoorToClose := i_bReqEnable AND i_bIlckOuterSpeedDoorToClose;
-s_bIlckOuterSpeedDoorToOpen := i_bReqEnable AND i_bIlckOuterSpeedDoorToOpen;
-s_bIlckInnerSpeedDoorToClose := i_bReqEnable AND i_bIlckInnerSpeedDoorToClose;
-s_bIlckInnerSpeedDoorToOpen := i_bReqEnable AND i_bIlckInnerSpeedDoorToOpen;
-//++s_bIlckCleanroomDoorToLock := i_bReqEnable AND i_bIlckCleanroomDoorToLock;
-//++s_bIlckCleanroomDoorToRelease := i_bReqEnable AND i_bIlckCleanroomDoorToRelease;	
-
 //Control Modules
 s_cmOuterSpeedDoor.i_bReqEnable := FALSE;
 s_cmOuterSpeedDoor.i_eCtrlMode := E_CtrlMode.IDLE;
@@ -303,6 +337,8 @@ s_cmOuterSpeedDoor.i_sCmName := 'Outer Speed Door';
 s_cmOuterSpeedDoor.i_stSettings.tDoorClosingTimeout := T#10S;
 s_cmOuterSpeedDoor.i_stSettings.tDoorOpeningTimeout := T#10S;
 s_cmOuterSpeedDoor.i_stSettings.tResetPulseDuration := T#1S;
+s_cmOuterSpeedDoor.p_sCfgOpenName := 'Open';
+s_cmOuterSpeedDoor.p_sCfgCloseName := 'Close';
 {warning '#TODO: Dot we need to added configuration parameters? Seperate struct or via settings or dedicateed variables'}
 
 s_cmInnerSpeedDoor.i_bReqEnable := FALSE;
@@ -311,6 +347,8 @@ s_cmInnerSpeedDoor.i_sCmName := 'Inner Speed Door';
 s_cmInnerSpeedDoor.i_stSettings.tDoorClosingTimeout := T#10S;
 s_cmInnerSpeedDoor.i_stSettings.tDoorOpeningTimeout := T#10S;
 s_cmInnerSpeedDoor.i_stSettings.tResetPulseDuration := T#1S;
+s_cmInnerSpeedDoor.p_sCfgOpenName := 'Open';
+s_cmInnerSpeedDoor.p_sCfgCloseName := 'Close';
 {warning '#TODO: Dot we need to added configuration parameters? Seperate struct or via settings or dedicateed variables'}
 	
 //++s_cmCleanroomDoor.i_bReqEnable := FALSE;
@@ -319,13 +357,39 @@ s_cmInnerSpeedDoor.i_stSettings.tResetPulseDuration := T#1S;
 //++s_cmCleanroomDoor.i_stSettings.tApplyingLockTimeout := T#3S;
 //++s_cmCleanroomDoor.i_stSettings.tReleasingLockTimeout := T#3S;
 //++{warning '#TODO: Dot we need to added configuration parameters? Seperate struct or via settings or dedicateed variables'}
-	
-//---------------------------------//	
 
-//----------------------------------//
+// Waarschijnlijk is het toch beter om de interlock uitsluited extern te verzamelen. 
+// Denk bijvoorbeeld aan de situatie dat er een box gedocked is (outer door is dan open),
+// de claenroom deur mag in die sitiuatie geopende worden
 
+//Interlock strings
+//Outer Speed Door
+//i_stInterlockList.arr_Interlocks[0].sReason --> External, dynamical will be written in m_input
+s_fbIlckHandlerOuterDoorOpen.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
+s_fbIlckHandlerOuterDoorOpen.i_stInterlockList.arr_Interlocks[2].sReason := 'Inner Speed Door Not Closed';
+
+//i_stInterlockList.arr_Interlocks[0].sReason --> External, dynamical will be written in m_input
+s_fbIlckHandlerOuterDoorClose.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
+
+//Inner Speed Door
+//i_stInterlockList.arr_Interlocks[0].sReason --> External, dynamical will be written in m_input
+s_fbIlckHandlerInnerDoorOpen.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
+s_fbIlckHandlerInnerDoorOpen.i_stInterlockList.arr_Interlocks[2].sReason := 'Outer Speed Door Not Closed';
+
+//i_stInterlockList.arr_Interlocks[0].sReason --> External, dynamical will be written in m_input
+s_fbIlckHandlerInnerDoorClose.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
+
+//Alarm config
+s_fbAlarmHandlerOuterSpeedDoorNoAllowedToOpen.i_eAlarmLevel := E_AlarmLevel.Warning;
+s_fbAlarmHandlerOuterSpeedDoorNoAllowedToOpen.i_sAlarmText := 'Outer Speed Door Not Allowed To Open';
+s_fbAlarmHandlerOuterSpeedDoorNoAllowedToClose.i_eAlarmLevel := E_AlarmLevel.Warning;
+s_fbAlarmHandlerOuterSpeedDoorNoAllowedToClose.i_sAlarmText := 'Outer Speed Door Not Allowed To Close';
+		
+s_fbAlarmHandlerInnerSpeedDoorNoAllowedToOpen.i_eAlarmLevel := E_AlarmLevel.Warning;
+s_fbAlarmHandlerInnerSpeedDoorNoAllowedToOpen.i_sAlarmText := 'Inner Speed Door Not Allowed To Open';
+s_fbAlarmHandlerInnerSpeedDoorNoAllowedToClose.i_eAlarmLevel := E_AlarmLevel.Warning;
+s_fbAlarmHandlerInnerSpeedDoorNoAllowedToClose.i_sAlarmText := 'Inner Speed Door Not Allowed To Close';
 	
-//----------------------------------//	
 //Hmi
 	s_fbHmiBtnReset.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnReset.p_bStaVisible := FALSE;
@@ -398,15 +462,71 @@ IF NOT SUPER^._m_Inputs() THEN
 	RETURN;
 END_IF
 
+//Interlocks
+//Outer Speed Door
+i_fbExtIlckOuterDoorOpen();
+s_fbIlckHandlerOuterDoorOpen.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckOuterDoorOpen.p_bInterlocked;
+s_fbIlckHandlerOuterDoorOpen.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckOuterDoorOpen.p_sReason;
+s_fbIlckHandlerOuterDoorOpen.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
+s_fbIlckHandlerOuterDoorOpen.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_cmInnerSpeedDoor.p_bStaIsClosed);
+s_fbIlckHandlerOuterDoorOpen();
 
-s_bIlckOuterSpeedDoorToOpen := i_bIlckOuterSpeedDoorToOpen;
-s_bIlckOuterSpeedDoorToClose := i_bIlckOuterSpeedDoorToClose;
+i_fbExtIlckOuterDoorClose();
+s_fbIlckHandlerOuterDoorClose.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckOuterDoorClose.p_bInterlocked;
+s_fbIlckHandlerOuterDoorClose.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckOuterDoorClose.p_sReason;
+s_fbIlckHandlerOuterDoorClose.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
+s_fbIlckHandlerOuterDoorClose();
 
-s_bIlckInnerSpeedDoorToOpen := i_bIlckInnerSpeedDoorToOpen;
-s_bIlckInnerSpeedDoorToClose := i_bIlckInnerSpeedDoorToClose;
-	
+s_bIlckOuterSpeedDoorToOpen := s_fbIlckHandlerOuterDoorOpen.p_bInterlocked;
+s_bIlckOuterSpeedDoorToClose := s_fbIlckHandlerOuterDoorClose.p_bInterlocked;
+
+//Inner Speed Door
+i_fbExtIlckInnerDoorOpen();
+s_fbIlckHandlerInnerDoorOpen.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckInnerDoorOpen.p_bInterlocked;
+s_fbIlckHandlerInnerDoorOpen.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckInnerDoorOpen.p_sReason;
+s_fbIlckHandlerInnerDoorOpen.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
+s_fbIlckHandlerInnerDoorOpen.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_cmOuterSpeedDoor.p_bStaIsClosed) AND NOT(i_bStaInfeedSealed) ;
+s_fbIlckHandlerInnerDoorOpen();
+
+i_fbExtIlckInnerDoorClose();
+s_fbIlckHandlerInnerDoorClose.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckInnerDoorClose.p_bInterlocked;
+s_fbIlckHandlerInnerDoorClose.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckInnerDoorClose.p_sReason;
+s_fbIlckHandlerInnerDoorClose.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
+s_fbIlckHandlerInnerDoorClose();
+
+s_bIlckInnerSpeedDoorToOpen := s_fbIlckHandlerInnerDoorOpen.p_bInterlocked;
+s_bIlckInnerSpeedDoorToClose := s_fbIlckHandlerInnerDoorClose.p_bInterlocked;
+
 //++s_bIlckCleanroomDoorToRelease := i_bIlckCleanroomDoorToRelease;
 //++s_bIlckCleanroomDoorToLock := i_bIlckCleanroomDoorToLock;
+
+//Reasons (own reason first: Cm->Em->Un)
+//Outer Speed Doors
+IF s_bIlckOuterSpeedDoorToOpen THEN
+	s_cmOuterSpeedDoor.p_sInterlockedReasonOpen := s_fbIlckHandlerOuterDoorOpen.p_sReason;
+ELSE
+	s_cmOuterSpeedDoor.p_sInterlockedReasonOpen := '-';
+END_IF
+
+IF s_bIlckOuterSpeedDoorToClose THEN
+	s_cmOuterSpeedDoor.p_sInterlockedReasonClose := s_fbIlckHandlerOuterDoorClose.p_sReason;
+ELSE
+	s_cmOuterSpeedDoor.p_sInterlockedReasonClose := '-';
+END_IF
+
+//Inner Speed Doors
+IF s_bIlckInnerSpeedDoorToOpen THEN
+	s_cmInnerSpeedDoor.p_sInterlockedReasonOpen := s_fbIlckHandlerInnerDoorOpen.p_sReason;
+ELSE
+	s_cmInnerSpeedDoor.p_sInterlockedReasonOpen := '-';
+END_IF
+
+IF s_bIlckInnerSpeedDoorToClose THEN
+	s_cmInnerSpeedDoor.p_sInterlockedReasonClose := s_fbIlckHandlerInnerDoorClose.p_sReason;
+ELSE
+	s_cmInnerSpeedDoor.p_sInterlockedReasonClose := '-';
+END_IF
+
 
 _m_Inputs := TRUE;
 ]]></ST>
@@ -526,229 +646,41 @@ IF NOT SUPER^.m_Main() THEN
 	RETURN;
 END_IF
 
-{waring '#TODO: wrtie code below'}
-(*
 CASE i_eCtrlMode OF
 
 	E_CtrlMode.IDLE:
-		;
+		s_eSeqDoors := E_SeqDoors.IDLE;
 	
 	E_CtrlMode.AUTOMATIC:
-		
-		CASE i_ref_objCarrier.p_eLocation OF 
-	
-			E_Location.PRE_DOCKING: //Control outer door
-		
-				IF i_ref_objCarrier.p_eDestination > E_Location.PRE_DOCKING THEN
-					//Check if outer door is allowed to open
-					IF NOT(i_bIlckOuterSpeedDoorToOpen) THEN
-						s_cmOuterSpeedDoor();
-					ELSE
-						//Generate warning to user, door not allowed to open	
-					END_IF
-				END_IF
-				
-				IF p_bStaOuterSpeedDoorOpened THEN
-					//Generate info to user, to place TB to docking position
-				END_IF
-				
-				IF i_ref_objCarrier.p_eDestination <= E_Location.PRE_DOCKING THEN
-					//Check if outer door is allowed to close
-					IF NOT(i_bIlckOuterSpeedDoorToClose) THEN
-						s_cmOuterSpeedDoor.m_Close();
-					ELSE
-						//Generate warning to user, door not allowed to close	
-					END_IF
-				END_IF
-						
-			E_Location.CLEAN_ROOM: //Control cleanroom door
-		
-				IF i_ref_objCarrier.p_eDestination >= E_Location.CLEAN_ROOM THEN
-					//Check if cleanroom door lock is allowed to be released
-					IF NOT(i_bIlckCleanroomDoorToRelease) THEN
-						IF i_ref_objCarrier.p_bFlushedClean THEN
-							s_cmCleanroomDoor.m_Release();
-						ELSE
-							//Generate warning to user, not flushed/clean
-						END_IF		
-					ELSE
-						//Generate warning to user, door not allowed to be released	
-					END_IF
-				END_IF
-				
-				IF i_ref_objCarrier.p_eDestination <= E_Location.PRE_DOCKING THEN
-					//Check if outer door is allowed to close
-					IF NOT(i_bIlckCleanroomDoorToLock) THEN
-						IF s_cmCleanroomDoor.p_bStaDoorIsClosed THEN
-							s_cmCleanroomDoor.m_Apply();
-						ELSE
-							//Generate info to user, close cleanroom door
-						END_IF	
-					ELSE
-						//Generate warning to user, door not allowed to lock	
-					END_IF
-				END_IF		
-				
-				
-		END_CASE	
-		
-		
+		//Automatic commands are controlled by higher-layer unit
+		_m_AutomaticControl();
 	
 	E_CtrlMode.MANUAL:
-		;
+		//Manual commands (convert HMI buttons to requests), only in state running
+		IF (i_eCtrlState = E_CtrlState.RUNNING) THEN
+			s_bReqOpenOuterSpeedDoor := s_fbHmiBtnOpenOuterSpeedDoor.p_osrBtnPress;
+			s_bReqCloseOuterSpeedDoor := s_fbHmiBtnCloseOuterSpeedDoor.p_osrBtnPress;
+			s_bReqOpenInnerSpeedDoor := s_fbHmiBtnOpenInnerSpeedDoor.p_osrBtnPress;
+			s_bReqCloseInnerSpeedDoor := s_fbHmiBtnCloseInnerSpeedDoor.p_osrBtnPress;
+		END_IF	
+		
+		_m_AutomaticControl();
+		
+	E_CtrlMode.MAINTENANCE:
+		//Execute maintenance control (HMI control module buttons)
+		s_eSeqDoors := E_SeqDoors.IDLE;
+		; 	//Maintenance control is implemented in lower-layer control modules
+		
+	E_CtrlMode.IO:
+		//Execute IO-test control (HMI output force control)
+		; 	//IO-Test control is implemented in lower-layer control modules
+			//Enabling control is done direcly under this case instruction
+		
+	E_CtrlMode.CLEANING:
+		//Execute cleaning control (cleaning  specific functionalities)
+		;	//Cleaning control is not implemented, this could be a done in the future if neccesary
+			
 END_CASE
-
-CASE i_eCtrlMode OF
-
-	E_CtrlMode.IDLE:
-		s_cmOuterSpeedDoor.m_Stop();
-		s_cmCleanroomDoor.m_Apply();
-		
-	E_CtrlMode.AUTOMATIC:
-		
-		s_fbSeqDoors(
-			i_nSeqStep := s_eSeqDoors, 
-			i_sStepName := TO_STRING(s_fbSeqDoors.q_eActState), 
-			i_bCmdReset := i_bCmdReset, 
-			i_bStaError := s_bStaError);
-	
-		CASE s_eSeqDoors OF
-			
-			E_SeqDoors.IDLE:
-				IF s_fbSeqDoors.q_bStaEntry THEN
-					//Reset all requests
-					s_bReqCloseOuterSpeedDoor := FALSE;
-					s_bReqOpenOuterSpeedDoor := FALSE;
-					s_bReqLockCleanroomDoor := FALSE;
-					s_bReqReleaseCleanroomDoor := FALSE;
-				END_IF
-			
-				//Requests from public mehtods (checked for interlocks)
-				IF s_bReqCloseOuterSpeedDoor THEN
-					s_eSeqDoors := E_SeqDoors.CLOSE_OUTER_DOOR;
-					
-				ELSIF s_bReqOpenOuterSpeedDoor THEN
-					s_eSeqDoors := E_SeqDoors.OPEN_OUTER_DOOR;
-					
-				ELSIF s_bReqLockCleanroomDoor THEN
-					s_eSeqDoors := E_SeqDoors.LOCK_CLEANROOM_DOOR;
-					
-				ELSIF s_bReqReleaseCleanroomDoor THEN
-					s_eSeqDoors := E_SeqDoors.RELEASE_CLEANROOM_DOOR;
-				END_IF
-			
-			E_SeqDoors.CLOSE_OUTER_DOOR:
-				IF s_fbSeqDoors.q_bStaEntry THEN
-					s_cmOuterSpeedDoor.m_Close();
-				END_IF
-				
-				IF s_cmOuterSpeedDoor.p_bStaIsClosed THEN
-					s_eSeqDoors := E_SeqDoors.OUTER_DOOR_CLOSED;
-				ELSIF s_cmOuterSpeedDoor.p_bStaError THEN
-					{warning '#TODO write add some info to error string'}
-					s_eSeqDoors := E_SeqDoors.ERROR;
-				ELSIF (s_fbSeqDoors.q_tmStepTime >= i_stSettings.tOuterDoorTimeout) THEN
-					{warning '#TODO write add some info to error string'}
-					s_eSeqDoors := E_SeqDoors.ERROR;	
-				END_IF
-			
-			E_SeqDoors.OUTER_DOOR_CLOSED:
-				s_eSeqDoors := E_SeqDoors.IDLE;	
-			
-			E_SeqDoors.OPEN_OUTER_DOOR:
-				IF s_fbSeqDoors.q_bStaEntry THEN
-					s_cmOuterSpeedDoor.m_Open();
-				END_IF
-				
-				IF s_cmOuterSpeedDoor.p_bStaIsOpened THEN
-					s_eSeqDoors := E_SeqDoors.OUTER_DOOR_OPENED;
-				ELSIF s_cmOuterSpeedDoor.p_bStaError THEN
-					{warning '#TODO write add some info to error string'}
-					s_eSeqDoors := E_SeqDoors.ERROR;
-				ELSIF (s_fbSeqDoors.q_tmStepTime >= i_stSettings.tOuterDoorTimeout) THEN
-					{warning '#TODO write add some info to error string'}
-					s_eSeqDoors := E_SeqDoors.ERROR;	
-				END_IF
-			
-			E_SeqDoors.OUTER_DOOR_OPENED:
-				s_eSeqDoors := E_SeqDoors.IDLE;
-			
-			E_SeqDoors.LOCK_CLEANROOM_DOOR:
-				IF s_fbSeqDoors.q_bStaEntry THEN
-					s_cmCleanroomDoor.m_Apply();
-				END_IF
-				
-				IF s_cmCleanroomDoor.p_bStaLockIsApplied THEN
-					s_eSeqDoors := E_SeqDoors.CLEANROOM_DOOR_LOCKED;
-				ELSIF s_cmCleanroomDoor.p_bStaError THEN
-					{warning '#TODO write add some info to error string'}
-					s_eSeqDoors := E_SeqDoors.ERROR;
-				ELSIF (s_fbSeqDoors.q_tmStepTime >= i_stSettings.tCleanroomDoorTimeout) THEN
-					{warning '#TODO write add some info to error string'}
-					s_eSeqDoors := E_SeqDoors.ERROR;	
-				END_IF
-			
-			E_SeqDoors.CLEANROOM_DOOR_LOCKED:
-				s_eSeqDoors := E_SeqDoors.IDLE;
-						
-			E_SeqDoors.RELEASE_CLEANROOM_DOOR:
-				IF s_fbSeqDoors.q_bStaEntry THEN
-					s_cmCleanroomDoor.m_Release();
-				END_IF
-				
-				IF s_cmCleanroomDoor.p_bStaLockIsReleased THEN
-					s_eSeqDoors := E_SeqDoors.CLEANROOM_DOOR_RELEASED;
-				ELSIF s_cmCleanroomDoor.p_bStaError THEN
-					{warning '#TODO write add some info to error string'}
-					s_eSeqDoors := E_SeqDoors.ERROR;
-				ELSIF (s_fbSeqDoors.q_tmStepTime >= i_stSettings.tCleanroomDoorTimeout) THEN
-					{warning '#TODO write add some info to error string'}
-					s_eSeqDoors := E_SeqDoors.ERROR;	
-				END_IF
-			
-			E_SeqDoors.CLEANROOM_DOOR_RELEASED:
-				s_eSeqDoors := E_SeqDoors.IDLE;
-			
-			E_SeqDockingInterface.READY:
-				;
-			
-			E_SeqDockingInterface.ERROR:
-				s_cmOuterSpeedDoor.m_Stop();
-				s_cmCleanroomDoor.m_Apply();
-			
-				IF i_bCmdReset THEN
-					//Reset errors (probebly alredy done in the methode devices)
-					//--cmValveDockingClampsUpper.i_bCmdReset := TRUE;
-				
-					s_eSeqDoors := E_SeqDockingInterface.IDLE;
-				END_IF
-				
-		END_CASE		
-	
-		
-	E_CtrlMode.MANUAL:
-		;
-		{warning '#TODO: Add manual control from hmi'}
-
-		// Outer Door
-		IF s_fbHmiBtnOpenOuterSpeedDoor.p_osrBtnPress THEN
-			s_cmOuterSpeedDoor.m_Open();
-		ELSIF s_fbHmiBtnCloseOuterSpeedDoor.p_osrBtnPress THEN
-			s_cmOuterSpeedDoor.m_Close();
-		END_IF
-		
-		// Door Lock
-		IF s_fbHmiBtnReleaseLockCleanroomDoor.p_osrBtnPress THEN
-			s_cmCleanroomDoor.m_Release();
-		ELSIF s_fbHmiBtnApplyLockCleanroomDoor.p_osrBtnPress THEN
-			s_cmCleanroomDoor.m_Apply();
-		END_IF
-		
-END_CASE
-*)
-
-{warning '#TODO: Code below is axample from pallet conveyor'}
-(*
 
 //AUTOMATIC-mode //////////////////////////////////////////////////////////////////////////////////
 
@@ -756,68 +688,54 @@ END_CASE
 
 //Buttons visibility
 IF (i_eCtrlMode = E_CtrlMode.MANUAL) THEN
-	s_fbHmiBtnTB_ToInfeed.p_bStaVisible := TRUE;
-	s_fbHmiBtnTB_ToCentering.p_bStaVisible := TRUE;
-	s_fbHmiBtnTB_ToDocking.p_bStaVisible := TRUE;
-	s_fbHmiBtnTB_Centering.p_bStaVisible := TRUE;
+	s_fbHmiBtnCloseOuterSpeedDoor.p_bStaVisible := TRUE;
+	s_fbHmiBtnOpenOuterSpeedDoor.p_bStaVisible := TRUE;
+	s_fbHmiBtnCloseInnerSpeedDoor.p_bStaVisible := TRUE;
+	s_fbHmiBtnOpenInnerSpeedDoor.p_bStaVisible := TRUE;
 ELSE
-	s_fbHmiBtnTB_ToInfeed.p_bStaVisible := FALSE;
-	s_fbHmiBtnTB_ToCentering.p_bStaVisible := FALSE;
-	s_fbHmiBtnTB_ToDocking.p_bStaVisible := FALSE;
-	s_fbHmiBtnTB_Centering.p_bStaVisible := FALSE;
+	s_fbHmiBtnCloseOuterSpeedDoor.p_bStaVisible := FALSE;
+	s_fbHmiBtnOpenOuterSpeedDoor.p_bStaVisible := FALSE;
+	s_fbHmiBtnCloseInnerSpeedDoor.p_bStaVisible := FALSE;
+	s_fbHmiBtnOpenInnerSpeedDoor.p_bStaVisible := FALSE;
 END_IF
 
 //Buttons enabling
 IF i_bReqEnable AND (i_eCtrlMode = E_CtrlMode.MANUAL) AND (i_eCtrlState = E_CtrlState.RUNNING) THEN
 
-	//Transport
-	s_fbHmiBtnTB_ToInfeed.p_bStaEnabled :=
-		NOT(s_bIlckConveyorBackward)
-		AND NOT(s_bStaAtInfeedRearPosition) //Added extra condition here instead of interlock only 
-		AND NOT(s_cmPalletConveyor.p_bStaError)
-		AND (s_cmPalletConveyor.p_bStaMotorStopped) AND TRUE
-		AND NOT(s_bReqCenteringTB);
+	//Outer Speed Door
+	s_fbHmiBtnCloseOuterSpeedDoor.p_bStaEnabled := 
+		NOT(s_bIlckOuterSpeedDoorToClose);
+
+	s_fbHmiBtnOpenOuterSpeedDoor.p_bStaEnabled :=
+		NOT(s_bIlckOuterSpeedDoorToOpen);
 	
-	s_fbHmiBtnTB_ToCentering.p_bStaEnabled :=
-		NOT(s_bIlckConveyorForward)
-		AND NOT(s_bStaAtCenteringPosition) //Added extra condition here instead of interlock only
-		AND NOT(s_cmPalletConveyor.p_bStaError)
-		AND (s_cmPalletConveyor.p_bStaMotorStopped)
-		AND NOT(s_bReqCenteringTB);
-	
-	s_fbHmiBtnTB_ToDocking.p_bStaEnabled :=
-		NOT(s_bIlckConveyorForward)
-		AND NOT(s_bStaAtDockingPosition) //Added extra condition here instead of interlock only
-		AND NOT(s_cmPalletConveyor.p_bStaError)
-		AND (s_cmPalletConveyor.p_bStaMotorStopped)
-		AND NOT(s_bReqCenteringTB);
-	
-	//Centering
-	s_fbHmiBtnTB_Centering.p_bStaEnabled :=
-		NOT(s_bIlckCenteringToCenter)
-		AND NOT(s_cmCenteringUnit.p_bStaError)
-		AND (s_eSeqTransport = E_SeqTransport.READY); 
+	//Inner Speed Door
+	s_fbHmiBtnCloseInnerSpeedDoor.p_bStaEnabled := 
+		NOT(s_bIlckInnerSpeedDoorToClose);
+
+	s_fbHmiBtnOpenInnerSpeedDoor.p_bStaEnabled :=
+		NOT(s_bIlckInnerSpeedDoorToOpen);
+
 ELSE
-	s_fbHmiBtnTB_ToInfeed.p_bStaEnabled := FALSE;
-	s_fbHmiBtnTB_ToCentering.p_bStaEnabled := FALSE;
-	s_fbHmiBtnTB_ToDocking.p_bStaEnabled := FALSE;
-	s_fbHmiBtnTB_Centering.p_bStaEnabled := FALSE;
+	s_fbHmiBtnCloseOuterSpeedDoor.p_bStaEnabled := FALSE;
+	s_fbHmiBtnOpenOuterSpeedDoor.p_bStaEnabled := FALSE;
+	s_fbHmiBtnCloseInnerSpeedDoor.p_bStaEnabled := FALSE;
+	s_fbHmiBtnOpenInnerSpeedDoor.p_bStaEnabled := FALSE;
 END_IF
 
 //MAINTENANCE-mode ////////////////////////////////////////////////////////////////////////////////
 
 //Stopping control modules
 IF (i_eCtrlMode = E_CtrlMode.MAINTENANCE) AND (i_eCtrlState = E_CtrlState.STOPPING) THEN 
-	s_cmPalletConveyor.m_Stop();
+	s_cmOuterSpeedDoor.m_Stop();
+	s_cmInnerSpeedDoor.m_Stop();
 END_IF
-*)
+
 //IO-mode /////////////////////////////////////////////////////////////////////////////////////////
 IF (i_eCtrlMode = E_CtrlMode.IO) AND (i_eCtrlState = E_CtrlState.RUNNING) THEN
 	s_bHmiForceOutputEnabled := TRUE;
-//--	s_bHmiForceOutputStartEnabled := s_cmPalletConveyor.p_bStaBrakeReleasedQ;
 ELSE
 	s_bHmiForceOutputEnabled := FALSE;
-//--	s_bHmiForceOutputStartEnabled := FALSE;	
 END_IF
 
 m_Main := TRUE;
@@ -1038,6 +956,12 @@ p_bStaReady := (s_eSeqDoors = E_SeqDoors.READY);
       <LineId Id="10" Count="0" />
       <LineId Id="14" Count="0" />
     </LineIds>
+    <LineIds Name="EM_Doors._m_AutomaticControl">
+      <LineId Id="473" Count="4" />
+      <LineId Id="481" Count="0" />
+      <LineId Id="293" Count="0" />
+      <LineId Id="479" Count="0" />
+    </LineIds>
     <LineIds Name="EM_Doors._m_Devices">
       <LineId Id="127" Count="0" />
       <LineId Id="96" Count="2" />
@@ -1045,10 +969,12 @@ p_bStaReady := (s_eSeqDoors = E_SeqDoors.READY);
       <LineId Id="130" Count="2" />
       <LineId Id="144" Count="0" />
       <LineId Id="129" Count="0" />
+      <LineId Id="146" Count="1" />
       <LineId Id="133" Count="0" />
       <LineId Id="135" Count="2" />
       <LineId Id="145" Count="0" />
       <LineId Id="99" Count="0" />
+      <LineId Id="148" Count="1" />
       <LineId Id="134" Count="0" />
       <LineId Id="100" Count="2" />
       <LineId Id="124" Count="0" />
@@ -1083,24 +1009,39 @@ p_bStaReady := (s_eSeqDoors = E_SeqDoors.READY);
     <LineIds Name="EM_Doors._m_Init">
       <LineId Id="203" Count="0" />
       <LineId Id="5" Count="2" />
-      <LineId Id="302" Count="0" />
-      <LineId Id="296" Count="0" />
-      <LineId Id="315" Count="0" />
-      <LineId Id="299" Count="1" />
-      <LineId Id="318" Count="0" />
-      <LineId Id="317" Count="0" />
-      <LineId Id="301" Count="0" />
       <LineId Id="297" Count="0" />
-      <LineId Id="207" Count="0" />
       <LineId Id="209" Count="5" />
       <LineId Id="225" Count="0" />
+      <LineId Id="356" Count="0" />
+      <LineId Id="354" Count="0" />
       <LineId Id="215" Count="0" />
       <LineId Id="320" Count="6" />
+      <LineId Id="358" Count="0" />
+      <LineId Id="357" Count="0" />
       <LineId Id="319" Count="0" />
-      <LineId Id="216" Count="7" />
-      <LineId Id="208" Count="0" />
-      <LineId Id="8" Count="1" />
-      <LineId Id="35" Count="3" />
+      <LineId Id="216" Count="6" />
+      <LineId Id="362" Count="1" />
+      <LineId Id="365" Count="0" />
+      <LineId Id="364" Count="0" />
+      <LineId Id="344" Count="0" />
+      <LineId Id="359" Count="1" />
+      <LineId Id="369" Count="1" />
+      <LineId Id="375" Count="0" />
+      <LineId Id="372" Count="2" />
+      <LineId Id="377" Count="0" />
+      <LineId Id="383" Count="5" />
+      <LineId Id="378" Count="0" />
+      <LineId Id="389" Count="1" />
+      <LineId Id="393" Count="0" />
+      <LineId Id="396" Count="0" />
+      <LineId Id="398" Count="0" />
+      <LineId Id="411" Count="0" />
+      <LineId Id="402" Count="0" />
+      <LineId Id="405" Count="1" />
+      <LineId Id="410" Count="0" />
+      <LineId Id="391" Count="0" />
+      <LineId Id="223" Count="0" />
+      <LineId Id="38" Count="0" />
       <LineId Id="239" Count="2" />
       <LineId Id="238" Count="0" />
       <LineId Id="232" Count="0" />
@@ -1132,13 +1073,36 @@ p_bStaReady := (s_eSeqDoors = E_SeqDoors.READY);
     <LineIds Name="EM_Doors._m_Inputs">
       <LineId Id="46" Count="0" />
       <LineId Id="6" Count="2" />
-      <LineId Id="50" Count="1" />
-      <LineId Id="53" Count="1" />
-      <LineId Id="60" Count="1" />
-      <LineId Id="59" Count="0" />
-      <LineId Id="55" Count="0" />
+      <LineId Id="63" Count="2" />
+      <LineId Id="120" Count="0" />
+      <LineId Id="117" Count="1" />
+      <LineId Id="113" Count="0" />
+      <LineId Id="121" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="122" Count="0" />
+      <LineId Id="125" Count="3" />
+      <LineId Id="124" Count="0" />
+      <LineId Id="151" Count="0" />
+      <LineId Id="145" Count="0" />
+      <LineId Id="147" Count="0" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="134" Count="10" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="152" Count="0" />
+      <LineId Id="154" Count="0" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="155" Count="0" />
       <LineId Id="52" Count="0" />
       <LineId Id="57" Count="0" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="88" Count="5" />
+      <LineId Id="87" Count="0" />
+      <LineId Id="95" Count="4" />
+      <LineId Id="94" Count="0" />
+      <LineId Id="101" Count="11" />
+      <LineId Id="100" Count="0" />
+      <LineId Id="86" Count="0" />
       <LineId Id="40" Count="0" />
       <LineId Id="5" Count="0" />
       <LineId Id="48" Count="0" />
@@ -1205,93 +1169,56 @@ p_bStaReady := (s_eSeqDoors = E_SeqDoors.READY);
       <LineId Id="330" Count="0" />
       <LineId Id="186" Count="2" />
       <LineId Id="511" Count="0" />
-      <LineId Id="588" Count="0" />
-      <LineId Id="515" Count="24" />
-      <LineId Id="544" Count="42" />
-      <LineId Id="512" Count="1" />
-      <LineId Id="189" Count="3" />
-      <LineId Id="331" Count="0" />
-      <LineId Id="333" Count="0" />
-      <LineId Id="195" Count="0" />
-      <LineId Id="199" Count="10" />
-      <LineId Id="410" Count="0" />
-      <LineId Id="418" Count="0" />
-      <LineId Id="412" Count="0" />
-      <LineId Id="417" Count="0" />
-      <LineId Id="414" Count="1" />
-      <LineId Id="413" Count="0" />
-      <LineId Id="210" Count="0" />
-      <LineId Id="384" Count="0" />
-      <LineId Id="422" Count="0" />
-      <LineId Id="383" Count="0" />
-      <LineId Id="447" Count="0" />
-      <LineId Id="341" Count="0" />
-      <LineId Id="372" Count="0" />
-      <LineId Id="448" Count="0" />
-      <LineId Id="345" Count="0" />
-      <LineId Id="373" Count="0" />
-      <LineId Id="449" Count="0" />
-      <LineId Id="349" Count="0" />
-      <LineId Id="374" Count="0" />
-      <LineId Id="347" Count="1" />
-      <LineId Id="386" Count="0" />
-      <LineId Id="426" Count="0" />
-      <LineId Id="390" Count="0" />
-      <LineId Id="420" Count="0" />
-      <LineId Id="427" Count="0" />
-      <LineId Id="421" Count="0" />
-      <LineId Id="423" Count="0" />
-      <LineId Id="425" Count="0" />
-      <LineId Id="429" Count="1" />
-      <LineId Id="432" Count="1" />
-      <LineId Id="431" Count="0" />
-      <LineId Id="424" Count="0" />
-      <LineId Id="419" Count="0" />
-      <LineId Id="391" Count="0" />
-      <LineId Id="446" Count="0" />
-      <LineId Id="434" Count="0" />
-      <LineId Id="394" Count="0" />
-      <LineId Id="454" Count="11" />
-      <LineId Id="397" Count="0" />
-      <LineId Id="453" Count="0" />
-      <LineId Id="395" Count="0" />
-      <LineId Id="450" Count="0" />
-      <LineId Id="402" Count="0" />
-      <LineId Id="400" Count="0" />
-      <LineId Id="467" Count="11" />
-      <LineId Id="466" Count="0" />
-      <LineId Id="401" Count="0" />
-      <LineId Id="399" Count="0" />
-      <LineId Id="451" Count="0" />
-      <LineId Id="393" Count="0" />
-      <LineId Id="405" Count="0" />
-      <LineId Id="480" Count="11" />
-      <LineId Id="406" Count="0" />
-      <LineId Id="479" Count="0" />
-      <LineId Id="404" Count="0" />
-      <LineId Id="452" Count="0" />
-      <LineId Id="407" Count="0" />
-      <LineId Id="310" Count="3" />
-      <LineId Id="492" Count="0" />
-      <LineId Id="494" Count="0" />
-      <LineId Id="493" Count="0" />
-      <LineId Id="315" Count="12" />
-      <LineId Id="503" Count="0" />
-      <LineId Id="496" Count="0" />
-      <LineId Id="328" Count="0" />
-      <LineId Id="499" Count="0" />
-      <LineId Id="501" Count="1" />
-      <LineId Id="500" Count="0" />
-      <LineId Id="504" Count="0" />
-      <LineId Id="506" Count="4" />
-      <LineId Id="505" Count="0" />
-      <LineId Id="498" Count="0" />
-      <LineId Id="329" Count="0" />
+      <LineId Id="516" Count="6" />
+      <LineId Id="715" Count="0" />
+      <LineId Id="585" Count="1" />
+      <LineId Id="730" Count="2" />
+      <LineId Id="743" Count="0" />
+      <LineId Id="734" Count="0" />
+      <LineId Id="744" Count="0" />
+      <LineId Id="741" Count="1" />
+      <LineId Id="512" Count="0" />
+      <LineId Id="745" Count="0" />
+      <LineId Id="747" Count="1" />
+      <LineId Id="750" Count="0" />
+      <LineId Id="752" Count="0" />
+      <LineId Id="754" Count="4" />
+      <LineId Id="763" Count="3" />
+      <LineId Id="746" Count="0" />
+      <LineId Id="513" Count="0" />
       <LineId Id="179" Count="0" />
-      <LineId Id="667" Count="0" />
-      <LineId Id="666" Count="0" />
-      <LineId Id="665" Count="0" />
-      <LineId Id="594" Count="70" />
+      <LineId Id="595" Count="0" />
+      <LineId Id="712" Count="0" />
+      <LineId Id="597" Count="3" />
+      <LineId Id="674" Count="1" />
+      <LineId Id="677" Count="0" />
+      <LineId Id="672" Count="0" />
+      <LineId Id="605" Count="0" />
+      <LineId Id="678" Count="2" />
+      <LineId Id="609" Count="4" />
+      <LineId Id="681" Count="1" />
+      <LineId Id="688" Count="0" />
+      <LineId Id="692" Count="1" />
+      <LineId Id="689" Count="0" />
+      <LineId Id="694" Count="0" />
+      <LineId Id="690" Count="0" />
+      <LineId Id="686" Count="0" />
+      <LineId Id="695" Count="3" />
+      <LineId Id="683" Count="0" />
+      <LineId Id="614" Count="0" />
+      <LineId Id="642" Count="0" />
+      <LineId Id="701" Count="0" />
+      <LineId Id="704" Count="0" />
+      <LineId Id="708" Count="0" />
+      <LineId Id="711" Count="0" />
+      <LineId Id="647" Count="5" />
+      <LineId Id="670" Count="1" />
+      <LineId Id="654" Count="0" />
+      <LineId Id="669" Count="0" />
+      <LineId Id="668" Count="0" />
+      <LineId Id="657" Count="1" />
+      <LineId Id="660" Count="1" />
+      <LineId Id="663" Count="1" />
       <LineId Id="593" Count="0" />
       <LineId Id="592" Count="0" />
     </LineIds>

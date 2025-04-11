@@ -690,6 +690,36 @@ s_cmLift.p_fSetTargetPosition := _m_ConvLiftHeightToSpindPos(s_fSetLiftPosition)
 s_cmTransport.p_fSetTargetPosition := s_fSetTransportPosition * 0.5;
 
 //Interlocks
+_m_Interlocks();
+
+{warning '#TODO: Something similar needs to be added for lifting transport'}
+//TB States (only use data if a valid ID is pressent else use sensor states)
+IF __ISVALIDREF(i_refTB) AND (i_refTB.p_nId > 0) THEN
+//++	s_bStaAtIdlePosition := i_refTB.p_b..;
+//++	s_bStaTrolleyInTB := i_refTB.p_b..;
+//++	s_bStaTrolleyInCabin := i_refTB.p_b..;
+	//..
+ 
+//--	s_bStaTB_CenteringDone := i_refTB.p_bCenteringDone;
+//--	s_bStaTB_AtInfeed := i_refTB.p_eActLocation = E_Location.INFEED;
+//--	s_bStaTB_AtCentering := i_refTB.p_eActLocation = E_Location.CENTERING;
+//--	s_bStaTB_AtDocking := i_refTB.p_eActLocation = E_Location.DOCKING;
+ELSE
+//--	s_bStaTB_CenteringDone := s_eTmpCenteringDone;
+//--	s_bStaTB_AtInfeed := s_bStaAtInfeedRearPosition OR s_bStaAtInfeedFrontPosition;
+//--	s_bStaTB_AtCentering := s_bStaAtCenteringPosition;
+//--	s_bStaTB_AtDocking := s_bStaAtDockingPosition;	
+END_IF
+
+_m_Inputs := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Interlocks" Id="{d0273455-0a55-4429-837d-4f1e324db3f4}" FolderPath="Base\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Interlocks
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
 //Lift/////////////////////////////////////////////////////////////////////////////////////////////
 i_fbExtIlckLiftDown();
 fbIlckHandlerLiftDown.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckLiftDown.p_bInterlocked;
@@ -756,27 +786,6 @@ IF s_bIlckTransportExtract THEN
 ELSE
 	s_cmTransport.p_sInterlockedReasonPos := '-';
 END_IF
-
-{warning '#TODO: Something similar needs to be added for lifting transport'}
-//TB States (only use data if a valid ID is pressent else use sensor states)
-IF __ISVALIDREF(i_refTB) AND (i_refTB.p_nId > 0) THEN
-//++	s_bStaAtIdlePosition := i_refTB.p_b..;
-//++	s_bStaTrolleyInTB := i_refTB.p_b..;
-//++	s_bStaTrolleyInCabin := i_refTB.p_b..;
-	//..
- 
-//--	s_bStaTB_CenteringDone := i_refTB.p_bCenteringDone;
-//--	s_bStaTB_AtInfeed := i_refTB.p_eActLocation = E_Location.INFEED;
-//--	s_bStaTB_AtCentering := i_refTB.p_eActLocation = E_Location.CENTERING;
-//--	s_bStaTB_AtDocking := i_refTB.p_eActLocation = E_Location.DOCKING;
-ELSE
-//--	s_bStaTB_CenteringDone := s_eTmpCenteringDone;
-//--	s_bStaTB_AtInfeed := s_bStaAtInfeedRearPosition OR s_bStaAtInfeedFrontPosition;
-//--	s_bStaTB_AtCentering := s_bStaAtCenteringPosition;
-//--	s_bStaTB_AtDocking := s_bStaAtDockingPosition;	
-END_IF
-
-_m_Inputs := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
@@ -1737,7 +1746,14 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="409" Count="2" />
       <LineId Id="543" Count="0" />
       <LineId Id="412" Count="3" />
-      <LineId Id="418" Count="4" />
+      <LineId Id="418" Count="0" />
+      <LineId Id="548" Count="0" />
+      <LineId Id="503" Count="20" />
+      <LineId Id="218" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_LiftingTransport._m_Interlocks">
+      <LineId Id="544" Count="0" />
+      <LineId Id="419" Count="3" />
       <LineId Id="545" Count="0" />
       <LineId Id="423" Count="0" />
       <LineId Id="531" Count="0" />
@@ -1748,7 +1764,7 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="459" Count="5" />
       <LineId Id="526" Count="0" />
       <LineId Id="469" Count="0" />
-      <LineId Id="472" Count="51" />
+      <LineId Id="472" Count="30" />
       <LineId Id="218" Count="0" />
     </LineIds>
     <LineIds Name="EM_LiftingTransport._m_Outputs">

@@ -70,21 +70,24 @@ VAR
 //------------------------------------------//
 
 //Requests
-	s_bReqOpenOuterSpeedDoor : BOOL := FALSE;
-	s_bReqCloseOuterSpeedDoor : BOOL := FALSE;
-	s_bReqOpenInnerSpeedDoor : BOOL := FALSE;
-	s_bReqCloseInnerSpeedDoor : BOOL := FALSE;
+	s_bReqOpenOuterDoor : BOOL := FALSE;
+	s_bReqCloseOuterDoor : BOOL := FALSE;
+	s_bReqOpenInnerDoor : BOOL := FALSE;
+	s_bReqCloseInnerDoor : BOOL := FALSE;
 //++	s_bReqReleaseCleanroomDoor : BOOL := FALSE;
 //++	s_bReqLockCleanroomDoor : BOOL := FALSE;
 	
 	s_bOverruleInterlocks : BOOL := FALSE;
 
-//Properties
-	s_bStaOuterSpeedDoorOpened : BOOL := FALSE;
-	s_bStaOuterSpeedDoorClosed : BOOL := FALSE;
+	//Commands
+	//--s_bCmdHold : BOOL;
 	
-	s_bStaInnerSpeedDoorOpened : BOOL := FALSE;
-	s_bStaInnerSpeedDoorClosed : BOOL := FALSE;
+//Properties
+	s_bStaOuterDoorOpened : BOOL := FALSE;
+	s_bStaOuterDoorClosed : BOOL := FALSE;
+	
+	s_bStaInnerDoorOpened : BOOL := FALSE;
+	s_bStaInnerDoorClosed : BOOL := FALSE;
 	
 //++	s_bStaCleanroomDoorOpened : BOOL := FALSE;
 //++	s_bStaCleanroomDoorClosed : BOOL := FALSE;
@@ -99,14 +102,14 @@ VAR
 //------------------------------------------//
 //Variables
 	s_eSeqDoors : E_SeqDoors;
-	s_fbSeqDoors : FB_SeqControl;
+	s_fbSeqDoorsControl : FB_SeqControl;
 	
 	// Interlocks
-	s_bIlckOuterSpeedDoorToClose 			: BOOL := TRUE;
-	s_bIlckOuterSpeedDoorToOpen		 		: BOOL := TRUE;
+	s_bIlckOuterDoorToClose 			: BOOL := TRUE;
+	s_bIlckOuterDoorToOpen		 		: BOOL := TRUE;
 	
-	s_bIlckInnerSpeedDoorToClose 			: BOOL := TRUE;
-	s_bIlckInnerSpeedDoorToOpen		 		: BOOL := TRUE;
+	s_bIlckInnerDoorToClose 			: BOOL := TRUE;
+	s_bIlckInnerDoorToOpen		 		: BOOL := TRUE;
 	
 //++	s_bIlckCleanroomDoorToLock 			: BOOL := TRUE;
 //++	s_bIlckCleanroomDoorToRelease		: BOOL := TRUE;
@@ -117,40 +120,52 @@ VAR
 
 //------------------------------------------//
 //Alarms
-	s_bWrnOuterSpeedDoorNoAllowedToOpen : BOOL;
-	s_bWrnOuterSpeedDoorNoAllowedToClose : BOOL;
-	s_bWrnInnerSpeedDoorNoAllowedToOpen : BOOL;
-	s_bWrnInnerSpeedDoorNoAllowedToClose : BOOL;
+	s_sReason : STRING;
+	s_sMessage : STRING;
+	s_fbAlarmHandlerCmdNotAllowed : FB_AlarmHandler;
+	s_bErrCmdNotAllowed : BOOL;
+	
+//Warning	
+	s_fbAlarmHandlerOuterDoorNoAllowedToOpen : FB_AlarmHandler;
+	s_bWrnOuterDoorNoAllowedToOpen : BOOL;
+	
+	s_fbAlarmHandlerOuterDoorNoAllowedToClose : FB_AlarmHandler;
+	s_bWrnOuterDoorNoAllowedToClose : BOOL;
+
+	s_fbAlarmHandlerInnerDoorNoAllowedToOpen : FB_AlarmHandler;
+	s_bWrnInnerDoorNoAllowedToOpen : BOOL;
+
+	s_fbAlarmHandlerInnerDoorNoAllowedToClose : FB_AlarmHandler;
+	s_bWrnInnerDoorNoAllowedToClose : BOOL;
+	
 //++	s_bWrnCleanroomDoorNoAllowedToRelease : BOOL;
 //++	s_bWrnCleanroomDoorNoAllowedToLock : BOOL;
 
-	s_fbAlarmHandlerOuterSpeedDoorNoAllowedToOpen : FB_AlarmHandler;
-	s_fbAlarmHandlerOuterSpeedDoorNoAllowedToClose : FB_AlarmHandler;
-	s_fbAlarmHandlerInnerSpeedDoorNoAllowedToOpen : FB_AlarmHandler;
-	s_fbAlarmHandlerInnerSpeedDoorNoAllowedToClose : FB_AlarmHandler;
 //++	s_fbAlarmHandlerCleanroomDoorNoAllowedToRelease : FB_AlarmHandler;
 //++	s_fbAlarmHandlerCleanroomDoorNoAllowedToLock : FB_AlarmHandler;
-	
+
+	s_bStaWarning : BOOL;
+
 //------------------------------------------//
 
 //------------------------------------------//
 //Hmi
 	s_fbHmiBtnReset						: FB_HmiBtn;
 	
-	s_fbHmiBtnCloseOuterSpeedDoor		: FB_HmiBtn;
-	s_fbHmiBtnOpenOuterSpeedDoor		: FB_HmiBtn;
+	s_fbHmiBtnCloseOuterDoor		: FB_HmiBtn;
+	s_fbHmiBtnOpenOuterDoor		: FB_HmiBtn;
 	
-	s_fbHmiBtnCloseInnerSpeedDoor		: FB_HmiBtn;
-	s_fbHmiBtnOpenInnerSpeedDoor		: FB_HmiBtn;
+	s_fbHmiBtnCloseInnerDoor		: FB_HmiBtn;
+	s_fbHmiBtnOpenInnerDoor		: FB_HmiBtn;
 	
 //++	s_fbHmiBtnApplyLockCleanroomDoor	: FB_HmiBtn;
 //++	s_fbHmiBtnReleaseLockCleanroomDoor	: FB_HmiBtn;
 	
-	s_fbHmiLedOuterSpeedDoorClosed			: FB_HmiLed;
-	s_fbHmiLedOuterSpeedDoorOpened			: FB_HmiLed;
+	s_fbHmiLedOuterDoorClosed			: FB_HmiLed;
+	s_fbHmiLedOuterDoorOpened			: FB_HmiLed;
 	
-	s_fbHmiLedInnerSpeedDoorClosed			: FB_HmiLed;
-	s_fbHmiLedInnerSpeedDoorOpened			: FB_HmiLed;
+	s_fbHmiLedInnerDoorClosed			: FB_HmiLed;
+	s_fbHmiLedInnerDoorOpened			: FB_HmiLed;
 	
 //++	s_fbHmiLedCleanDoorClosed			: FB_HmiLed;
 //++	s_fbHmiLedCleanDoorOpened			: FB_HmiLed;
@@ -178,23 +193,23 @@ IF NOT SUPER^._m_Alarms() THEN
 	RETURN;
 END_IF
 	
-	s_fbAlarmHandlerOuterSpeedDoorNoAllowedToOpen(
-		i_bStaActive := i_bReqEnable AND s_bWrnOuterSpeedDoorNoAllowedToOpen,
+	s_fbAlarmHandlerOuterDoorNoAllowedToOpen(
+		i_bStaActive := i_bReqEnable AND s_bWrnOuterDoorNoAllowedToOpen,
 		i_eAlarmLevel := E_AlarmLevel.Warning,
 		i_sAlarmText := 'Outer Speed Door Not Allowed To Open');
 	
-	s_fbAlarmHandlerOuterSpeedDoorNoAllowedToClose(
-		i_bStaActive := i_bReqEnable AND s_bWrnOuterSpeedDoorNoAllowedToClose,
+	s_fbAlarmHandlerOuterDoorNoAllowedToClose(
+		i_bStaActive := i_bReqEnable AND s_bWrnOuterDoorNoAllowedToClose,
 		i_eAlarmLevel := E_AlarmLevel.Warning,
 		i_sAlarmText := 'Outer Speed Door Not Allowed To Close');
 		
-	s_fbAlarmHandlerInnerSpeedDoorNoAllowedToOpen(
-		i_bStaActive := i_bReqEnable AND s_bWrnInnerSpeedDoorNoAllowedToOpen,
+	s_fbAlarmHandlerInnerDoorNoAllowedToOpen(
+		i_bStaActive := i_bReqEnable AND s_bWrnInnerDoorNoAllowedToOpen,
 		i_eAlarmLevel := E_AlarmLevel.Warning,
 		i_sAlarmText := 'Inner Speed Door Not Allowed To Open');
 	
-	s_fbAlarmHandlerInnerSpeedDoorNoAllowedToClose(
-		i_bStaActive := i_bReqEnable AND s_bWrnInnerSpeedDoorNoAllowedToClose,
+	s_fbAlarmHandlerInnerDoorNoAllowedToClose(
+		i_bStaActive := i_bReqEnable AND s_bWrnInnerDoorNoAllowedToClose,
 		i_eAlarmLevel := E_AlarmLevel.Warning,
 		i_sAlarmText := 'Inner Speed Door Not Allowed To Close');
 	
@@ -210,10 +225,10 @@ END_IF
 	
 	//Reset error/warning bits
 	IF i_bCmdReset THEN
-		s_bWrnOuterSpeedDoorNoAllowedToOpen := FALSE;
-		s_bWrnOuterSpeedDoorNoAllowedToClose := FALSE;
-		s_bWrnInnerSpeedDoorNoAllowedToOpen := FALSE;
-		s_bWrnInnerSpeedDoorNoAllowedToClose := FALSE;
+		s_bWrnOuterDoorNoAllowedToOpen := FALSE;
+		s_bWrnOuterDoorNoAllowedToClose := FALSE;
+		s_bWrnInnerDoorNoAllowedToOpen := FALSE;
+		s_bWrnInnerDoorNoAllowedToClose := FALSE;
 //++		s_bWrnCleanroomDoorNoAllowedToRelease := FALSE;
 //++		s_bWrnCleanroomDoorNoAllowedToLock := FALSE;
 	END_IF
@@ -227,12 +242,107 @@ _m_Alarms := TRUE;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
+//Doros
+_m_SeqDoors();
+
 //Pallet Conveyor
 //--_m_SeqTransport();
 		
 //Pallet Centering
 //--centering functionality is build into the transport sequencer
 //--_m_SeqCentering();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_CmdCloseInnerDoor" Id="{813bc456-e783-4657-8894-c3a4fdfe5bb3}">
+      <Declaration><![CDATA[METHOD PRIVATE _m_CmdCloseInnerDoor : BOOL
+VAR_INPUT
+	i_refReason : REFERENCE TO STRING;
+END_VAR
+	]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+IF s_bIlckInnerDoorToClose THEN
+	i_refReason := CONCAT('Cmd Close Inner Door: Interlocked - ', s_fbIlckHandlerInnerDoorClose.p_sReason);
+	_m_CmdCloseInnerDoor := FALSE;
+	s_bErrCmdNotAllowed := TRUE;
+ELSE
+	i_refReason := '-';
+	_m_CmdCloseInnerDoor := TRUE;	
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_CmdCloseOuterDoor" Id="{8a8141a6-8be9-4396-8d1d-5c155e234201}">
+      <Declaration><![CDATA[METHOD PRIVATE _m_CmdCloseOuterDoor : BOOL
+VAR_INPUT
+	i_refReason : REFERENCE TO STRING;
+END_VAR
+	]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+IF s_bIlckOuterDoorToClose THEN
+	i_refReason := CONCAT('Cmd Close Outer Door: Interlocked - ', s_fbIlckHandlerOuterDoorClose.p_sReason);
+	_m_CmdCloseOuterDoor := FALSE;
+	s_bErrCmdNotAllowed := TRUE;
+ELSE
+	i_refReason := '-';
+	_m_CmdCloseOuterDoor := TRUE;	
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_CmdOpenInnerDoor" Id="{0d49e8ec-6fae-45fa-a6a6-d8e844207ab7}">
+      <Declaration><![CDATA[METHOD PRIVATE _m_CmdOpenInnerDoor : BOOL
+VAR_INPUT
+	i_refReason : REFERENCE TO STRING;
+END_VAR
+	]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+IF s_bIlckInnerDoorToOpen THEN
+	i_refReason := CONCAT('Cmd Open Inner Door: Interlocked - ', s_fbIlckHandlerInnerDoorOpen.p_sReason);
+	_m_CmdOpenInnerDoor := FALSE;
+	s_bErrCmdNotAllowed := TRUE;
+ELSE
+	i_refReason := '-';
+	_m_CmdOpenInnerDoor := TRUE;	
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_CmdOpenOuterDoor" Id="{8e78a8ed-2bf1-45ba-8b7a-bd326eec6a84}">
+      <Declaration><![CDATA[METHOD PRIVATE _m_CmdOpenOuterDoor : BOOL
+VAR_INPUT
+	i_refReason : REFERENCE TO STRING;
+END_VAR
+	]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+IF s_bIlckOuterDoorToOpen THEN
+	i_refReason := CONCAT('Cmd Open Outer Door: Interlocked - ', s_fbIlckHandlerOuterDoorOpen.p_sReason);
+	_m_CmdOpenOuterDoor := FALSE;
+	s_bErrCmdNotAllowed := TRUE;
+ELSE
+	i_refReason := '-';
+	_m_CmdOpenOuterDoor := TRUE;	
+END_IF
 ]]></ST>
       </Implementation>
     </Method>
@@ -250,16 +360,16 @@ s_cmOuterSpeedDoor(
 	i_eCtrlMode := i_eCtrlMode,
 	i_ref_eCtrlState := i_eCtrlState,
 	i_bCmdReset := i_bCmdReset,
-	i_bIclkOpen := s_bIlckOuterSpeedDoorToOpen AND NOT(s_bOverruleInterlocks), 
-	i_bIclkClose := s_bIlckOuterSpeedDoorToClose AND NOT(s_bOverruleInterlocks));
+	i_bIclkOpen := s_bIlckOuterDoorToOpen AND NOT(s_bOverruleInterlocks), 
+	i_bIclkClose := s_bIlckOuterDoorToClose AND NOT(s_bOverruleInterlocks));
 
 s_cmInnerSpeedDoor(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
 	i_ref_eCtrlState := i_eCtrlState,
 	i_bCmdReset := i_bCmdReset,
-	i_bIclkOpen := s_bIlckInnerSpeedDoorToOpen AND NOT(s_bOverruleInterlocks), 
-	i_bIclkClose := s_bIlckInnerSpeedDoorToClose AND NOT(s_bOverruleInterlocks));
+	i_bIclkOpen := s_bIlckInnerDoorToOpen AND NOT(s_bOverruleInterlocks), 
+	i_bIclkClose := s_bIlckInnerDoorToClose AND NOT(s_bOverruleInterlocks));
 	
 //++s_cmCleanroomDoor(
 //++	i_bReqEnable := i_bReqEnable,
@@ -267,11 +377,11 @@ s_cmInnerSpeedDoor(
 //++	i_bCmdReset := i_bCmdReset);
 
 //Statusses
-s_bStaOuterSpeedDoorClosed := s_cmOuterSpeedDoor.p_bStaIsClosed;
-s_bStaOuterSpeedDoorOpened := s_cmOuterSpeedDoor.p_bStaIsOpened;
+s_bStaOuterDoorClosed := s_cmOuterSpeedDoor.p_bStaIsClosed;
+s_bStaOuterDoorOpened := s_cmOuterSpeedDoor.p_bStaIsOpened;
 
-s_bStaInnerSpeedDoorClosed := s_cmInnerSpeedDoor.p_bStaIsClosed;
-s_bStaInnerSpeedDoorOpened := s_cmInnerSpeedDoor.p_bStaIsOpened;
+s_bStaInnerDoorClosed := s_cmInnerSpeedDoor.p_bStaIsClosed;
+s_bStaInnerDoorOpened := s_cmInnerSpeedDoor.p_bStaIsOpened;
 
 //++s_bStaCleanroomLockApplied := s_cmCleanroomDoor.p_bStaLockIsApplied;
 //++s_bStaCleanroomLockReleased := s_cmCleanroomDoor.p_bStaLockIsReleased;
@@ -296,21 +406,21 @@ END_IF
 //Buttons
 s_fbHmiBtnReset();
 	
-s_fbHmiBtnCloseOuterSpeedDoor();
-s_fbHmiBtnOpenOuterSpeedDoor();
+s_fbHmiBtnCloseOuterDoor();
+s_fbHmiBtnOpenOuterDoor();
 
-s_fbHmiBtnCloseInnerSpeedDoor();
-s_fbHmiBtnOpenInnerSpeedDoor();
+s_fbHmiBtnCloseInnerDoor();
+s_fbHmiBtnOpenInnerDoor();
 	
 //++s_fbHmiBtnApplyLockCleanroomDoor();;
 //++s_fbHmiBtnReleaseLockCleanroomDoor();
 
 //Leds	
-s_fbHmiLedOuterSpeedDoorClosed(i_bStaLed := s_bStaOuterSpeedDoorClosed);
-s_fbHmiLedOuterSpeedDoorOpened(i_bStaLed := s_bStaOuterSpeedDoorOpened);
+s_fbHmiLedOuterDoorClosed(i_bStaLed := s_bStaOuterDoorClosed);
+s_fbHmiLedOuterDoorOpened(i_bStaLed := s_bStaOuterDoorOpened);
 
-s_fbHmiLedInnerSpeedDoorClosed(i_bStaLed := s_bStaInnerSpeedDoorClosed);
-s_fbHmiLedInnerSpeedDoorOpened(i_bStaLed := s_bStaInnerSpeedDoorOpened);
+s_fbHmiLedInnerDoorClosed(i_bStaLed := s_bStaInnerDoorClosed);
+s_fbHmiLedInnerDoorOpened(i_bStaLed := s_bStaInnerDoorOpened);
 	
 //++s_fbHmiLedCleanDoorClosed(i_bStaLed := s_bStaCleanroomDoorClosed);
 //++s_fbHmiLedCleanDoorOpened(i_bStaLed := s_bStaCleanroomDoorOpened);
@@ -380,15 +490,15 @@ s_fbIlckHandlerInnerDoorOpen.i_stInterlockList.arr_Interlocks[2].sReason := 'Out
 s_fbIlckHandlerInnerDoorClose.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
 
 //Alarm config
-s_fbAlarmHandlerOuterSpeedDoorNoAllowedToOpen.i_eAlarmLevel := E_AlarmLevel.Warning;
-s_fbAlarmHandlerOuterSpeedDoorNoAllowedToOpen.i_sAlarmText := 'Outer Speed Door Not Allowed To Open';
-s_fbAlarmHandlerOuterSpeedDoorNoAllowedToClose.i_eAlarmLevel := E_AlarmLevel.Warning;
-s_fbAlarmHandlerOuterSpeedDoorNoAllowedToClose.i_sAlarmText := 'Outer Speed Door Not Allowed To Close';
+s_fbAlarmHandlerOuterDoorNoAllowedToOpen.i_eAlarmLevel := E_AlarmLevel.Warning;
+s_fbAlarmHandlerOuterDoorNoAllowedToOpen.i_sAlarmText := 'Outer Speed Door Not Allowed To Open';
+s_fbAlarmHandlerOuterDoorNoAllowedToClose.i_eAlarmLevel := E_AlarmLevel.Warning;
+s_fbAlarmHandlerOuterDoorNoAllowedToClose.i_sAlarmText := 'Outer Speed Door Not Allowed To Close';
 		
-s_fbAlarmHandlerInnerSpeedDoorNoAllowedToOpen.i_eAlarmLevel := E_AlarmLevel.Warning;
-s_fbAlarmHandlerInnerSpeedDoorNoAllowedToOpen.i_sAlarmText := 'Inner Speed Door Not Allowed To Open';
-s_fbAlarmHandlerInnerSpeedDoorNoAllowedToClose.i_eAlarmLevel := E_AlarmLevel.Warning;
-s_fbAlarmHandlerInnerSpeedDoorNoAllowedToClose.i_sAlarmText := 'Inner Speed Door Not Allowed To Close';
+s_fbAlarmHandlerInnerDoorNoAllowedToOpen.i_eAlarmLevel := E_AlarmLevel.Warning;
+s_fbAlarmHandlerInnerDoorNoAllowedToOpen.i_sAlarmText := 'Inner Speed Door Not Allowed To Open';
+s_fbAlarmHandlerInnerDoorNoAllowedToClose.i_eAlarmLevel := E_AlarmLevel.Warning;
+s_fbAlarmHandlerInnerDoorNoAllowedToClose.i_sAlarmText := 'Inner Speed Door Not Allowed To Close';
 	
 //Hmi
 	s_fbHmiBtnReset.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
@@ -396,25 +506,25 @@ s_fbAlarmHandlerInnerSpeedDoorNoAllowedToClose.i_sAlarmText := 'Inner Speed Door
 	s_fbHmiBtnReset.p_bStaEnabled := FALSE;		
 	s_fbHmiBtnReset.p_sBtnText := 'Reset';
 	
-	s_fbHmiBtnCloseOuterSpeedDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnCloseOuterSpeedDoor.p_bStaVisible := FALSE;
-	s_fbHmiBtnCloseOuterSpeedDoor.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnCloseOuterSpeedDoor.p_sBtnText := 'Close Outer Speed Door';
+	s_fbHmiBtnCloseOuterDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnCloseOuterDoor.p_bStaVisible := FALSE;
+	s_fbHmiBtnCloseOuterDoor.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnCloseOuterDoor.p_sBtnText := 'Close Outer Speed Door';
 	
-	s_fbHmiBtnOpenOuterSpeedDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnOpenOuterSpeedDoor.p_bStaVisible := FALSE;
-	s_fbHmiBtnOpenOuterSpeedDoor.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnOpenOuterSpeedDoor.p_sBtnText := 'Open Outer Speed Door';
+	s_fbHmiBtnOpenOuterDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnOpenOuterDoor.p_bStaVisible := FALSE;
+	s_fbHmiBtnOpenOuterDoor.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnOpenOuterDoor.p_sBtnText := 'Open Outer Speed Door';
 	
-	s_fbHmiBtnCloseInnerSpeedDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnCloseInnerSpeedDoor.p_bStaVisible := FALSE;
-	s_fbHmiBtnCloseInnerSpeedDoor.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnCloseInnerSpeedDoor.p_sBtnText := 'Close Inner Speed Door';
+	s_fbHmiBtnCloseInnerDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnCloseInnerDoor.p_bStaVisible := FALSE;
+	s_fbHmiBtnCloseInnerDoor.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnCloseInnerDoor.p_sBtnText := 'Close Inner Speed Door';
 	
-	s_fbHmiBtnOpenInnerSpeedDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnOpenInnerSpeedDoor.p_bStaVisible := FALSE;
-	s_fbHmiBtnOpenInnerSpeedDoor.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnOpenInnerSpeedDoor.p_sBtnText := 'Open Inner Speed Door';
+	s_fbHmiBtnOpenInnerDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnOpenInnerDoor.p_bStaVisible := FALSE;
+	s_fbHmiBtnOpenInnerDoor.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnOpenInnerDoor.p_sBtnText := 'Open Inner Speed Door';
 	
 //++	s_fbHmiBtnApplyLockCleanroomDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 //++	s_fbHmiBtnApplyLockCleanroomDoor.p_bStaVisible := FALSE;
@@ -426,17 +536,17 @@ s_fbAlarmHandlerInnerSpeedDoorNoAllowedToClose.i_sAlarmText := 'Inner Speed Door
 //++	s_fbHmiBtnReleaseLockCleanroomDoor.p_bStaEnabled := FALSE;		
 //++	s_fbHmiBtnReleaseLockCleanroomDoor.p_sBtnText := 'Release Cleanroom Door';
 
-	s_fbHmiLedOuterSpeedDoorClosed.p_bStaVisible := FALSE;
-	s_fbHmiLedOuterSpeedDoorClosed.p_sToHmiDescriptionLed := 'Outer Speed Door Closed';
+	s_fbHmiLedOuterDoorClosed.p_bStaVisible := FALSE;
+	s_fbHmiLedOuterDoorClosed.p_sToHmiDescriptionLed := 'Outer Speed Door Closed';
 	
-	s_fbHmiLedOuterSpeedDoorOpened.p_bStaVisible := FALSE;
-	s_fbHmiLedOuterSpeedDoorOpened.p_sToHmiDescriptionLed := 'Outer Speed Door Opened';
+	s_fbHmiLedOuterDoorOpened.p_bStaVisible := FALSE;
+	s_fbHmiLedOuterDoorOpened.p_sToHmiDescriptionLed := 'Outer Speed Door Opened';
 	
-	s_fbHmiLedInnerSpeedDoorClosed.p_bStaVisible := FALSE;
-	s_fbHmiLedInnerSpeedDoorClosed.p_sToHmiDescriptionLed := 'Inner Speed Door Closed';
+	s_fbHmiLedInnerDoorClosed.p_bStaVisible := FALSE;
+	s_fbHmiLedInnerDoorClosed.p_sToHmiDescriptionLed := 'Inner Speed Door Closed';
 	
-	s_fbHmiLedInnerSpeedDoorOpened.p_bStaVisible := FALSE;
-	s_fbHmiLedInnerSpeedDoorOpened.p_sToHmiDescriptionLed := 'Inner Speed Door Opened';
+	s_fbHmiLedInnerDoorOpened.p_bStaVisible := FALSE;
+	s_fbHmiLedInnerDoorOpened.p_sToHmiDescriptionLed := 'Inner Speed Door Opened';
 	
 //++	s_fbHmiLedCleanDoorClosed.p_bStaVisible := FALSE;
 //++	s_fbHmiLedCleanDoorClosed.p_sToHmiDescriptionLed := 'Cleanroom Door Closed';
@@ -463,6 +573,17 @@ IF NOT SUPER^._m_Inputs() THEN
 END_IF
 
 //Interlocks
+_m_Interlocks();
+
+_m_Inputs := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Interlocks" Id="{51f4e3fa-df87-40f1-9431-ce3e4a09f8d7}" FolderPath="Base\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Interlocks
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
 //Outer Speed Door
 i_fbExtIlckOuterDoorOpen();
 s_fbIlckHandlerOuterDoorOpen.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckOuterDoorOpen.p_bInterlocked;
@@ -477,8 +598,8 @@ s_fbIlckHandlerOuterDoorClose.i_stInterlockList.arr_Interlocks[0].sReason := i_f
 s_fbIlckHandlerOuterDoorClose.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
 s_fbIlckHandlerOuterDoorClose();
 
-s_bIlckOuterSpeedDoorToOpen := s_fbIlckHandlerOuterDoorOpen.p_bInterlocked;
-s_bIlckOuterSpeedDoorToClose := s_fbIlckHandlerOuterDoorClose.p_bInterlocked;
+s_bIlckOuterDoorToOpen := s_fbIlckHandlerOuterDoorOpen.p_bInterlocked;
+s_bIlckOuterDoorToClose := s_fbIlckHandlerOuterDoorClose.p_bInterlocked;
 
 //Inner Speed Door
 i_fbExtIlckInnerDoorOpen();
@@ -494,41 +615,38 @@ s_fbIlckHandlerInnerDoorClose.i_stInterlockList.arr_Interlocks[0].sReason := i_f
 s_fbIlckHandlerInnerDoorClose.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
 s_fbIlckHandlerInnerDoorClose();
 
-s_bIlckInnerSpeedDoorToOpen := s_fbIlckHandlerInnerDoorOpen.p_bInterlocked;
-s_bIlckInnerSpeedDoorToClose := s_fbIlckHandlerInnerDoorClose.p_bInterlocked;
+s_bIlckInnerDoorToOpen := s_fbIlckHandlerInnerDoorOpen.p_bInterlocked;
+s_bIlckInnerDoorToClose := s_fbIlckHandlerInnerDoorClose.p_bInterlocked;
 
 //++s_bIlckCleanroomDoorToRelease := i_bIlckCleanroomDoorToRelease;
 //++s_bIlckCleanroomDoorToLock := i_bIlckCleanroomDoorToLock;
 
 //Reasons (own reason first: Cm->Em->Un)
 //Outer Speed Doors
-IF s_bIlckOuterSpeedDoorToOpen THEN
+IF s_bIlckOuterDoorToOpen THEN
 	s_cmOuterSpeedDoor.p_sInterlockedReasonOpen := s_fbIlckHandlerOuterDoorOpen.p_sReason;
 ELSE
 	s_cmOuterSpeedDoor.p_sInterlockedReasonOpen := '-';
 END_IF
 
-IF s_bIlckOuterSpeedDoorToClose THEN
+IF s_bIlckOuterDoorToClose THEN
 	s_cmOuterSpeedDoor.p_sInterlockedReasonClose := s_fbIlckHandlerOuterDoorClose.p_sReason;
 ELSE
 	s_cmOuterSpeedDoor.p_sInterlockedReasonClose := '-';
 END_IF
 
 //Inner Speed Doors
-IF s_bIlckInnerSpeedDoorToOpen THEN
+IF s_bIlckInnerDoorToOpen THEN
 	s_cmInnerSpeedDoor.p_sInterlockedReasonOpen := s_fbIlckHandlerInnerDoorOpen.p_sReason;
 ELSE
 	s_cmInnerSpeedDoor.p_sInterlockedReasonOpen := '-';
 END_IF
 
-IF s_bIlckInnerSpeedDoorToClose THEN
+IF s_bIlckInnerDoorToClose THEN
 	s_cmInnerSpeedDoor.p_sInterlockedReasonClose := s_fbIlckHandlerInnerDoorClose.p_sReason;
 ELSE
 	s_cmInnerSpeedDoor.p_sInterlockedReasonClose := '-';
 END_IF
-
-
-_m_Inputs := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
@@ -558,6 +676,175 @@ _m_Params := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
+    <Method Name="_m_SeqDoors" Id="{d716563e-6be4-40f5-879d-a7064d9a5631}">
+      <Declaration><![CDATA[METHOD PRIVATE _m_SeqDoors : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+s_fbSeqDoorsControl(
+	i_nSeqStep := s_eSeqDoors, 
+	i_sStepName := TO_STRING(s_eSeqDoors), 
+	i_bCmdReset := i_bCmdReset
+					AND (s_eSeqDoors = E_SeqTransport.ERROR) // Only reset/resume sequencer from ERROR state
+					AND NOT(s_cmOuterSpeedDoor.p_bStaError)
+					AND NOT(s_cmInnerSpeedDoor.p_bStaError)
+					AND i_bReqEnable, 
+	i_bStaError := s_bStaError OR NOT(i_bReqEnable));
+
+//Abort operation (go to stop)
+IF (i_eCtrlState = E_CtrlState.STOPPING) THEN
+	s_eSeqDoors := E_SeqDoors.STOP;
+END_IF	
+	
+CASE s_eSeqDoors OF
+	
+	E_SeqTransport.IDLE:
+		IF (i_eCtrlState = E_CtrlState.IDLE) THEN
+			s_eSeqDoors := E_SeqDoors.START;
+		END_IF
+
+//START////////////////////////////////////////////////////////////////////////////////////////////			
+	E_SeqTransport.START:
+		IF s_fbSeqDoorsControl.q_bStaEntry THEN
+			s_cmOuterSpeedDoor.m_Stop();
+			s_cmInnerSpeedDoor.m_Stop();
+			//--s_bCmdHold := FALSE;
+			s_sMessage := '***';
+		END_IF		
+	
+		IF i_eCtrlState = E_CtrlState.RUNNING THEN
+			s_eSeqDoors := E_SeqDoors.READY;
+		END_IF
+
+//READY////////////////////////////////////////////////////////////////////////////////////////////		
+	E_SeqTransport.READY:
+		IF s_fbSeqDoorsControl.q_bStaEntry THEN
+			;
+		END_IF
+		
+		IF i_eCtrlState <> E_CtrlState.RUNNING THEN
+			s_eSeqDoors := E_SeqTransport.START;
+		END_IF
+		
+		IF s_bReqOpenOuterDoor THEN
+
+			IF _m_CmdOpenOuterDoor(i_refReason := s_sMessage) THEN
+				s_eSeqDoors := E_SeqDoors.OPEN_OUTER_DOOR;
+			ELSE //If failed (command not allowed): the message will be written with the interlock reason
+				;
+			END_IF
+
+//--			s_bReqOpenOuterDoor := FALSE;
+			
+		ELSIF s_bReqCloseOuterDoor THEN
+
+			IF _m_CmdCloseOuterDoor(i_refReason := s_sMessage) THEN
+				s_eSeqDoors := E_SeqDoors.CLOSE_OUTER_DOOR;
+			ELSE //If failed (command not allowed): the message will be written with the interlock reason
+				//--s_bCmdHold := TRUE;
+				//--s_bErrCmdNotAllowed := TRUE;
+				;
+			END_IF
+
+//--			s_bReqCloseOuterDoor := FALSE;	
+			
+		ELSIF s_bReqOpenInnerDoor THEN
+
+			IF _m_CmdOpenInnerDoor(i_refReason := s_sMessage) THEN
+				s_eSeqDoors := E_SeqDoors.OPEN_INNER_DOOR;
+			ELSE //If failed (command not allowed): the message will be written with the interlock reason
+				//--s_bCmdHold := TRUE;
+				//--s_bErrCmdNotAllowed := TRUE;
+				;
+			END_IF
+
+//--			s_bReqOpenInnerDoor := FALSE;
+			
+		ELSIF s_bReqCloseInnerDoor THEN
+
+			IF _m_CmdCloseInnerDoor(i_refReason := s_sMessage) THEN
+				s_eSeqDoors := E_SeqDoors.CLOSE_INNER_DOOR;
+			ELSE //If failed (command not allowed): the message will be written with the interlock reason
+				//--s_bCmdHold := TRUE;
+				//--s_bErrCmdNotAllowed := TRUE;
+				;
+			END_IF
+
+//--			s_bReqCloseInnerDoor := FALSE;
+		
+		END_IF
+
+//OPEN_OUTER_DOOR//////////////////////////////////////////////////////////////////////////////////		
+	E_SeqDoors.OPEN_OUTER_DOOR:
+		IF s_fbSeqDoorsControl.q_bStaEntry THEN
+			s_cmOuterSpeedDoor.m_Open();		
+		END_IF
+		
+		IF s_cmOuterSpeedDoor.p_bStaIsOpened THEN
+			s_eSeqDoors := E_SeqDoors.READY;
+		//ELSE 
+			//In case of error, fb sequener will force to ERROR --> reset --> START
+		END_IF
+		
+//CLOSE_OUTER_DOOR//////////////////////////////////////////////////////////////////////////////////		
+	E_SeqDoors.CLOSE_OUTER_DOOR:
+		IF s_fbSeqDoorsControl.q_bStaEntry THEN
+			s_cmOuterSpeedDoor.m_Close();		
+		END_IF
+		
+		IF s_cmOuterSpeedDoor.p_bStaIsClosed THEN
+			s_eSeqDoors := E_SeqDoors.READY;
+		//ELSE 
+			//In case of error, fb sequener will force to ERROR --> reset --> START
+		END_IF
+
+//OPEN_INNER_DOOR//////////////////////////////////////////////////////////////////////////////////		
+	E_SeqDoors.OPEN_INNER_DOOR:
+		IF s_fbSeqDoorsControl.q_bStaEntry THEN
+			s_cmInnerSpeedDoor.m_Open();		
+		END_IF
+		
+		IF s_cmInnerSpeedDoor.p_bStaIsOpened THEN
+			s_eSeqDoors := E_SeqDoors.READY;
+		//ELSE 
+			//In case of error, fb sequener will force to ERROR --> reset --> START
+		END_IF
+
+//CLOSE_INNER_DOOR//////////////////////////////////////////////////////////////////////////////////		
+	E_SeqDoors.CLOSE_INNER_DOOR:
+		IF s_fbSeqDoorsControl.q_bStaEntry THEN
+			s_cmInnerSpeedDoor.m_Close();		
+		END_IF
+		
+		IF s_cmInnerSpeedDoor.p_bStaIsClosed THEN
+			s_eSeqDoors := E_SeqDoors.READY;
+		//ELSE 
+			//In case of error, fb sequener will force to ERROR --> reset --> START
+		END_IF		
+
+//STOP		
+	E_SeqDoors.STOP:
+		IF s_fbSeqDoorsControl.q_bStaEntry THEN
+			s_cmOuterSpeedDoor.m_Stop();
+			s_cmInnerSpeedDoor.m_Stop();
+		END_IF
+		
+		s_eSeqDoors := E_SeqDoors.READY;
+		
+	E_SeqDoors.ERROR:
+		s_cmOuterSpeedDoor.m_Stop();
+		s_cmInnerSpeedDoor.m_Stop();
+		
+		//returs to START via FbSeqControl
+		
+END_CASE
+
+s_bReqOpenOuterDoor := FALSE;
+s_bReqCloseOuterDoor := FALSE;
+s_bReqOpenInnerDoor := FALSE;
+s_bReqCloseInnerDoor := FALSE;]]></ST>
+      </Implementation>
+    </Method>
     <Method Name="m_ApplyLockCleanroomDoor" Id="{4499f858-1c66-4e87-af48-eca8a833d6ae}">
       <Declaration><![CDATA[METHOD PUBLIC m_ApplyLockCleanroomDoor : BOOL
 ]]></Declaration>
@@ -583,60 +870,6 @@ END_IF
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="m_CloseInnerSpeedDoor" Id="{8b9659e3-9892-4336-a3c2-49b887b841ee}">
-      <Declaration><![CDATA[METHOD PUBLIC m_CloseInnerSpeedDoor : BOOL
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
-	RETURN;
-END_IF
-
-IF NOT(s_bIlckInnerSpeedDoorToClose) THEN
-	s_bReqOpenOuterSpeedDoor := FALSE;
-	s_bReqCloseOuterSpeedDoor := FALSE;
-	s_bReqOpenInnerSpeedDoor := FALSE;
-	s_bReqCloseInnerSpeedDoor := TRUE;
-//++	s_bReqReleaseCleanroomDoor := FALSE;
-//++	s_bReqLockCleanroomDoor := FALSE;
-	
-	m_CloseInnerSpeedDoor := TRUE;
-	
-ELSE
-	s_bWrnInnerSpeedDoorNoAllowedToClose := TRUE;
-	
-	m_CloseInnerSpeedDoor := FALSE;
-END_IF
-]]></ST>
-      </Implementation>
-    </Method>
-    <Method Name="m_CloseOuterSpeedDoor" Id="{9c407a35-74a6-401d-8a18-b21be8c2d1a1}">
-      <Declaration><![CDATA[METHOD PUBLIC m_CloseOuterSpeedDoor : BOOL
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
-	RETURN;
-END_IF
-
-IF NOT(s_bIlckOuterSpeedDoorToClose) THEN
-	s_bReqOpenOuterSpeedDoor := FALSE;
-	s_bReqCloseOuterSpeedDoor := TRUE;
-	s_bReqOpenInnerSpeedDoor := FALSE;
-	s_bReqCloseInnerSpeedDoor := FALSE;
-//++	s_bReqReleaseCleanroomDoor := FALSE;
-//++	s_bReqLockCleanroomDoor := FALSE;
-	
-	m_CloseOuterSpeedDoor := TRUE;
-	
-ELSE
-	s_bWrnOuterSpeedDoorNoAllowedToClose := TRUE;
-	
-	m_CloseOuterSpeedDoor := FALSE;
-END_IF
-]]></ST>
-      </Implementation>
-    </Method>
     <Method Name="m_Main" Id="{c1559ad6-cc3e-4059-9eff-299ddfbeac7b}" FolderPath="Base\">
       <Declaration><![CDATA[METHOD PUBLIC m_Main : BOOL
 ]]></Declaration>
@@ -658,10 +891,10 @@ CASE i_eCtrlMode OF
 	E_CtrlMode.MANUAL:
 		//Manual commands (convert HMI buttons to requests), only in state running
 		IF (i_eCtrlState = E_CtrlState.RUNNING) THEN
-			s_bReqOpenOuterSpeedDoor := s_fbHmiBtnOpenOuterSpeedDoor.p_osrBtnPress;
-			s_bReqCloseOuterSpeedDoor := s_fbHmiBtnCloseOuterSpeedDoor.p_osrBtnPress;
-			s_bReqOpenInnerSpeedDoor := s_fbHmiBtnOpenInnerSpeedDoor.p_osrBtnPress;
-			s_bReqCloseInnerSpeedDoor := s_fbHmiBtnCloseInnerSpeedDoor.p_osrBtnPress;
+			s_bReqOpenOuterDoor := s_fbHmiBtnOpenOuterDoor.p_osrBtnPress;
+			s_bReqCloseOuterDoor := s_fbHmiBtnCloseOuterDoor.p_osrBtnPress;
+			s_bReqOpenInnerDoor := s_fbHmiBtnOpenInnerDoor.p_osrBtnPress;
+			s_bReqCloseInnerDoor := s_fbHmiBtnCloseInnerDoor.p_osrBtnPress;
 		END_IF	
 		
 		_m_AutomaticControl();
@@ -688,39 +921,39 @@ END_CASE
 
 //Buttons visibility
 IF (i_eCtrlMode = E_CtrlMode.MANUAL) THEN
-	s_fbHmiBtnCloseOuterSpeedDoor.p_bStaVisible := TRUE;
-	s_fbHmiBtnOpenOuterSpeedDoor.p_bStaVisible := TRUE;
-	s_fbHmiBtnCloseInnerSpeedDoor.p_bStaVisible := TRUE;
-	s_fbHmiBtnOpenInnerSpeedDoor.p_bStaVisible := TRUE;
+	s_fbHmiBtnCloseOuterDoor.p_bStaVisible := TRUE;
+	s_fbHmiBtnOpenOuterDoor.p_bStaVisible := TRUE;
+	s_fbHmiBtnCloseInnerDoor.p_bStaVisible := TRUE;
+	s_fbHmiBtnOpenInnerDoor.p_bStaVisible := TRUE;
 ELSE
-	s_fbHmiBtnCloseOuterSpeedDoor.p_bStaVisible := FALSE;
-	s_fbHmiBtnOpenOuterSpeedDoor.p_bStaVisible := FALSE;
-	s_fbHmiBtnCloseInnerSpeedDoor.p_bStaVisible := FALSE;
-	s_fbHmiBtnOpenInnerSpeedDoor.p_bStaVisible := FALSE;
+	s_fbHmiBtnCloseOuterDoor.p_bStaVisible := FALSE;
+	s_fbHmiBtnOpenOuterDoor.p_bStaVisible := FALSE;
+	s_fbHmiBtnCloseInnerDoor.p_bStaVisible := FALSE;
+	s_fbHmiBtnOpenInnerDoor.p_bStaVisible := FALSE;
 END_IF
 
 //Buttons enabling
 IF i_bReqEnable AND (i_eCtrlMode = E_CtrlMode.MANUAL) AND (i_eCtrlState = E_CtrlState.RUNNING) THEN
 
 	//Outer Speed Door
-	s_fbHmiBtnCloseOuterSpeedDoor.p_bStaEnabled := 
-		NOT(s_bIlckOuterSpeedDoorToClose);
+	s_fbHmiBtnCloseOuterDoor.p_bStaEnabled := 
+		NOT(s_bIlckOuterDoorToClose);
 
-	s_fbHmiBtnOpenOuterSpeedDoor.p_bStaEnabled :=
-		NOT(s_bIlckOuterSpeedDoorToOpen);
+	s_fbHmiBtnOpenOuterDoor.p_bStaEnabled :=
+		NOT(s_bIlckOuterDoorToOpen);
 	
 	//Inner Speed Door
-	s_fbHmiBtnCloseInnerSpeedDoor.p_bStaEnabled := 
-		NOT(s_bIlckInnerSpeedDoorToClose);
+	s_fbHmiBtnCloseInnerDoor.p_bStaEnabled := 
+		NOT(s_bIlckInnerDoorToClose);
 
-	s_fbHmiBtnOpenInnerSpeedDoor.p_bStaEnabled :=
-		NOT(s_bIlckInnerSpeedDoorToOpen);
+	s_fbHmiBtnOpenInnerDoor.p_bStaEnabled :=
+		NOT(s_bIlckInnerDoorToOpen);
 
 ELSE
-	s_fbHmiBtnCloseOuterSpeedDoor.p_bStaEnabled := FALSE;
-	s_fbHmiBtnOpenOuterSpeedDoor.p_bStaEnabled := FALSE;
-	s_fbHmiBtnCloseInnerSpeedDoor.p_bStaEnabled := FALSE;
-	s_fbHmiBtnOpenInnerSpeedDoor.p_bStaEnabled := FALSE;
+	s_fbHmiBtnCloseOuterDoor.p_bStaEnabled := FALSE;
+	s_fbHmiBtnOpenOuterDoor.p_bStaEnabled := FALSE;
+	s_fbHmiBtnCloseInnerDoor.p_bStaEnabled := FALSE;
+	s_fbHmiBtnOpenInnerDoor.p_bStaEnabled := FALSE;
 END_IF
 
 //MAINTENANCE-mode ////////////////////////////////////////////////////////////////////////////////
@@ -739,60 +972,6 @@ ELSE
 END_IF
 
 m_Main := TRUE;
-]]></ST>
-      </Implementation>
-    </Method>
-    <Method Name="m_OpenInnerSpeedDoor" Id="{574f8d3a-fdc9-465e-913e-843f784f0e6e}">
-      <Declaration><![CDATA[METHOD PUBLIC m_OpenInnerSpeedDoor : BOOL
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
-	RETURN;
-END_IF
-
-IF NOT(s_bIlckInnerSpeedDoorToOpen) THEN
-	s_bReqOpenOuterSpeedDoor := FALSE;
-	s_bReqCloseOuterSpeedDoor := FALSE;
-	s_bReqOpenInnerSpeedDoor := TRUE;
-	s_bReqCloseInnerSpeedDoor := FALSE;
-//++	s_bReqReleaseCleanroomDoor := FALSE;
-//++	s_bReqLockCleanroomDoor := FALSE;
-	
-	m_OpenInnerSpeedDoor := TRUE;
-ELSE
-	
-	s_bWrnInnerSpeedDoorNoAllowedToOpen := TRUE;
-	
-	m_OpenInnerSpeedDoor := FALSE;
-END_IF	
-]]></ST>
-      </Implementation>
-    </Method>
-    <Method Name="m_OpenOuterSpeedDoor" Id="{cacb32c9-2f39-45b3-a10f-fdd38f341162}">
-      <Declaration><![CDATA[METHOD PUBLIC m_OpenOuterSpeedDoor : BOOL
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
-	RETURN;
-END_IF
-
-IF NOT(s_bIlckOuterSpeedDoorToOpen) THEN
-	s_bReqOpenOuterSpeedDoor := TRUE;
-	s_bReqCloseOuterSpeedDoor := FALSE;
-	s_bReqOpenInnerSpeedDoor := FALSE;
-	s_bReqCloseInnerSpeedDoor := FALSE;
-//++	s_bReqReleaseCleanroomDoor := FALSE;
-//++	s_bReqLockCleanroomDoor := FALSE;
-	
-	m_OpenOuterSpeedDoor := TRUE;
-ELSE
-	
-	s_bWrnOuterSpeedDoorNoAllowedToOpen := TRUE;
-	
-	m_OpenOuterSpeedDoor := FALSE;
-END_IF	
 ]]></ST>
       </Implementation>
     </Method>
@@ -819,6 +998,138 @@ ELSE
 	m_ReleaseLockCleanroomDoor := FALSE;
 END_IF
 ]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_ReqCloseInnerDoor" Id="{8b9659e3-9892-4336-a3c2-49b887b841ee}">
+      <Declaration><![CDATA[{attribute 'TcRpcEnable'}
+METHOD PUBLIC m_ReqCloseInnerDoor : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+s_bReqCloseInnerDoor := TRUE;
+
+m_ReqCloseInnerDoor := TRUE;
+
+(*--
+IF NOT(s_bIlckInnerDoorToClose) THEN
+	s_bReqOpenOuterDoor := FALSE;
+	s_bReqCloseOuterDoor := FALSE;
+	s_bReqOpenInnerDoor := FALSE;
+	s_bReqCloseInnerDoor := TRUE;
+//++	s_bReqReleaseCleanroomDoor := FALSE;
+//++	s_bReqLockCleanroomDoor := FALSE;
+	
+	m_ReqCloseInnerDoor := TRUE;
+	
+ELSE
+	s_bWrnInnerDoorNoAllowedToClose := TRUE;
+	
+	m_ReqCloseInnerDoor := FALSE;
+END_IF
+*)]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_ReqCloseOuterDoor" Id="{9c407a35-74a6-401d-8a18-b21be8c2d1a1}">
+      <Declaration><![CDATA[{attribute 'TcRpcEnable'}
+METHOD PUBLIC m_ReqCloseOuterDoor : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+s_bReqCloseOuterDoor := TRUE;
+
+m_ReqCloseOuterDoor := TRUE;
+
+(*--
+IF NOT(s_bIlckOuterDoorToClose) THEN
+	s_bReqOpenOuterDoor := FALSE;
+	s_bReqCloseOuterDoor := TRUE;
+	s_bReqOpenInnerDoor := FALSE;
+	s_bReqCloseInnerDoor := FALSE;
+//++	s_bReqReleaseCleanroomDoor := FALSE;
+//++	s_bReqLockCleanroomDoor := FALSE;
+	
+	m_ReqCloseOuterDoor := TRUE;
+	
+ELSE
+	s_bWrnOuterDoorNoAllowedToClose := TRUE;
+	
+	m_ReqCloseOuterDoor := FALSE;
+END_IF
+*)]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_ReqOpenInnerDoor" Id="{574f8d3a-fdc9-465e-913e-843f784f0e6e}">
+      <Declaration><![CDATA[{attribute 'TcRpcEnable'}
+METHOD PUBLIC m_ReqOpenInnerDoor : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+s_bReqOpenInnerDoor := TRUE;
+
+m_ReqOpenInnerDoor := TRUE;
+
+(*--
+IF NOT(s_bIlckInnerDoorToOpen) THEN
+	s_bReqOpenOuterDoor := FALSE;
+	s_bReqCloseOuterDoor := FALSE;
+	s_bReqOpenInnerDoor := TRUE;
+	s_bReqCloseInnerDoor := FALSE;
+//++	s_bReqReleaseCleanroomDoor := FALSE;
+//++	s_bReqLockCleanroomDoor := FALSE;
+	
+	m_ReqOpenInnerDoor := TRUE;
+ELSE
+	
+	s_bWrnInnerDoorNoAllowedToOpen := TRUE;
+	
+	m_ReqOpenInnerDoor := FALSE;
+END_IF	
+*)]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_ReqOpenOuterDoor" Id="{cacb32c9-2f39-45b3-a10f-fdd38f341162}">
+      <Declaration><![CDATA[{attribute 'TcRpcEnable'}
+METHOD PUBLIC m_ReqOpenOuterDoor : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+s_bReqOpenOuterDoor := TRUE;
+
+m_ReqOpenOuterDoor := TRUE;
+
+(*--
+IF NOT(s_bIlckOuterDoorToOpen) THEN
+	s_bReqOpenOuterDoor := TRUE;
+	s_bReqCloseOuterDoor := FALSE;
+	s_bReqOpenInnerDoor := FALSE;
+	s_bReqCloseInnerDoor := FALSE;
+//++	s_bReqReleaseCleanroomDoor := FALSE;
+//++	s_bReqLockCleanroomDoor := FALSE;
+	
+	m_ReqOpenOuterDoor := TRUE;
+ELSE
+	
+	s_bWrnOuterDoorNoAllowedToOpen := TRUE;
+	
+	m_ReqOpenOuterDoor := FALSE;
+END_IF	
+*)]]></ST>
       </Implementation>
     </Method>
     <Property Name="p_bStaCleanroomDoorClosed" Id="{3e867690-16e1-4e81-ad03-19ccedfb22c2}">
@@ -865,46 +1176,46 @@ p_bStaCleanroomLockReleased := s_bStaCleanroomLockReleased;
         </Implementation>
       </Get>
     </Property>
-    <Property Name="p_bStaInnerSpeedDoorClosed" Id="{e820ef87-a935-4e5a-9f4e-74f710eeaa35}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaInnerSpeedDoorClosed : BOOL]]></Declaration>
+    <Property Name="p_bStaInnerDoorClosed" Id="{e820ef87-a935-4e5a-9f4e-74f710eeaa35}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaInnerDoorClosed : BOOL]]></Declaration>
       <Get Name="Get" Id="{723740c9-5feb-4d12-ae81-508dbaf06682}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaInnerSpeedDoorClosed := s_bStaInnerSpeedDoorClosed;
+p_bStaInnerDoorClosed := s_bStaInnerDoorClosed;
 ]]></ST>
         </Implementation>
       </Get>
     </Property>
-    <Property Name="p_bStaInnerSpeedDoorOpened" Id="{fd770672-09bf-4052-b33b-9e8aaacab69c}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaInnerSpeedDoorOpened : BOOL]]></Declaration>
+    <Property Name="p_bStaInnerDoorOpened" Id="{fd770672-09bf-4052-b33b-9e8aaacab69c}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaInnerDoorOpened : BOOL]]></Declaration>
       <Get Name="Get" Id="{cd7d4a09-3f8f-4815-907b-09d35b18097b}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaInnerSpeedDoorOpened := s_bStaInnerSpeedDoorOpened;
+p_bStaInnerDoorOpened := s_bStaInnerDoorOpened;
 ]]></ST>
         </Implementation>
       </Get>
     </Property>
-    <Property Name="p_bStaOuterSpeedDoorClosed" Id="{e8474055-2ea6-4b59-a386-3fcee4ae9262}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaOuterSpeedDoorClosed : BOOL]]></Declaration>
+    <Property Name="p_bStaOuterDoorClosed" Id="{e8474055-2ea6-4b59-a386-3fcee4ae9262}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaOuterDoorClosed : BOOL]]></Declaration>
       <Get Name="Get" Id="{38689063-15e9-462f-9650-3e7d7a523f33}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaOuterSpeedDoorClosed := s_bStaOuterSpeedDoorClosed;
+p_bStaOuterDoorClosed := s_bStaOuterDoorClosed;
 ]]></ST>
         </Implementation>
       </Get>
     </Property>
-    <Property Name="p_bStaOuterSpeedDoorOpened" Id="{bc66e39f-ee2c-4f79-9694-10ac484efe5a}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaOuterSpeedDoorOpened : BOOL]]></Declaration>
+    <Property Name="p_bStaOuterDoorOpened" Id="{bc66e39f-ee2c-4f79-9694-10ac484efe5a}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaOuterDoorOpened : BOOL]]></Declaration>
       <Get Name="Get" Id="{d7cea33e-5fa5-438f-8145-a6950abb53e6}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaOuterSpeedDoorOpened := s_bStaOuterSpeedDoorOpened;
+p_bStaOuterDoorOpened := s_bStaOuterDoorOpened;
 ]]></ST>
         </Implementation>
       </Get>
@@ -957,10 +1268,35 @@ p_bStaReady := (s_eSeqDoors = E_SeqDoors.READY);
       <LineId Id="14" Count="0" />
     </LineIds>
     <LineIds Name="EM_Doors._m_AutomaticControl">
+      <LineId Id="483" Count="2" />
       <LineId Id="473" Count="4" />
       <LineId Id="481" Count="0" />
       <LineId Id="293" Count="0" />
       <LineId Id="479" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors._m_CmdCloseInnerDoor">
+      <LineId Id="169" Count="0" />
+      <LineId Id="156" Count="6" />
+      <LineId Id="170" Count="0" />
+      <LineId Id="164" Count="3" />
+      <LineId Id="77" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors._m_CmdCloseOuterDoor">
+      <LineId Id="169" Count="0" />
+      <LineId Id="156" Count="11" />
+      <LineId Id="77" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors._m_CmdOpenInnerDoor">
+      <LineId Id="169" Count="0" />
+      <LineId Id="156" Count="6" />
+      <LineId Id="170" Count="0" />
+      <LineId Id="164" Count="3" />
+      <LineId Id="77" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors._m_CmdOpenOuterDoor">
+      <LineId Id="169" Count="0" />
+      <LineId Id="156" Count="11" />
+      <LineId Id="77" Count="0" />
     </LineIds>
     <LineIds Name="EM_Doors._m_Devices">
       <LineId Id="127" Count="0" />
@@ -1073,7 +1409,15 @@ p_bStaReady := (s_eSeqDoors = E_SeqDoors.READY);
     <LineIds Name="EM_Doors._m_Inputs">
       <LineId Id="46" Count="0" />
       <LineId Id="6" Count="2" />
-      <LineId Id="63" Count="2" />
+      <LineId Id="63" Count="1" />
+      <LineId Id="158" Count="0" />
+      <LineId Id="157" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="48" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors._m_Interlocks">
+      <LineId Id="46" Count="0" />
+      <LineId Id="65" Count="0" />
       <LineId Id="120" Count="0" />
       <LineId Id="117" Count="1" />
       <LineId Id="113" Count="0" />
@@ -1102,9 +1446,6 @@ p_bStaReady := (s_eSeqDoors = E_SeqDoors.READY);
       <LineId Id="94" Count="0" />
       <LineId Id="101" Count="11" />
       <LineId Id="100" Count="0" />
-      <LineId Id="86" Count="0" />
-      <LineId Id="40" Count="0" />
-      <LineId Id="5" Count="0" />
       <LineId Id="48" Count="0" />
     </LineIds>
     <LineIds Name="EM_Doors._m_Outputs">
@@ -1122,6 +1463,76 @@ p_bStaReady := (s_eSeqDoors = E_SeqDoors.READY);
       <LineId Id="282" Count="0" />
       <LineId Id="292" Count="0" />
     </LineIds>
+    <LineIds Name="EM_Doors._m_SeqDoors">
+      <LineId Id="1808" Count="0" />
+      <LineId Id="1632" Count="8" />
+      <LineId Id="1921" Count="0" />
+      <LineId Id="1813" Count="0" />
+      <LineId Id="1815" Count="1" />
+      <LineId Id="1641" Count="0" />
+      <LineId Id="1814" Count="0" />
+      <LineId Id="1642" Count="2" />
+      <LineId Id="1809" Count="2" />
+      <LineId Id="1966" Count="0" />
+      <LineId Id="1812" Count="0" />
+      <LineId Id="1649" Count="0" />
+      <LineId Id="1654" Count="1" />
+      <LineId Id="1965" Count="0" />
+      <LineId Id="1912" Count="0" />
+      <LineId Id="1920" Count="0" />
+      <LineId Id="1656" Count="1" />
+      <LineId Id="1901" Count="1" />
+      <LineId Id="1660" Count="0" />
+      <LineId Id="1967" Count="0" />
+      <LineId Id="1661" Count="2" />
+      <LineId Id="1983" Count="0" />
+      <LineId Id="1666" Count="1" />
+      <LineId Id="1906" Count="1" />
+      <LineId Id="1904" Count="1" />
+      <LineId Id="1797" Count="0" />
+      <LineId Id="1986" Count="0" />
+      <LineId Id="1671" Count="2" />
+      <LineId Id="1917" Count="0" />
+      <LineId Id="1676" Count="0" />
+      <LineId Id="1987" Count="0" />
+      <LineId Id="1678" Count="0" />
+      <LineId Id="1988" Count="0" />
+      <LineId Id="1990" Count="9" />
+      <LineId Id="1989" Count="0" />
+      <LineId Id="2000" Count="0" />
+      <LineId Id="2002" Count="21" />
+      <LineId Id="2001" Count="0" />
+      <LineId Id="2071" Count="1" />
+      <LineId Id="1962" Count="0" />
+      <LineId Id="1716" Count="2" />
+      <LineId Id="2024" Count="0" />
+      <LineId Id="1721" Count="1" />
+      <LineId Id="2025" Count="0" />
+      <LineId Id="2027" Count="0" />
+      <LineId Id="2029" Count="1" />
+      <LineId Id="2028" Count="0" />
+      <LineId Id="2031" Count="0" />
+      <LineId Id="2033" Count="9" />
+      <LineId Id="2032" Count="0" />
+      <LineId Id="2044" Count="10" />
+      <LineId Id="2043" Count="0" />
+      <LineId Id="2056" Count="10" />
+      <LineId Id="2055" Count="0" />
+      <LineId Id="1963" Count="0" />
+      <LineId Id="1777" Count="3" />
+      <LineId Id="2067" Count="0" />
+      <LineId Id="1781" Count="1" />
+      <LineId Id="2069" Count="0" />
+      <LineId Id="1786" Count="2" />
+      <LineId Id="2070" Count="0" />
+      <LineId Id="1789" Count="0" />
+      <LineId Id="2074" Count="0" />
+      <LineId Id="2073" Count="0" />
+      <LineId Id="1790" Count="0" />
+      <LineId Id="2075" Count="0" />
+      <LineId Id="89" Count="0" />
+      <LineId Id="2076" Count="2" />
+    </LineIds>
     <LineIds Name="EM_Doors.m_ApplyLockCleanroomDoor">
       <LineId Id="182" Count="4" />
       <LineId Id="195" Count="0" />
@@ -1133,36 +1544,6 @@ p_bStaReady := (s_eSeqDoors = E_SeqDoors.READY);
       <LineId Id="220" Count="0" />
       <LineId Id="219" Count="0" />
       <LineId Id="211" Count="0" />
-      <LineId Id="179" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_Doors.m_CloseInnerSpeedDoor">
-      <LineId Id="182" Count="3" />
-      <LineId Id="195" Count="1" />
-      <LineId Id="217" Count="1" />
-      <LineId Id="226" Count="1" />
-      <LineId Id="219" Count="0" />
-      <LineId Id="200" Count="0" />
-      <LineId Id="222" Count="0" />
-      <LineId Id="202" Count="0" />
-      <LineId Id="224" Count="0" />
-      <LineId Id="203" Count="1" />
-      <LineId Id="223" Count="0" />
-      <LineId Id="205" Count="1" />
-      <LineId Id="179" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_Doors.m_CloseOuterSpeedDoor">
-      <LineId Id="182" Count="3" />
-      <LineId Id="195" Count="1" />
-      <LineId Id="217" Count="1" />
-      <LineId Id="226" Count="1" />
-      <LineId Id="219" Count="0" />
-      <LineId Id="200" Count="0" />
-      <LineId Id="222" Count="0" />
-      <LineId Id="202" Count="0" />
-      <LineId Id="224" Count="0" />
-      <LineId Id="203" Count="1" />
-      <LineId Id="223" Count="0" />
-      <LineId Id="205" Count="1" />
       <LineId Id="179" Count="0" />
     </LineIds>
     <LineIds Name="EM_Doors.m_Main">
@@ -1222,32 +1603,6 @@ p_bStaReady := (s_eSeqDoors = E_SeqDoors.READY);
       <LineId Id="593" Count="0" />
       <LineId Id="592" Count="0" />
     </LineIds>
-    <LineIds Name="EM_Doors.m_OpenInnerSpeedDoor">
-      <LineId Id="182" Count="0" />
-      <LineId Id="237" Count="1" />
-      <LineId Id="185" Count="0" />
-      <LineId Id="245" Count="1" />
-      <LineId Id="265" Count="1" />
-      <LineId Id="270" Count="1" />
-      <LineId Id="267" Count="0" />
-      <LineId Id="250" Count="3" />
-      <LineId Id="268" Count="0" />
-      <LineId Id="254" Count="3" />
-      <LineId Id="242" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_Doors.m_OpenOuterSpeedDoor">
-      <LineId Id="182" Count="0" />
-      <LineId Id="237" Count="1" />
-      <LineId Id="185" Count="0" />
-      <LineId Id="245" Count="1" />
-      <LineId Id="265" Count="1" />
-      <LineId Id="270" Count="1" />
-      <LineId Id="267" Count="0" />
-      <LineId Id="250" Count="3" />
-      <LineId Id="268" Count="0" />
-      <LineId Id="254" Count="3" />
-      <LineId Id="242" Count="0" />
-    </LineIds>
     <LineIds Name="EM_Doors.m_ReleaseLockCleanroomDoor">
       <LineId Id="182" Count="3" />
       <LineId Id="195" Count="0" />
@@ -1256,6 +1611,68 @@ p_bStaReady := (s_eSeqDoors = E_SeqDoors.READY);
       <LineId Id="201" Count="7" />
       <LineId Id="196" Count="0" />
       <LineId Id="179" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors.m_ReqCloseInnerDoor">
+      <LineId Id="182" Count="3" />
+      <LineId Id="229" Count="5" />
+      <LineId Id="196" Count="0" />
+      <LineId Id="217" Count="1" />
+      <LineId Id="226" Count="1" />
+      <LineId Id="219" Count="0" />
+      <LineId Id="200" Count="0" />
+      <LineId Id="222" Count="0" />
+      <LineId Id="202" Count="0" />
+      <LineId Id="224" Count="0" />
+      <LineId Id="203" Count="1" />
+      <LineId Id="223" Count="0" />
+      <LineId Id="205" Count="1" />
+      <LineId Id="179" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors.m_ReqCloseOuterDoor">
+      <LineId Id="182" Count="3" />
+      <LineId Id="229" Count="4" />
+      <LineId Id="195" Count="1" />
+      <LineId Id="217" Count="1" />
+      <LineId Id="226" Count="1" />
+      <LineId Id="219" Count="0" />
+      <LineId Id="200" Count="0" />
+      <LineId Id="222" Count="0" />
+      <LineId Id="202" Count="0" />
+      <LineId Id="224" Count="0" />
+      <LineId Id="203" Count="1" />
+      <LineId Id="223" Count="0" />
+      <LineId Id="205" Count="1" />
+      <LineId Id="179" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors.m_ReqOpenInnerDoor">
+      <LineId Id="182" Count="0" />
+      <LineId Id="237" Count="1" />
+      <LineId Id="185" Count="0" />
+      <LineId Id="274" Count="0" />
+      <LineId Id="273" Count="0" />
+      <LineId Id="275" Count="2" />
+      <LineId Id="245" Count="1" />
+      <LineId Id="265" Count="1" />
+      <LineId Id="270" Count="1" />
+      <LineId Id="267" Count="0" />
+      <LineId Id="250" Count="3" />
+      <LineId Id="268" Count="0" />
+      <LineId Id="254" Count="3" />
+      <LineId Id="242" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_Doors.m_ReqOpenOuterDoor">
+      <LineId Id="182" Count="0" />
+      <LineId Id="237" Count="1" />
+      <LineId Id="185" Count="0" />
+      <LineId Id="273" Count="4" />
+      <LineId Id="245" Count="1" />
+      <LineId Id="265" Count="1" />
+      <LineId Id="270" Count="1" />
+      <LineId Id="267" Count="0" />
+      <LineId Id="250" Count="3" />
+      <LineId Id="268" Count="0" />
+      <LineId Id="254" Count="3" />
+      <LineId Id="242" Count="0" />
     </LineIds>
     <LineIds Name="EM_Doors.p_bStaCleanroomDoorClosed.Get">
       <LineId Id="4" Count="0" />
@@ -1277,22 +1694,22 @@ p_bStaReady := (s_eSeqDoors = E_SeqDoors.READY);
       <LineId Id="3" Count="0" />
       <LineId Id="2" Count="0" />
     </LineIds>
-    <LineIds Name="EM_Doors.p_bStaInnerSpeedDoorClosed.Get">
+    <LineIds Name="EM_Doors.p_bStaInnerDoorClosed.Get">
       <LineId Id="4" Count="0" />
       <LineId Id="3" Count="0" />
       <LineId Id="2" Count="0" />
     </LineIds>
-    <LineIds Name="EM_Doors.p_bStaInnerSpeedDoorOpened.Get">
+    <LineIds Name="EM_Doors.p_bStaInnerDoorOpened.Get">
       <LineId Id="4" Count="0" />
       <LineId Id="3" Count="0" />
       <LineId Id="2" Count="0" />
     </LineIds>
-    <LineIds Name="EM_Doors.p_bStaOuterSpeedDoorClosed.Get">
+    <LineIds Name="EM_Doors.p_bStaOuterDoorClosed.Get">
       <LineId Id="4" Count="0" />
       <LineId Id="3" Count="0" />
       <LineId Id="2" Count="0" />
     </LineIds>
-    <LineIds Name="EM_Doors.p_bStaOuterSpeedDoorOpened.Get">
+    <LineIds Name="EM_Doors.p_bStaOuterDoorOpened.Get">
       <LineId Id="4" Count="0" />
       <LineId Id="3" Count="0" />
       <LineId Id="2" Count="0" />

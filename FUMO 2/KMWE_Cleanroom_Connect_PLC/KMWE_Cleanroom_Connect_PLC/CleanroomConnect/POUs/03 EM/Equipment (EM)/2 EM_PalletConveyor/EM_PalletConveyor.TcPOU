@@ -59,6 +59,9 @@ VAR
 	s_bReqTB_ToDocking : BOOL := FALSE;
 	s_bReqCenteringTB : BOOL := FALSE;
 
+	//Commands
+	//--s_bCmdHold : BOOL;
+	
 	//States
 	s_bStaBrakeReleased : BOOL := FALSE;
 	s_bStaDriveError : BOOL := FALSE;
@@ -77,8 +80,7 @@ VAR
 	s_bStaTB_AtCentering : BOOL;
 	s_bStaTB_AtDocking : BOOL;
 	s_bStaTB_CenteringDone : BOOL;
-	
-	s_bCmdHold : BOOL;
+
 	
 	//Interlockes	
 	s_bIlckConveyorBackward : BOOL := TRUE;
@@ -89,6 +91,7 @@ VAR
 	
 	//Alarms
 	s_sReason : STRING;
+	s_sMessage : STRING;
 	s_fbAlarmHandlerTravelTimeOut : FB_AlarmHandler;
 	s_bErrTravelTimeOut : BOOL;
 	
@@ -118,9 +121,6 @@ VAR
 	s_fbParamCenteringDuration : FB_HmiParamHandler;
 	s_fbParamTimeoutCenteringToCenter : FB_HmiParamHandler;
 	s_fbParamTimeoutCenteringToIdle : FB_HmiParamHandler;
-
-
-	s_sMessage : STRING;
 
 	//Sequencers
 	s_eSeqTransport : E_SeqTransport;
@@ -315,7 +315,6 @@ ELSE
 	i_refReason := '-';
 	_m_CmdTB_ToCenter := TRUE;	
 END_IF
-
 ]]></ST>
       </Implementation>
     </Method>
@@ -565,6 +564,29 @@ IF NOT SUPER^._m_Inputs() THEN
 END_IF
 
 //Interlocks
+_m_Interlocks();
+
+//TB States (only use data if a valid ID is pressent else use sensor states)
+IF __ISVALIDREF(i_refTB) AND (i_refTB.p_nId > 0) THEN 
+	s_bStaTB_CenteringDone := i_refTB.p_bCenteringDone;
+	s_bStaTB_AtInfeed := i_refTB.p_eActLocation = E_Location.INFEED;
+	s_bStaTB_AtCentering := i_refTB.p_eActLocation = E_Location.CENTERING;
+	s_bStaTB_AtDocking := i_refTB.p_eActLocation = E_Location.DOCKING;
+ELSE
+	s_bStaTB_CenteringDone := s_eTmpCenteringDone;
+	s_bStaTB_AtInfeed := s_bStaAtInfeedRearPosition OR s_bStaAtInfeedFrontPosition;
+	s_bStaTB_AtCentering := s_bStaAtCenteringPosition;
+	s_bStaTB_AtDocking := s_bStaAtDockingPosition;	
+END_IF
+	
+_m_Inputs := TRUE;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Interlocks" Id="{5d680404-6254-4d7f-ba59-60012ab8115d}" FolderPath="Base\">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Interlocks
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
 //Conveyor
 i_fbExtIlckConvBwd();
 s_fbIlckHandlerConveyorBackward.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckConvBwd.p_bInterlocked;
@@ -624,21 +646,7 @@ IF s_bIlckCenteringToCenter THEN
 ELSE
 	s_cmCenteringUnit.p_sInterlockedReasonOn := '-';
 END_IF
-
-//TB States (only use data if a valid ID is pressent else use sensor states)
-IF __ISVALIDREF(i_refTB) AND (i_refTB.p_nId > 0) THEN 
-	s_bStaTB_CenteringDone := i_refTB.p_bCenteringDone;
-	s_bStaTB_AtInfeed := i_refTB.p_eActLocation = E_Location.INFEED;
-	s_bStaTB_AtCentering := i_refTB.p_eActLocation = E_Location.CENTERING;
-	s_bStaTB_AtDocking := i_refTB.p_eActLocation = E_Location.DOCKING;
-ELSE
-	s_bStaTB_CenteringDone := s_eTmpCenteringDone;
-	s_bStaTB_AtInfeed := s_bStaAtInfeedRearPosition OR s_bStaAtInfeedFrontPosition;
-	s_bStaTB_AtCentering := s_bStaAtCenteringPosition;
-	s_bStaTB_AtDocking := s_bStaAtDockingPosition;	
-END_IF
-	
-_m_Inputs := TRUE;]]></ST>
+	]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_Outputs" Id="{dde91033-d57b-467b-929e-41cce55dae6e}" FolderPath="Base\">
@@ -912,7 +920,7 @@ CASE s_eSeqTransport OF
 		IF s_fbSeqTransportControl.q_bStaEntry THEN
 			s_cmPalletConveyor.m_Stop();
 			s_cmCenteringUnit.m_Off();
-			s_bCmdHold := FALSE;
+			//--s_bCmdHold := FALSE;
 			s_sMessage := '***';
 		END_IF		
 	
@@ -944,7 +952,6 @@ CASE s_eSeqTransport OF
 				s_eSeqTransport := E_SeqTransport.MOVE_TO_INFEED;
 			ELSE //If failed (command not allowed): the message will be written with the interlock reason
 				//--s_bCmdHold := TRUE;
-				//--s_bErrCmdNotAllowed := TRUE;
 				;
 			END_IF
 			
@@ -956,7 +963,6 @@ CASE s_eSeqTransport OF
 				s_eSeqTransport := E_SeqTransport.MOVE_TO_CENTERING;
 			ELSE //If failed (command not allowed): the message will be written with the interlock reason
 				//--s_bCmdHold := TRUE;
-				//--s_bErrCmdNotAllowed := TRUE;
 				;
 			END_IF	
 		
@@ -968,7 +974,6 @@ CASE s_eSeqTransport OF
 				s_eSeqTransport := E_SeqTransport.MOVE_TO_DOCKING;
 			ELSE //If failed (command not allowed): the message will be written with the interlock reason
 				//--s_bCmdHold := TRUE;
-				//--s_bErrCmdNotAllowed := TRUE;
 				;
 			END_IF	
 		
@@ -1504,7 +1509,6 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="141" Count="0" />
       <LineId Id="128" Count="0" />
       <LineId Id="122" Count="0" />
-      <LineId Id="119" Count="0" />
       <LineId Id="77" Count="0" />
     </LineIds>
     <LineIds Name="EM_PalletConveyor._m_CmdTB_ToDocking">
@@ -1652,6 +1656,19 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="103" Count="2" />
       <LineId Id="303" Count="0" />
       <LineId Id="107" Count="0" />
+      <LineId Id="394" Count="0" />
+      <LineId Id="393" Count="0" />
+      <LineId Id="368" Count="0" />
+      <LineId Id="376" Count="0" />
+      <LineId Id="369" Count="3" />
+      <LineId Id="377" Count="0" />
+      <LineId Id="382" Count="2" />
+      <LineId Id="378" Count="1" />
+      <LineId Id="373" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_PalletConveyor._m_Interlocks">
+      <LineId Id="303" Count="0" />
       <LineId Id="267" Count="0" />
       <LineId Id="387" Count="0" />
       <LineId Id="306" Count="0" />
@@ -1698,15 +1715,7 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="339" Count="0" />
       <LineId Id="358" Count="4" />
       <LineId Id="357" Count="0" />
-      <LineId Id="366" Count="0" />
-      <LineId Id="368" Count="0" />
-      <LineId Id="376" Count="0" />
-      <LineId Id="369" Count="3" />
-      <LineId Id="377" Count="0" />
-      <LineId Id="382" Count="2" />
-      <LineId Id="378" Count="1" />
       <LineId Id="373" Count="0" />
-      <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="EM_PalletConveyor._m_Outputs">
       <LineId Id="20" Count="0" />
@@ -1829,7 +1838,6 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="1800" Count="0" />
       <LineId Id="1671" Count="2" />
       <LineId Id="1924" Count="0" />
-      <LineId Id="1923" Count="0" />
       <LineId Id="1917" Count="0" />
       <LineId Id="1676" Count="0" />
       <LineId Id="1821" Count="0" />
@@ -1839,13 +1847,11 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="1794" Count="0" />
       <LineId Id="1685" Count="1" />
       <LineId Id="1910" Count="0" />
-      <LineId Id="1915" Count="0" />
       <LineId Id="1918" Count="0" />
       <LineId Id="1689" Count="3" />
       <LineId Id="1804" Count="1" />
       <LineId Id="1703" Count="2" />
       <LineId Id="1911" Count="0" />
-      <LineId Id="1916" Count="0" />
       <LineId Id="1919" Count="0" />
       <LineId Id="1708" Count="2" />
       <LineId Id="1969" Count="1" />

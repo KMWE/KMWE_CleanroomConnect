@@ -1204,6 +1204,9 @@ VAR_INST
 	osrOpenInnerDoor : R_TRIG;
 	osrCloseInnerDoor : R_TRIG;
 	
+	osrPickTrolleyFromTb : R_TRIG;
+	osrPlaceTrollerInTb : R_TRIG;
+	
 	arr_bTestCmd : ARRAY[0..15] OF BOOL;
 END_VAR]]></Declaration>
       <Implementation>
@@ -1337,7 +1340,35 @@ IF i_objTB.p_eDestination <> E_Location.UNKNOWN	THEN
 	END_IF
 	
 END_IF	
+
+//EM_LiftingTransport
+IF i_objTB.p_eDestination <> E_Location.UNKNOWN	THEN
+
+	//Picking trolley from TB
+	osrPickTrolleyFromTb(
+		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING) 
+		AND i_objTB.p_eDestination > i_objTB.p_eActLocation
+		AND i_objTB.p_eActLocation < E_Location.CENTERING  
+		AND i_objTB.p_bOuterDoorOpened
+		AND i_objTB.p_bApprovedAtInfeed);
 	
+	IF osrPickTrolleyFromTb.Q THEN
+		GVL_Modules.g_emLiftingTransport.m_ReqPickTrolleyFromTB();
+	END_IF
+	
+	//Place trolley TB TB
+	osrPickTrolleyFromTb(
+		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING) 
+		AND i_objTB.p_eDestination > i_objTB.p_eActLocation
+		AND i_objTB.p_eActLocation < E_Location.CENTERING  
+		AND i_objTB.p_bOuterDoorOpened
+		AND i_objTB.p_bApprovedAtInfeed);
+	
+	IF osrPickTrolleyFromTb.Q THEN
+		GVL_Modules.g_emLiftingTransport.m_ReqPickTrolleyFromTB();
+	END_IF
+	
+END_IF
 	
 (* Lod Code 20241108	
 //EM_PalletConveyor
@@ -2371,7 +2402,15 @@ GVL_Modules.g_emPalletConveyor.m_ReqTB_ToInfeed();
       <LineId Id="203" Count="0" />
     </LineIds>
     <LineIds Name="UN_CleanroomConnect.m_FullCycle">
-      <LineId Id="978" Count="231" />
+      <LineId Id="978" Count="129" />
+      <LineId Id="1233" Count="13" />
+      <LineId Id="1232" Count="0" />
+      <LineId Id="1248" Count="0" />
+      <LineId Id="1250" Count="9" />
+      <LineId Id="1249" Count="0" />
+      <LineId Id="1108" Count="0" />
+      <LineId Id="1247" Count="0" />
+      <LineId Id="1109" Count="100" />
       <LineId Id="211" Count="0" />
     </LineIds>
     <LineIds Name="UN_CleanroomConnect.m_Inbound">

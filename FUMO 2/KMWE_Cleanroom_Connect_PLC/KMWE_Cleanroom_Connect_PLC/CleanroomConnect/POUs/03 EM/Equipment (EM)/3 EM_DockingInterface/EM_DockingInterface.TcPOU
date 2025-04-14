@@ -10,15 +10,12 @@ VAR_INPUT
 	// External interlocks (from outside this EM)
 	i_fbExtIlckDockingClampsToClose : FB_Interlock;
 	i_fbExtIlckDockingClampsToOpen : FB_Interlock;
+	i_fbExtIlckUnlockingPinsToLock : FB_Interlock;
+	i_fbExtIlckUnlockingPinsToRelease : FB_Interlock;
 	i_fbExtIlckDoorShutterToClose : FB_Interlock;
 	i_fbExtIlckDoorShutterToOpen : FB_Interlock;
 	i_fbExtIlckDoorOpenerToClose : FB_Interlock;
 	i_fbExtIlckDoorOpenerToOpen : FB_Interlock;
-	
-	i_fbExtIlckUnlockingPinsToLock : FB_Interlock;
-	i_fbExtIlckUnlockingPinsToRelease : FB_Interlock;
-	i_fbExtIlckInnerDoorOpen : FB_Interlock;
-	i_fbExtIlckInnerDoorClose : FB_Interlock;
 	
 	i_refTB : REFERENCE TO OBJ_Carrier;	//Mogelijk voor uiteindelijke machine, voor de FUMO's is dit nog niet echt relevant
 	
@@ -935,60 +932,38 @@ s_fbIlckHandlerDockingClampsClose.i_stInterlockList.arr_Interlocks[0].sReason :=
 s_fbIlckHandlerDockingClampsClose.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
 s_fbIlckHandlerDockingClampsClose();
 
-//Door Opener 
-s_fbIlckHandlerDoorOpenerOpen.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckDoorOpenerToOpen.p_bInterlocked;
-s_fbIlckHandlerDoorOpenerOpen.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckDoorOpenerToOpen.p_sReason;
-s_fbIlckHandlerDoorOpenerOpen.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
-s_fbIlckHandlerDoorOpenerOpen();
+//Unlocking Pins
+s_fbIlckHandlerUnlockingPinsLock.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckUnlockingPinsToLock.p_bInterlocked;
+s_fbIlckHandlerUnlockingPinsLock.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckUnlockingPinsToLock.p_sReason;
+s_fbIlckHandlerUnlockingPinsLock.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
+s_fbIlckHandlerUnlockingPinsLock();
 
+s_fbIlckHandlerUnlockingPinsRelease.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckUnlockingPinsToRelease.p_bInterlocked;
+s_fbIlckHandlerUnlockingPinsRelease.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckUnlockingPinsToRelease.p_sReason;
+s_fbIlckHandlerUnlockingPinsRelease.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
+s_fbIlckHandlerUnlockingPinsRelease();
+
+//Door Opener
 s_fbIlckHandlerDoorOpenerClose.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckDoorOpenerToClose.p_bInterlocked;
 s_fbIlckHandlerDoorOpenerClose.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckDoorOpenerToClose.p_sReason;
 s_fbIlckHandlerDoorOpenerClose.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
+s_fbIlckHandlerDoorOpenerClose.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_bStaDoorShutterOpened);
 s_fbIlckHandlerDoorOpenerClose();
 
+s_fbIlckHandlerDoorOpenerOpen.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckDoorOpenerToOpen.p_bInterlocked;
+s_fbIlckHandlerDoorOpenerOpen.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckDoorOpenerToOpen.p_sReason;
+s_fbIlckHandlerDoorOpenerOpen.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
+s_fbIlckHandlerDoorOpenerOpen.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_bStaDoorShutterOpened);
+s_fbIlckHandlerDoorOpenerOpen();
+
 //Door Shutter
-s_fbIlckHandlerDoorShutterOpen.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckDoorShutterToOpen.p_bInterlocked;
+s_fbIlckHandlerDoorShutterOpen.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckDoorOpenerToOpen.p_bInterlocked;
 s_fbIlckHandlerDoorShutterOpen.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckDoorShutterToOpen.p_sReason;
 s_fbIlckHandlerDoorShutterOpen.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
 s_fbIlckHandlerDoorShutterOpen();
 
 s_fbIlckHandlerDoorShutterClose.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckDoorShutterToClose.p_bInterlocked;
 s_fbIlckHandlerDoorShutterClose.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckDoorShutterToClose.p_sReason;
-s_fbIlckHandlerDoorShutterClose.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
-s_fbIlckHandlerDoorShutterClose();
-
-//Unlocking Pins
-s_fbIlckHandlerUnlockingPinsLock.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckInnerDoorClose.p_bInterlocked;
-s_fbIlckHandlerUnlockingPinsLock.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckInnerDoorClose.p_sReason;
-s_fbIlckHandlerUnlockingPinsLock.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
-s_fbIlckHandlerUnlockingPinsLock();
-
-s_fbIlckHandlerUnlockingPinsRelease.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckInnerDoorOpen.p_bInterlocked;
-s_fbIlckHandlerUnlockingPinsRelease.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckInnerDoorOpen.p_sReason;
-s_fbIlckHandlerUnlockingPinsRelease.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
-s_fbIlckHandlerUnlockingPinsRelease();
-
-//Door Opener
-s_fbIlckHandlerDoorOpenerClose.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckInnerDoorClose.p_bInterlocked;
-s_fbIlckHandlerDoorOpenerClose.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckInnerDoorClose.p_sReason;
-s_fbIlckHandlerDoorOpenerClose.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
-s_fbIlckHandlerDoorOpenerClose.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_bStaDoorShutterOpened);
-s_fbIlckHandlerDoorOpenerClose();
-
-s_fbIlckHandlerDoorOpenerOpen.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckInnerDoorOpen.p_bInterlocked;
-s_fbIlckHandlerDoorOpenerOpen.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckInnerDoorOpen.p_sReason;
-s_fbIlckHandlerDoorOpenerOpen.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
-s_fbIlckHandlerDoorOpenerOpen.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_bStaDoorShutterOpened);
-s_fbIlckHandlerDoorOpenerOpen();
-
-//Door Shutter
-s_fbIlckHandlerDoorShutterOpen.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckInnerDoorOpen.p_bInterlocked;
-s_fbIlckHandlerDoorShutterOpen.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckInnerDoorOpen.p_sReason;
-s_fbIlckHandlerDoorShutterOpen.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
-s_fbIlckHandlerDoorShutterOpen();
-
-s_fbIlckHandlerDoorShutterClose.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckInnerDoorClose.p_bInterlocked;
-s_fbIlckHandlerDoorShutterClose.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckInnerDoorClose.p_sReason;
 s_fbIlckHandlerDoorShutterClose.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
 s_fbIlckHandlerDoorShutterClose.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_bStaDoorOpenerClosed) AND NOT(s_bStaDoorOpenerAlmostClosed); 
 s_fbIlckHandlerDoorShutterClose();
@@ -1010,12 +985,6 @@ s_bIlckDoorShutterToClose := s_fbIlckHandlerDoorShutterClose.p_bInterlocked;
 
 s_bIlckUnlockingPinsToLock := s_fbIlckHandlerUnlockingPinsLock.p_bInterlocked;
 s_bIlckUnlockingPinsToRelease := s_fbIlckHandlerUnlockingPinsRelease.p_bInterlocked;
-
-s_bIlckDoorOpenerToClose := s_fbIlckHandlerDoorOpenerClose.p_bInterlocked; //NOT(s_bStaDoorShutterOpened);
-s_bIlckDoorOpenerToOpen := s_fbIlckHandlerDoorOpenerOpen.p_bInterlocked; //NOT(s_bStaDoorShutterOpened);
-
-s_bIlckDoorShutterToOpen := s_fbIlckHandlerDoorShutterOpen.p_bInterlocked; //FALSE;
-s_bIlckDoorShutterToClose := s_fbIlckHandlerDoorShutterClose.p_bInterlocked; //NOT(s_bStaDoorOpenerClosed) AND NOT(s_bStaDoorOpenerAlmostClosed);
 
 //Clamps upper pressure selection
 IF s_bIlckDockingClampsUpperPressureLow THEN
@@ -2561,17 +2530,13 @@ p_bStaUnlockingPinsReleased := s_bStaUnlockingPinsReleased;
       <LineId Id="425" Count="0" />
       <LineId Id="284" Count="3" />
       <LineId Id="426" Count="0" />
-      <LineId Id="288" Count="0" />
-      <LineId Id="507" Count="6" />
-      <LineId Id="517" Count="2" />
-      <LineId Id="506" Count="0" />
-      <LineId Id="521" Count="9" />
-      <LineId Id="520" Count="0" />
-      <LineId Id="289" Count="3" />
+      <LineId Id="288" Count="4" />
       <LineId Id="427" Count="0" />
       <LineId Id="293" Count="3" />
       <LineId Id="428" Count="0" />
-      <LineId Id="297" Count="4" />
+      <LineId Id="297" Count="0" />
+      <LineId Id="540" Count="0" />
+      <LineId Id="299" Count="2" />
       <LineId Id="430" Count="0" />
       <LineId Id="306" Count="0" />
       <LineId Id="302" Count="2" />
@@ -2579,7 +2544,7 @@ p_bStaUnlockingPinsReleased := s_bStaUnlockingPinsReleased;
       <LineId Id="431" Count="0" />
       <LineId Id="308" Count="0" />
       <LineId Id="266" Count="0" />
-      <LineId Id="309" Count="0" />
+      <LineId Id="562" Count="0" />
       <LineId Id="311" Count="0" />
       <LineId Id="318" Count="1" />
       <LineId Id="433" Count="0" />
@@ -2604,10 +2569,6 @@ p_bStaUnlockingPinsReleased := s_bStaUnlockingPinsReleased;
       <LineId Id="440" Count="0" />
       <LineId Id="335" Count="1" />
       <LineId Id="441" Count="0" />
-      <LineId Id="337" Count="1" />
-      <LineId Id="444" Count="0" />
-      <LineId Id="442" Count="0" />
-      <LineId Id="339" Count="1" />
       <LineId Id="474" Count="6" />
       <LineId Id="485" Count="3" />
       <LineId Id="473" Count="0" />

@@ -8,7 +8,7 @@ END_VAR
 
 VAR_INPUT
 //Inputs
-	i_stSettings : ST_SettingsDoors;
+	i_ref_stSettings : REFERENCE TO ST_SettingsDoors;
 	
 	i_bStaInfeedSealed : BOOL;
 	
@@ -589,7 +589,7 @@ i_fbExtIlckOuterDoorOpen();
 s_fbIlckHandlerOuterDoorOpen.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckOuterDoorOpen.p_bInterlocked;
 s_fbIlckHandlerOuterDoorOpen.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckOuterDoorOpen.p_sReason;
 s_fbIlckHandlerOuterDoorOpen.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
-s_fbIlckHandlerOuterDoorOpen.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_cmInnerSpeedDoor.p_bStaIsClosed);
+s_fbIlckHandlerOuterDoorOpen.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_cmInnerSpeedDoor.p_bStaIsClosed) AND NOT(i_bStaInfeedSealed);
 s_fbIlckHandlerOuterDoorOpen();
 
 i_fbExtIlckOuterDoorClose();

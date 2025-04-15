@@ -753,6 +753,7 @@ i_fbExtIlckTransportExtract();
 fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckTransportExtract.p_bInterlocked;
 fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckTransportExtract.p_sReason;
 fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[1].bState := //Lift not at correct position
+	(i_eCtrlMode <> E_CtrlMode.AUTOMATIC) AND (i_eCtrlMode <> E_CtrlMode.MANUAL) AND
 	((s_fActLiftPosition < c_fMIN_LIFT_HEIGHT_TO_EXTRACT_TRANSPORT) OR (s_fActLiftPosition > c_fMAX_LIFT_HEIGHT_TO_EXTRACT_TRANSPORT) );
 fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[2].bState := s_bStaCollisionAvoidanceSensor AND (s_fActTransportPosition < c_fEND_TRANSPORT_POSITION_COLLISION_CHECK) AND FALSE;
 fbIlckHandlerTransportExtract();
@@ -1411,7 +1412,7 @@ IF i_bReqEnable AND (i_eCtrlMode = E_CtrlMode.MANUAL) AND (i_eCtrlState = E_Ctrl
 		//--NOT(s_bIlckLiftDown)
 		NOT(s_bIlckLiftUp)
 		//--AND NOT(s_bIlckTransportRetract)
-		//--AND NOT(s_bIlckTransportExtract)
+		AND NOT(s_bIlckTransportExtract)
 		AND NOT(s_cmLift.p_bStaError)
 		AND NOT(s_cmTransport.p_bStaError);
 
@@ -1762,6 +1763,7 @@ p_fActTransportPosition := s_fActTransportPosition;
       <LineId Id="540" Count="2" />
       <LineId Id="445" Count="9" />
       <LineId Id="459" Count="5" />
+      <LineId Id="547" Count="0" />
       <LineId Id="526" Count="0" />
       <LineId Id="469" Count="0" />
       <LineId Id="472" Count="30" />

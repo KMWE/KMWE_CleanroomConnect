@@ -1,0 +1,235 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="CM_TUBELED_RGB" Id="{595df5ed-8c43-4c64-84d2-9ba9d4b953e6}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK CM_TUBELED_RGB IMPLEMENTS I_LED_RGB
+VAR_OUTPUT
+	Q_bColorRed AT %Q* : BOOL;
+	Q_bColorGreen AT %Q* : BOOL;
+	Q_bColorBlue AT %Q* : BOOL;
+	Q_bColorWhite AT %Q* : BOOL;
+END_VAR
+VAR
+	s_bColorRed : BOOL;
+	s_bColorGreen : BOOL;
+	s_bColorBlue : BOOL;
+	s_bColorWhite : BOOL;	
+
+	s_bFlash : BOOL;
+	s_fbFlash : FB_Flash; 
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+s_fbFlash(
+	i_bExcecute := TRUE,
+	t_tOnTime := T#750MS,
+	t_tOffTime := T#750MS,
+	o_bQ => );
+
+IF s_bFlash THEN
+	Q_bColorRed := s_bColorRed AND s_fbFlash.o_bQ;
+	Q_bColorGreen := s_bColorGreen AND s_fbFlash.o_bQ;
+	Q_bColorBlue := s_bColorBlue AND s_fbFlash.o_bQ;
+	Q_bColorWhite := s_bColorWhite AND s_fbFlash.o_bQ;
+ELSE
+	Q_bColorRed := s_bColorRed;
+	Q_bColorGreen := s_bColorGreen;
+	Q_bColorBlue := s_bColorBlue;
+	Q_bColorWhite := s_bColorWhite;
+END_IF	
+]]></ST>
+    </Implementation>
+    <Method Name="m_Blue" Id="{811cd9fc-1a9c-4a3c-8f72-d33a4a0f6dcb}">
+      <Declaration><![CDATA[METHOD PUBLIC m_Blue : BOOL
+VAR_INPUT
+	i_bFlash : BOOL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+s_bColorRed := FALSE;
+s_bColorGreen := FALSE;
+s_bColorBlue := TRUE;
+s_bColorWhite := FALSE;
+
+s_bFlash := i_bFlash;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_Cyan" Id="{b5b902f2-be03-4a64-b2bb-64fe70cfdaef}">
+      <Declaration><![CDATA[METHOD PUBLIC m_Cyan : BOOL
+VAR_INPUT
+	i_bFlash : BOOL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+s_bColorRed := FALSE;
+s_bColorGreen := TRUE;
+s_bColorBlue := TRUE;
+s_bColorWhite := FALSE;
+
+s_bFlash := i_bFlash;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_Green" Id="{ce16dd08-2cb3-42e7-b1f0-7228760bacfc}">
+      <Declaration><![CDATA[METHOD PUBLIC m_Green : BOOL
+VAR_INPUT
+	i_bFlash : BOOL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+s_bColorRed := FALSE;
+s_bColorGreen := TRUE;
+s_bColorBlue := FALSE;
+s_bColorWhite := FALSE;
+
+s_bFlash := i_bFlash;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_Magenta" Id="{d186cc63-c07a-4047-a047-2a07b860d415}">
+      <Declaration><![CDATA[METHOD PUBLIC m_Magenta : BOOL
+VAR_INPUT
+	i_bFlash : BOOL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+s_bColorRed := TRUE;
+s_bColorGreen := FALSE;
+s_bColorBlue := TRUE;
+s_bColorWhite := FALSE;
+
+s_bFlash := i_bFlash;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_Off" Id="{cbede21d-7f97-47a3-9390-3ee13ec52ca1}">
+      <Declaration><![CDATA[METHOD PUBLIC m_Off : BOOL
+VAR_INPUT
+	i_bFlash : BOOL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+s_bColorRed := FALSE;
+s_bColorGreen := FALSE;
+s_bColorBlue := FALSE;
+s_bColorWhite := FALSE;
+
+s_bFlash := i_bFlash;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_Red" Id="{d35a4945-5d60-4fb4-9589-c3ea10729b99}">
+      <Declaration><![CDATA[METHOD PUBLIC m_Red : BOOL
+VAR_INPUT
+	i_bFlash : BOOL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+s_bColorRed := TRUE;
+s_bColorGreen := FALSE;
+s_bColorBlue := FALSE;
+s_bColorWhite := FALSE;
+
+s_bFlash := i_bFlash;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_White" Id="{54898620-fb17-4318-ace3-ab1962baf179}">
+      <Declaration><![CDATA[METHOD PUBLIC m_White : BOOL
+VAR_INPUT
+	i_bFlash : BOOL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+s_bColorRed := FALSE;
+s_bColorGreen := FALSE;
+s_bColorBlue := FALSE;
+s_bColorWhite := TRUE;
+
+s_bFlash := i_bFlash;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_Yellow" Id="{d01841ca-9da5-44f7-a42f-be7c77a4e5f2}">
+      <Declaration><![CDATA[METHOD PUBLIC m_Yellow : BOOL
+VAR_INPUT
+	i_bFlash : BOOL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+s_bColorRed := TRUE;
+s_bColorGreen := TRUE;
+s_bColorBlue := FALSE;
+s_bColorWhite := FALSE;
+
+s_bFlash := i_bFlash;
+]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="CM_TUBELED_RGB">
+      <LineId Id="39" Count="0" />
+      <LineId Id="34" Count="4" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="63" Count="2" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="59" Count="2" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="57" Count="0" />
+      <LineId Id="40" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_TUBELED_RGB.m_Blue">
+      <LineId Id="14" Count="0" />
+      <LineId Id="7" Count="2" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="17" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_TUBELED_RGB.m_Cyan">
+      <LineId Id="6" Count="3" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="10" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_TUBELED_RGB.m_Green">
+      <LineId Id="6" Count="3" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="12" Count="1" />
+      <LineId Id="10" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_TUBELED_RGB.m_Magenta">
+      <LineId Id="6" Count="3" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="12" Count="1" />
+      <LineId Id="10" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_TUBELED_RGB.m_Off">
+      <LineId Id="6" Count="3" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="11" Count="1" />
+      <LineId Id="10" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_TUBELED_RGB.m_Red">
+      <LineId Id="6" Count="3" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="12" Count="1" />
+      <LineId Id="10" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_TUBELED_RGB.m_White">
+      <LineId Id="6" Count="3" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="12" Count="1" />
+      <LineId Id="10" Count="0" />
+    </LineIds>
+    <LineIds Name="CM_TUBELED_RGB.m_Yellow">
+      <LineId Id="6" Count="3" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="12" Count="1" />
+      <LineId Id="10" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

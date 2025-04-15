@@ -113,6 +113,8 @@ s_bDestroy : BOOL;
 
 s_arr_bBoolTest : ARRAY [0..15] OF BOOL;
 
+
+
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -418,7 +420,7 @@ s_fbIlckHandlerClampsToClose.i_stInterlockList.arr_Interlocks[0].sReason := 'No 
 
 s_fbIlckHandlerClampsToOpen.i_stInterlockList.arr_Interlocks[0].sReason := 'Cleanroom Door Not Closed';
 s_fbIlckHandlerClampsToOpen.i_stInterlockList.arr_Interlocks[1].sReason := 'Inner Speed Door Not Closed';
-s_fbIlckHandlerClampsToOpen.i_stInterlockList.arr_Interlocks[2].sReason := 'Outer Speed Door Not Closed';
+s_fbIlckHandlerClampsToOpen.i_stInterlockList.arr_Interlocks[2].sReason := 'Outer Speed Door Not Opened';
 
 s_fbIlckHandlerDoorOpenerToClose.i_stInterlockList.arr_Interlocks[0].sReason := 'Inner Speed Door Not Opened';
 
@@ -438,6 +440,7 @@ s_fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[3].sReason := 'I
 //Outer Speed Door
 s_fbIlckHandlerOuterSpeedDoorOpen.i_stInterlockList.arr_Interlocks[0].sReason := 'Docking Clamps Not Closed';
 s_fbIlckHandlerOuterSpeedDoorOpen.i_stInterlockList.arr_Interlocks[1].sReason := 'Door Shutter Not Closed';
+s_fbIlckHandlerOuterSpeedDoorOpen.i_stInterlockList.arr_Interlocks[2].sReason := 'Unlocking Pins Not Locked';
 
 s_fbIlckHandlerOuterSpeedDoorClose.i_stInterlockList.arr_Interlocks[0].sReason := 'Docking Clamps Not Closed';
 s_fbIlckHandlerOuterSpeedDoorClose.i_stInterlockList.arr_Interlocks[1].sReason := 'Door Shutter Not Closed';
@@ -447,6 +450,7 @@ s_fbIlckHandlerOuterSpeedDoorClose.i_stInterlockList.arr_Interlocks[3].sReason :
 //Inner Speed Door
 s_fbIlckHandlerInnerSpeedDoorOpen.i_stInterlockList.arr_Interlocks[0].sReason := 'Docking Clamps Not Closed';
 s_fbIlckHandlerInnerSpeedDoorOpen.i_stInterlockList.arr_Interlocks[1].sReason := 'Door Shutter Not Closed';
+s_fbIlckHandlerInnerSpeedDoorOpen.i_stInterlockList.arr_Interlocks[2].sReason := 'Unlocking Pins Not Locked';
 
 s_fbIlckHandlerInnerSpeedDoorClose.i_stInterlockList.arr_Interlocks[0].sReason := 'Docking Clamps Not Closed';
 s_fbIlckHandlerInnerSpeedDoorClose.i_stInterlockList.arr_Interlocks[1].sReason := 'Door Shutter Not Closed';
@@ -853,10 +857,10 @@ ELSE
 END_IF
 
 s_fbIlckHandlerConvFwd();
-s_fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[0].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDockingClampsOpened);//?? AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering;
-s_fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[1].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaUnlockingPinsLocked);//?? AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering;
-s_fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[2].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDoorOpenerClosed);//??AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering;
-s_fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[3].bState := NOT(GVL_Modules.g_emDoors.p_bStaOuterDoorOpened) AND GVL_Modules.g_emDoors.p_bStaEnabled;
+s_fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[0].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDockingClampsOpened) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering;
+s_fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[1].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaUnlockingPinsLocked) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering;
+s_fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[2].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDoorOpenerClosed) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering;
+s_fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[3].bState := NOT(GVL_Modules.g_emDoors.p_bStaOuterDoorOpened) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering AND GVL_Modules.g_emDoors.p_bStaEnabled;
 
 s_fbExtIlckConvFwd.i_bInterlocked := s_fbIlckHandlerConvFwd.p_bInterlocked;
 s_fbExtIlckConvFwd(); 
@@ -891,7 +895,7 @@ END_IF
 s_fbIlckHandlerClampsToOpen();
 s_fbIlckHandlerClampsToOpen.i_stInterlockList.arr_Interlocks[0].bState := FALSE; //++NOT(GVL_Modules.g_emDoors.p_bStaCleanroomDoorNotClosedAndLocked);
 s_fbIlckHandlerClampsToOpen.i_stInterlockList.arr_Interlocks[1].bState := NOT(GVL_Modules.g_emDoors.p_bStaInnerDoorClosed);
-s_fbIlckHandlerClampsToOpen.i_stInterlockList.arr_Interlocks[2].bState := NOT(GVL_Modules.g_emDoors.p_bStaOuterDoorClosed);
+s_fbIlckHandlerClampsToOpen.i_stInterlockList.arr_Interlocks[2].bState := NOT(GVL_Modules.g_emDoors.p_bStaOuterDoorOpened);
 
 s_fbExtIlckDockingClampsToOpen.i_bInterlocked := s_fbIlckHandlerClampsToOpen.p_bInterlocked;
 s_fbExtIlckDockingClampsToOpen(); 
@@ -964,7 +968,7 @@ s_fbIlckHandlerTranportExtract();
 s_fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[0].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDoorOpenerOpened);
 s_fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[1].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDoorShutterOpened);
 s_fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[2].bState := NOT(GVL_Modules.g_emDoors.p_bStaOuterDoorOpened);
-s_fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[3].bState := NOT(GVL_Modules.g_emDoors.p_bStaOuterDoorOpened);
+s_fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[3].bState := NOT(GVL_Modules.g_emDoors.p_bStaInnerDoorOpened);
 
 s_fbExtIlckTransportExtract.i_bInterlocked := s_fbIlckHandlerTranportExtract.p_bInterlocked;
 s_fbExtIlckTransportExtract();
@@ -989,6 +993,7 @@ GVL_Modules.g_emLiftingTransport(
 s_fbIlckHandlerOuterSpeedDoorOpen();
 s_fbIlckHandlerOuterSpeedDoorOpen.i_stInterlockList.arr_Interlocks[0].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDockingClampsClosed);
 s_fbIlckHandlerOuterSpeedDoorOpen.i_stInterlockList.arr_Interlocks[1].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDoorShutterClosed);
+s_fbIlckHandlerOuterSpeedDoorOpen.i_stInterlockList.arr_Interlocks[2].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaUnlockingPinsLocked);
 s_fbExtIlckOuterDoorOpen();
 s_fbExtIlckOuterDoorOpen.i_bInterlocked := s_fbIlckHandlerOuterSpeedDoorOpen.p_bInterlocked; 
 IF s_fbIlckHandlerOuterSpeedDoorOpen.p_bInterlocked THEN
@@ -1013,6 +1018,7 @@ END_IF
 s_fbIlckHandlerInnerSpeedDoorOpen();
 s_fbIlckHandlerInnerSpeedDoorOpen.i_stInterlockList.arr_Interlocks[0].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDockingClampsClosed);
 s_fbIlckHandlerInnerSpeedDoorOpen.i_stInterlockList.arr_Interlocks[1].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDoorShutterClosed);
+s_fbIlckHandlerInnerSpeedDoorOpen.i_stInterlockList.arr_Interlocks[2].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaUnlockingPinsLocked);
 s_fbExtIlckInnerDoorOpen();
 s_fbExtIlckInnerDoorOpen.i_bInterlocked := s_fbIlckHandlerInnerSpeedDoorOpen.p_bInterlocked; 
 IF s_fbIlckHandlerInnerSpeedDoorOpen.p_bInterlocked THEN
@@ -2175,7 +2181,11 @@ GVL_Modules.g_emPalletConveyor.m_ReqTB_ToInfeed();
       <LineId Id="4464" Count="0" />
       <LineId Id="4444" Count="0" />
       <LineId Id="4424" Count="0" />
-      <LineId Id="4470" Count="14" />
+      <LineId Id="4470" Count="2" />
+      <LineId Id="4707" Count="0" />
+      <LineId Id="4473" Count="8" />
+      <LineId Id="4706" Count="0" />
+      <LineId Id="4482" Count="2" />
       <LineId Id="4468" Count="0" />
       <LineId Id="4415" Count="0" />
       <LineId Id="4417" Count="0" />
@@ -2350,6 +2360,7 @@ GVL_Modules.g_emPalletConveyor.m_ReqTB_ToInfeed();
       <LineId Id="1447" Count="1" />
       <LineId Id="1516" Count="0" />
       <LineId Id="1518" Count="1" />
+      <LineId Id="1821" Count="0" />
       <LineId Id="1696" Count="5" />
       <LineId Id="1688" Count="0" />
       <LineId Id="1515" Count="0" />
@@ -2362,6 +2373,7 @@ GVL_Modules.g_emPalletConveyor.m_ReqTB_ToInfeed();
       <LineId Id="1690" Count="0" />
       <LineId Id="1506" Count="0" />
       <LineId Id="1521" Count="2" />
+      <LineId Id="1822" Count="0" />
       <LineId Id="1708" Count="5" />
       <LineId Id="1692" Count="1" />
       <LineId Id="1525" Count="2" />

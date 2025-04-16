@@ -19,6 +19,7 @@ VAR
 	
 	s_arrBool : ARRAY[0..15] OF BOOL;
 	s_cmTubeLedRgb : CM_TUBELED_RGB;
+	itf_LED_RGB : I_LED_RGB;
 	
 END_VAR
 ]]></Declaration>
@@ -36,26 +37,36 @@ fbModeStateControl();
 GVL.g_unCleanroomConnect.p_bCmdReset := GVL_KMWEGenericLib.g_fbAlarmManager.p_osrReset;
 GVL.g_unCleanroomConnect();
 
+//TEST
+itf_LED_RGB := s_cmTubeLedRgb;
+
 s_cmTubeLedRgb();
 
-IF s_arrBool[0] THEN s_cmTubeLedRgb.m_Off(s_arrBool[11]); s_arrBool[0] := FALSE; END_IF
-IF s_arrBool[1] THEN s_cmTubeLedRgb.m_Red(s_arrBool[11]); s_arrBool[1] := FALSE; END_IF
-IF s_arrBool[2] THEN s_cmTubeLedRgb.m_Green(s_arrBool[11]); s_arrBool[2] := FALSE; END_IF
-IF s_arrBool[3] THEN s_cmTubeLedRgb.m_Blue(s_arrBool[11]); s_arrBool[3] := FALSE; END_IF
-IF s_arrBool[4] THEN s_cmTubeLedRgb.m_Yellow(s_arrBool[11]); s_arrBool[4] := FALSE; END_IF
-IF s_arrBool[5] THEN s_cmTubeLedRgb.m_Magenta(s_arrBool[11]); s_arrBool[5] := FALSE; END_IF
-IF s_arrBool[6] THEN s_cmTubeLedRgb.m_Cyan(s_arrBool[11]); s_arrBool[6] := FALSE; END_IF
-IF s_arrBool[7] THEN s_cmTubeLedRgb.m_White(s_arrBool[11]); s_arrBool[7] := FALSE; END_IF
+IF itf_LED_RGB <> 0 THEN
+ 
+	IF s_arrBool[0] THEN itf_LED_RGB.m_Off(s_arrBool[11]); s_arrBool[0] := FALSE; END_IF
+	IF s_arrBool[1] THEN itf_LED_RGB.m_Red(s_arrBool[11]); s_arrBool[1] := FALSE; END_IF
+	IF s_arrBool[2] THEN itf_LED_RGB.m_Green(s_arrBool[11]); s_arrBool[2] := FALSE; END_IF
+	IF s_arrBool[3] THEN itf_LED_RGB.m_Blue(s_arrBool[11]); s_arrBool[3] := FALSE; END_IF
+	IF s_arrBool[4] THEN itf_LED_RGB.m_Yellow(s_arrBool[11]); s_arrBool[4] := FALSE; END_IF
+	IF s_arrBool[5] THEN itf_LED_RGB.m_Magenta(s_arrBool[11]); s_arrBool[5] := FALSE; END_IF
+	IF s_arrBool[6] THEN itf_LED_RGB.m_Cyan(s_arrBool[11]); s_arrBool[6] := FALSE; END_IF
+	IF s_arrBool[7] THEN itf_LED_RGB.m_White(s_arrBool[11]); s_arrBool[7] := FALSE; END_IF
+
+END_IF
  ]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
       <LineId Id="1386" Count="0" />
       <LineId Id="1388" Count="10" />
+      <LineId Id="1508" Count="2" />
       <LineId Id="1475" Count="0" />
-      <LineId Id="1465" Count="1" />
-      <LineId Id="1444" Count="0" />
-      <LineId Id="1467" Count="5" />
-      <LineId Id="1474" Count="0" />
+      <LineId Id="1465" Count="0" />
+      <LineId Id="1500" Count="0" />
+      <LineId Id="1504" Count="1" />
+      <LineId Id="1511" Count="6" />
+      <LineId Id="1506" Count="1" />
+      <LineId Id="1501" Count="0" />
       <LineId Id="1473" Count="0" />
     </LineIds>
   </POU>

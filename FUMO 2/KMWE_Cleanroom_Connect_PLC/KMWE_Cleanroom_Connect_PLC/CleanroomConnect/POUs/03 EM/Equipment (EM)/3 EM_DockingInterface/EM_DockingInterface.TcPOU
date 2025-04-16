@@ -489,8 +489,7 @@ s_bStaInnerDoorClosedAndLocked :=
 	s_bStaLockingPinLowerLocked
 	AND s_bStaLockingPinUpperLocked
 	AND s_bStaDoorOpenerClosed
-	AND s_bStaDoorShutterOpened;
-//--	AND s_bStaDoorShutterClosed;
+	AND s_bStaDoorShutterClosed;
 
 s_bStaInnerDoorOpenedAndReleased := 
 	s_bStaLockingPinLowerReleased
@@ -1962,6 +1961,28 @@ p_bStaBoxAtPreDockingPosition := s_bStaBoxAtPreDockingPosition;
         </Implementation>
       </Get>
     </Property>
+    <Property Name="p_bStaClampsClosed" Id="{de32a338-e965-450c-a404-78adcd65d0d0}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaClampsClosed : BOOL]]></Declaration>
+      <Get Name="Get" Id="{7682c14a-e4ab-4156-bdf2-ba42269377d9}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaClampsClosed := s_bStaDockingClampsClosed; 
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaClampsOpened" Id="{20b689ca-7b07-4e51-a3ea-324f8cec92e0}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaClampsOpened : BOOL]]></Declaration>
+      <Get Name="Get" Id="{31c09844-15c2-48d5-9a5b-8c43458c7d91}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaClampsOpened := s_bStaDockingClampsOpened;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
     <Property Name="p_bStaDocked" Id="{a61394df-c5f0-450a-8cdf-e47379cb8b81}">
       <Declaration><![CDATA[PROPERTY PUBLIC p_bStaDocked : BOOL]]></Declaration>
       <Get Name="Get" Id="{e6843217-13bc-4765-b8f6-a237563e9d39}">
@@ -1969,28 +1990,6 @@ p_bStaBoxAtPreDockingPosition := s_bStaBoxAtPreDockingPosition;
         <Implementation>
           <ST><![CDATA[
 p_bStaDocked := s_bStaDocked;
-]]></ST>
-        </Implementation>
-      </Get>
-    </Property>
-    <Property Name="p_bStaDockingClampsClosed" Id="{de32a338-e965-450c-a404-78adcd65d0d0}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaDockingClampsClosed : BOOL]]></Declaration>
-      <Get Name="Get" Id="{7682c14a-e4ab-4156-bdf2-ba42269377d9}">
-        <Declaration><![CDATA[]]></Declaration>
-        <Implementation>
-          <ST><![CDATA[
-p_bStaDockingClampsClosed := s_bStaDockingClampsClosed; 
-]]></ST>
-        </Implementation>
-      </Get>
-    </Property>
-    <Property Name="p_bStaDockingClampsOpened" Id="{20b689ca-7b07-4e51-a3ea-324f8cec92e0}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaDockingClampsOpened : BOOL]]></Declaration>
-      <Get Name="Get" Id="{31c09844-15c2-48d5-9a5b-8c43458c7d91}">
-        <Declaration><![CDATA[]]></Declaration>
-        <Implementation>
-          <ST><![CDATA[
-p_bStaDockingClampsOpened := s_bStaDockingClampsOpened;
 ]]></ST>
         </Implementation>
       </Get>
@@ -2259,7 +2258,6 @@ p_bStaUnlockingPinsReleased := s_bStaUnlockingPinsReleased;
       <LineId Id="337" Count="1" />
       <LineId Id="322" Count="0" />
       <LineId Id="324" Count="3" />
-      <LineId Id="323" Count="0" />
       <LineId Id="343" Count="0" />
       <LineId Id="329" Count="4" />
       <LineId Id="328" Count="0" />
@@ -3051,20 +3049,20 @@ p_bStaUnlockingPinsReleased := s_bStaUnlockingPinsReleased;
     <LineIds Name="EM_DockingInterface.p_bStaBoxAtPreDockingPosition.Get">
       <LineId Id="5" Count="2" />
     </LineIds>
-    <LineIds Name="EM_DockingInterface.p_bStaDocked.Get">
-      <LineId Id="4" Count="0" />
-      <LineId Id="3" Count="0" />
-      <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_DockingInterface.p_bStaDockingClampsClosed.Get">
+    <LineIds Name="EM_DockingInterface.p_bStaClampsClosed.Get">
       <LineId Id="5" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="6" Count="0" />
     </LineIds>
-    <LineIds Name="EM_DockingInterface.p_bStaDockingClampsOpened.Get">
+    <LineIds Name="EM_DockingInterface.p_bStaClampsOpened.Get">
       <LineId Id="3" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="4" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_DockingInterface.p_bStaDocked.Get">
+      <LineId Id="4" Count="0" />
+      <LineId Id="3" Count="0" />
+      <LineId Id="2" Count="0" />
     </LineIds>
     <LineIds Name="EM_DockingInterface.p_bStaDockingPositionFree.Get">
       <LineId Id="5" Count="0" />

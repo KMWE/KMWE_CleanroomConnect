@@ -9,6 +9,7 @@ END_VAR
 VAR_INPUT
 	i_ref_stSettings : REFERENCE TO ST_SettingsDockingInterface;
 	
+	{warning '#TODO: Option can be deleted when cabin doors are commisioned'}
 	i_bTestDisableCabinDoors : BOOL;	
 	i_bStaTbAtDockingPosition : BOOL;
 	
@@ -179,9 +180,11 @@ VAR
 	s_fbParamTimeoutUnlockingPins : FB_HmiParamHandler;
 	s_fbParamTimeoutDoorOpener : FB_HmiParamHandler;
 	s_fbParamTimeoutDoorShutter : FB_HmiParamHandler;
-	
+		
 	s_fbParamDelaySeal : FB_HmiParamHandler;
 	s_fbParamCompressSealDuration : FB_HmiParamHandler;
+	
+	{warning '#TODO: Consider using 1 time value for all steps instead of seperate times'}
 	s_fbParamDelayCloseDoorShutterReleasingPins : FB_HmiParamHandler;
 	s_fbParamDelayReleaseUnlockingPins : FB_HmiParamHandler;
 	s_fbParamDelayOpenDoorShutter : FB_HmiParamHandler;
@@ -195,27 +198,6 @@ VAR
 	//Hmi
 	//Buttons
 	
-//?? Could be removed is part of CM's
-(*	s_fbHmiBtnManualClampsUpperHighPressure : FB_HmiBtn;
-	s_fbHmiBtnManualClampsUpperOpen	: FB_HmiBtn;
-	s_fbHmiBtnManualClampsUpperClose: FB_HmiBtn;
-	
-	s_fbHmiBtnManualClampsLowerHighPressure : FB_HmiBtn;
-	s_fbHmiBtnManualClampsLowerOpen	: FB_HmiBtn;
-	s_fbHmiBtnManualClampsLowerClose: FB_HmiBtn;
-	
-	s_fbHmiBtnManualPinUpperLock	: FB_HmiBtn;
-	s_fbHmiBtnManualPinUpperRelease: FB_HmiBtn;
-	
-	s_fbHmiBtnManualPinLowerLock	: FB_HmiBtn;
-	s_fbHmiBtnManualPinLowerRelease: FB_HmiBtn;
-	
-	s_fbHmiBtnManualOpenerOpen		: FB_HmiBtn;
-	s_fbHmiBtnManualOpenerClose		: FB_HmiBtn;
-	
-	s_fbHmiBtnManualShutterOpen		: FB_HmiBtn;
-	s_fbHmiBtnManualShutterClose	: FB_HmiBtn;
-*)	
 	//Buttons for MANUAL-mode
 	s_fbHmiBtnDockTB : FB_HmiBtn;
 	s_fbHmiBtnUndockTB : FB_HmiBtn;
@@ -375,7 +357,7 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-{warning #TOOD: Interlock is blocking TO start buttone in MANUAL-Mode}
+{warning '#TOOD: Interlock is blocking TO start buttone in MANUAL-Mode'}
 IF s_bIlckDoorOpenerToClose AND FALSE THEN
 	i_refReason := CONCAT('Cmd To Close Inner Door: Interlocked - ', s_fbIlckHandlerDoorOpenerClose.p_sReason);
 	_m_CmdCloseInnerDoor := FALSE;
@@ -421,7 +403,8 @@ END_VAR
 IF NOT i_bReqEnable THEN 
 	RETURN;
 END_IF
-{warning #TOOD: Interlock is blocking TO start buttone in MANUAL-Mode}
+
+{warning '#TOOD: Interlock is blocking TO start buttone in MANUAL-Mode'}
 IF s_bIlckDoorShutterToOpen AND FALSE THEN
 	i_refReason := CONCAT('Cmd To Open Inner Door: Interlocked - ', s_fbIlckHandlerDoorShutterOpen.p_sReason);
 	_m_CmdOpenInnerDoor := FALSE;
@@ -590,7 +573,6 @@ IF NOT SUPER^._m_Hmi() THEN
 END_IF
 
 //Buttons
-
 //Manual control 
 s_fbHmiBtnDockTB();
 s_fbHmiBtnUndockTB();
@@ -819,174 +801,104 @@ s_fbAlarmHandlerCmdNotAllowed.i_eAlarmLevel := E_AlarmLevel.Alarm;
 	
 //----------------------------------//	
 //Hmi
-	s_fbHmiBtnDockTB.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnDockTB.p_bStaVisible := FALSE;
-	s_fbHmiBtnDockTB.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnDockTB.p_sBtnText := 'Dock TB';
-	
-	s_fbHmiBtnUndockTB.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnUndockTB.p_bStaVisible := FALSE;
-	s_fbHmiBtnUndockTB.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnUndockTB.p_sBtnText := 'Undock TB';
-	
-	s_fbHmiBtnOpenInnerDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnOpenInnerDoor.p_bStaVisible := FALSE;
-	s_fbHmiBtnOpenInnerDoor.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnOpenInnerDoor.p_sBtnText := 'Open Inner TB Door';
-	
-	s_fbHmiBtnCloseInnerDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnCloseInnerDoor.p_bStaVisible := FALSE;
-	s_fbHmiBtnCloseInnerDoor.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnCloseInnerDoor.p_sBtnText := 'Close Inner TB Door';
-	
-//-- Could be removed is part of CM's
-(*	//Manual
-	s_fbHmiBtnManualClampsUpperHighPressure.p_eButtontype := E_HmiButtonType.TOGGLEBUTTON;
-	s_fbHmiBtnManualClampsUpperHighPressure.p_bStaVisible := FALSE;
-	s_fbHmiBtnManualClampsUpperHighPressure.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnManualClampsUpperHighPressure.p_sBtnText := 'Pressure Select Upper Clamps';
-	
-	s_fbHmiBtnManualClampsUpperOpen.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnManualClampsUpperOpen.p_bStaVisible := FALSE;
-	s_fbHmiBtnManualClampsUpperOpen.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnManualClampsUpperOpen.p_sBtnText := 'Open Upper Clamps';
-	
-	s_fbHmiBtnManualClampsUpperClose.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnManualClampsUpperClose.p_bStaVisible := FALSE;
-	s_fbHmiBtnManualClampsUpperClose.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnManualClampsUpperClose.p_sBtnText := 'Close Upper Clamps';
-	
-	s_fbHmiBtnManualClampsLowerHighPressure.p_eButtontype := E_HmiButtonType.TOGGLEBUTTON;
-	s_fbHmiBtnManualClampsLowerHighPressure.p_bStaVisible := FALSE;
-	s_fbHmiBtnManualClampsLowerHighPressure.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnManualClampsLowerHighPressure.p_sBtnText := 'Pressure Select Lower Clamps';
-	
-	s_fbHmiBtnManualClampsLowerOpen.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnManualClampsLowerOpen.p_bStaVisible := FALSE;
-	s_fbHmiBtnManualClampsLowerOpen.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnManualClampsLowerOpen.p_sBtnText := 'Open Lower Clamps';
-	
-	s_fbHmiBtnManualClampsLowerClose.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnManualClampsLowerClose.p_bStaVisible := FALSE;
-	s_fbHmiBtnManualClampsLowerClose.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnManualClampsLowerClose.p_sBtnText := 'Close Lower Clamps';
-	
-	s_fbHmiBtnManualPinUpperLock.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnManualPinUpperLock.p_bStaVisible := FALSE;
-	s_fbHmiBtnManualPinUpperLock.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnManualPinUpperLock.p_sBtnText := 'Lock Upper Pins';
-	
-	s_fbHmiBtnManualPinUpperRelease.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnManualPinUpperRelease.p_bStaVisible := FALSE;
-	s_fbHmiBtnManualPinUpperRelease.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnManualPinUpperRelease.p_sBtnText := 'Release Upper Pins';
-	
-	s_fbHmiBtnManualPinLowerLock.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnManualPinLowerLock.p_bStaVisible := FALSE;
-	s_fbHmiBtnManualPinLowerLock.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnManualPinLowerLock.p_sBtnText := 'Lock Lower Pins';
-	
-	s_fbHmiBtnManualPinLowerRelease.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnManualPinLowerRelease.p_bStaVisible := FALSE;
-	s_fbHmiBtnManualPinLowerRelease.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnManualPinLowerRelease.p_sBtnText := 'Release Lower Pins';
-	
-	s_fbHmiBtnManualOpenerOpen.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnManualOpenerOpen.p_bStaVisible := FALSE;
-	s_fbHmiBtnManualOpenerOpen.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnManualOpenerOpen.p_sBtnText := 'Opener Open';
-	
-	s_fbHmiBtnManualOpenerClose.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnManualOpenerClose.p_bStaVisible := FALSE;
-	s_fbHmiBtnManualOpenerClose.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnManualOpenerClose.p_sBtnText := 'Opener Close';
-	
-	s_fbHmiBtnManualShutterOpen.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnManualShutterOpen.p_bStaVisible := FALSE;
-	s_fbHmiBtnManualShutterOpen.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnManualShutterOpen.p_sBtnText := 'Shutter Open';
-	
-	s_fbHmiBtnManualShutterClose.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnManualShutterClose.p_bStaVisible := FALSE;
-	s_fbHmiBtnManualShutterClose.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnManualShutterClose.p_sBtnText := 'Shutter Close';
-*)	
-	//Leds
-	s_fbHmiLedDockTbDone.p_bStaVisible := FALSE;
-	s_fbHmiLedDockTbDone.p_sToHmiDescriptionLed := 'Dock TB Done';
-	
-	s_fbHmiLedUndockTbDone.p_bStaVisible := FALSE;
-	s_fbHmiLedUndockTbDone.p_sToHmiDescriptionLed := 'Undock TB Done';
+//Manual-mode
+s_fbHmiBtnDockTB.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnDockTB.p_bStaVisible := FALSE;
+s_fbHmiBtnDockTB.p_bStaEnabled := FALSE;		
+s_fbHmiBtnDockTB.p_sBtnText := 'Dock TB';
 
-	s_fbHmiLedOpenInnerDoorDone.p_bStaVisible := FALSE;
-	s_fbHmiLedOpenInnerDoorDone.p_sToHmiDescriptionLed := 'Open Inner TB Door Done';
+s_fbHmiBtnUndockTB.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnUndockTB.p_bStaVisible := FALSE;
+s_fbHmiBtnUndockTB.p_bStaEnabled := FALSE;		
+s_fbHmiBtnUndockTB.p_sBtnText := 'Undock TB';
 
-	s_fbHmiLedCloseInnerDoorDone.p_bStaVisible := FALSE;
-	s_fbHmiLedCloseInnerDoorDone.p_sToHmiDescriptionLed := 'Close Inner TB Door Done';
-	
-	s_fbHmiLedClampsUpperPressureSelect.p_bStaVisible := FALSE;
-	s_fbHmiLedClampsUpperPressureSelect.p_sToHmiDescriptionLed := 'Pressure Select Upper Clamps';
-	
-	s_fbHmiLedClampsLowerPressureSelect.p_bStaVisible := FALSE;
-	s_fbHmiLedClampsLowerPressureSelect.p_sToHmiDescriptionLed := 'Pressure Select Lower Clamps';
-	
-	s_fbHmiLedClampsOpened.p_bStaVisible := FALSE;
-	s_fbHmiLedClampsOpened.p_sToHmiDescriptionLed := 'Clamps Opened';
-		
-	s_fbHmiLedClampsClosed.p_bStaVisible := FALSE;
-	s_fbHmiLedClampsClosed.p_sToHmiDescriptionLed := 'Clamps Closed';
+s_fbHmiBtnOpenInnerDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnOpenInnerDoor.p_bStaVisible := FALSE;
+s_fbHmiBtnOpenInnerDoor.p_bStaEnabled := FALSE;		
+s_fbHmiBtnOpenInnerDoor.p_sBtnText := 'Open Inner TB Door';
 
-	//==
-	s_fbHmiLedClampsUpperOpened.p_bStaVisible := FALSE;
-	s_fbHmiLedClampsUpperOpened.p_sToHmiDescriptionLed := 'Clamps Upper Left Opened';
+s_fbHmiBtnCloseInnerDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnCloseInnerDoor.p_bStaVisible := FALSE;
+s_fbHmiBtnCloseInnerDoor.p_bStaEnabled := FALSE;		
+s_fbHmiBtnCloseInnerDoor.p_sBtnText := 'Close Inner TB Door';
 	
-	s_fbHmiLedClampsUpperClosed.p_bStaVisible := FALSE;
-	s_fbHmiLedClampsUpperClosed.p_sToHmiDescriptionLed := 'Clamps Upper Left Closed';
+//Leds
+//Manual-mode
+s_fbHmiLedDockTbDone.p_bStaVisible := FALSE;
+s_fbHmiLedDockTbDone.p_sToHmiDescriptionLed := 'Dock TB Done';
 
-	s_fbHmiLedClampsLowerOpened.p_bStaVisible := FALSE;
-	s_fbHmiLedClampsLowerOpened.p_sToHmiDescriptionLed := 'Clamps Lower Left Opened';
+s_fbHmiLedUndockTbDone.p_bStaVisible := FALSE;
+s_fbHmiLedUndockTbDone.p_sToHmiDescriptionLed := 'Undock TB Done';
+
+s_fbHmiLedOpenInnerDoorDone.p_bStaVisible := FALSE;
+s_fbHmiLedOpenInnerDoorDone.p_sToHmiDescriptionLed := 'Open Inner TB Door Done';
+
+s_fbHmiLedCloseInnerDoorDone.p_bStaVisible := FALSE;
+s_fbHmiLedCloseInnerDoorDone.p_sToHmiDescriptionLed := 'Close Inner TB Door Done';
+
+s_fbHmiLedClampsUpperPressureSelect.p_bStaVisible := FALSE;
+s_fbHmiLedClampsUpperPressureSelect.p_sToHmiDescriptionLed := 'Pressure Select Upper Clamps';
+
+s_fbHmiLedClampsLowerPressureSelect.p_bStaVisible := FALSE;
+s_fbHmiLedClampsLowerPressureSelect.p_sToHmiDescriptionLed := 'Pressure Select Lower Clamps';
+
+s_fbHmiLedClampsOpened.p_bStaVisible := FALSE;
+s_fbHmiLedClampsOpened.p_sToHmiDescriptionLed := 'Clamps Opened';
 	
-	s_fbHmiLedClampsLowerClosed.p_bStaVisible := FALSE;
-	s_fbHmiLedClampsLowerClosed.p_sToHmiDescriptionLed := 'Clamps Lower Left Closed';
-	
-	s_fbHmiLedPinsLocked.p_bStaVisible := FALSE;
-	s_fbHmiLedPinsLocked.p_sToHmiDescriptionLed := 'Pins Locked';
-	
-	s_fbHmiLedPinsReleased.p_bStaVisible := FALSE;
-	s_fbHmiLedPinsReleased.p_sToHmiDescriptionLed := 'Pins Unlocked';
-	
-	//==	
-	s_fbHmiLedPinUpperReleased.p_bStaVisible := FALSE;
-	s_fbHmiLedPinUpperReleased.p_sToHmiDescriptionLed := 'Unlocking Pin Upper Released';
-	s_fbHmiLedPinUpperLocked.p_bStaVisible := FALSE;
-	s_fbHmiLedPinUpperLocked.p_sToHmiDescriptionLed := 'Unlocking Pin Upper Locked';
-	
-	s_fbHmiLedPinLowerReleased.p_bStaVisible := FALSE;
-	s_fbHmiLedPinLowerReleased.p_sToHmiDescriptionLed := 'Unlocking Pin Lower Released';
-	s_fbHmiLedPinLowerLocked.p_bStaVisible := FALSE;
-	s_fbHmiLedPinLowerLocked.p_sToHmiDescriptionLed := 'Unlocking Pin Lower Locked';
-	
-	s_fbHmiLedOpenerOpened.p_bStaVisible := FALSE;
-	s_fbHmiLedOpenerOpened.p_sToHmiDescriptionLed := 'Door Opener Opened';
-	s_fbHmiLedOpenerClosed.p_bStaVisible := FALSE;
-	s_fbHmiLedOpenerClosed.p_sToHmiDescriptionLed := 'Door Opener Closed';
-	s_fbHmiLedOpenerAlmostClosed.p_bStaVisible := FALSE;
-	s_fbHmiLedOpenerAlmostClosed.p_sToHmiDescriptionLed := 'Door Opener Almost Closed';
-	
-	s_fbHmiLedShutterOpened.p_bStaVisible := FALSE;
-	s_fbHmiLedShutterOpened.p_sToHmiDescriptionLed := 'Door Shutter Opened';
-	s_fbHmiLedShutterClosed.p_bStaVisible := FALSE;
-	s_fbHmiLedShutterClosed.p_sToHmiDescriptionLed := 'Door Shutter Closed';
-	
-	s_fbHmiLedOuterDoorOpened.p_bStaVisible := FALSE;
-	s_fbHmiLedOuterDoorOpened.p_sToHmiDescriptionLed := 'Outer Cabin Door Opened';
-	s_fbHmiLedOuterDoorClosed.p_bStaVisible := FALSE;
-	s_fbHmiLedOuterDoorClosed.p_sToHmiDescriptionLed := 'Outer Cabin Door Closed';
-	
-	s_fbHmiLedInnerDoorOpened.p_bStaVisible := FALSE;
-	s_fbHmiLedInnerDoorOpened.p_sToHmiDescriptionLed := 'Inner Cabin Door Opened';
-	s_fbHmiLedInnerDoorClosed.p_bStaVisible := FALSE;
-	s_fbHmiLedInnerDoorClosed.p_sToHmiDescriptionLed := 'Inner Cabin Door Closed';
+s_fbHmiLedClampsClosed.p_bStaVisible := FALSE;
+s_fbHmiLedClampsClosed.p_sToHmiDescriptionLed := 'Clamps Closed';
+
+//==
+s_fbHmiLedClampsUpperOpened.p_bStaVisible := FALSE;
+s_fbHmiLedClampsUpperOpened.p_sToHmiDescriptionLed := 'Clamps Upper Left Opened';
+
+s_fbHmiLedClampsUpperClosed.p_bStaVisible := FALSE;
+s_fbHmiLedClampsUpperClosed.p_sToHmiDescriptionLed := 'Clamps Upper Left Closed';
+
+s_fbHmiLedClampsLowerOpened.p_bStaVisible := FALSE;
+s_fbHmiLedClampsLowerOpened.p_sToHmiDescriptionLed := 'Clamps Lower Left Opened';
+
+s_fbHmiLedClampsLowerClosed.p_bStaVisible := FALSE;
+s_fbHmiLedClampsLowerClosed.p_sToHmiDescriptionLed := 'Clamps Lower Left Closed';
+
+s_fbHmiLedPinsLocked.p_bStaVisible := FALSE;
+s_fbHmiLedPinsLocked.p_sToHmiDescriptionLed := 'Pins Locked';
+
+s_fbHmiLedPinsReleased.p_bStaVisible := FALSE;
+s_fbHmiLedPinsReleased.p_sToHmiDescriptionLed := 'Pins Unlocked';
+
+//==	
+s_fbHmiLedPinUpperReleased.p_bStaVisible := FALSE;
+s_fbHmiLedPinUpperReleased.p_sToHmiDescriptionLed := 'Unlocking Pin Upper Released';
+s_fbHmiLedPinUpperLocked.p_bStaVisible := FALSE;
+s_fbHmiLedPinUpperLocked.p_sToHmiDescriptionLed := 'Unlocking Pin Upper Locked';
+
+s_fbHmiLedPinLowerReleased.p_bStaVisible := FALSE;
+s_fbHmiLedPinLowerReleased.p_sToHmiDescriptionLed := 'Unlocking Pin Lower Released';
+s_fbHmiLedPinLowerLocked.p_bStaVisible := FALSE;
+s_fbHmiLedPinLowerLocked.p_sToHmiDescriptionLed := 'Unlocking Pin Lower Locked';
+
+s_fbHmiLedOpenerOpened.p_bStaVisible := FALSE;
+s_fbHmiLedOpenerOpened.p_sToHmiDescriptionLed := 'Door Opener Opened';
+s_fbHmiLedOpenerClosed.p_bStaVisible := FALSE;
+s_fbHmiLedOpenerClosed.p_sToHmiDescriptionLed := 'Door Opener Closed';
+s_fbHmiLedOpenerAlmostClosed.p_bStaVisible := FALSE;
+s_fbHmiLedOpenerAlmostClosed.p_sToHmiDescriptionLed := 'Door Opener Almost Closed';
+
+s_fbHmiLedShutterOpened.p_bStaVisible := FALSE;
+s_fbHmiLedShutterOpened.p_sToHmiDescriptionLed := 'Door Shutter Opened';
+s_fbHmiLedShutterClosed.p_bStaVisible := FALSE;
+s_fbHmiLedShutterClosed.p_sToHmiDescriptionLed := 'Door Shutter Closed';
+
+s_fbHmiLedOuterDoorOpened.p_bStaVisible := FALSE;
+s_fbHmiLedOuterDoorOpened.p_sToHmiDescriptionLed := 'Outer Cabin Door Opened';
+s_fbHmiLedOuterDoorClosed.p_bStaVisible := FALSE;
+s_fbHmiLedOuterDoorClosed.p_sToHmiDescriptionLed := 'Outer Cabin Door Closed';
+
+s_fbHmiLedInnerDoorOpened.p_bStaVisible := FALSE;
+s_fbHmiLedInnerDoorOpened.p_sToHmiDescriptionLed := 'Inner Cabin Door Opened';
+s_fbHmiLedInnerDoorClosed.p_bStaVisible := FALSE;
+s_fbHmiLedInnerDoorClosed.p_sToHmiDescriptionLed := 'Inner Cabin Door Closed';
 	
 	
 _m_Init := TRUE;]]></ST>
@@ -1499,7 +1411,7 @@ CASE s_eSeqDockingInterface OF
 		
 	E_SeqDockingInterface.START:
 		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN
-			s_sMessage := '***';
+			s_sMessage := 'start';
 		END_IF
 	
 		s_tonTimer.IN := FALSE;
@@ -1561,7 +1473,6 @@ CASE s_eSeqDockingInterface OF
 				
 				{warning #DELETE: "Disabled Doors" option can be deleted, IF FUMO3 is build}	
 				IF i_bTestDisableCabinDoors THEN
-//--					s_eSeqDockingInterface := E_SeqDockingInterface.WAIT_FOR_TB_PLACED;
 					s_eSeqDockingInterface := E_SeqDockingInterface.DOCK_OPEN_DOCKING_CLAMPS;
 				ELSE
 					s_eSeqDockingInterface := E_SeqDockingInterface.OPEN_OUTER_CABIN_DOOR;
@@ -1570,7 +1481,6 @@ CASE s_eSeqDockingInterface OF
 			ELSE
 				s_bErrCmdNotAllowed := TRUE;
 			END_IF
-//--			s_bReqDockTB := FALSE;
 		END_IF
 		
 		//Command Undock TB////////////////////////////////////////////////////////////////////////
@@ -1580,14 +1490,13 @@ CASE s_eSeqDockingInterface OF
 			ELSE
 				s_bErrCmdNotAllowed := TRUE;
 			END_IF
-//--			s_bReqUnDockTB := FALSE;
 		END_IF
 		
 		//Command Open Inner TB Door //////////////////////////////////////////////////////////////
 		IF s_bReqOpenInnerDoor THEN
 			IF _m_CmdOpenInnerDoor(i_refReason := s_sMessage) THEN	
 				
-				{warning #DELETE: "Disabled Doors" option can be deleted, IF FUMO3 is build}	
+				{warning '#DELETE: "Disabled Doors" option can be deleted, IF FUMO3 is build'}	
 				IF i_bTestDisableCabinDoors THEN
 					s_eSeqDockingInterface := E_SeqDockingInterface.RELEASE_UNLOCKING_PINS;
 				ELSE
@@ -1597,7 +1506,6 @@ CASE s_eSeqDockingInterface OF
 			ELSE
 				s_bErrCmdNotAllowed := TRUE;
 			END_IF
-//--			s_bReqOpenInnerDoor := FALSE;
 		END_IF
 		
 		//Command Close Inner TB Door /////////////////////////////////////////////////////////////
@@ -1607,7 +1515,6 @@ CASE s_eSeqDockingInterface OF
 			ELSE
 				s_bErrCmdNotAllowed := TRUE;
 			END_IF
-//--			s_bReqCloseInnerDoor := FALSE;
 		END_IF
 		
 //DOCK TB /////////////////////////////////////////////////////////////////////////////////////////
@@ -1636,14 +1543,13 @@ CASE s_eSeqDockingInterface OF
 		END_IF
 			
 		IF s_cmOuterCabinDoor.p_bStaIsOpened THEN
-//--			s_eSeqDockingInterface := E_SeqDockingInterface.WAIT_FOR_TB_PLACED;
 			s_eSeqDockingInterface := E_SeqDockingInterface.DOCK_OPEN_DOCKING_CLAMPS;
 		END_IF
 	
 	E_SeqDockingInterface.DOCK_OPEN_DOCKING_CLAMPS:
 		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN	
 			s_cmDockingClampsUpper.m_Off();
-			s_cmDockingClampsLower.m_Off();;
+			s_cmDockingClampsLower.m_Off();
 		END_IF
 		
 		IF s_cmDockingClampsUpper.p_bStaIsOff AND s_cmDockingClampsLower.p_bStaIsOff THEN
@@ -1669,7 +1575,6 @@ CASE s_eSeqDockingInterface OF
 			ELSE
 				s_bErrCmdNotAllowed := TRUE;
 			END_IF
-//--			s_bReqUnDockTB := FALSE;
 		END_IF 
 		
 	//(option 1)	
@@ -1760,9 +1665,9 @@ CASE s_eSeqDockingInterface OF
 	
 	E_SeqDockingInterface.DOCK_TB_DONE:
 		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN
-			{waring #TODO: Nog goed bepalen waar dit moet plaatsvinden nu nog maar op een plek}	
-			s_bStaDocked := TRUE;
-			s_bStaUndocked := FALSE;
+			{warning '#TODO: Nog goed bepalen waar dit moet plaatsvinden nu nog maar op een plek'}	
+//--			s_bStaDocked := TRUE;
+//--			s_bStaUndocked := FALSE;
 		END_IF
 		
 		IF (s_fbSeqDockingInterfaceControl.q_tmStepTime > T#2S) THEN
@@ -1799,7 +1704,6 @@ CASE s_eSeqDockingInterface OF
 			ELSE
 				s_bErrCmdNotAllowed := TRUE;
 			END_IF
-//--			s_bReqDockTB := FALSE;
 		END_IF
 		
 	E_SeqDockingInterface.UNDOCK_CLOSE_DOCKING_CLAMPS:
@@ -1810,7 +1714,7 @@ CASE s_eSeqDockingInterface OF
 		
 		IF s_cmDockingClampsUpper.p_bStaIsOn AND s_cmDockingClampsLower.p_bStaIsOn THEN
 		
-			{warning #DELETE: "Disabled Doors" option can be deleted, IF FUMO3 is build}	
+			{warning '#DELETE: "Disabled Doors" option can be deleted, IF FUMO3 is build'}	
 			IF i_bTestDisableCabinDoors THEN	
 				s_eSeqDockingInterface := E_SeqDockingInterface.UNDOCK_TB_DONE;
 			ELSE
@@ -1830,9 +1734,9 @@ CASE s_eSeqDockingInterface OF
 	
 	E_SeqDockingInterface.UNDOCK_TB_DONE:
 		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN
-			{waring #TODO: Nog goed bepalen waar dit moet plaatsvinden nu nog maar op een plek}	
-			s_bStaDocked := FALSE;
-			s_bStaUndocked := TRUE;
+			{warning '#TODO: Nog goed bepalen waar dit moet plaatsvinden nu nog maar op een plek'}	
+//--			s_bStaDocked := FALSE;
+//--			s_bStaUndocked := TRUE;
 		END_IF
 		
 		IF (s_fbSeqDockingInterfaceControl.q_tmStepTime > T#2S) THEN
@@ -1888,8 +1792,9 @@ CASE s_eSeqDockingInterface OF
 	
 	E_SeqDockingInterface.OPEN_INNER_TB_DOOR_DONE:
 		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN
-			s_bStaInnerDoorOpenedAndReleased := TRUE;
-			s_bStaInnerDoorClosedAndLocked := FALSE;
+			;
+//--			s_bStaInnerDoorOpenedAndReleased := TRUE;
+//--			s_bStaInnerDoorClosedAndLocked := FALSE;
 		END_IF
 	
 		IF (s_fbSeqDockingInterfaceControl.q_tmStepTime > T#2S) THEN
@@ -1945,8 +1850,9 @@ CASE s_eSeqDockingInterface OF
 		
 	E_SeqDockingInterface.CLOSE_INNER_TB_DOOR_DONE:
 		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN
-			s_bStaInnerDoorOpenedAndReleased := FALSE;
-			s_bStaInnerDoorClosedAndLocked := TRUE;
+			;
+//--			s_bStaInnerDoorOpenedAndReleased := FALSE;
+//--			s_bStaInnerDoorClosedAndLocked := TRUE;
 		END_IF
 	
 		IF (s_fbSeqDockingInterfaceControl.q_tmStepTime > T#2S) THEN
@@ -2020,7 +1926,7 @@ CASE s_eSeqDockingInterface OF
 
 END_CASE	
 
-{warning #TODO: remove on all other location where THIS is written TO FALSE, it is non nessecary as it wil BY cylically be written FASLE here}
+{warning '#TODO: remove on all other location where THIS is written TO FALSE, it is non nessecary as it wil BY cylically be written FASLE here'}
 s_bReqDockTB := FALSE; 
 s_bReqUndockTB := FALSE;
 s_bReqOpenInnerDoor := FALSE;
@@ -2053,7 +1959,8 @@ END_IF
       <Declaration><![CDATA[METHOD PUBLIC m_Main : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF NOT SUPER^.m_Main() THEN
+        <ST><![CDATA[
+IF NOT SUPER^.m_Main() THEN
 	RETURN;
 END_IF
 
@@ -2063,7 +1970,6 @@ CASE i_eCtrlMode OF
 		;
 		
 	E_CtrlMode.AUTOMATIC:
-	
 		//Let pressure selection toggle follow automatic state
 //??		_m_AdoptPressureSelection();
 	
@@ -2097,10 +2003,6 @@ CASE i_eCtrlMode OF
 			
 		END_IF
 		; 	//Maintenance control is implemented in lower-layer control modules	
-		
-		// Manual control has been implemented into lower layer control modules
-		// Execets for pressure selection control outputs 
-//??		_m_MaintenanceControl();
 	
 	E_CtrlMode.IO:
 		//Execute IO-test control (HMI output force control)
@@ -2148,7 +2050,6 @@ IF i_bReqEnable AND (i_eCtrlMode = E_CtrlMode.MANUAL) AND (i_eCtrlState = E_Ctrl
 		AND NOT(s_cmOuterCabinDoor.p_bStaError)
 		//++
 		AND ( (s_eSeqDockingInterface = E_SeqDockingInterface.READY) OR (s_eSeqDockingInterface =E_SeqDockingInterface.WAIT_FOR_TB_PLACED) );
-//--		AND (s_eSeqDockingInterface = E_SeqDockingInterface.DOCK_TB_DONE);
 	
 	s_fbHmiBtnOpenInnerDoor.p_bStaEnabled :=
 		NOT(s_bIlckUnlockingPinsToRelease)
@@ -2161,7 +2062,6 @@ IF i_bReqEnable AND (i_eCtrlMode = E_CtrlMode.MANUAL) AND (i_eCtrlState = E_Ctrl
 		AND NOT(s_cmInnerCabinDoor.p_bStaError)
 		//++
 		AND (s_eSeqDockingInterface = E_SeqDockingInterface.READY);
-//--		AND (s_eSeqDockingInterface = E_SeqDockingInterface.DOCK_TB_DONE);
 	
 	s_fbHmiBtnCloseInnerDoor.p_bStaEnabled :=
 		NOT(s_bIlckUnlockingPinsToLock)
@@ -2174,7 +2074,6 @@ IF i_bReqEnable AND (i_eCtrlMode = E_CtrlMode.MANUAL) AND (i_eCtrlState = E_Ctrl
 		AND NOT(s_cmInnerCabinDoor.p_bStaError)
 		//++
 		AND (s_eSeqDockingInterface = E_SeqDockingInterface.READY);
-//--		AND (s_eSeqDockingInterface = E_SeqDockingInterface.OPEN_INNER_TB_DOOR_DONE);
 ELSE
 	s_fbHmiBtnDockTB.p_bStaEnabled := FALSE;
 	s_fbHmiBtnUndockTB.p_bStaEnabled := FALSE;
@@ -2201,9 +2100,6 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-//--s_bReqDockTB := FALSE;
-//--s_bReqUndockTB := FALSE;
-//--s_bReqOpenInnerDoor := FALSE;
 s_bReqCloseInnerDoor := TRUE;
 
 m_ReqCloseInnerDoor := TRUE;
@@ -2221,9 +2117,6 @@ IF NOT i_bReqEnable THEN
 END_IF
 
 s_bReqDockTB := TRUE;
-//--s_bReqUndockTB := FALSE;
-//--s_bReqOpenInnerDoor := FALSE;
-//--s_bReqCloseInnerDoor := FALSE;
 
 m_ReqDockTB := TRUE;
 ]]></ST>
@@ -2239,10 +2132,7 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-//--s_bReqDockTB := FALSE;
-//--s_bReqUndockTB := FALSE;
 s_bReqOpenInnerDoor := TRUE;
-//--s_bReqCloseInnerDoor := FALSE;
 
 m_ReqOpenInnerDoor := TRUE;
 ]]></ST>
@@ -2258,10 +2148,7 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-//--s_bReqDockTB := FALSE;
 s_bReqUndockTB := TRUE;
-//--s_bReqOpenInnerDoor := FALSE;
-//--s_bReqCloseInnerDoor := FALSE;
 
 m_ReqUndockTB := TRUE;
 ]]></ST>
@@ -2545,7 +2432,8 @@ p_bStsReadyToSendTB := s_bStsReadyToSendTB;
     </LineIds>
     <LineIds Name="EM_DockingInterface._m_CmdCloseInnerDoor">
       <LineId Id="4" Count="3" />
-      <LineId Id="40" Count="1" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="41" Count="0" />
       <LineId Id="18" Count="2" />
       <LineId Id="35" Count="0" />
       <LineId Id="21" Count="2" />
@@ -2566,6 +2454,7 @@ p_bStsReadyToSendTB := s_bStsReadyToSendTB;
     </LineIds>
     <LineIds Name="EM_DockingInterface._m_CmdOpenInnerDoor">
       <LineId Id="4" Count="3" />
+      <LineId Id="41" Count="0" />
       <LineId Id="31" Count="0" />
       <LineId Id="24" Count="2" />
       <LineId Id="36" Count="0" />
@@ -2669,7 +2558,6 @@ p_bStsReadyToSendTB := s_bStsReadyToSendTB;
       <LineId Id="7" Count="2" />
       <LineId Id="246" Count="0" />
       <LineId Id="224" Count="0" />
-      <LineId Id="381" Count="0" />
       <LineId Id="318" Count="0" />
       <LineId Id="320" Count="1" />
       <LineId Id="323" Count="0" />
@@ -2816,6 +2704,7 @@ p_bStsReadyToSendTB := s_bStsReadyToSendTB;
       <LineId Id="672" Count="0" />
       <LineId Id="592" Count="0" />
       <LineId Id="35" Count="3" />
+      <LineId Id="764" Count="0" />
       <LineId Id="580" Count="0" />
       <LineId Id="272" Count="1" />
       <LineId Id="269" Count="1" />
@@ -2826,39 +2715,8 @@ p_bStsReadyToSendTB := s_bStsReadyToSendTB;
       <LineId Id="583" Count="7" />
       <LineId Id="582" Count="0" />
       <LineId Id="275" Count="0" />
-      <LineId Id="738" Count="0" />
-      <LineId Id="441" Count="0" />
-      <LineId Id="516" Count="2" />
-      <LineId Id="514" Count="1" />
-      <LineId Id="258" Count="0" />
-      <LineId Id="286" Count="1" />
-      <LineId Id="283" Count="1" />
-      <LineId Id="259" Count="0" />
-      <LineId Id="289" Count="1" />
-      <LineId Id="260" Count="0" />
-      <LineId Id="431" Count="0" />
-      <LineId Id="522" Count="2" />
-      <LineId Id="520" Count="1" />
-      <LineId Id="433" Count="7" />
-      <LineId Id="432" Count="0" />
-      <LineId Id="291" Count="0" />
-      <LineId Id="261" Count="0" />
-      <LineId Id="294" Count="1" />
-      <LineId Id="292" Count="0" />
-      <LineId Id="296" Count="0" />
-      <LineId Id="298" Count="2" />
-      <LineId Id="297" Count="0" />
-      <LineId Id="448" Count="0" />
-      <LineId Id="450" Count="7" />
-      <LineId Id="449" Count="0" />
-      <LineId Id="263" Count="0" />
-      <LineId Id="465" Count="7" />
-      <LineId Id="463" Count="0" />
-      <LineId Id="473" Count="0" />
-      <LineId Id="475" Count="7" />
-      <LineId Id="474" Count="0" />
-      <LineId Id="464" Count="0" />
       <LineId Id="442" Count="0" />
+      <LineId Id="765" Count="0" />
       <LineId Id="753" Count="0" />
       <LineId Id="759" Count="0" />
       <LineId Id="756" Count="0" />
@@ -3234,18 +3092,17 @@ p_bStsReadyToSendTB := s_bStsReadyToSendTB;
       <LineId Id="619" Count="0" />
       <LineId Id="1069" Count="0" />
       <LineId Id="1075" Count="0" />
-      <LineId Id="1070" Count="1" />
+      <LineId Id="1070" Count="0" />
       <LineId Id="1169" Count="0" />
       <LineId Id="1073" Count="1" />
       <LineId Id="1072" Count="0" />
       <LineId Id="839" Count="0" />
       <LineId Id="760" Count="1" />
       <LineId Id="620" Count="0" />
-      <LineId Id="626" Count="0" />
       <LineId Id="357" Count="0" />
       <LineId Id="919" Count="0" />
       <LineId Id="1066" Count="0" />
-      <LineId Id="921" Count="6" />
+      <LineId Id="921" Count="5" />
       <LineId Id="920" Count="0" />
       <LineId Id="928" Count="0" />
       <LineId Id="1067" Count="0" />
@@ -3258,11 +3115,11 @@ p_bStsReadyToSendTB := s_bStsReadyToSendTB;
       <LineId Id="1097" Count="0" />
       <LineId Id="1095" Count="0" />
       <LineId Id="1089" Count="0" />
-      <LineId Id="933" Count="3" />
+      <LineId Id="933" Count="2" />
       <LineId Id="929" Count="0" />
       <LineId Id="937" Count="0" />
       <LineId Id="1068" Count="0" />
-      <LineId Id="939" Count="6" />
+      <LineId Id="939" Count="5" />
       <LineId Id="938" Count="0" />
       <LineId Id="200" Count="0" />
       <LineId Id="948" Count="1" />
@@ -3276,7 +3133,7 @@ p_bStsReadyToSendTB := s_bStsReadyToSendTB;
       <LineId Id="868" Count="0" />
       <LineId Id="821" Count="0" />
       <LineId Id="953" Count="1" />
-      <LineId Id="956" Count="3" />
+      <LineId Id="956" Count="2" />
       <LineId Id="1108" Count="0" />
       <LineId Id="960" Count="0" />
       <LineId Id="950" Count="0" />
@@ -3289,7 +3146,7 @@ p_bStsReadyToSendTB := s_bStsReadyToSendTB;
       <LineId Id="849" Count="0" />
       <LineId Id="1163" Count="5" />
       <LineId Id="1161" Count="1" />
-      <LineId Id="1123" Count="6" />
+      <LineId Id="1123" Count="5" />
       <LineId Id="1121" Count="0" />
       <LineId Id="842" Count="0" />
       <LineId Id="962" Count="0" />
@@ -3362,7 +3219,7 @@ p_bStsReadyToSendTB := s_bStsReadyToSendTB;
       <LineId Id="1157" Count="1" />
       <LineId Id="1132" Count="1" />
       <LineId Id="1152" Count="4" />
-      <LineId Id="1142" Count="3" />
+      <LineId Id="1142" Count="2" />
       <LineId Id="1130" Count="0" />
       <LineId Id="902" Count="0" />
       <LineId Id="904" Count="6" />
@@ -3378,7 +3235,9 @@ p_bStsReadyToSendTB := s_bStsReadyToSendTB;
       <LineId Id="978" Count="0" />
       <LineId Id="1049" Count="0" />
       <LineId Id="1059" Count="0" />
-      <LineId Id="1055" Count="3" />
+      <LineId Id="1055" Count="0" />
+      <LineId Id="1171" Count="0" />
+      <LineId Id="1057" Count="1" />
       <LineId Id="1053" Count="1" />
       <LineId Id="1051" Count="1" />
       <LineId Id="1050" Count="0" />
@@ -3414,6 +3273,7 @@ p_bStsReadyToSendTB := s_bStsReadyToSendTB;
       <LineId Id="391" Count="1" />
       <LineId Id="179" Count="1" />
       <LineId Id="1020" Count="0" />
+      <LineId Id="1172" Count="0" />
       <LineId Id="1022" Count="0" />
       <LineId Id="1041" Count="0" />
       <LineId Id="1023" Count="0" />
@@ -3451,7 +3311,9 @@ p_bStsReadyToSendTB := s_bStsReadyToSendTB;
       <LineId Id="1029" Count="6" />
       <LineId Id="1025" Count="0" />
       <LineId Id="1027" Count="0" />
-      <LineId Id="1036" Count="2" />
+      <LineId Id="1036" Count="1" />
+      <LineId Id="1173" Count="0" />
+      <LineId Id="1038" Count="0" />
       <LineId Id="1042" Count="0" />
       <LineId Id="1039" Count="1" />
       <LineId Id="1062" Count="1" />
@@ -3521,30 +3383,32 @@ p_bStsReadyToSendTB := s_bStsReadyToSendTB;
       <LineId Id="293" Count="0" />
     </LineIds>
     <LineIds Name="EM_DockingInterface.m_Main">
+      <LineId Id="773" Count="0" />
       <LineId Id="632" Count="6" />
       <LineId Id="772" Count="0" />
-      <LineId Id="642" Count="30" />
-      <LineId Id="674" Count="44" />
+      <LineId Id="642" Count="1" />
+      <LineId Id="645" Count="27" />
+      <LineId Id="674" Count="4" />
+      <LineId Id="683" Count="35" />
       <LineId Id="760" Count="0" />
-      <LineId Id="766" Count="0" />
+      <LineId Id="774" Count="0" />
       <LineId Id="719" Count="5" />
       <LineId Id="761" Count="0" />
-      <LineId Id="765" Count="0" />
+      <LineId Id="775" Count="0" />
       <LineId Id="764" Count="0" />
-      <LineId Id="725" Count="9" />
+      <LineId Id="726" Count="8" />
       <LineId Id="762" Count="0" />
       <LineId Id="767" Count="1" />
-      <LineId Id="735" Count="9" />
+      <LineId Id="736" Count="8" />
       <LineId Id="763" Count="0" />
       <LineId Id="769" Count="1" />
-      <LineId Id="745" Count="13" />
+      <LineId Id="746" Count="12" />
       <LineId Id="179" Count="0" />
     </LineIds>
     <LineIds Name="EM_DockingInterface.m_ReqCloseInnerDoor">
       <LineId Id="34" Count="0" />
       <LineId Id="26" Count="2" />
       <LineId Id="71" Count="0" />
-      <LineId Id="113" Count="2" />
       <LineId Id="108" Count="1" />
       <LineId Id="103" Count="0" />
       <LineId Id="118" Count="0" />
@@ -3553,7 +3417,8 @@ p_bStsReadyToSendTB := s_bStsReadyToSendTB;
       <LineId Id="34" Count="0" />
       <LineId Id="26" Count="2" />
       <LineId Id="71" Count="0" />
-      <LineId Id="105" Count="4" />
+      <LineId Id="105" Count="0" />
+      <LineId Id="109" Count="0" />
       <LineId Id="103" Count="0" />
       <LineId Id="112" Count="0" />
     </LineIds>
@@ -3561,8 +3426,8 @@ p_bStsReadyToSendTB := s_bStsReadyToSendTB;
       <LineId Id="34" Count="0" />
       <LineId Id="26" Count="2" />
       <LineId Id="71" Count="0" />
-      <LineId Id="110" Count="2" />
-      <LineId Id="108" Count="1" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="109" Count="0" />
       <LineId Id="103" Count="0" />
       <LineId Id="115" Count="0" />
     </LineIds>
@@ -3570,8 +3435,8 @@ p_bStsReadyToSendTB := s_bStsReadyToSendTB;
       <LineId Id="34" Count="0" />
       <LineId Id="26" Count="2" />
       <LineId Id="71" Count="0" />
-      <LineId Id="110" Count="2" />
-      <LineId Id="108" Count="1" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="109" Count="0" />
       <LineId Id="103" Count="0" />
       <LineId Id="115" Count="0" />
     </LineIds>

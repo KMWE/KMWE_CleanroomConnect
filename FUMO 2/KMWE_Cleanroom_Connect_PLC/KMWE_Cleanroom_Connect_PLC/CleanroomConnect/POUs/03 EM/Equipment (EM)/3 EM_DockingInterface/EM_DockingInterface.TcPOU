@@ -9,6 +9,7 @@ END_VAR
 VAR_INPUT
 	i_ref_stSettings : REFERENCE TO ST_SettingsDockingInterface;
 	
+	i_bTestDisableCabinDoors : BOOL;	
 	i_bStaTbAtDockingPosition : BOOL;
 	
 	// External interlocks (from outside this EM)
@@ -20,10 +21,10 @@ VAR_INPUT
 	i_fbExtIlckDoorOpenerToOpen : FB_Interlock;
 	i_fbExtIlckDoorShutterToClose : FB_Interlock;
 	i_fbExtIlckDoorShutterToOpen : FB_Interlock;
-	i_fbExtIlckOuterSpeedDoorToClose : FB_Interlock;
-	i_fbExtIlckOuterSpeedDoorToOpen : FB_Interlock;
-	i_fbExtIlckInnerSpeedDoorToClose : FB_Interlock;
-	i_fbExtIlckInnerSpeedDoorToOpen : FB_Interlock;
+	i_fbExtIlckOuterCabinDoorToClose : FB_Interlock;
+	i_fbExtIlckOuterCabinDoorToOpen : FB_Interlock;
+	i_fbExtIlckInnerCabinDoorToClose : FB_Interlock;
+	i_fbExtIlckInnerCabinDoorToOpen : FB_Interlock;
 	
 	i_refTB : REFERENCE TO OBJ_Carrier;	//Mogelijk voor uiteindelijke machine, voor de FUMO's is dit nog niet echt relevant
 	
@@ -48,8 +49,8 @@ VAR
 	s_cmDoorOpener : CM_ValveWithFB; // Off = Close, On = Open
 	s_cmDoorShutter : CM_ValveWithFB; // Off = Open, On = Close
 	
-	s_cmOuterSpeedDoor : CM_SpeedDoor;
-	s_cmInnerSpeedDoor : CM_SpeedDoor;
+	s_cmOuterCabinDoor : CM_SpeedDoor;
+	s_cmInnerCabinDoor : CM_SpeedDoor;
 	
 	//Interlocks
 	s_fbIlckHandlerClampsUpperPressureLow : FB_InterlockHandler;
@@ -64,10 +65,10 @@ VAR
 	s_fbIlckHandlerDoorOpenerOpen : FB_InterlockHandler;
 	s_fbIlckHandlerDoorShutterClose : FB_InterlockHandler;
 	s_fbIlckHandlerDoorShutterOpen : FB_InterlockHandler;
-	s_fbIlckHandlerOuterSpeedDoorOpen : FB_InterlockHandler;
-	s_fbIlckHandlerOuterSpeedDoorClose : FB_InterlockHandler;
-	s_fbIlckHandlerInnerSpeedDoorOpen : FB_InterlockHandler;
-	s_fbIlckHandlerInnerSpeedDoorClose : FB_InterlockHandler;
+	s_fbIlckHandlerOuterCabinDoorOpen : FB_InterlockHandler;
+	s_fbIlckHandlerOuterCabinDoorClose : FB_InterlockHandler;
+	s_fbIlckHandlerInnerCabinDoorOpen : FB_InterlockHandler;
+	s_fbIlckHandlerInnerCabinDoorClose : FB_InterlockHandler;
 	
 	//Inputs
 	s_diStaDoorAlmostClosed : FB_DigInput;
@@ -99,10 +100,10 @@ VAR
 	s_bStaDoorOpenerAlmostClosed : BOOL := FALSE;
 	s_bStaDoorShutterOpened : BOOL := FALSE;
 	s_bStaDoorShutterClosed : BOOL := FALSE;
-	s_bStaOuterSpeedDoorOpened : BOOL := FALSE;
-	s_bStaOuterSpeedDoorClosed : BOOL := FALSE;
-	s_bStaInnerSpeedDoorOpened : BOOL := FALSE;
-	s_bStaInnerSpeedDoorClosed : BOOL := FALSE;
+	s_bStaOuterCabinDoorOpened : BOOL := FALSE;
+	s_bStaOuterCabinDoorClosed : BOOL := FALSE;
+	s_bStaInnerCabinDoorOpened : BOOL := FALSE;
+	s_bStaInnerCabinDoorClosed : BOOL := FALSE;
 	
 	//Properties
 	s_bStaDocked : BOOL := FALSE;
@@ -137,10 +138,10 @@ VAR
 	s_bIlckDoorOpenerToOpen : BOOL;
 	s_bIlckDoorShutterToClose : BOOL;
 	s_bIlckDoorShutterToOpen : BOOL;
-	s_bIlckOuterSpeedDoorToClose : BOOL;
-	s_bIlckOuterSpeedDoorToOpen : BOOL;
-	s_bIlckInnerSpeedDoorToClose : BOOL;
-	s_bIlckInnerSpeedDoorToOpen : BOOL;
+	s_bIlckOuterCabinDoorToClose : BOOL;
+	s_bIlckOuterCabinDoorToOpen : BOOL;
+	s_bIlckInnerCabinDoorToClose : BOOL;
+	s_bIlckInnerCabinDoorToOpen : BOOL;
 	
 	s_sMessage : STRING;
 	
@@ -324,8 +325,8 @@ s_bStaError :=
 	OR s_cmUnlockingPinLower.p_bStaError
 	OR s_cmDoorOpener.p_bStaError
 	OR s_cmDoorShutter.p_bStaError
-	OR s_cmOuterSpeedDoor.p_bStaError
-	OR s_cmInnerSpeedDoor.p_bStaError
+	OR s_cmOuterCabinDoor.p_bStaError
+	OR s_cmInnerCabinDoor.p_bStaError
 	OR s_fbAlarmHandlerClosingDoorFailed.q_bStaActive
 	OR s_fbAlarmHandlerCmdNotAllowed.q_bStaActive;
 
@@ -338,8 +339,8 @@ s_bStaWarning :=
 	OR s_cmUnlockingPinLower.p_bStaWarning
 	OR s_cmDoorOpener.p_bStaWarning
 	OR s_cmDoorShutter.p_bStaWarning
-	OR s_cmOuterSpeedDoor.p_bStaWarning
-	OR s_cmInnerSpeedDoor.p_bStaWarning;	
+	OR s_cmOuterCabinDoor.p_bStaWarning
+	OR s_cmInnerCabinDoor.p_bStaWarning;	
 	
 _m_Alarms := TRUE;
 ]]></ST>
@@ -558,27 +559,27 @@ s_cmDoorShutter(
 s_bStaDoorShutterOpened := s_cmDoorShutter.p_bStaIsOff;
 s_bStaDoorShutterClosed := s_cmDoorShutter.p_bStaIsOn;
 
-s_cmOuterSpeedDoor(
-	i_bReqEnable := i_bReqEnable,
+s_cmOuterCabinDoor(
+	i_bReqEnable := i_bReqEnable AND i_bTestDisableCabinDoors,
 	i_eCtrlMode := i_eCtrlMode,
 	i_ref_eCtrlState := i_eCtrlState,
 	i_bCmdReset := i_bCmdReset,
-	i_bIclkOpen := s_bIlckOuterSpeedDoorToOpen AND  NOT(s_bOverruleInterlocks),
-	i_bIclkClose := s_bIlckOuterSpeedDoorToClose AND NOT(s_bOverruleInterlocks));
+	i_bIclkOpen := s_bIlckOuterCabinDoorToOpen AND  NOT(s_bOverruleInterlocks),
+	i_bIclkClose := s_bIlckOuterCabinDoorToClose AND NOT(s_bOverruleInterlocks));
 
-s_bStaOuterSpeedDoorOpened := s_cmOuterSpeedDoor.p_bStaIsOpened;
-s_bStaOuterSpeedDoorClosed := s_cmOuterSpeedDoor.p_bStaIsClosed;
+s_bStaOuterCabinDoorOpened := s_cmOuterCabinDoor.p_bStaIsOpened;
+s_bStaOuterCabinDoorClosed := s_cmOuterCabinDoor.p_bStaIsClosed;
 
-s_cmInnerSpeedDoor(
-	i_bReqEnable := i_bReqEnable,
+s_cmInnerCabinDoor(
+	i_bReqEnable := i_bReqEnable AND i_bTestDisableCabinDoors,
 	i_eCtrlMode := i_eCtrlMode,
 	i_ref_eCtrlState := i_eCtrlState,
 	i_bCmdReset := i_bCmdReset,
-	i_bIclkOpen := s_bIlckInnerSpeedDoorToOpen AND NOT(s_bOverruleInterlocks),
-	i_bIclkClose := s_bIlckInnerSpeedDoorToClose AND NOT(s_bOverruleInterlocks));
+	i_bIclkOpen := s_bIlckInnerCabinDoorToOpen AND NOT(s_bOverruleInterlocks),
+	i_bIclkClose := s_bIlckInnerCabinDoorToClose AND NOT(s_bOverruleInterlocks));
 
-s_bStaInnerSpeedDoorOpened := s_cmInnerSpeedDoor.p_bStaIsOpened;
-s_bStaInnerSpeedDoorClosed := s_cmInnerSpeedDoor.p_bStaIsClosed;
+s_bStaInnerCabinDoorOpened := s_cmInnerCabinDoor.p_bStaIsOpened;
+s_bStaInnerCabinDoorClosed := s_cmInnerCabinDoor.p_bStaIsClosed;
 
 _m_Devices := TRUE;
 ]]></ST>
@@ -604,7 +605,7 @@ s_fbHmiBtnUndockTB();
 s_fbHmiBtnOpenInnerDoor();
 s_fbHmiBtnCloseInnerDoor();
 
-//?? Could be removed is part of CM's
+//-- Could be removed is part of CM's
 (*
 //Maintenance control	
 s_fbHmiBtnManualClampsUpperHighPressure();
@@ -651,11 +652,11 @@ s_fbHmiLedOpenerAlmostClosed(i_bStaLed := s_bStaDoorOpenerAlmostClosed);
 s_fbHmiLedShutterOpened(i_bStaLed := s_bStaDoorShutterOpened);
 s_fbHmiLedShutterClosed(i_bStaLed := s_bStaDoorShutterClosed);
 
-s_fbHmiLedOuterDoorOpened(i_bStaLed := s_bStaOuterSpeedDoorOpened);
-s_fbHmiLedOuterDoorClosed(i_bStaLed := s_bStaOuterSpeedDoorClosed);
+s_fbHmiLedOuterDoorOpened(i_bStaLed := s_bStaOuterCabinDoorOpened);
+s_fbHmiLedOuterDoorClosed(i_bStaLed := s_bStaOuterCabinDoorClosed);
 
-s_fbHmiLedInnerDoorOpened(i_bStaLed := s_bStaInnerSpeedDoorOpened);
-s_fbHmiLedInnerDoorClosed(i_bStaLed := s_bStaInnerSpeedDoorClosed);
+s_fbHmiLedInnerDoorOpened(i_bStaLed := s_bStaInnerCabinDoorOpened);
+s_fbHmiLedInnerDoorClosed(i_bStaLed := s_bStaInnerCabinDoorClosed);
 
 _m_Hmi := TRUE;]]></ST>
       </Implementation>
@@ -755,23 +756,23 @@ s_cmDoorShutter.p_bCfgReverseValve := FALSE;
 s_cmDoorShutter.p_sCfgOffName := 'Open';
 s_cmDoorShutter.p_sCfgOnName := 'Close';
 
-s_cmOuterSpeedDoor.i_bReqEnable := FALSE;
-s_cmOuterSpeedDoor.i_eCtrlMode := E_CtrlMode.IDLE;
-s_cmOuterSpeedDoor.i_sCmName := 'Outer Speed Door';
-s_cmOuterSpeedDoor.i_stSettings.tDoorClosingTimeout := T#10S;
-s_cmOuterSpeedDoor.i_stSettings.tDoorOpeningTimeout := T#10S;
-s_cmOuterSpeedDoor.i_stSettings.tResetPulseDuration := T#1S;
-s_cmOuterSpeedDoor.p_sCfgOpenName := 'Open';
-s_cmOuterSpeedDoor.p_sCfgCloseName := 'Close';
+s_cmOuterCabinDoor.i_bReqEnable := FALSE;
+s_cmOuterCabinDoor.i_eCtrlMode := E_CtrlMode.IDLE;
+s_cmOuterCabinDoor.i_sCmName := 'Outer Cabin Door';
+s_cmOuterCabinDoor.i_stSettings.tDoorClosingTimeout := T#10S;
+s_cmOuterCabinDoor.i_stSettings.tDoorOpeningTimeout := T#10S;
+s_cmOuterCabinDoor.i_stSettings.tResetPulseDuration := T#1S;
+s_cmOuterCabinDoor.p_sCfgOpenName := 'Open';
+s_cmOuterCabinDoor.p_sCfgCloseName := 'Close';
 
-s_cmInnerSpeedDoor.i_bReqEnable := FALSE;
-s_cmInnerSpeedDoor.i_eCtrlMode := E_CtrlMode.IDLE;
-s_cmInnerSpeedDoor.i_sCmName := 'Inner Speed Door';
-s_cmInnerSpeedDoor.i_stSettings.tDoorClosingTimeout := T#10S;
-s_cmInnerSpeedDoor.i_stSettings.tDoorOpeningTimeout := T#10S;
-s_cmInnerSpeedDoor.i_stSettings.tResetPulseDuration := T#1S;
-s_cmInnerSpeedDoor.p_sCfgOpenName := 'Open';
-s_cmInnerSpeedDoor.p_sCfgCloseName := 'Close';
+s_cmInnerCabinDoor.i_bReqEnable := FALSE;
+s_cmInnerCabinDoor.i_eCtrlMode := E_CtrlMode.IDLE;
+s_cmInnerCabinDoor.i_sCmName := 'Inner Cabin Door';
+s_cmInnerCabinDoor.i_stSettings.tDoorClosingTimeout := T#10S;
+s_cmInnerCabinDoor.i_stSettings.tDoorOpeningTimeout := T#10S;
+s_cmInnerCabinDoor.i_stSettings.tResetPulseDuration := T#1S;
+s_cmInnerCabinDoor.p_sCfgOpenName := 'Open';
+s_cmInnerCabinDoor.p_sCfgCloseName := 'Close';
 	
 //Interlocks
 //Clamps upper/lower pressure selection
@@ -784,12 +785,12 @@ s_fbIlckHandlerClampsLowerPressureHigh.i_stInterlockList.arr_Interlocks[1].sReas
 //Docking Clamps
 //i_stInterlockList.arr_Interlocks[0].sReason --> External, dynamical will be written in m_input
 s_fbIlckHandlerDockingClampsOpen.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
-s_fbIlckHandlerDockingClampsOpen.i_stInterlockList.arr_Interlocks[2].sReason := 'Inner Speed Door not Closed';
-s_fbIlckHandlerDockingClampsOpen.i_stInterlockList.arr_Interlocks[3].sReason := 'Outer Speed Door not Opened';
+s_fbIlckHandlerDockingClampsOpen.i_stInterlockList.arr_Interlocks[2].sReason := 'Inner Cabin Door not Closed';
+s_fbIlckHandlerDockingClampsOpen.i_stInterlockList.arr_Interlocks[3].sReason := 'Outer Cabin Door not Opened';
 
 s_fbIlckHandlerDockingClampsClose.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
-s_fbIlckHandlerDockingClampsClose.i_stInterlockList.arr_Interlocks[1].sReason := 'Inner Speed Door not Closed';
-s_fbIlckHandlerDockingClampsClose.i_stInterlockList.arr_Interlocks[1].sReason := 'Outer Speed Door not Opened';
+s_fbIlckHandlerDockingClampsClose.i_stInterlockList.arr_Interlocks[1].sReason := 'Inner Cabin Door not Closed';
+s_fbIlckHandlerDockingClampsClose.i_stInterlockList.arr_Interlocks[1].sReason := 'Outer Cabin Door not Opened';
 
 //Unlockig Pins
 //i_stInterlockList.arr_Interlocks[0].sReason --> External, dynamical will be written in m_input
@@ -802,34 +803,34 @@ s_fbIlckHandlerDoorOpenerClose.i_stInterlockList.arr_Interlocks[1].sReason := 'U
 s_fbIlckHandlerDoorOpenerClose.i_stInterlockList.arr_Interlocks[2].sReason := 'Door Shutter not opened';
 s_fbIlckHandlerDoorOpenerOpen.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
 s_fbIlckHandlerDoorOpenerOpen.i_stInterlockList.arr_Interlocks[2].sReason := 'Door Shutter not opened';
-s_fbIlckHandlerDoorOpenerOpen.i_stInterlockList.arr_Interlocks[3].sReason := 'Inner Speed Door not opened';
+s_fbIlckHandlerDoorOpenerOpen.i_stInterlockList.arr_Interlocks[3].sReason := 'Inner Cabin Door not opened';
 
 //Door Shutter
 //i_stInterlockList.arr_Interlocks[0].sReason --> External, dynamical will be written in m_input
 s_fbIlckHandlerDoorShutterOpen.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
-s_fbIlckHandlerDoorShutterOpen.i_stInterlockList.arr_Interlocks[2].sReason := 'Inner Speed Door not opened';
+s_fbIlckHandlerDoorShutterOpen.i_stInterlockList.arr_Interlocks[2].sReason := 'Inner Cabin Door not opened';
 s_fbIlckHandlerDoorShutterClose.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
 s_fbIlckHandlerDoorShutterClose.i_stInterlockList.arr_Interlocks[2].sReason := 'Door Opener not (almost)closed';
 
-//Outer Speed Door
+//Outer Cabin Door
 //i_stInterlockList.arr_Interlocks[0].sReason --> External, dynamical will be written in m_input
-s_fbIlckHandlerOuterSpeedDoorOpen.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
-s_fbIlckHandlerOuterSpeedDoorOpen.i_stInterlockList.arr_Interlocks[2].sReason := 'Inner Speed Door not Closed';
-s_fbIlckHandlerOuterSpeedDoorOpen.i_stInterlockList.arr_Interlocks[3].sReason := 'Docking Clamps not Closed';
-s_fbIlckHandlerOuterSpeedDoorOpen.i_stInterlockList.arr_Interlocks[4].sReason := 'Unlocking Pins not Locked';
-s_fbIlckHandlerOuterSpeedDoorClose.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
-s_fbIlckHandlerOuterSpeedDoorClose.i_stInterlockList.arr_Interlocks[2].sReason := 'Docking Clamps not Closed';
-s_fbIlckHandlerOuterSpeedDoorClose.i_stInterlockList.arr_Interlocks[3].sReason := 'Unlocking Pins not Locked';
+s_fbIlckHandlerOuterCabinDoorOpen.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
+s_fbIlckHandlerOuterCabinDoorOpen.i_stInterlockList.arr_Interlocks[2].sReason := 'Inner Cabin Door not Closed';
+s_fbIlckHandlerOuterCabinDoorOpen.i_stInterlockList.arr_Interlocks[3].sReason := 'Docking Clamps not Closed';
+s_fbIlckHandlerOuterCabinDoorOpen.i_stInterlockList.arr_Interlocks[4].sReason := 'Unlocking Pins not Locked';
+s_fbIlckHandlerOuterCabinDoorClose.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
+s_fbIlckHandlerOuterCabinDoorClose.i_stInterlockList.arr_Interlocks[2].sReason := 'Docking Clamps not Closed';
+s_fbIlckHandlerOuterCabinDoorClose.i_stInterlockList.arr_Interlocks[3].sReason := 'Unlocking Pins not Locked';
 
-//Inner Speed Door
+//Inner Cabin Door
 //i_stInterlockList.arr_Interlocks[0].sReason --> External, dynamical will be written in m_input
-s_fbIlckHandlerInnerSpeedDoorOpen.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
-s_fbIlckHandlerInnerSpeedDoorOpen.i_stInterlockList.arr_Interlocks[2].sReason := 'Outer Speed Door not Closed';
-s_fbIlckHandlerInnerSpeedDoorOpen.i_stInterlockList.arr_Interlocks[3].sReason := 'Door Opener not Closed';
-s_fbIlckHandlerInnerSpeedDoorOpen.i_stInterlockList.arr_Interlocks[4].sReason := 'Door Shutter not Closed';
-s_fbIlckHandlerInnerSpeedDoorClose.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
-s_fbIlckHandlerInnerSpeedDoorClose.i_stInterlockList.arr_Interlocks[2].sReason := 'Door Opener not Closed';
-s_fbIlckHandlerInnerSpeedDoorClose.i_stInterlockList.arr_Interlocks[3].sReason := 'Door Shutter not Closed';
+s_fbIlckHandlerInnerCabinDoorOpen.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
+s_fbIlckHandlerInnerCabinDoorOpen.i_stInterlockList.arr_Interlocks[2].sReason := 'Outer Cabin Door not Closed';
+s_fbIlckHandlerInnerCabinDoorOpen.i_stInterlockList.arr_Interlocks[3].sReason := 'Door Opener not Closed';
+s_fbIlckHandlerInnerCabinDoorOpen.i_stInterlockList.arr_Interlocks[4].sReason := 'Door Shutter not Closed';
+s_fbIlckHandlerInnerCabinDoorClose.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
+s_fbIlckHandlerInnerCabinDoorClose.i_stInterlockList.arr_Interlocks[2].sReason := 'Door Opener not Closed';
+s_fbIlckHandlerInnerCabinDoorClose.i_stInterlockList.arr_Interlocks[3].sReason := 'Door Shutter not Closed';
 
 //Alarm config
 s_fbAlarmHandlerClosingDoorFailed.i_sAlarmText := CONCAT(i_sEmName, ': Closing inner door failed');
@@ -866,7 +867,7 @@ s_fbAlarmHandlerCmdNotAllowed.i_eAlarmLevel := E_AlarmLevel.Alarm;
 	s_fbHmiBtnCloseInnerDoor.p_bStaEnabled := FALSE;		
 	s_fbHmiBtnCloseInnerDoor.p_sBtnText := 'Close Inner TB Door';
 	
-	//?? Could be removed is part of CM's
+//-- Could be removed is part of CM's
 (*	//Manual
 	s_fbHmiBtnManualClampsUpperHighPressure.p_eButtontype := E_HmiButtonType.TOGGLEBUTTON;
 	s_fbHmiBtnManualClampsUpperHighPressure.p_bStaVisible := FALSE;
@@ -994,14 +995,14 @@ s_fbAlarmHandlerCmdNotAllowed.i_eAlarmLevel := E_AlarmLevel.Alarm;
 	s_fbHmiLedShutterClosed.p_sToHmiDescriptionLed := 'Door Shutter Closed';
 	
 	s_fbHmiLedOuterDoorOpened.p_bStaVisible := FALSE;
-	s_fbHmiLedOuterDoorOpened.p_sToHmiDescriptionLed := 'Outer Speed Door Opened';
+	s_fbHmiLedOuterDoorOpened.p_sToHmiDescriptionLed := 'Outer Cabin Door Opened';
 	s_fbHmiLedOuterDoorClosed.p_bStaVisible := FALSE;
-	s_fbHmiLedOuterDoorClosed.p_sToHmiDescriptionLed := 'Outer Speed Door Closed';
+	s_fbHmiLedOuterDoorClosed.p_sToHmiDescriptionLed := 'Outer Cabin Door Closed';
 	
 	s_fbHmiLedInnerDoorOpened.p_bStaVisible := FALSE;
-	s_fbHmiLedInnerDoorOpened.p_sToHmiDescriptionLed := 'Inner Speed Door Opened';
+	s_fbHmiLedInnerDoorOpened.p_sToHmiDescriptionLed := 'Inner Cabin Door Opened';
 	s_fbHmiLedInnerDoorClosed.p_bStaVisible := FALSE;
-	s_fbHmiLedInnerDoorClosed.p_sToHmiDescriptionLed := 'Inner Speed Door Closed';
+	s_fbHmiLedInnerDoorClosed.p_sToHmiDescriptionLed := 'Inner Cabin Door Closed';
 	
 	
 _m_Init := TRUE;]]></ST>
@@ -1050,8 +1051,8 @@ s_fbIlckHandlerClampsLowerPressureHigh();
 s_fbIlckHandlerDockingClampsOpen.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckDockingClampsToOpen.p_bInterlocked;
 s_fbIlckHandlerDockingClampsOpen.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckDockingClampsToOpen.p_sReason;
 s_fbIlckHandlerDockingClampsOpen.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
-s_fbIlckHandlerDockingClampsOpen.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_bStaInnerSpeedDoorClosed);
-s_fbIlckHandlerDockingClampsOpen.i_stInterlockList.arr_Interlocks[3].bState := NOT(s_bStaOuterSpeedDoorOpened);
+s_fbIlckHandlerDockingClampsOpen.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_bStaInnerCabinDoorClosed) AND NOT(i_bTestDisableCabinDoors);
+s_fbIlckHandlerDockingClampsOpen.i_stInterlockList.arr_Interlocks[3].bState := NOT(s_bStaOuterCabinDoorOpened) AND NOT(i_bTestDisableCabinDoors);
 s_fbIlckHandlerDockingClampsOpen();
 
 s_fbIlckHandlerDockingClampsClose.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckDockingClampsToClose.p_bInterlocked;
@@ -1081,14 +1082,14 @@ s_fbIlckHandlerDoorOpenerOpen.i_stInterlockList.arr_Interlocks[0].bState := i_fb
 s_fbIlckHandlerDoorOpenerOpen.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckDoorOpenerToOpen.p_sReason;
 s_fbIlckHandlerDoorOpenerOpen.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
 s_fbIlckHandlerDoorOpenerOpen.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_bStaDoorShutterOpened);
-s_fbIlckHandlerDoorOpenerOpen.i_stInterlockList.arr_Interlocks[3].bState := NOT(s_bStaInnerSpeedDoorOpened);
+s_fbIlckHandlerDoorOpenerOpen.i_stInterlockList.arr_Interlocks[3].bState := NOT(s_bStaInnerCabinDoorOpened) AND NOT(i_bTestDisableCabinDoors);
 s_fbIlckHandlerDoorOpenerOpen();
 
 //Door Shutter
 s_fbIlckHandlerDoorShutterOpen.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckDoorOpenerToOpen.p_bInterlocked;
 s_fbIlckHandlerDoorShutterOpen.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckDoorShutterToOpen.p_sReason;
 s_fbIlckHandlerDoorShutterOpen.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
-s_fbIlckHandlerDoorShutterOpen.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_bStaInnerSpeedDoorOpened);
+s_fbIlckHandlerDoorShutterOpen.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_bStaInnerCabinDoorOpened) AND NOT(i_bTestDisableCabinDoors);
 s_fbIlckHandlerDoorShutterOpen();
 
 s_fbIlckHandlerDoorShutterClose.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckDoorShutterToClose.p_bInterlocked;
@@ -1097,37 +1098,37 @@ s_fbIlckHandlerDoorShutterClose.i_stInterlockList.arr_Interlocks[1].bState := NO
 s_fbIlckHandlerDoorShutterClose.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_bStaDoorOpenerClosed) AND NOT(s_bStaDoorOpenerAlmostClosed); 
 s_fbIlckHandlerDoorShutterClose();
 
-//Outer Speed Door
-s_fbIlckHandlerOuterSpeedDoorOpen.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckOuterSpeedDoorToOpen.p_bInterlocked;
-s_fbIlckHandlerOuterSpeedDoorOpen.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckOuterSpeedDoorToOpen.p_sReason;
-s_fbIlckHandlerOuterSpeedDoorOpen.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
-s_fbIlckHandlerOuterSpeedDoorOpen.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_bStaInnerSpeedDoorClosed);
-s_fbIlckHandlerOuterSpeedDoorOpen.i_stInterlockList.arr_Interlocks[3].bState := NOT(s_bStaDockingClampsClosed);
-s_fbIlckHandlerOuterSpeedDoorOpen.i_stInterlockList.arr_Interlocks[4].bState := NOT(s_bStaUnlockingPinsLocked);
-s_fbIlckHandlerOuterSpeedDoorOpen();
+//Outer Cabin Door
+s_fbIlckHandlerOuterCabinDoorOpen.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckOuterCabinDoorToOpen.p_bInterlocked;
+s_fbIlckHandlerOuterCabinDoorOpen.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckOuterCabinDoorToOpen.p_sReason;
+s_fbIlckHandlerOuterCabinDoorOpen.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
+s_fbIlckHandlerOuterCabinDoorOpen.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_bStaInnerCabinDoorClosed) AND NOT(i_bTestDisableCabinDoors);
+s_fbIlckHandlerOuterCabinDoorOpen.i_stInterlockList.arr_Interlocks[3].bState := NOT(s_bStaDockingClampsClosed);
+s_fbIlckHandlerOuterCabinDoorOpen.i_stInterlockList.arr_Interlocks[4].bState := NOT(s_bStaUnlockingPinsLocked);
+s_fbIlckHandlerOuterCabinDoorOpen();
 
-s_fbIlckHandlerOuterSpeedDoorClose.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckOuterSpeedDoorToClose.p_bInterlocked;
-s_fbIlckHandlerOuterSpeedDoorClose.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckOuterSpeedDoorToClose.p_sReason;
-s_fbIlckHandlerOuterSpeedDoorClose.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
-s_fbIlckHandlerOuterSpeedDoorClose.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_bStaDockingClampsClosed);
-s_fbIlckHandlerOuterSpeedDoorClose.i_stInterlockList.arr_Interlocks[3].bState := NOT(s_bStaUnlockingPinsLocked); 
-s_fbIlckHandlerOuterSpeedDoorClose();
+s_fbIlckHandlerOuterCabinDoorClose.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckOuterCabinDoorToClose.p_bInterlocked;
+s_fbIlckHandlerOuterCabinDoorClose.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckOuterCabinDoorToClose.p_sReason;
+s_fbIlckHandlerOuterCabinDoorClose.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
+s_fbIlckHandlerOuterCabinDoorClose.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_bStaDockingClampsClosed);
+s_fbIlckHandlerOuterCabinDoorClose.i_stInterlockList.arr_Interlocks[3].bState := NOT(s_bStaUnlockingPinsLocked); 
+s_fbIlckHandlerOuterCabinDoorClose();
 
-//Inner Speed Door
-s_fbIlckHandlerInnerSpeedDoorOpen.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckInnerSpeedDoorToOpen.p_bInterlocked;
-s_fbIlckHandlerInnerSpeedDoorOpen.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckInnerSpeedDoorToOpen.p_sReason;
-s_fbIlckHandlerInnerSpeedDoorOpen.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
-s_fbIlckHandlerInnerSpeedDoorOpen.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_bStaOuterSpeedDoorClosed);
-s_fbIlckHandlerInnerSpeedDoorOpen.i_stInterlockList.arr_Interlocks[3].bState := NOT(s_bStaDoorOpenerClosed);
-s_fbIlckHandlerInnerSpeedDoorOpen.i_stInterlockList.arr_Interlocks[4].bState := NOT(s_bStaDoorShutterClosed);
-s_fbIlckHandlerInnerSpeedDoorOpen();
+//Inner Cabin Door
+s_fbIlckHandlerInnerCabinDoorOpen.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckInnerCabinDoorToOpen.p_bInterlocked;
+s_fbIlckHandlerInnerCabinDoorOpen.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckInnerCabinDoorToOpen.p_sReason;
+s_fbIlckHandlerInnerCabinDoorOpen.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
+s_fbIlckHandlerInnerCabinDoorOpen.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_bStaOuterCabinDoorClosed) AND NOT(i_bTestDisableCabinDoors);
+s_fbIlckHandlerInnerCabinDoorOpen.i_stInterlockList.arr_Interlocks[3].bState := NOT(s_bStaDoorOpenerClosed);
+s_fbIlckHandlerInnerCabinDoorOpen.i_stInterlockList.arr_Interlocks[4].bState := NOT(s_bStaDoorShutterClosed);
+s_fbIlckHandlerInnerCabinDoorOpen();
 
-s_fbIlckHandlerInnerSpeedDoorClose.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckInnerSpeedDoorToClose.p_bInterlocked;
-s_fbIlckHandlerInnerSpeedDoorClose.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckInnerSpeedDoorToClose.p_sReason;
-s_fbIlckHandlerInnerSpeedDoorClose.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
-s_fbIlckHandlerInnerSpeedDoorClose.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_bStaDoorOpenerClosed);
-s_fbIlckHandlerInnerSpeedDoorClose.i_stInterlockList.arr_Interlocks[3].bState := NOT(s_bStaDoorShutterClosed); 
-s_fbIlckHandlerInnerSpeedDoorClose();
+s_fbIlckHandlerInnerCabinDoorClose.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckInnerCabinDoorToClose.p_bInterlocked;
+s_fbIlckHandlerInnerCabinDoorClose.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckInnerCabinDoorToClose.p_sReason;
+s_fbIlckHandlerInnerCabinDoorClose.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
+s_fbIlckHandlerInnerCabinDoorClose.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_bStaDoorOpenerClosed);
+s_fbIlckHandlerInnerCabinDoorClose.i_stInterlockList.arr_Interlocks[3].bState := NOT(s_bStaDoorShutterClosed); 
+s_fbIlckHandlerInnerCabinDoorClose();
 
 s_bIlckDockingClampsUpperPressureLow := s_fbIlckHandlerClampsUpperPressureLow.p_bInterlocked;
 s_bIlckDockingClampsUpperPressureHigh := s_fbIlckHandlerClampsUpperPressureHigh.p_bInterlocked;
@@ -1147,11 +1148,11 @@ s_bIlckDoorOpenerToClose := s_fbIlckHandlerDoorOpenerClose.p_bInterlocked;
 s_bIlckDoorShutterToOpen := s_fbIlckHandlerDoorShutterOpen.p_bInterlocked;
 s_bIlckDoorShutterToClose := s_fbIlckHandlerDoorShutterClose.p_bInterlocked;
 
-s_bIlckOuterSpeedDoorToOpen := s_fbIlckHandlerOuterSpeedDoorOpen.p_bInterlocked;
-s_bIlckOuterSpeedDoorToClose := s_fbIlckHandlerOuterSpeedDoorClose.p_bInterlocked;
+s_bIlckOuterCabinDoorToOpen := s_fbIlckHandlerOuterCabinDoorOpen.p_bInterlocked;
+s_bIlckOuterCabinDoorToClose := s_fbIlckHandlerOuterCabinDoorClose.p_bInterlocked;
 
-s_bIlckInnerSpeedDoorToOpen := s_fbIlckHandlerInnerSpeedDoorOpen.p_bInterlocked;
-s_bIlckInnerSpeedDoorToClose := s_fbIlckHandlerInnerSpeedDoorClose.p_bInterlocked;
+s_bIlckInnerCabinDoorToOpen := s_fbIlckHandlerInnerCabinDoorOpen.p_bInterlocked;
+s_bIlckInnerCabinDoorToClose := s_fbIlckHandlerInnerCabinDoorClose.p_bInterlocked;
 
 //Clamps upper pressure selection
 IF s_bIlckDockingClampsUpperPressureLow THEN
@@ -1239,30 +1240,30 @@ ELSE
 	s_cmDoorShutter.p_sInterlockedReasonOn := '-';
 END_IF
 
-//Outer Speed Door
-IF s_bIlckOuterSpeedDoorToOpen THEN
-	s_cmOuterSpeedDoor.p_sInterlockedReasonOpen := s_fbIlckHandlerOuterSpeedDoorOpen.p_sReason;
+//Outer Cabin Door
+IF s_bIlckOuterCabinDoorToOpen THEN
+	s_cmOuterCabinDoor.p_sInterlockedReasonOpen := s_fbIlckHandlerOuterCabinDoorOpen.p_sReason;
 ELSE
-	s_cmOuterSpeedDoor.p_sInterlockedReasonOpen := '-';
+	s_cmOuterCabinDoor.p_sInterlockedReasonOpen := '-';
 END_IF
 
-IF s_bIlckOuterSpeedDoorToClose THEN
-	s_cmOuterSpeedDoor.p_sInterlockedReasonClose := s_fbIlckHandlerOuterSpeedDoorClose.p_sReason;
+IF s_bIlckOuterCabinDoorToClose THEN
+	s_cmOuterCabinDoor.p_sInterlockedReasonClose := s_fbIlckHandlerOuterCabinDoorClose.p_sReason;
 ELSE
-	s_cmOuterSpeedDoor.p_sInterlockedReasonClose := '-';
+	s_cmOuterCabinDoor.p_sInterlockedReasonClose := '-';
 END_IF
 
-//Inner Speed Door
-IF s_bIlckInnerSpeedDoorToOpen THEN
-	s_cmInnerSpeedDoor.p_sInterlockedReasonOpen := s_fbIlckHandlerInnerSpeedDoorOpen.p_sReason;
+//Inner Cabin Door
+IF s_bIlckInnerCabinDoorToOpen THEN
+	s_cmInnerCabinDoor.p_sInterlockedReasonOpen := s_fbIlckHandlerInnerCabinDoorOpen.p_sReason;
 ELSE
-	s_cmInnerSpeedDoor.p_sInterlockedReasonOpen := '-';
+	s_cmInnerCabinDoor.p_sInterlockedReasonOpen := '-';
 END_IF
 
-IF s_bIlckInnerSpeedDoorToClose THEN
-	s_cmInnerSpeedDoor.p_sInterlockedReasonClose := s_fbIlckHandlerInnerSpeedDoorClose.p_sReason;
+IF s_bIlckInnerCabinDoorToClose THEN
+	s_cmInnerCabinDoor.p_sInterlockedReasonClose := s_fbIlckHandlerInnerCabinDoorClose.p_sReason;
 ELSE
-	s_cmInnerSpeedDoor.p_sInterlockedReasonClose := '-';
+	s_cmInnerCabinDoor.p_sInterlockedReasonClose := '-';
 END_IF
 ]]></ST>
       </Implementation>
@@ -1318,12 +1319,18 @@ END_IF
 s_cmClampsUpperHighPressure(i_eCtrlMode := i_eCtrlMode, i_ref_eCtrlState := i_eCtrlState);
 s_cmClampsLowerHighPressure(i_eCtrlMode := i_eCtrlMode, i_ref_eCtrlState := i_eCtrlState);
 
-s_bStaDocked	:=	s_cmDockingClampsUpper.p_bStaIsOn AND s_cmClampsUpperHighPressure.p_bStaOutput
-				AND s_cmDockingClampsLower.p_bStaIsOn AND s_cmClampsLowerHighPressure.p_bStaOutput;  
-s_bStaUndocked 	:= s_cmDockingClampsUpper.p_bStaIsOff AND s_cmDockingClampsLower.p_bStaIsOff;
+s_bStaDocked :=
+	s_cmDockingClampsUpper.p_bStaIsOn AND s_cmClampsUpperHighPressure.p_bStaOutput
+	AND s_cmDockingClampsLower.p_bStaIsOn AND s_cmClampsLowerHighPressure.p_bStaOutput;  
+s_bStaUndocked :=
+	s_cmDockingClampsUpper.p_bStaIsOff AND s_cmDockingClampsLower.p_bStaIsOff;
 
-s_bStsReadyToReceiveTB := (s_eSeqDockingInterface = E_SeqDockingInterface.WAIT_FOR_TB_PLACED) AND (i_eCtrlState <> E_CtrlState.RUNNING);
-s_bStsReadyToSendTB := (s_eSeqDockingInterface = E_SeqDockingInterface.WAIT_FOR_TB_REMOVED) AND (i_eCtrlState <> E_CtrlState.RUNNING);
+s_bStsReadyToReceiveTB :=
+	(s_eSeqDockingInterface = E_SeqDockingInterface.WAIT_FOR_TB_PLACED)
+	AND (i_eCtrlState <> E_CtrlState.RUNNING);
+	
+s_bStsReadyToSendTB := (s_eSeqDockingInterface = E_SeqDockingInterface.WAIT_FOR_TB_REMOVED)
+	AND (i_eCtrlState <> E_CtrlState.RUNNING);
 
 q_bStaWarning := s_bStaWarning;
 
@@ -1540,15 +1547,24 @@ CASE s_eSeqDockingInterface OF
 			s_eSeqDockingInterface := E_SeqDockingInterface.START;
 		END_IF
 		
+		//Command Dock TB//////////////////////////////////////////////////////////////////////////
 		IF s_bReqDockTB THEN
 			IF _m_CmdDockTB(i_refReason := s_sMessage) THEN	
-				s_eSeqDockingInterface := E_SeqDockingInterface.OPEN_OUTER_SPEED_DOOR;
+				
+				{warning #DELETE: "Disabled Doors" option can be deleted, IF FUMO3 is build}	
+				IF i_bTestDisableCabinDoors THEN
+					s_eSeqDockingInterface := E_SeqDockingInterface.WAIT_FOR_TB_PLACED;
+				ELSE
+					s_eSeqDockingInterface := E_SeqDockingInterface.OPEN_OUTER_CABIN_DOOR;
+				END_IF
+					
 			ELSE
 				s_bErrCmdNotAllowed := TRUE;
 			END_IF
 //--			s_bReqDockTB := FALSE;
 		END_IF
 		
+		//Command Undock TB////////////////////////////////////////////////////////////////////////
 		IF s_bReqUnDockTB THEN
 			IF _m_CmdUndockTB(i_refReason := s_sMessage) THEN	
 				s_eSeqDockingInterface := E_SeqDockingInterface.OPEN_ALL_DOCKING_CLAMPS;
@@ -1558,15 +1574,24 @@ CASE s_eSeqDockingInterface OF
 //--			s_bReqUnDockTB := FALSE;
 		END_IF
 		
+		//Command Open Inner TB Door //////////////////////////////////////////////////////////////
 		IF s_bReqOpenInnerDoor THEN
 			IF _m_CmdOpenInnerDoor(i_refReason := s_sMessage) THEN	
-				s_eSeqDockingInterface := E_SeqDockingInterface.OPEN_INNER_SPEED_DOOR;
+				
+				{warning #DELETE: "Disabled Doors" option can be deleted, IF FUMO3 is build}	
+				IF i_bTestDisableCabinDoors THEN
+					s_eSeqDockingInterface := E_SeqDockingInterface.RELEASE_UNLOCKING_PINS;
+				ELSE
+					s_eSeqDockingInterface := E_SeqDockingInterface.OPEN_INNER_CABIN_DOOR;
+				END_IF
+				
 			ELSE
 				s_bErrCmdNotAllowed := TRUE;
 			END_IF
 //--			s_bReqOpenInnerDoor := FALSE;
 		END_IF
 		
+		//Command Close Inner TB Door /////////////////////////////////////////////////////////////
 		IF s_bReqCloseInnerDoor THEN
 			IF _m_CmdCloseInnerDoor(i_refReason := s_sMessage) THEN	
 				s_eSeqDockingInterface := E_SeqDockingInterface.CLOSE_DOOR_OPENER;
@@ -1590,18 +1615,18 @@ CASE s_eSeqDockingInterface OF
 //--				IF s_cmDoorShutter.m_On() THEN
 //--					IF s_cmUnlockingPinUpper.m_Off() AND s_cmUnlockingPinLower.m_Off() THEN
 //--						s_eSeqDockingInterface := E_SeqDockingInterface.WAIT_FOR_TB_IN_PLACE;
-						s_eSeqDockingInterface := E_SeqDockingInterface.OPEN_OUTER_SPEED_DOOR;
+						s_eSeqDockingInterface := E_SeqDockingInterface.OPEN_OUTER_CABIN_DOOR;
 //--					END_IF
 //--				END_IF
 //--			END_IF
 		END_IF
 	
-	E_SeqDockingInterface.OPEN_OUTER_SPEED_DOOR:
+	E_SeqDockingInterface.OPEN_OUTER_CABIN_DOOR:
 		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN	
-			s_cmOuterSpeedDoor.m_Open();
+			s_cmOuterCabinDoor.m_Open();
 		END_IF
 			
-		IF s_cmOuterSpeedDoor.p_bStaIsOpened THEN
+		IF s_cmOuterCabinDoor.p_bStaIsOpened THEN
 			s_eSeqDockingInterface := E_SeqDockingInterface.WAIT_FOR_TB_PLACED;
 		END_IF
 	
@@ -1742,15 +1767,22 @@ CASE s_eSeqDockingInterface OF
 		END_IF
 		
 		IF s_cmDockingClampsUpper.p_bStaIsOn AND s_cmDockingClampsLower.p_bStaIsOn THEN
-			s_eSeqDockingInterface := E_SeqDockingInterface.CLOSE_OUTER_SPEED_DOOR;
+		
+			{warning #DELETE: "Disabled Doors" option can be deleted, IF FUMO3 is build}	
+			IF i_bTestDisableCabinDoors THEN	
+				s_eSeqDockingInterface := E_SeqDockingInterface.UNDOCK_TB_DONE;
+			ELSE
+				s_eSeqDockingInterface := E_SeqDockingInterface.CLOSE_OUTER_INNER_DOOR;
+			END_IF
+			
 		END_IF	
 
-	E_SeqDockingInterface.CLOSE_OUTER_SPEED_DOOR:
+	E_SeqDockingInterface.CLOSE_OUTER_INNER_DOOR:
 		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN	
-			s_cmOuterSpeedDoor.m_Close();
+			s_cmOuterCabinDoor.m_Close();
 		END_IF
 			
-		IF s_cmOuterSpeedDoor.p_bStaIsClosed THEN
+		IF s_cmOuterCabinDoor.p_bStaIsClosed THEN
 			s_eSeqDockingInterface := E_SeqDockingInterface.UNDOCK_TB_DONE;
 		END_IF
 	
@@ -1766,12 +1798,12 @@ CASE s_eSeqDockingInterface OF
 		END_IF
 	
 //OPEN INNER TB DOOR///////////////////////////////////////////////////////////////////////////////	
-	E_SeqDockingInterface.OPEN_INNER_SPEED_DOOR:
+	E_SeqDockingInterface.OPEN_INNER_CABIN_DOOR:
 		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN	
-			s_cmInnerSpeedDoor.m_Open();
+			s_cmInnerCabinDoor.m_Open();
 		END_IF
 			
-		IF s_cmInnerSpeedDoor.p_bStaIsOpened THEN
+		IF s_cmInnerCabinDoor.p_bStaIsOpened THEN
 			s_eSeqDockingInterface := E_SeqDockingInterface.RELEASE_UNLOCKING_PINS;
 		END_IF
 
@@ -1850,15 +1882,22 @@ CASE s_eSeqDockingInterface OF
 		IF s_tonTimer.ET > i_ref_stSettings.tDelayOpenDoorShutter THEN
 			s_tonTimer.IN := FALSE;
 			i_refTB.p_bCloseInnerDoorDone := TRUE;
-			s_eSeqDockingInterface := E_SeqDockingInterface.CLOSE_INNER_SPEED_DOOR;
+			
+			{warning #DELETE: "Disabled Doors" option can be deleted, IF FUMO3 is build}	
+			IF i_bTestDisableCabinDoors THEN
+				s_eSeqDockingInterface := E_SeqDockingInterface.CLOSE_INNER_TB_DOOR_DONE;
+			ELSE
+				s_eSeqDockingInterface := E_SeqDockingInterface.CLOSE_INNER_CABIN_DOOR;
+			END_IF
+			
 		END_IF
 		
-	E_SeqDockingInterface.CLOSE_INNER_SPEED_DOOR:
+	E_SeqDockingInterface.CLOSE_INNER_CABIN_DOOR:
 		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN	
-			s_cmInnerSpeedDoor.m_Close();
+			s_cmInnerCabinDoor.m_Close();
 		END_IF
 			
-		IF s_cmInnerSpeedDoor.p_bStaIsClosed THEN
+		IF s_cmInnerCabinDoor.p_bStaIsClosed THEN
 			s_eSeqDockingInterface := E_SeqDockingInterface.CLOSE_INNER_TB_DOOR_DONE;
 		END_IF	
 		
@@ -2062,7 +2101,7 @@ IF i_bReqEnable AND (i_eCtrlMode = E_CtrlMode.MANUAL) AND (i_eCtrlState = E_Ctrl
 		NOT(s_bIlckDockingClampsToClose)
 		AND NOT(s_cmDockingClampsUpper.p_bStaError)
 		AND NOT(s_cmDockingClampsLower.p_bStaError)
-		AND NOT(s_cmOuterSpeedDoor.p_bStaError)
+		AND NOT(s_cmOuterCabinDoor.p_bStaError)
 		//++
 		AND (s_eSeqDockingInterface = E_SeqDockingInterface.READY);		
 	
@@ -2070,7 +2109,7 @@ IF i_bReqEnable AND (i_eCtrlMode = E_CtrlMode.MANUAL) AND (i_eCtrlState = E_Ctrl
 		NOT(s_bIlckDockingClampsToOpen)
 		AND NOT(s_cmDockingClampsUpper.p_bStaError)
 		AND NOT(s_cmDockingClampsLower.p_bStaError)
-		AND NOT(s_cmOuterSpeedDoor.p_bStaError)
+		AND NOT(s_cmOuterCabinDoor.p_bStaError)
 		//++
 		AND (s_eSeqDockingInterface = E_SeqDockingInterface.READY);
 //--		AND (s_eSeqDockingInterface = E_SeqDockingInterface.DOCK_TB_DONE);
@@ -2083,7 +2122,7 @@ IF i_bReqEnable AND (i_eCtrlMode = E_CtrlMode.MANUAL) AND (i_eCtrlState = E_Ctrl
 		AND NOT(s_cmUnlockingPinLower.p_bStaError)
 		AND NOT(s_cmDoorShutter.p_bStaError)
 		AND NOT(s_cmDoorOpener.p_bStaError)
-		AND NOT(s_cmInnerSpeedDoor.p_bStaError)
+		AND NOT(s_cmInnerCabinDoor.p_bStaError)
 		//++
 		AND (s_eSeqDockingInterface = E_SeqDockingInterface.READY);
 //--		AND (s_eSeqDockingInterface = E_SeqDockingInterface.DOCK_TB_DONE);
@@ -2096,7 +2135,7 @@ IF i_bReqEnable AND (i_eCtrlMode = E_CtrlMode.MANUAL) AND (i_eCtrlState = E_Ctrl
 		AND NOT(s_cmUnlockingPinLower.p_bStaError)
 		AND NOT(s_cmDoorShutter.p_bStaError)
 		AND NOT(s_cmDoorOpener.p_bStaError)
-		AND NOT(s_cmInnerSpeedDoor.p_bStaError)
+		AND NOT(s_cmInnerCabinDoor.p_bStaError)
 		//++
 		AND (s_eSeqDockingInterface = E_SeqDockingInterface.READY);
 //--		AND (s_eSeqDockingInterface = E_SeqDockingInterface.OPEN_INNER_TB_DOOR_DONE);
@@ -2320,6 +2359,28 @@ p_bStaInnerDoorClosed := s_bStaInnerDoorClosedAndLocked;
         <Implementation>
           <ST><![CDATA[
 p_bStaInnerDoorOpened := s_bStaInnerDoorOpenedAndReleased;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaOuterDoorClosed" Id="{3bee48fb-c1b7-4a50-aaab-2f8746475cee}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaOuterDoorClosed : BOOL]]></Declaration>
+      <Get Name="Get" Id="{bb2dfa90-c8d2-4ad9-8560-32f84f2d1922}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaOuterDoorClosed := s_bStaOuterCabinDoorClosed;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaOuterDoorOpened" Id="{7347b399-2c14-4724-9146-93dc500f8bbb}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaOuterDoorOpened : BOOL]]></Declaration>
+      <Get Name="Get" Id="{d545b3f3-8376-458f-ae3b-983defb7dd36}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaOuterDoorOpened := s_bStaOuterCabinDoorOpened;
 ]]></ST>
         </Implementation>
       </Get>
@@ -2982,10 +3043,15 @@ p_bStsReadyToSendTB := s_bStsReadyToSendTB;
       <LineId Id="42" Count="0" />
       <LineId Id="26" Count="0" />
       <LineId Id="34" Count="1" />
+      <LineId Id="54" Count="0" />
       <LineId Id="37" Count="0" />
       <LineId Id="32" Count="0" />
+      <LineId Id="55" Count="0" />
       <LineId Id="45" Count="0" />
-      <LineId Id="51" Count="1" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="56" Count="2" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="59" Count="0" />
       <LineId Id="46" Count="0" />
       <LineId Id="28" Count="0" />
       <LineId Id="16" Count="0" />
@@ -3109,20 +3175,38 @@ p_bStsReadyToSendTB := s_bStsReadyToSendTB;
       <LineId Id="918" Count="0" />
       <LineId Id="758" Count="1" />
       <LineId Id="756" Count="1" />
+      <LineId Id="1065" Count="0" />
       <LineId Id="641" Count="0" />
       <LineId Id="619" Count="0" />
+      <LineId Id="1069" Count="0" />
+      <LineId Id="1075" Count="0" />
+      <LineId Id="1070" Count="1" />
+      <LineId Id="1073" Count="1" />
+      <LineId Id="1072" Count="0" />
       <LineId Id="839" Count="0" />
       <LineId Id="760" Count="1" />
       <LineId Id="620" Count="0" />
       <LineId Id="626" Count="0" />
       <LineId Id="357" Count="0" />
       <LineId Id="919" Count="0" />
+      <LineId Id="1066" Count="0" />
       <LineId Id="921" Count="6" />
       <LineId Id="920" Count="0" />
       <LineId Id="928" Count="0" />
-      <LineId Id="930" Count="6" />
+      <LineId Id="1067" Count="0" />
+      <LineId Id="930" Count="1" />
+      <LineId Id="1088" Count="0" />
+      <LineId Id="1091" Count="0" />
+      <LineId Id="1093" Count="0" />
+      <LineId Id="1096" Count="0" />
+      <LineId Id="1094" Count="0" />
+      <LineId Id="1097" Count="0" />
+      <LineId Id="1095" Count="0" />
+      <LineId Id="1089" Count="0" />
+      <LineId Id="933" Count="3" />
       <LineId Id="929" Count="0" />
       <LineId Id="937" Count="0" />
+      <LineId Id="1068" Count="0" />
       <LineId Id="939" Count="6" />
       <LineId Id="938" Count="0" />
       <LineId Id="200" Count="0" />
@@ -3215,7 +3299,13 @@ p_bStsReadyToSendTB := s_bStsReadyToSendTB;
       <LineId Id="897" Count="3" />
       <LineId Id="892" Count="0" />
       <LineId Id="902" Count="0" />
-      <LineId Id="904" Count="7" />
+      <LineId Id="904" Count="6" />
+      <LineId Id="1076" Count="0" />
+      <LineId Id="1078" Count="1" />
+      <LineId Id="1077" Count="0" />
+      <LineId Id="1080" Count="0" />
+      <LineId Id="911" Count="0" />
+      <LineId Id="1081" Count="1" />
       <LineId Id="903" Count="0" />
       <LineId Id="974" Count="0" />
       <LineId Id="979" Count="6" />
@@ -3284,6 +3374,12 @@ p_bStsReadyToSendTB := s_bStsReadyToSendTB;
       <LineId Id="677" Count="1" />
       <LineId Id="683" Count="0" />
       <LineId Id="913" Count="0" />
+      <LineId Id="1100" Count="1" />
+      <LineId Id="1106" Count="0" />
+      <LineId Id="1102" Count="0" />
+      <LineId Id="1107" Count="0" />
+      <LineId Id="1103" Count="0" />
+      <LineId Id="1099" Count="0" />
       <LineId Id="680" Count="0" />
       <LineId Id="669" Count="0" />
       <LineId Id="1029" Count="6" />
@@ -3467,6 +3563,16 @@ p_bStsReadyToSendTB := s_bStsReadyToSendTB;
     <LineIds Name="EM_DockingInterface.p_bStaInnerDoorOpened.Get">
       <LineId Id="5" Count="0" />
       <LineId Id="7" Count="1" />
+    </LineIds>
+    <LineIds Name="EM_DockingInterface.p_bStaOuterDoorClosed.Get">
+      <LineId Id="4" Count="0" />
+      <LineId Id="3" Count="0" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="EM_DockingInterface.p_bStaOuterDoorOpened.Get">
+      <LineId Id="4" Count="0" />
+      <LineId Id="3" Count="0" />
+      <LineId Id="2" Count="0" />
     </LineIds>
     <LineIds Name="EM_DockingInterface.p_bStaReady.Get">
       <LineId Id="5" Count="0" />

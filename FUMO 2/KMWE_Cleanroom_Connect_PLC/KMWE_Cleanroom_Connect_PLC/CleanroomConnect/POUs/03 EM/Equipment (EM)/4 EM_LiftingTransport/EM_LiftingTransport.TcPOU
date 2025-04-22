@@ -175,7 +175,7 @@ VAR
 	s_fbHmiLedTrolleyPickedFromTB 		: FB_HmiLed;
 	s_fbHmiLedTrolleyPlacedInTB 		: FB_HmiLed;
 	
-	{warning '#TODO' Het zou beter zijn om dit onder te brengen in de onderstaande control modules}
+	{warning '#TODO: Het zou beter zijn om dit onder te brengen in de onderstaande control modules'}
 	s_bHmiForceOutputEnabled : BOOL;
 	
 END_VAR
@@ -596,8 +596,6 @@ s_cmTransport.i_mcHomingMode := Tc2_MC2.MC_HomingMode.MC_Direct; //Tc2_MC2.MC_Ho
 s_cmTransport.p_sCfgPosName := 'Extract';
 s_cmTransport.p_sCfgNegName := 'Retract';
  
-{warning '#TODO: Dot we need to added configuration parameters? Seperate struct or via settings or dedicateed variables'}
-
 s_diStaTrolleyOnPositionLeft.i_stSettings.tmInputDelay := T#100MS;
 s_diStaTrolleyOnPositionRight.i_stSettings.tmInputDelay := T#100MS;
 s_diStaCabinAreaOccupied.i_stSettings.tmInputDelay := T#100MS;
@@ -692,7 +690,7 @@ s_cmTransport.p_fSetTargetPosition := s_fSetTransportPosition * 0.5;
 //Interlocks
 _m_Interlocks();
 
-{warning '#TODO: Something similar needs to be added for lifting transport'}
+{warning '#TODO: Something similar needs to be added for lifting transport'} //Probebly not, module will be controlled by overall sequnecer
 //TB States (only use data if a valid ID is pressent else use sensor states)
 IF __ISVALIDREF(i_refTB) AND (i_refTB.p_nId > 0) THEN
 //++	s_bStaAtIdlePosition := i_refTB.p_b..;
@@ -858,7 +856,7 @@ s_fbSeqLiftingTransportControl(
 	i_nSeqStep := s_eSeqLiftingTransport, 
 	i_sStepName := TO_STRING(s_eSeqLiftingTransport), 
 	i_bCmdReset := i_bCmdReset
-					AND (s_eSeqLiftingTransport = E_SeqTransport.ERROR) // Only reset/resume sequencer from ERROR state
+					AND (s_eSeqLiftingTransport = E_SeqLiftingTransport.ERROR) // Only reset/resume sequencer from ERROR state
 					AND NOT(s_cmLift.p_bStaError)
 					AND NOT(s_cmTransport.p_bStaError)
 					AND i_bReqEnable, 
@@ -1362,7 +1360,7 @@ CASE i_eCtrlMode OF
 	E_CtrlMode.MAINTENANCE:
 		//Execute maintenance control (HMI control module buttons)
 		//Reset automatic/manual sequencer
-		s_eSeqLiftingTransport := E_SeqTransport.IDLE;
+		s_eSeqLiftingTransport := E_SeqLiftingTransport.IDLE;
 	
 		//--//Load setting for movements in Maintenance-mode
 		//--s_cmLift.i_ref_setting := i_ref_stSettings.stLiftPositioningProfileMaintenance;
@@ -1728,7 +1726,8 @@ p_fActTransportPosition := s_fActTransportPosition;
     </LineIds>
     <LineIds Name="EM_LiftingTransport._m_Init">
       <LineId Id="687" Count="4" />
-      <LineId Id="694" Count="26" />
+      <LineId Id="694" Count="15" />
+      <LineId Id="712" Count="8" />
       <LineId Id="798" Count="0" />
       <LineId Id="723" Count="1" />
       <LineId Id="799" Count="0" />

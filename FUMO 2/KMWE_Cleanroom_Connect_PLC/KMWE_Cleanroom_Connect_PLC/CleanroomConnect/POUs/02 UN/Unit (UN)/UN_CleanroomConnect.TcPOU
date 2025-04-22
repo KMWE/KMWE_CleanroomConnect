@@ -5,7 +5,7 @@
 VAR
 	s_stSettings : ST_UN_CleanroomConnectSettings;	
 	
-	s_bTestDisableCabinDoors : BOOL := TRUE;
+	s_bTestDisableCabinDoors : BOOL := FALSE;
 
 //------------------------------------------//
 //Function Blocks
@@ -332,9 +332,6 @@ END_CASE
 
 //------------------------------------------//
 //Hmi Buttons
-//--s_fbHmiBtnAutomatic();
-//--s_fbHmiBtnManual();
-//??s_fbHmiBtnTesterConfig();
 s_fbHmiBtnAlarms();
 s_fbHmiBtnReset();
 
@@ -395,7 +392,7 @@ GVL_Modules.g_emLiftingTransport.i_bCmdReset := FALSE;
 GVL_Modules.g_emLiftingTransport.i_sEmName := 'EM Lifting Transport';
 
 //EM Doors/////////////////////////////////////////////////////////////////////////////////////////
-//?? Inner- and Outer Cabin Door are moves to EM_DockingInterface
+//?? Inner- and Outer Cabin Door are moved to EM_DockingInterface
 (*
 _m_AddModule(i_itfModuleBase := GVL_Modules.g_emDoors);
 
@@ -418,22 +415,22 @@ s_fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[2].sReason := 'Door Open
 s_fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[0].sReason := 'Docking Clamps Not Opened';
 s_fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[1].sReason := 'Unlocking Pins Not In';
 s_fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[2].sReason := 'Door Opener Not Closed';
-s_fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[3].sReason := 'Outer Speed Door Not Opened';
+s_fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[3].sReason := 'Outer Cabin Door Not Opened';
 
 //EM Docking Interface/////////////////////////////////////////////////////////////////////////////
 s_fbIlckHandlerClampsToClose.i_stInterlockList.arr_Interlocks[0].sReason := 'No TB Detected';
 
 s_fbIlckHandlerClampsToOpen.i_stInterlockList.arr_Interlocks[0].sReason := 'Cleanroom Door Not Closed';
-s_fbIlckHandlerClampsToOpen.i_stInterlockList.arr_Interlocks[1].sReason := 'Inner Speed Door Not Closed';
-s_fbIlckHandlerClampsToOpen.i_stInterlockList.arr_Interlocks[2].sReason := 'Outer Speed Door Not Opened';
+s_fbIlckHandlerClampsToOpen.i_stInterlockList.arr_Interlocks[1].sReason := 'Inner Cabin Door Not Closed';
+s_fbIlckHandlerClampsToOpen.i_stInterlockList.arr_Interlocks[2].sReason := 'Outer Cabin Door Not Opened';
 
-s_fbIlckHandlerDoorOpenerToClose.i_stInterlockList.arr_Interlocks[0].sReason := 'Inner Speed Door Not Opened';
+s_fbIlckHandlerDoorOpenerToClose.i_stInterlockList.arr_Interlocks[0].sReason := 'Inner Cabin Door Not Opened';
 
-s_fbIlckHandlerDoorOpenerToOpen.i_stInterlockList.arr_Interlocks[0].sReason := 'Inner Speed Door Not Opened';
+s_fbIlckHandlerDoorOpenerToOpen.i_stInterlockList.arr_Interlocks[0].sReason := 'Inner Cabin Door Not Opened';
 
-s_fbIlckHandlerDoorShutterToClose.i_stInterlockList.arr_Interlocks[0].sReason := 'Inner Speed Door Not Opened';
+s_fbIlckHandlerDoorShutterToClose.i_stInterlockList.arr_Interlocks[0].sReason := 'Inner Cabin Door Not Opened';
 
-s_fbIlckHandlerDoorShutterToOpen.i_stInterlockList.arr_Interlocks[0].sReason := 'Inner Speed Door Not Opened';
+s_fbIlckHandlerDoorShutterToOpen.i_stInterlockList.arr_Interlocks[0].sReason := 'Inner Cabin Door Not Opened';
 
 s_fbIlckHandlerOuterCabinDoorClose.i_stInterlockList.arr_Interlocks[0].sReason := 'TB At Docking Position';
 s_fbIlckHandlerOuterCabinDoorClose.i_stInterlockList.arr_Interlocks[1].sReason := 'Lifting Transport Not At Idle Position';
@@ -443,17 +440,17 @@ s_fbIlckHandlerInnerCabinDoorClose.i_stInterlockList.arr_Interlocks[1].sReason :
 //EM Lifting Transport/////////////////////////////////////////////////////////////////////////////
 s_fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[0].sReason := 'Door-Opener Not Opened';
 s_fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[1].sReason := 'Door-Shutter Not Opened';
-s_fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[2].sReason := 'Outer Speed Door Is Not Opened';
-s_fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[3].sReason := 'Inner Speed Door Is Not Opened';
+s_fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[2].sReason := 'Outer Cabin Door Is Not Opened';
+s_fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[3].sReason := 'Inner Cabin Door Is Not Opened';
 
 //EM Doors
-//Outer Speed Door
+//Outer Cabin Door
 //s_fbIlckHandlerOuterCabinDoorOpen.i_stInterlockList.arr_Interlocks[0].sReason := 'none';
 
 s_fbIlckHandlerOuterCabinDoorClose.i_stInterlockList.arr_Interlocks[0].sReason := 'TB At Docking Position';
 s_fbIlckHandlerOuterCabinDoorClose.i_stInterlockList.arr_Interlocks[1].sReason := 'Lifting Transport Not At Idle Position';
 
-//Inner Speed Door
+//Inner Cabin Door
 //s_fbIlckHandlerInnerCabinDoorOpen.i_stInterlockList.arr_Interlocks[0].sReason := 'none';
 
 s_fbIlckHandlerInnerCabinDoorClose.i_stInterlockList.arr_Interlocks[0].sReason := 'Lifting Transport Not At Idle Position';
@@ -797,7 +794,6 @@ VAR
 	s_fbExtIlckDoorShutterToOpen : FB_Interlock;
 	
 	//External interlocks for EM_LiftingTransport
-	{warning '#TODO: check what is nessecary, probebly only Transport Extract (door open)'}
 	s_fbExtIlckLiftUp : FB_Interlock;	
 	s_fbExtIlckLiftDown : FB_Interlock;
 	s_fbExtIlckTransportExtract : FB_Interlock;
@@ -886,7 +882,7 @@ GVL_Modules.g_emPalletConveyor(
 
 // EM_DockingInterface ////////////////////////////////////////////////////////////////////////////
 s_fbIlckHandlerClampsToClose();
-{warning '#TODO: Not clear if this is realy an interlock, the clamp should now also close before the CabinDoors are allowed to close, in that case no TB will be presetn on Docking Position'}
+{warning '#TODO: Not clear if this is realy an interlock, the clamp should now also close before the CabinDoors are allowed to close, in that case no TB will be present on Docking Position'}
 s_fbIlckHandlerClampsToClose.i_stInterlockList.arr_Interlocks[0].bState := NOT(GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking) AND FALSE;
 
 s_fbExtIlckDockingClampsToClose.i_bInterlocked := s_fbIlckHandlerClampsToClose.p_bInterlocked;
@@ -1305,7 +1301,7 @@ IF arr_bTestCmd[10] THEN GVL_Modules.g_emLiftingTransport.m_ReqPlaceTrolleyInTB(
 //Unit will control lower-layer control modules based on data in Object Carrier
 //By changing the data in this object the behanvior can be manipulated / controlled.
 
-{warning '#TODO na gaan of het in onderstaande code niet beter zou zijn om puur te kijken naar de data uit de struct ipv naar properties uit de onderliggende modules?'}
+{warning '#TODO: Na gaan of het in onderstaande code niet beter zou zijn om puur te kijken naar de data uit de struct ipv naar properties uit de onderliggende modules?'}
 // zoals bij voorbeeld voor TB centered status
 
 //EM_PalletConveyor
@@ -1621,11 +1617,11 @@ CASE s_eSeqInbound OF
 		ELSIF s_bStaAllEmReady AND (s_eReqAction = E_ReqAction.CLOSE_INNER_TB_DOOR) THEN
 			s_eSeqInbound := E_SeqInbound.CLOSE_INNER_TB_DOOR;	
 		ELSIF s_bStaAllEmReady AND (s_eReqAction = E_ReqAction.PICK_TROLLEY_FROM_TB) THEN
-			//TODO check if correct --> Nog bepalen wat hier wenslijk is: of doorgaan va. OPEN INNER SPEED DOOR of direct naar PICK TROLLEY
+			//TODO check if correct --> Nog bepalen wat hier wenslijk is: of doorgaan va. OPEN INNER CABIN DOOR of direct naar PICK TROLLEY
 //??			s_eSeqInbound := E_SeqInbound.OPEN_INNER_CABIN_DOOR;
 			s_eSeqInbound := E_SeqInbound.PICK_TROLLEY_FROM_TB;
 		ELSIF s_bStaAllEmReady AND (s_eReqAction = E_ReqAction.PLACE_TROLLEY_IN_TB) THEN
-			//TODO check if correct	--> Nog bepalen wat hier wenslijk is: of doorgaan va. OPEN INNER SPEED DOOR of direct naar PLACE TROLLEY
+			//TODO check if correct	--> Nog bepalen wat hier wenslijk is: of doorgaan va. OPEN INNER CABIN DOOR of direct naar PLACE TROLLEY
 //??			s_eSeqInbound := E_SeqInbound.OPEN_INNER_CABIN_DOOR;
 			s_eSeqInbound := E_SeqInbound.PLACE_TROLLEY_IN_TB;
 		END_IF
@@ -1676,7 +1672,7 @@ CASE s_eSeqInbound OF
 				s_eSeqInbound := E_SeqInbound.DOCK_TB;
 			END_IF
 			
-		ELSE //SKIP SPEED DOOR CONTROL	
+		ELSE //SKIP CABIN DOOR CONTROL	
 			IF s_fbSeqControlInbound.q_tmStepTime >= T#3S THEN
 				s_eSeqInbound := E_SeqInbound.TB_TO_DOCKING;
 			END_IF
@@ -1698,8 +1694,7 @@ CASE s_eSeqInbound OF
 			GVL_Modules.g_emDockingInterface.m_ReqDockTB();
 		END_IF
 		
-		{warning '#TODO: Added extra command to pallet conveyor to move TB to docking position'}
-		
+		{warning '#TODO: Check if the T#5S is really necessary'}
 		IF (s_fbSeqControlInbound.q_tmStepTime > T#5S) AND GVL_Modules.g_emDockingInterface.p_bStaClampsOpened AND GVL_Modules.g_emDockingInterface.p_bStaDoorOpenerClosed AND GVL_Modules.g_emDockingInterface.p_bStaUnlockingPinsLocked AND NOT(GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking) THEN
 			GVL_Modules.g_emPalletConveyor.m_ReqTB_ToDocking();
 		END_IF
@@ -1728,7 +1723,7 @@ CASE s_eSeqInbound OF
 				s_eSeqInbound := E_SeqInbound.OPEN_INNER_TB_DOOR;
 			END_IF
 			
-		ELSE //SKIP SPEED DOOR CONTROL
+		ELSE //SKIP CABIN DOOR CONTROL
 			IF s_fbSeqControlInbound.q_tmStepTime >= T#3S THEN
 				s_eSeqInbound := E_SeqInbound.OPEN_INNER_TB_DOOR;
 			END_IF
@@ -1839,7 +1834,7 @@ CASE s_eSeqInbound OF
 				END_IF		
 			END_IF
 			
-		ELSE //SKIP SPEED DOOR CONTROL
+		ELSE //SKIP CABIN DOOR CONTROL
 			IF s_fbSeqControlInbound.q_tmStepTime >= T#3S THEN
 				IF ( (s_eReqAction = E_ReqAction.INBOUND) OR (s_eReqAction = E_ReqAction.OUTBOUND) ) THEN
 					s_eSeqInbound := s_eSeqInbound := E_SeqInbound.UNDOCK_TB;
@@ -1854,9 +1849,6 @@ CASE s_eSeqInbound OF
 			GVL_Modules.g_emDockingInterface.m_ReqUndockTB();
 		END_IF
 	
-		{warning '#TODO: Move TB to infeed can be started when clamps are opened'}	
-//--		IF GVL_Modules.g_emDockingInterface.p_bStaUndocked
-//--			AND GVL_Modules.g_emDockingInterface.p_bStaReady THEN
 		IF GVL_Modules.g_emDockingInterface.p_bStaClampsOpened THEN
 			s_eSeqInbound := E_SeqInbound.TB_TO_INFEED;
 		END_IF
@@ -1897,7 +1889,7 @@ CASE s_eSeqInbound OF
 				s_eSeqInbound := E_SeqInbound.STOP;
 			END_IF
 			
-		ELSE //SKIP SPEED DOOR CONTROL
+		ELSE //SKIP CABIN DOOR CONTROL
 			IF s_fbSeqControlInbound.q_tmStepTime >= T#3S THEN
 				s_eSeqInbound := E_SeqInbound.STOP;
 			END_IF
@@ -2035,7 +2027,7 @@ CASE s_eCtrlMode OF
 	E_CtrlMode.IO:
 		;
 		
-	E_CtrlMode.CLEANING;
+	E_CtrlMode.CLEANING:
 		;
 		
 END_CASE
@@ -2206,8 +2198,8 @@ GVL_Modules.g_emPalletConveyor.m_ReqTB_ToInfeed();
       <LineId Id="265" Count="1" />
       <LineId Id="264" Count="0" />
       <LineId Id="244" Count="2" />
-      <LineId Id="142" Count="11" />
-      <LineId Id="155" Count="1" />
+      <LineId Id="142" Count="9" />
+      <LineId Id="156" Count="0" />
       <LineId Id="296" Count="0" />
       <LineId Id="334" Count="0" />
       <LineId Id="336" Count="3" />
@@ -2395,7 +2387,6 @@ GVL_Modules.g_emPalletConveyor.m_ReqTB_ToInfeed();
       <LineId Id="3488" Count="14" />
       <LineId Id="3743" Count="0" />
       <LineId Id="3747" Count="0" />
-      <LineId Id="3752" Count="0" />
       <LineId Id="3744" Count="2" />
       <LineId Id="3503" Count="5" />
       <LineId Id="3763" Count="0" />
@@ -2406,9 +2397,6 @@ GVL_Modules.g_emPalletConveyor.m_ReqTB_ToInfeed();
       <LineId Id="3618" Count="0" />
       <LineId Id="3766" Count="0" />
       <LineId Id="3619" Count="30" />
-      <LineId Id="3748" Count="0" />
-      <LineId Id="3650" Count="0" />
-      <LineId Id="3751" Count="0" />
       <LineId Id="3749" Count="0" />
       <LineId Id="3652" Count="9" />
       <LineId Id="3770" Count="0" />

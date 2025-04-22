@@ -154,7 +154,7 @@ VAR
 	s_fbHmiLedCenteringIdle				: FB_HmiLed;
 	s_fbHmiLedCenteringCenter			: FB_HmiLed;
 	
-	{warning '#TODO' Het zou beter zijn om dit onder te brengen in de onderstaande control modules}
+	{warning '#TODO: Het zou beter zijn om dit onder te brengen in de onderstaande control modules'}
 	s_bHmiForceOutputEnabled : BOOL;
 	s_bHmiForceOutputStartEnabled : BOOL;
 	
@@ -192,8 +192,6 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-{warning 'Following calculation below is correct but it would be more efficient to convert to one single equation'}
-
 IF i_fBaseSpeed > 0 THEN
 	s_fRampsTime := (i_TargetSpeed / i_fBaseSpeed) * i_fBaseRampTime;
 END_IF
@@ -207,12 +205,6 @@ IF i_TargetSpeed > 0 THEN
 END_IF
 
 _CalcMaxTravelTime := LREAL_TO_TIME( (s_fRampsTime + s_fRemainingTime) * i_Tollerance * 1000 );
-
-//Previous calculation
-//--_CalcMaxTravelTime := LREAL_TO_TIME((i_ref_stSettings.fDistanceToInfeed / i_ref_stSettings.fSpeedGoToInfeed) * i_ref_stSettings.fTravelTollerance * 1000);
-
-//_CalcMaxTravelTime := LREAL_TO_TIME( ( (i_TargetSpeed / i_fBaseSpeed) * i_fBaseRampTime ) + ( (i_TargetDistance - ( (i_TargetSpeed / 2) * ((i_TargetSpeed / i_fBaseSpeed) * i_fBaseRampTime) ) ) / i_TargetSpeed ) * i_Tollerance * 1000 )
-//_CalcMaxTravelTime := LREAL_TO_TIME( ( (i_TargetSpeed / i_fBaseSpeed) * i_fBaseRampTime ) + ( (i_TargetDistance - ( (i_TargetSpeed / 2) * ((i_TargetSpeed / i_fBaseSpeed) * i_fBaseRampTime) ) ) / i_TargetSpeed ) * i_Tollerance * 1000 )
 ]]></ST>
       </Implementation>
     </Method>
@@ -458,14 +450,12 @@ s_cmPalletConveyor.i_stSettings.tMotorStoppedDelay := T#3S;
 s_cmPalletConveyor.i_stSettings.rMaxTargetSpeed := 200.0; // mm/s
 s_cmPalletConveyor.p_sCfgFwdName := 'Forward';
 s_cmPalletConveyor.p_sCfgBckName := 'Backward';
-{warning '#TODO: Dot we need to added configuration parameters? Seperate struct or via settings or dedicateed variables'}
 
 s_cmCenteringUnit.i_bReqEnable := FALSE;
 s_cmCenteringUnit.i_eCtrlMode := E_CtrlMode.IDLE;
 s_cmCenteringUnit.i_sCmName := 'CM Centering Unit';
 s_cmCenteringUnit.i_stSettings.tValveOnTimeout := T#5S;
 s_cmCenteringUnit.i_stSettings.tValveOffTimeout := T#5S;
-{warning '#TODO: Dot we need to added configuration parameters? Seperate struct or via settings or dedicateed variables'}
 
 s_cmCenteringUnit.p_bCfgBiStableValve := FALSE; // 5/2 monostable
 s_cmCenteringUnit.p_bCfgReverseValve := FALSE;
@@ -1177,7 +1167,7 @@ CASE i_eCtrlMode OF
 		//Execute manaual control (based on HMI buttons)
 		
 		//Store the selected action (so it could be rstart / resumed if two-hand-control is activated)
-		{warning 'TODO: Could be omitted if 2HCtrl is not used'}
+		{warning '#TODO: Could be omitted if 2HCtrl is not used'}
 		IF s_fbHmiBtnTB_ToInfeed.p_osrBtnPress THEN
 			s_eActionSelection := E_ActionSelection.MOVE_TO_INFEED;
 		ELSIF s_fbHmiBtnTB_ToCentering.p_osrBtnPress THEN	
@@ -1428,8 +1418,7 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="766" Count="0" />
     </LineIds>
     <LineIds Name="EM_PalletConveyor._CalcMaxTravelTime">
-      <LineId Id="40" Count="1" />
-      <LineId Id="37" Count="0" />
+      <LineId Id="40" Count="0" />
       <LineId Id="7" Count="0" />
       <LineId Id="9" Count="0" />
       <LineId Id="38" Count="0" />
@@ -1442,10 +1431,6 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="36" Count="0" />
       <LineId Id="34" Count="0" />
       <LineId Id="10" Count="0" />
-      <LineId Id="8" Count="0" />
-      <LineId Id="6" Count="0" />
-      <LineId Id="5" Count="0" />
-      <LineId Id="43" Count="2" />
       <LineId Id="42" Count="0" />
     </LineIds>
     <LineIds Name="EM_PalletConveyor._m_Alarms">
@@ -1580,11 +1565,10 @@ p_bStaTB_CenteringDone := s_bStaTB_CenteringDone;
       <LineId Id="331" Count="2" />
       <LineId Id="517" Count="0" />
       <LineId Id="516" Count="0" />
-      <LineId Id="334" Count="0" />
       <LineId Id="460" Count="0" />
       <LineId Id="335" Count="2" />
       <LineId Id="341" Count="0" />
-      <LineId Id="339" Count="1" />
+      <LineId Id="339" Count="0" />
       <LineId Id="522" Count="0" />
       <LineId Id="353" Count="1" />
       <LineId Id="447" Count="3" />

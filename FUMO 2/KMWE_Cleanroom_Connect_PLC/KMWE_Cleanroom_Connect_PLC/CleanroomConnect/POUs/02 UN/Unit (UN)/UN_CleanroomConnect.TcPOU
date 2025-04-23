@@ -68,6 +68,13 @@ VAR
 	s_bCmdAbort : BOOL;
 	s_bCmdHold : BOOL;
 	
+	s_bStaDockTbDone: BOOL;
+	s_bStaUnDockTbDone : BOOL;
+	s_bStaOpenInnerTbDoorDone : BOOL;
+	s_bStaCloseInnerTbDoorDone : BOOL;
+	s_bStaPickTrolleyFromTbDone : BOOL;
+	s_bStaPlaceTrolleyInTbDone : BOOL;
+	
 	s_eCtrlState : E_CtrlState;
 //------------------------------------------//
 
@@ -1610,6 +1617,8 @@ CASE s_eCtrlMode OF
 			s_eReqAction := E_ReqAction.PLACE_TROLLEY_IN_TB;
 		END_IF
 		
+		m_SeqCleanroomConnect();
+		
 	E_CtrlMode.MANUAL:
 		;
 		
@@ -1751,7 +1760,8 @@ CASE s_eSeqCleanroomConnect OF
 			s_bCmdHold := FALSE;
 		END_IF
 
-//READY////////////////////////////////////////////////////////////////////////////////////////////		
+///////////////////////////////////////////////////////////////////////////////////////////////////
+////READY//////////////////////////////////////////////////////////////////////////////////////////		
 	E_SeqCleanroomConnect.READY:
 		IF s_fbSeqControlCleanroomConnect.q_bStaEntry THEN
 		//??	s_bReqInbound := FALSE;
@@ -1775,49 +1785,41 @@ CASE s_eSeqCleanroomConnect OF
 			GVL_Modules.g_emPalletConveyor.p_bStaReady AND
 			GVL_Modules.g_emDockingInterface.p_bStaReady AND
 			GVL_Modules.g_emLiftingTransport.p_bStaReady;
-			
-//--		IF s_bStaAllEmReady AND (*GVL_Modules.g_emPalletConveyor.p_bStaTB_AtInfeed AND*) (s_bReqInbound OR s_bReqOutbound OR s_bReqDockTB) THEN
-//--			s_eSeqInbound := E_SeqInbound.TB_TO_CENTER;
-//--		END_IF
 		
-		IF s_bStaAllEmReady AND ( (s_eReqAction = E_ReqAction.INBOUND) OR (s_eReqAction = E_ReqAction.OUTBOUND) OR (s_eReqAction = E_ReqAction.DOCK_TB) ) THEN
-			s_eSeqCleanroomConnect := E_SeqCleanroomConnect.TB_TO_CENTER;
-		ELSIF s_bStaAllEmReady AND (s_eReqAction = E_ReqAction.UNDOCK_TB) THEN
-			s_eSeqCleanroomConnect := E_SeqCleanroomConnect.UNDOCK_TB;
-//--		ELSIF s_bStaAllEmReady AND (s_eReqAction = E_ReqAction.OPEN_INNER_TB_DOOR) THEN
-//--			s_eSeqInbound := E_SeqInbound.OPEN_INNER_CABIN_DOOR;
-		ELSIF s_bStaAllEmReady AND (s_eReqAction = E_ReqAction.CLOSE_INNER_TB_DOOR) THEN
-			s_eSeqCleanroomConnect := E_SeqCleanroomConnect.CLOSE_INNER_TB_DOOR;	
-		ELSIF s_bStaAllEmReady AND (s_eReqAction = E_ReqAction.PICK_TROLLEY_FROM_TB) THEN
-			//TODO check if correct --> Nog bepalen wat hier wenslijk is: of doorgaan va. OPEN INNER CABIN DOOR of direct naar PICK TROLLEY
-//??			s_eSeqInbound := E_SeqInbound.OPEN_INNER_CABIN_DOOR;
-			s_eSeqCleanroomConnect := E_SeqCleanroomConnect.PICK_TROLLEY_FROM_TB;
-		ELSIF s_bStaAllEmReady AND (s_eReqAction = E_ReqAction.PLACE_TROLLEY_IN_TB) THEN
-			//TODO check if correct	--> Nog bepalen wat hier wenslijk is: of doorgaan va. OPEN INNER CABIN DOOR of direct naar PLACE TROLLEY
-//??			s_eSeqInbound := E_SeqInbound.OPEN_INNER_CABIN_DOOR;
-			s_eSeqCleanroomConnect := E_SeqCleanroomConnect.PLACE_TROLLEY_IN_TB;
+		//REQUEST DOCK TB//////////////////////////////////////////////////////////////////////////
+		IF s_bStaAllEmReady  
+			AND ( (s_eReqAction = E_ReqAction.INBOUND)
+			OR (s_eReqAction = E_ReqAction.OUTBOUND)
+			OR (s_eReqAction = E_ReqAction.DOCK_TB) ) THEN
+				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.TB_TO_CENTER;
+		
+		//REQUEST UNDOCK TB////////////////////////////////////////////////////////////////////////		
+		ELSIF s_bStaAllEmReady 
+			AND (s_eReqAction = E_ReqAction.UNDOCK_TB) THEN
+				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.UNDOCK_TB;
+
+		//REQUEST OPEN INNER TB DOOR///////////////////////////////////////////////////////////////
+		ELSIF s_bStaAllEmReady 
+			AND (s_eReqAction = E_ReqAction.OPEN_INNER_TB_DOOR) THEN
+				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.OPEN_INNER_TB_DOOR;
+
+		//REQUEST CLOSE INNER TB DOOR//////////////////////////////////////////////////////////////
+		ELSIF s_bStaAllEmReady
+			AND (s_eReqAction = E_ReqAction.CLOSE_INNER_TB_DOOR) THEN
+				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.CLOSE_INNER_TB_DOOR;	
+			
+		//REQUEST PICK TROLLEY FROM TB/////////////////////////////////////////////////////////////	
+		ELSIF s_bStaAllEmReady
+			AND (s_eReqAction = E_ReqAction.PICK_TROLLEY_FROM_TB) THEN
+				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.PICK_TROLLEY_FROM_TB;
+			
+		//REQUEST PLACE TROLLEY IN TB//////////////////////////////////////////////////////////////
+		ELSIF s_bStaAllEmReady
+			AND (s_eReqAction = E_ReqAction.PLACE_TROLLEY_IN_TB) THEN
+				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.PLACE_TROLLEY_IN_TB;
 		END_IF
 		
-//--		IF s_bStaAllEmReady AND FALSE THEN
-//--			s_eSeqInbound := E_SeqInbound.TB_TO_INFEED;
-//--		END_IF
-		
-//--		IF s_bStaAllEmReady AND FALSE THEN
-//--			s_eSeqInbound := E_SeqInbound.TB_TO_DOCKING;
-//--		END_IF
-		
-//--		IF s_bStaAllEmReady AND (s_bReqUndockTB) THEN
-//--			s_eSeqInbound := E_SeqInbound.CLOSE_INNER_TB_DOOR;
-//--		END_IF
-		
-//--		IF s_bStaAllEmReady AND s_bReqPickTrolleyFromTB THEN
-//--			s_eSeqInbound := E_SeqInbound.PICK_TROLLEY_FROM_TB;
-//--		END_IF
-		
-//--		IF s_bStaAllEmReady AND s_bReqPlaceTrolleyInTB THEN
-//--			s_eSeqInbound := E_SeqInbound.PLACE_TROLLEY_IN_TB;
-//--		END_IF
-////		
+	//DOCK TB//////////////////////////////////////////////////////////////////////////////////////
 	E_SeqCleanroomConnect.TB_TO_CENTER:
 		IF s_fbSeqControlCleanroomConnect.q_bStaEntry THEN
 			GVL_Modules.g_emPalletConveyor.m_ReqTB_ToCenter();
@@ -1825,39 +1827,6 @@ CASE s_eSeqCleanroomConnect OF
 		
 		IF GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering
 			AND GVL_Modules.g_emPalletConveyor.p_bStaReady THEN			
-//--			s_eSeqInbound := E_SeqInbound.OPEN_OUTER_CABIN_DOOR;
-			s_eSeqCleanroomConnect := E_SeqCleanroomConnect.DOCK_TB;
-		END_IF
-
-//--		
-(*	E_SeqInbound.OPEN_OUTER_CABIN_DOOR:
-		IF GVL_Modules.g_emDoors.p_bStaEnabled THEN
-			IF s_fbSeqControlInbound.q_bStaEntry THEN
-				GVL_Modules.g_emDoors.m_ReqOpenOuterDoor();
-			END_IF
-		
-			IF GVL_Modules.g_emDoors.p_bStaOuterDoorOpened
-				AND GVL_Modules.g_emDoors.p_bStaReady THEN
-
-				{warning '#TODO: TB to docking kan niet nworden uitgevoer omdat de Docking Interface nog niet gereed is om een TB te ontvangen'}			
-//--				s_eSeqInbound := E_SeqInbound.TB_TO_DOCKING;
-				s_eSeqInbound := E_SeqInbound.DOCK_TB;
-			END_IF
-			
-		ELSE //SKIP CABIN DOOR CONTROL	
-			IF s_fbSeqControlInbound.q_tmStepTime >= T#3S THEN
-				s_eSeqInbound := E_SeqInbound.TB_TO_DOCKING;
-			END_IF
-		END_IF
-*)		
-////		
-	E_SeqCleanroomConnect.TB_TO_DOCKING:
-		IF s_fbSeqControlCleanroomConnect.q_bStaEntry THEN
-			GVL_Modules.g_emPalletConveyor.m_ReqTB_ToDocking();
-		END_IF
-		
-		IF GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking
-			AND GVL_Modules.g_emPalletConveyor.p_bStaReady THEN
 			s_eSeqCleanroomConnect := E_SeqCleanroomConnect.DOCK_TB;
 		END_IF
 		
@@ -1865,157 +1834,35 @@ CASE s_eSeqCleanroomConnect OF
 		IF s_fbSeqControlCleanroomConnect.q_bStaEntry THEN
 			GVL_Modules.g_emDockingInterface.m_ReqDockTB();
 		END_IF
-		
-		{warning '#TODO: Check if the T#5S is really necessary'}
-		IF (s_fbSeqControlCleanroomConnect.q_tmStepTime > T#5S) AND GVL_Modules.g_emDockingInterface.p_bStaClampsOpened AND GVL_Modules.g_emDockingInterface.p_bStaDoorOpenerClosed AND GVL_Modules.g_emDockingInterface.p_bStaUnlockingPinsLocked AND NOT(GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking) THEN
+
+		IF GVL_Modules.g_emDockingInterface.p_bStsReadyToReceiveTB THEN
+			s_eSeqCleanroomConnect := E_SeqCleanroomConnect.TB_TO_DOCKING;
+		END_IF
+
+	E_SeqCleanroomConnect.TB_TO_DOCKING:
+		IF s_fbSeqControlCleanroomConnect.q_bStaEntry THEN
 			GVL_Modules.g_emPalletConveyor.m_ReqTB_ToDocking();
 		END_IF
 		
-		IF GVL_Modules.g_emDockingInterface.p_bStaDocked 
+		IF GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking
+			AND GVL_Modules.g_emPalletConveyor.p_bStaReady 
+			AND GVL_Modules.g_emDockingInterface.p_bStaDocked
 			AND GVL_Modules.g_emDockingInterface.p_bStaReady THEN
-			
-			IF ( (s_eReqAction = E_ReqAction.INBOUND) OR (s_eReqAction = E_ReqAction.OUTBOUND) ) THEN
-//--				s_eSeqInbound := E_SeqInbound.OPEN_INNER_CABIN_DOOR;
-				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.OPEN_INNER_TB_DOOR;
-				
-			ELSIF (s_eReqAction = E_ReqAction.DOCK_TB) THEN
-				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.STOP;
-			END_IF
-		END_IF
-
-//--		
-(*	E_SeqInbound.OPEN_INNER_CABIN_DOOR:
-		IF GVL_Modules.g_emDoors.p_bStaEnabled THEN
-			IF s_fbSeqControlInbound.q_bStaEntry THEN
-				GVL_Modules.g_emDoors.m_ReqOpenInnerDoor();
-			END_IF
-		
-			IF GVL_Modules.g_emDoors.p_bStaInnerDoorOpened
-				AND GVL_Modules.g_emDoors.p_bStaReady THEN			
-				s_eSeqInbound := E_SeqInbound.OPEN_INNER_TB_DOOR;
-			END_IF
-			
-		ELSE //SKIP CABIN DOOR CONTROL
-			IF s_fbSeqControlInbound.q_tmStepTime >= T#3S THEN
-				s_eSeqInbound := E_SeqInbound.OPEN_INNER_TB_DOOR;
-			END_IF
-		END_IF
-*)			
-	E_SeqCleanroomConnect.OPEN_INNER_TB_DOOR:
-		IF s_fbSeqControlCleanroomConnect.q_bStaEntry THEN
-			GVL_Modules.g_emDockingInterface.m_ReqOpenInnerDoor();
-		END_IF
-		
-		IF GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpened
-			AND GVL_Modules.g_emDockingInterface.p_bStaReady THEN
-			
-			s_eSeqCleanroomConnect := E_SeqCleanroomConnect.FLUSHING;
-		END_IF
-	
-	E_SeqCleanroomConnect.FLUSHING:
-		{warning '#TODO: Add future/FUMO3 code'}
-		IF ( (s_eReqAction = E_ReqAction.INBOUND) (*OR (s_eReqAction = E_ReqAction.PICK_TROLLEY_FROM_TB)*) ) THEN 
-			s_eSeqCleanroomConnect := E_SeqCleanroomConnect.PICK_TROLLEY_FROM_TB;
-		ELSIF ( (s_eReqAction = E_ReqAction.OUTBOUND) OR (s_eReqAction = E_ReqAction.PLACE_TROLLEY_IN_TB) ) THEN 
-			s_eSeqCleanroomConnect := E_SeqCleanroomConnect.OPEN_CLEANROOM_DOOR;
-		ELSIF (s_eReqAction = E_ReqAction.DOCK_TB) THEN
-			s_eSeqCleanroomConnect := E_SeqCleanroomConnect.STOP;
-		ELSIF (s_eReqAction = E_ReqAction.OPEN_INNER_TB_DOOR) THEN
-			s_eSeqCleanroomConnect := E_SeqCleanroomConnect.STOP;	
-		ELSE
-			s_eSeqCleanroomConnect := E_SeqCleanroomConnect.STOP;
-		END_IF
-	
-////		
-	E_SeqCleanroomConnect.PICK_TROLLEY_FROM_TB:
-		IF s_fbSeqControlCleanroomConnect.q_bStaEntry THEN
-			GVL_Modules.g_emLiftingTransport.m_ReqPickTrolleyFromTB();
-		END_IF
-		
-		IF GVL_Modules.g_emLiftingTransport.p_bStaTrolleyPickedFromTB
-			AND GVL_Modules.g_emLiftingTransport.p_bStaReady THEN
-			
-			IF (s_eReqAction = E_ReqAction.INBOUND) THEN
-				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.OPEN_CLEANROOM_DOOR;
-			ELSIF (s_eReqAction = E_ReqAction.PICK_TROLLEY_FROM_TB) THEN
-				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.STOP;
-			END_IF
-			
-//--			IF s_bReqInbound THEN 
-//--				{warning '#TODO: What is expexted from inbound? Stay Docked or return empty TB to infeed'}
-//--				s_eSeqInbound := E_SeqInbound.CLOSE_INNER_TB_DOOR;
-//--			END_IF
-		END_IF
-////		
-	E_SeqCleanroomConnect.PLACE_TROLLEY_IN_TB:
-		IF s_fbSeqControlCleanroomConnect.q_bStaEntry THEN
-			GVL_Modules.g_emLiftingTransport.m_ReqPlaceTrolleyInTB();
-		END_IF
-		
-		IF GVL_Modules.g_emLiftingTransport.p_bStaTrolleyPlacedInTB
-			AND GVL_Modules.g_emLiftingTransport.p_bStaReady THEN
-			
-			IF (s_eReqAction = E_ReqAction.OUTBOUND) THEN 
-				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.CLOSE_CLEANROOM_DOOR;
-			ELSIF (s_eReqAction = E_ReqAction.PLACE_TROLLEY_IN_TB) THEN
-				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.STOP;
-			ELSE
-				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.STOP;
-			END_IF
-		END_IF
-		
-	E_SeqCleanroomConnect.OPEN_CLEANROOM_DOOR:
-		;
-		{warning '#TODO: Add future/FUMO3 code'}
-		IF ( (s_eReqAction = E_ReqAction.INBOUND) (*OR (s_eReqAction = E_ReqAction.PICK_TROLLEY_FROM_TB)*) ) THEN
-			s_eSeqCleanroomConnect := E_SeqCleanroomConnect.CLOSE_CLEANROOM_DOOR;
-		ELSIF (s_eReqAction = E_ReqAction.OUTBOUND) THEN	
-			s_eSeqCleanroomConnect := E_SeqCleanroomConnect.PLACE_TROLLEY_IN_TB;
-		END_IF
-
-	E_SeqCleanroomConnect.CLOSE_CLEANROOM_DOOR:
-		;
-		{warning '#TODO: Add future/FUMO3 code'}
-		s_eSeqCleanroomConnect := E_SeqCleanroomConnect.CLOSE_INNER_TB_DOOR;	
-		
-////		
-	E_SeqCleanroomConnect.CLOSE_INNER_TB_DOOR:
-		IF s_fbSeqControlCleanroomConnect.q_bStaEntry THEN
-			GVL_Modules.g_emDockingInterface.m_ReqCloseInnerDoor();
-		END_IF
-		
-		IF GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosed 
-			AND GVL_Modules.g_emDockingInterface.p_bStaReady THEN
-//--			s_eSeqInbound := E_SeqInbound.CLOSE_INNER_CABIN_DOOR;
-			s_eSeqCleanroomConnect := s_eSeqCleanroomConnect := E_SeqCleanroomConnect.UNDOCK_TB;
-		END_IF
-
-//--	
-(*	E_SeqInbound.CLOSE_INNER_CABIN_DOOR:
-		IF GVL_Modules.g_emDoors.p_bStaEnabled THEN
-			IF s_fbSeqControlInbound.q_bStaEntry THEN
-				GVL_Modules.g_emDoors.m_ReqCloseInnerDoor();
-			END_IF
-		
-			IF GVL_Modules.g_emDoors.p_bStaInnerDoorClosed
-				AND GVL_Modules.g_emDoors.p_bStaReady THEN
 				IF ( (s_eReqAction = E_ReqAction.INBOUND) OR (s_eReqAction = E_ReqAction.OUTBOUND) ) THEN
-					s_eSeqInbound := s_eSeqInbound := E_SeqInbound.UNDOCK_TB;
-				ELSIF ( (*(s_eReqAction = E_ReqAction.PICK_TROLLEY_FROM_TB) OR (s_eReqAction = E_ReqAction.PLACE_TROLLEY_IN_TB) OR *) (s_eReqAction = E_ReqAction.CLOSE_INNER_TB_DOOR) ) THEN
-					s_eSeqInbound := E_SeqInbound.STOP;
+					s_eSeqCleanroomConnect := E_SeqCleanroomConnect.OPEN_INNER_TB_DOOR;
+				ELSE
+					s_bStaDockTbDone := TRUE;
+					s_bStaUnDockTbDone := FALSE;
+					s_bStaOpenInnerTbDoorDone := FALSE;
+					s_bStaCloseInnerTbDoorDone := FALSE;
+					s_bStaPickTrolleyFromTbDone := FALSE;
+					s_bStaPlaceTrolleyInTbDone := FALSE;
+					
+					s_eSeqCleanroomConnect := E_SeqCleanroomConnect.STOP;
 				END_IF		
-			END_IF
-			
-		ELSE //SKIP CABIN DOOR CONTROL
-			IF s_fbSeqControlInbound.q_tmStepTime >= T#3S THEN
-				IF ( (s_eReqAction = E_ReqAction.INBOUND) OR (s_eReqAction = E_ReqAction.OUTBOUND) ) THEN
-					s_eSeqInbound := s_eSeqInbound := E_SeqInbound.UNDOCK_TB;
-				ELSIF ( (*(s_eReqAction = E_ReqAction.PICK_TROLLEY_FROM_TB) OR (s_eReqAction = E_ReqAction.PLACE_TROLLEY_IN_TB) OR *) (s_eReqAction = E_ReqAction.CLOSE_INNER_TB_DOOR) ) THEN
-					s_eSeqInbound := E_SeqInbound.STOP;
-				END_IF
-			END_IF
-		END_IF
-*)		
+		END_IF	
+
+	//UNDOCK TB////////////////////////////////////////////////////////////////////////////////////	
 	E_SeqCleanroomConnect.UNDOCK_TB:
 		IF s_fbSeqControlCleanroomConnect.q_bStaEntry THEN
 			GVL_Modules.g_emDockingInterface.m_ReqUndockTB();
@@ -2031,42 +1878,147 @@ CASE s_eSeqCleanroomConnect OF
 		END_IF
 		
 		IF NOT(GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking) THEN
-//--			GVL_Modules.g_emDoors.m_ReqCloseOuterDoor();
 			GVL_Modules.g_emDockingInterface.m_ReqUndockTB();
 		END_IF
 	
 		IF GVL_Modules.g_emPalletConveyor.p_bStaTB_AtInfeed
 			AND GVL_Modules.g_emPalletConveyor.p_bStaReady THEN
+				s_bStaDockTbDone := FALSE;
+				s_bStaUnDockTbDone := TRUE;
+				s_bStaOpenInnerTbDoorDone := FALSE;
+				s_bStaCloseInnerTbDoorDone := FALSE;
+				s_bStaPickTrolleyFromTbDone := FALSE;
+				s_bStaPlaceTrolleyInTbDone := FALSE;
+					
+				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.STOP;
+		END_IF		
+		
+	//OPEN INNER TB DOOR //////////////////////////////////////////////////////////////////////////	
+	E_SeqCleanroomConnect.OPEN_INNER_TB_DOOR:
+		IF s_fbSeqControlCleanroomConnect.q_bStaEntry THEN
+			GVL_Modules.g_emDockingInterface.m_ReqOpenInnerDoor();
+		END_IF
+		
+		IF GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpened
+			AND GVL_Modules.g_emDockingInterface.p_bStaReady THEN
 			
-//--			s_eSeqInbound := E_SeqInbound.CLOSE_OUTER_CABIN_DOOR;
-			s_eSeqCleanroomConnect := E_SeqCleanroomConnect.STOP;
+			s_eSeqCleanroomConnect := E_SeqCleanroomConnect.FLUSHING;
+		END_IF
+	
+	E_SeqCleanroomConnect.FLUSHING:
+		IF s_fbSeqControlCleanroomConnect.q_tmStepTime > T#5S THEN
+			{warning '#TODO: Add future/FUMO3 code'}
+			IF ( (s_eReqAction = E_ReqAction.INBOUND) (*OR (s_eReqAction = E_ReqAction.PICK_TROLLEY_FROM_TB)*) ) THEN 
+				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.PICK_TROLLEY_FROM_TB;
+			ELSIF ( (s_eReqAction = E_ReqAction.OUTBOUND) OR (s_eReqAction = E_ReqAction.PLACE_TROLLEY_IN_TB) ) THEN 
+				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.OPEN_CLEANROOM_DOOR;
+//??			ELSIF (s_eReqAction = E_ReqAction.DOCK_TB) THEN
+//??				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.STOP;
+//??			ELSIF (s_eReqAction = E_ReqAction.OPEN_INNER_TB_DOOR) THEN
+//??				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.STOP;	
+			ELSE
+				s_bStaDockTbDone := FALSE;
+				s_bStaUnDockTbDone := FALSE;
+				s_bStaOpenInnerTbDoorDone := TRUE;
+				s_bStaCloseInnerTbDoorDone := FALSE;
+				s_bStaPickTrolleyFromTbDone := FALSE;
+				s_bStaPlaceTrolleyInTbDone := FALSE;	
 			
-//--			IF s_bReqUndockTB THEN
-//--				s_eSeqInbound := E_SeqInbound.READY;
-//--			ELSE
-//--				s_eSeqInbound := E_SeqInbound.READY;
-//--			END_IF
+				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.STOP;
+			END_IF
+		END_IF
+	
+	//CLOSE INNER TB DOOR//////////////////////////////////////////////////////////////////////////	
+	E_SeqCleanroomConnect.CLOSE_INNER_TB_DOOR:
+		IF s_fbSeqControlCleanroomConnect.q_bStaEntry THEN
+			GVL_Modules.g_emDockingInterface.m_ReqCloseInnerDoor();
+		END_IF
+		
+		IF GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosed 
+			AND GVL_Modules.g_emDockingInterface.p_bStaReady THEN
+				s_bStaDockTbDone := FALSE;
+				s_bStaUnDockTbDone := FALSE;
+				s_bStaOpenInnerTbDoorDone := FALSE;
+				s_bStaCloseInnerTbDoorDone := TRUE;
+				s_bStaPickTrolleyFromTbDone := FALSE;
+				s_bStaPlaceTrolleyInTbDone := FALSE;
+			
+				IF GVL_Modules.g_emDockingInterface.p_bStaReady THEN
+				
+					IF ( (s_eReqAction = E_ReqAction.INBOUND) OR (s_eReqAction = E_ReqAction.OUTBOUND) ) THEN
+						s_eSeqCleanroomConnect := E_SeqCleanroomConnect.UNDOCK_TB;
+					ELSE
+						s_eSeqCleanroomConnect := E_SeqCleanroomConnect.STOP;
+					END_IF	
+						
+				END_IF	
+		END_IF	
+	
+	//PICK TROLLEY FROM TB/////////////////////////////////////////////////////////////////////////
+	E_SeqCleanroomConnect.PICK_TROLLEY_FROM_TB:
+		IF s_fbSeqControlCleanroomConnect.q_bStaEntry THEN
+			GVL_Modules.g_emLiftingTransport.m_ReqPickTrolleyFromTB();
+		END_IF
+		
+		IF GVL_Modules.g_emLiftingTransport.p_bStaTrolleyPickedFromTB
+			AND GVL_Modules.g_emLiftingTransport.p_bStaReady THEN
+			
+			IF (s_eReqAction = E_ReqAction.INBOUND) THEN
+				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.OPEN_CLEANROOM_DOOR;
+			ELSE
+				s_bStaDockTbDone := FALSE;
+				s_bStaUnDockTbDone := FALSE;
+				s_bStaOpenInnerTbDoorDone := FALSE;
+				s_bStaCloseInnerTbDoorDone := FALSE;
+				s_bStaPickTrolleyFromTbDone := TRUE;
+				s_bStaPlaceTrolleyInTbDone := FALSE;	
+			
+				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.STOP;
+			END_IF
 		END_IF
 
-//--
-(*		
-	E_SeqInbound.CLOSE_OUTER_CABIN_DOOR:
-		IF GVL_Modules.g_emDoors.p_bStaEnabled THEN
-			IF s_fbSeqControlInbound.q_bStaEntry THEN
-				GVL_Modules.g_emDoors.m_ReqCloseOuterDoor();
-			END_IF
+	//PLACE TROLLEY IN TB//////////////////////////////////////////////////////////////////////////
+	E_SeqCleanroomConnect.PLACE_TROLLEY_IN_TB:
+		IF s_fbSeqControlCleanroomConnect.q_bStaEntry THEN
+			GVL_Modules.g_emLiftingTransport.m_ReqPlaceTrolleyInTB();
+		END_IF
 		
-			IF GVL_Modules.g_emDoors.p_bStaOuterDoorClosed
-				AND GVL_Modules.g_emDoors.p_bStaReady THEN			
-				s_eSeqInbound := E_SeqInbound.STOP;
-			END_IF
+		IF GVL_Modules.g_emLiftingTransport.p_bStaTrolleyPlacedInTB
+			AND GVL_Modules.g_emLiftingTransport.p_bStaReady THEN
 			
-		ELSE //SKIP CABIN DOOR CONTROL
-			IF s_fbSeqControlInbound.q_tmStepTime >= T#3S THEN
-				s_eSeqInbound := E_SeqInbound.STOP;
+			IF (s_eReqAction = E_ReqAction.OUTBOUND) THEN 
+				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.CLOSE_CLEANROOM_DOOR;
+			ELSIF (s_eReqAction = E_ReqAction.PLACE_TROLLEY_IN_TB) THEN
+				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.STOP;
+			ELSE
+				s_bStaDockTbDone := FALSE;
+				s_bStaUnDockTbDone := FALSE;
+				s_bStaOpenInnerTbDoorDone := FALSE;
+				s_bStaCloseInnerTbDoorDone := FALSE;
+				s_bStaPickTrolleyFromTbDone := FALSE;
+				s_bStaPlaceTrolleyInTbDone := TRUE;	
+			
+				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.STOP;
 			END_IF
 		END_IF
-*)		
+		
+	//OPEN CLEANROOM DOOR//////////////////////////////////////////////////////////////////////////	
+	E_SeqCleanroomConnect.OPEN_CLEANROOM_DOOR:
+		;
+		{warning '#TODO: Add future/FUMO3 code'}
+		IF ( (s_eReqAction = E_ReqAction.INBOUND) (*OR (s_eReqAction = E_ReqAction.PICK_TROLLEY_FROM_TB)*) ) THEN
+			s_eSeqCleanroomConnect := E_SeqCleanroomConnect.CLOSE_CLEANROOM_DOOR;
+		ELSIF (s_eReqAction = E_ReqAction.OUTBOUND) THEN	
+			s_eSeqCleanroomConnect := E_SeqCleanroomConnect.PLACE_TROLLEY_IN_TB;
+		END_IF
+
+	//CLOSE CLEANROOM DOOR/////////////////////////////////////////////////////////////////////////
+	E_SeqCleanroomConnect.CLOSE_CLEANROOM_DOOR:
+		;
+		{warning '#TODO: Add future/FUMO3 code'}
+		s_eSeqCleanroomConnect := E_SeqCleanroomConnect.CLOSE_INNER_TB_DOOR;	
+		
+	//STOP/////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqCleanroomConnect.STOP:
 		//Do not use .qEnrty forced stop doesn't make use of fbSeqControl
 //--		s_bReqInbound := FALSE;
@@ -2080,6 +2032,7 @@ CASE s_eSeqCleanroomConnect OF
 				
 		s_eSeqCleanroomConnect := E_SeqCleanroomConnect.READY;
 	
+	//ERROR////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqCleanroomConnect.ERROR:
 		IF s_fbSeqControlCleanroomConnect.q_bStaEntry THEN
 			s_eReqAction := E_ReqAction.NONE;	
@@ -2409,6 +2362,7 @@ s_arr_bBoolTest[15] := GVL_Modules.g_emDoors.p_bStaReady;
       <LineId Id="158" Count="1" />
       <LineId Id="167" Count="0" />
       <LineId Id="157" Count="0" />
+      <LineId Id="196" Count="1" />
       <LineId Id="123" Count="0" />
       <LineId Id="101" Count="0" />
       <LineId Id="103" Count="10" />
@@ -2434,42 +2388,108 @@ s_arr_bBoolTest[15] := GVL_Modules.g_emDoors.p_bStaReady;
       <LineId Id="91" Count="0" />
     </LineIds>
     <LineIds Name="UN_CleanroomConnect.m_SeqCleanroomConnect">
-      <LineId Id="3359" Count="110" />
+      <LineId Id="3359" Count="34" />
+      <LineId Id="3847" Count="0" />
+      <LineId Id="3394" Count="24" />
+      <LineId Id="3423" Count="0" />
+      <LineId Id="3816" Count="0" />
+      <LineId Id="3424" Count="0" />
+      <LineId Id="3810" Count="2" />
+      <LineId Id="3425" Count="0" />
+      <LineId Id="3813" Count="0" />
+      <LineId Id="3817" Count="0" />
+      <LineId Id="3426" Count="0" />
+      <LineId Id="3814" Count="0" />
+      <LineId Id="3427" Count="0" />
+      <LineId Id="3820" Count="0" />
+      <LineId Id="3822" Count="2" />
+      <LineId Id="3821" Count="0" />
+      <LineId Id="3819" Count="0" />
+      <LineId Id="3815" Count="0" />
+      <LineId Id="3430" Count="0" />
+      <LineId Id="3851" Count="0" />
+      <LineId Id="3431" Count="0" />
+      <LineId Id="3818" Count="0" />
+      <LineId Id="3848" Count="0" />
+      <LineId Id="3432" Count="0" />
+      <LineId Id="3852" Count="0" />
+      <LineId Id="3435" Count="0" />
+      <LineId Id="3849" Count="1" />
+      <LineId Id="3436" Count="0" />
+      <LineId Id="3853" Count="0" />
+      <LineId Id="3439" Count="2" />
+      <LineId Id="3461" Count="7" />
       <LineId Id="3760" Count="0" />
       <LineId Id="3470" Count="0" />
-      <LineId Id="3761" Count="0" />
-      <LineId Id="3471" Count="1" />
-      <LineId Id="3759" Count="0" />
-      <LineId Id="3474" Count="5" />
-      <LineId Id="3741" Count="0" />
-      <LineId Id="3740" Count="0" />
-      <LineId Id="3480" Count="0" />
-      <LineId Id="3742" Count="0" />
-      <LineId Id="3481" Count="6" />
-      <LineId Id="3762" Count="0" />
-      <LineId Id="3488" Count="14" />
-      <LineId Id="3743" Count="0" />
-      <LineId Id="3747" Count="0" />
-      <LineId Id="3744" Count="2" />
-      <LineId Id="3503" Count="5" />
-      <LineId Id="3763" Count="0" />
-      <LineId Id="3509" Count="4" />
-      <LineId Id="3764" Count="0" />
-      <LineId Id="3514" Count="103" />
-      <LineId Id="3765" Count="0" />
-      <LineId Id="3618" Count="0" />
-      <LineId Id="3766" Count="0" />
-      <LineId Id="3619" Count="30" />
-      <LineId Id="3749" Count="0" />
-      <LineId Id="3652" Count="9" />
-      <LineId Id="3770" Count="0" />
-      <LineId Id="3663" Count="5" />
-      <LineId Id="3767" Count="0" />
-      <LineId Id="3669" Count="6" />
-      <LineId Id="3768" Count="0" />
-      <LineId Id="3676" Count="0" />
-      <LineId Id="3769" Count="0" />
-      <LineId Id="3677" Count="42" />
+      <LineId Id="3854" Count="0" />
+      <LineId Id="3782" Count="2" />
+      <LineId Id="3780" Count="0" />
+      <LineId Id="3785" Count="0" />
+      <LineId Id="3781" Count="0" />
+      <LineId Id="3786" Count="2" />
+      <LineId Id="3790" Count="5" />
+      <LineId Id="3800" Count="0" />
+      <LineId Id="3799" Count="0" />
+      <LineId Id="3796" Count="0" />
+      <LineId Id="3804" Count="0" />
+      <LineId Id="3806" Count="0" />
+      <LineId Id="3808" Count="0" />
+      <LineId Id="3900" Count="4" />
+      <LineId Id="3899" Count="0" />
+      <LineId Id="3912" Count="0" />
+      <LineId Id="3809" Count="0" />
+      <LineId Id="3803" Count="0" />
+      <LineId Id="3774" Count="0" />
+      <LineId Id="3857" Count="0" />
+      <LineId Id="3860" Count="20" />
+      <LineId Id="3906" Count="4" />
+      <LineId Id="3905" Count="0" />
+      <LineId Id="3911" Count="0" />
+      <LineId Id="3881" Count="0" />
+      <LineId Id="3856" Count="0" />
+      <LineId Id="3859" Count="0" />
+      <LineId Id="3855" Count="0" />
+      <LineId Id="3532" Count="11" />
+      <LineId Id="3827" Count="0" />
+      <LineId Id="3832" Count="9" />
+      <LineId Id="3915" Count="4" />
+      <LineId Id="3913" Count="1" />
+      <LineId Id="3842" Count="0" />
+      <LineId Id="3831" Count="0" />
+      <LineId Id="3829" Count="0" />
+      <LineId Id="3556" Count="0" />
+      <LineId Id="3882" Count="0" />
+      <LineId Id="3886" Count="6" />
+      <LineId Id="3922" Count="4" />
+      <LineId Id="3920" Count="1" />
+      <LineId Id="3947" Count="0" />
+      <LineId Id="3949" Count="0" />
+      <LineId Id="3948" Count="0" />
+      <LineId Id="3945" Count="1" />
+      <LineId Id="3895" Count="0" />
+      <LineId Id="3951" Count="1" />
+      <LineId Id="3950" Count="0" />
+      <LineId Id="3883" Count="0" />
+      <LineId Id="3885" Count="0" />
+      <LineId Id="3884" Count="0" />
+      <LineId Id="3558" Count="10" />
+      <LineId Id="3929" Count="4" />
+      <LineId Id="3927" Count="1" />
+      <LineId Id="3569" Count="1" />
+      <LineId Id="3576" Count="0" />
+      <LineId Id="3896" Count="0" />
+      <LineId Id="3577" Count="13" />
+      <LineId Id="3936" Count="4" />
+      <LineId Id="3934" Count="1" />
+      <LineId Id="3591" Count="3" />
+      <LineId Id="3897" Count="0" />
+      <LineId Id="3595" Count="7" />
+      <LineId Id="3898" Count="0" />
+      <LineId Id="3603" Count="5" />
+      <LineId Id="3845" Count="0" />
+      <LineId Id="3694" Count="12" />
+      <LineId Id="3846" Count="0" />
+      <LineId Id="3707" Count="12" />
       <LineId Id="3721" Count="0" />
       <LineId Id="3720" Count="0" />
       <LineId Id="3723" Count="0" />

@@ -1219,9 +1219,9 @@ s_cmClampsLowerHighPressure(i_eCtrlMode := i_eCtrlMode, i_ref_eCtrlState := i_eC
 s_bStaDocked :=
 		s_bStaHighPressureSelected
 	AND s_bStaDockingClampsClosed
-	AND s_bStaUnlockingPinsLocked
-	AND s_bStaDoorOpenerClosed
-	AND s_bStaDoorShutterClosed
+//--	AND s_bStaUnlockingPinsLocked
+//--	AND s_bStaDoorOpenerClosed
+//--	AND s_bStaDoorShutterClosed
 	AND (s_bStaOuterCabinDoorOpened OR i_bTestDisableCabinDoors)
 	AND s_bStaTbAtDockingPosition;
   
@@ -1247,10 +1247,10 @@ s_bStaInnerDoorOpenedAndReleased :=
 	
 s_bStsReadyToReceiveTB :=
 	(s_eSeqDockingInterface = E_SeqDockingInterface.WAIT_FOR_TB_PLACED)
-	AND (i_eCtrlState <> E_CtrlState.RUNNING);
+	AND (i_eCtrlState = E_CtrlState.RUNNING);
 	
 s_bStsReadyToSendTB := (s_eSeqDockingInterface = E_SeqDockingInterface.WAIT_FOR_TB_REMOVED)
-	AND (i_eCtrlState <> E_CtrlState.RUNNING);
+	AND (i_eCtrlState = E_CtrlState.RUNNING);
 
 q_bStaWarning := s_bStaWarning;
 
@@ -1427,7 +1427,7 @@ CASE s_eSeqDockingInterface OF
 			//--END_IF
 		END_IF
 			
-	E_SeqDockingInterface.PREP_READY:
+	E_SeqDockingInterface.PREPARE_READY:
 		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN	
 			s_cmClampsUpperHighPressure.m_Off();
 			s_cmClampsLowerHighPressure.m_Off();
@@ -1519,7 +1519,7 @@ CASE s_eSeqDockingInterface OF
 		
 //DOCK TB /////////////////////////////////////////////////////////////////////////////////////////
 {warning '#TODO: Not clear why this step is needed?'} // Not used at this point, if this keeps the case then delete
-	E_SeqDockingInterface.PREP_DOCK:
+	E_SeqDockingInterface.PREPAPRE_DOCK:
 		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN	
 			s_cmClampsUpperHighPressure.m_Off();
 			s_cmClampsLowerHighPressure.m_Off();
@@ -1718,12 +1718,12 @@ CASE s_eSeqDockingInterface OF
 			IF i_bTestDisableCabinDoors THEN	
 				s_eSeqDockingInterface := E_SeqDockingInterface.UNDOCK_TB_DONE;
 			ELSE
-				s_eSeqDockingInterface := E_SeqDockingInterface.CLOSE_OUTER_INNER_DOOR;
+				s_eSeqDockingInterface := E_SeqDockingInterface.CLOSE_OUTER_CABIN_DOOR;
 			END_IF
 			
 		END_IF	
 
-	E_SeqDockingInterface.CLOSE_OUTER_INNER_DOOR:
+	E_SeqDockingInterface.CLOSE_OUTER_CABIN_DOOR:
 		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN	
 			s_cmOuterCabinDoor.m_Close();
 		END_IF
@@ -1880,7 +1880,7 @@ CASE s_eSeqDockingInterface OF
 				s_eResumeStep := s_ePreviousStep;
 			ELSE
 				{warning '#TODO: Is this still the correct way to go'} 
-				s_eResumeStep := E_SeqDockingInterface.PREP_READY;
+				s_eResumeStep := E_SeqDockingInterface.PREPARE_READY;
 			END_IF
 			
 			//Error response: During "Dock TB"

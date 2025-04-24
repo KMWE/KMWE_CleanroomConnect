@@ -49,15 +49,6 @@ VAR
 
 //------------------------------------------//
 
-//--	s_bReqInbound : BOOL;
-//--	s_bReqOutbound : BOOL;
-//--	s_bReqDockTB : BOOL;
-//--	s_bReqUndockTB : BOOL;
-//--	s_bReqPickTrolleyFromTB : BOOL;
-//--	s_bReqPlaceTrolleyInTB : BOOL;
-	
-	//--s_nStaInboundState : USINT;
-
 //------------------------------------------//
 //Variables
 	s_bStaWarning : BOOL;
@@ -66,7 +57,6 @@ VAR
 	s_bStaAllEmReady : BOOL;
 	s_bStaEmError : BOOL;
 	s_bCmdAbort : BOOL;
-	s_bCmdHold : BOOL;
 	
 	s_bStaDockTbDone: BOOL;
 	s_bStaUnDockTbDone : BOOL;
@@ -92,11 +82,8 @@ VAR
 
 	s_eReqAction : E_ReqAction;
 
-(*	s_bStaTbIsDocked : BOOL;
-	s_bStaTbIsUnDocked : BOOL;
-	s_bStaInnerTbDoorIsOpen : BOOL;
-	s_bStaInnerTbDoorIsClosed : BOOL;
-*)	
+	s_osrReqDockTb : F_TRIG;
+	
 	s_tonTimer : TON;
 	
 //------------------------------------------//
@@ -816,8 +803,8 @@ END_VAR]]></Declaration>
 //--IF s_bCreate THEN GVL_Modules.g_objCarrier.m_Create(i_eDestination := E_Location.CLEANROOM); s_bCreate := FALSE; END_IF; 
 //--IF s_bDestroy THEN GVL_Modules.g_objCarrier.m_Destroy(); s_bDestroy := FALSE; END_IF;
 
+{warning '#TODO: Check if stopping mode on any error is ok, what to do if a valve does not reach posittion, death lock?'}
 sFbModeStateControl(
-	{warning '#TODO: Check if stopping mode on any error is ok, what to do if a valve does not reach posittion, death lock?'}
 	i_bReqStopAlarm := (   GVL_Modules.g_emUtilities.p_bStaError
 						OR GVL_Modules.g_emPalletConveyor.p_bStaError (*OR GVL_Modules.g_emPalletConveyor.p_bCmdHold*) 
 						OR GVL_Modules.g_emDockingInterface.p_bStaError
@@ -880,8 +867,8 @@ GVL_Modules.g_emPalletConveyor(
 	i_eCtrlState := s_eCtrlState,
 	i_bCmdReset := p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn, //Add temp reset button
 	i_fbExtIlckConvFwd := s_fbExtIlckConvFwd,
-	i_fbExtIlckConvBwd := s_fbExtIlckConvBwd,
-	i_refTB := GVL_Modules.g_objCarrier);
+	i_fbExtIlckConvBwd := s_fbExtIlckConvBwd);
+//??	i_refTB := GVL_Modules.g_objCarrier);
 
 // EM_DockingInterface ////////////////////////////////////////////////////////////////////////////
 s_fbIlckHandlerClampsToClose();
@@ -1010,7 +997,8 @@ GVL_Modules.g_emDockingInterface(
 	i_eCtrlMode := s_eCtrlMode,
 	i_eCtrlState := s_eCtrlState,
 	i_bCmdReset := p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn, //Add temp reset button
-	i_bStaTbAtDockingPosition := GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking,
+	i_bStaTbAtDockingPosition := GVL_Modules.g_emPalletConveyor.p_bStaTB_ReadyForDocking,
+	i_bStaDockingPositionFree := GVL_Modules.g_emPalletConveyor.p_bStaTB_DockPosFree,
 	i_fbExtIlckDockingClampsToOpen := s_fbExtIlckDockingClampsToOpen,
 	i_fbExtIlckDockingClampsToClose := s_fbExtIlckDockingClampsToClose,
 	i_fbExtIlckDoorOpenerToOpen := s_fbExtIlckDoorOpenerToOpen,
@@ -1020,8 +1008,8 @@ GVL_Modules.g_emDockingInterface(
 	i_fbExtIlckOuterCabinDoorToOpen := s_fbExtIlckOuterCabinDoorOpen,
 	i_fbExtIlckOuterCabinDoorToClose := s_fbExtIlckOuterCabinDoorClose,
 	i_fbExtIlckInnerCabinDoorToOpen := s_fbExtIlckInnerCabinDoorOpen,
-	i_fbExtIlckInnerCabinDoorToClose := s_fbExtIlckInnerCabinDoorClose,
-	i_refTB := GVL_Modules.g_objCarrier);	
+	i_fbExtIlckInnerCabinDoorToClose := s_fbExtIlckInnerCabinDoorClose);
+//??	i_refTB := GVL_Modules.g_objCarrier);	
 
 // EM_LiftingTransport ////////////////////////////////////////////////////////////////////////////	
 s_fbIlckHandlerTranportExtract();
@@ -1046,8 +1034,8 @@ GVL_Modules.g_emLiftingTransport(
 	i_fbExtIlckLiftUp := s_fbExtIlckLiftUp,
 	i_fbExtIlckLiftDown := s_fbExtIlckLiftDown,
 	i_fbExtIlckTransportExtract := s_fbExtIlckTransportExtract,
-	i_fbExtIlckTransportRetract := s_fbExtIlckTransportRetract,
-	i_refTB := GVL_Modules.g_objCarrier);
+	i_fbExtIlckTransportRetract := s_fbExtIlckTransportRetract);
+//??	i_refTB := GVL_Modules.g_objCarrier);
 
 (*	
 // EM_Doors ///////////////////////////////////////////////////////////////////////////////////////
@@ -1131,124 +1119,6 @@ s_bStaWarning :=
 //++OR GVL_Modules.g_emDockingCabin.q_bStaWarning
 
 _m_Modules := TRUE;
-]]></ST>
-      </Implementation>
-    </Method>
-    <Method Name="_m_SelectConfigFile" Id="{7c7e81b7-08ef-4473-8a6d-b20d88aaf565}">
-      <Declaration><![CDATA[METHOD PRIVATE _m_SelectConfigFile : BOOL
-VAR_INPUT
-	i_bCmdReset 			: BOOL;
-END_VAR
-VAR_INST	
-	i, x					: UDINT;
-		
-	s_aPossibleRevs			: ARRAY[0..TO_DINT(Param_Project.n_MaxParamFiles)] OF T_MAXSTRING;
-	
-	s_aConfigFileNames 		: ARRAY[0..Param_Project.n_MaxParamFiles] OF T_MAXSTRING;
-	s_aConfigFileDUTs		: ARRAY[0..TO_DINT(Param_Project.n_MaxParamFiles)] OF T_MAXSTRING;	
-	s_aConfigFileRev		: ARRAY[0..Param_Project.n_MaxParamFiles] OF T_MAXSTRING;
-	
-	s_aSingleDUTs			: ARRAY[0..TO_DINT(Param_Project.n_MaxParamFiles)] OF T_MAXSTRING;
-	s_aSingleREVs			: ARRAY[0..TO_DINT(Param_Project.n_MaxParamFiles)] OF T_MAXSTRING;
-		
-	s_nIndexDut				: INT;
-//	s_nIndexSR				: INT;
-	s_nIndexRev				: INT;
-	
-	s_nIndexDutPrev			: INT;
-	s_nIndexRevPrev			: INT;
-	
-	s_sChosenFile			: T_MAXSTRING;
-	s_sToHmiChosenFile		: T_MAXSTRING;
-	
-	s_bCmdResetInternal	 	: BOOL;
-END_VAR
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[
-//1413824/E test bestand met deze naam.
-
-IF i_bCmdReset OR s_bCmdResetInternal THEN	
-	MEMSET(ADR(s_aConfigFileNames), 0, SIZEOF(s_aConfigFileNames));
-	MEMSET(ADR(s_aConfigFileDUTs), 0, SIZEOF(s_aConfigFileDUTs));
-	MEMSET(ADR(s_aSingleDUTs), 0, SIZEOF(s_aSingleDUTs));
-	
-	MEMCPY(ADR(s_aConfigFileNames), ADR(GVL_KMWEGenericLib.g_fbParamManager.s_aFileListHmi), SIZEOF(GVL_KMWEGenericLib.g_fbParamManager.s_aFileListHmi));
-	
-	s_nIndexDut		:= -1;
-//	s_nIndexSR		:= -1;
-	s_nIndexRev		:= -1;
-	
-	FOR i := 0 TO Param_Project.n_MaxParamFiles DO 
-		FindAndSplit(pSeparator:= ADR('^'),
-							 pSrcString:= ADR(s_aConfigFileNames[i]),
-							 pLeftString:= ADR(s_aConfigFileDUTs[i]),
-							 nLeftSize:= SIZEOF(s_aConfigFileDUTs[i]),
-							 pRightString:= ADR(s_aConfigFileRev[i]),
-							 nRightSize:= SIZEOF(s_aConfigFileRev[i]),
-							 bSearchFromRight:= FALSE);	
-
-		s_aConfigFileRev[i] := 	DELETE(s_aConfigFileRev[i], 6, 2);			
-	END_FOR
-	
-	F_CheckDuplicatesInArray(iq_aOriginalArray := s_aConfigFileDUTs, iq_aUniqueArray := s_aSingleDUTs);
-
-	IF s_aConfigFileNames[0] = '' THEN
-		s_bCmdResetInternal := TRUE;	
-	ELSE
-		s_bCmdResetInternal := FALSE;	
-	END_IF
-END_IF
-
-IF s_nIndexDutPrev <> s_nIndexDut AND s_nIndexDutPrev <> -1 THEN
-	s_nIndexRev := -1;
-	
-	MEMSET(ADR(s_aSingleREVs), 0, SIZEOF(s_aSingleREVs));
-END_IF
-
-IF s_nIndexDut <> -1 AND s_nIndexRev = -1 THEN 
-	x := 0;
-	MEMSET(ADR(s_aSingleREVs), 0, SIZEOF(s_aSingleREVs));
-	MEMSET(ADR(s_aPossibleRevs), 0, SIZEOF(s_aPossibleRevs));
-	FOR i:= 0 TO Param_Project.n_MaxParamFiles DO
-		IF FIND(s_aConfigFileNames[i], s_aSingleDUTs[s_nIndexDut]) <> 0 THEN
-			s_aPossibleRevs[x] := MID(s_aConfigFileNames[i],1,FIND(s_aConfigFileNames[i], '^')+1);
-			x := x + 1;
-		END_IF					
-	END_FOR	
-	
-	F_CheckDuplicatesInArray(iq_aOriginalArray := s_aPossibleRevs, iq_aUniqueArray := s_aSingleREVs); 
-END_IF
-
-IF s_nIndexDut <> -1 AND s_nIndexRev <> -1 AND s_nIndexRevPrev <> s_nIndexRev THEN
-	FOR i := 0 TO Param_Project.n_MaxParamFiles DO
-		IF s_aConfigFileNames[i] = CONCAT(s_aSingleDUTs[s_nIndexDut], 
-										CONCAT('^', 
-										CONCAT(s_aSingleRevs[s_nIndexRev], '.csv')))
-		THEN
-			s_sChosenFile := s_aConfigFileNames[i];
-		END_IF
-	END_FOR
-	
-	FOR i := 0 TO Param_Project.n_MaxParamFiles DO
-		IF GVL_KMWEGenericLib.g_fbParamManager.s_aFileListHmi[i] = s_sChosenFile THEN
-			GVL_KMWEGenericLib.g_fbParamManager.p_nHmiFileSelected := TO_UDINT(i);
-		END_IF
-	END_FOR 
-END_IF
-
-IF s_aConfigFileNames[GVL_KMWEGenericLib.g_fbParamManager.p_nHmiFileSelected] <> s_sChosenFile THEN
-	s_nIndexDut	:= -1;
-	s_nIndexRev	:= -1;
-	
-	MEMSET(ADR(s_aSingleREVs), 0, SIZEOF(s_aSingleREVs));
-END_IF
-
-s_sChosenFile 		:= GVL_KMWEGenericLib.g_fbParamManager.s_aFileListHmi[GVL_KMWEGenericLib.g_fbParamManager.p_nHmiFileSelected];
-s_sToHmiChosenFile 	:= DELETE(s_sChosenFile, 4, FIND(s_sChosenFile, '.csv'));
-
-s_nIndexRevPrev := s_nIndexRev;
-s_nIndexDutPrev	:= s_nIndexDut;
 ]]></ST>
       </Implementation>
     </Method>
@@ -1553,22 +1423,11 @@ IF NOT SUPER^.m_Main() THEN
 END_IF
 
 GVL.g_osrNotify();
-
-//--GVL_DataLogging.g_fbDataLogger(i_sPathName := 'C:\RMMT\', i_bCmdReset := s_bCmdReset);
-
-//--GVL_DataLogging.g_fbSqlDatabase(i_stSettings := s_stSqlDbSettings, i_bCmdReset := s_bCmdReset);
-
-//--_m_SelectConfigFile(i_bCmdReset := s_fbHmiBtnAutomatic.p_osfBtnPress);
-
 GVL.g_osrNotify.CLK := FALSE;	
 
-//--m_FullCycle(i_objTB := GVL_Modules.g_objCarrier);
+
 
 m_Main := TRUE;
-
-//--IF s_arr_bBoolTest[0] THEN GVL_Modules.g_emLiftingTransport.m_ReqGoToIdle(); s_arr_bBoolTest[0] := FALSE; END_IF
-//--IF s_arr_bBoolTest[1] THEN GVL_Modules.g_emLiftingTransport.m_ReqPickTrolleyFromTB(); s_arr_bBoolTest[1] := FALSE; END_IF
-//--IF s_arr_bBoolTest[2] THEN GVL_Modules.g_emLiftingTransport.m_ReqPlaceTrolleyInTB(); s_arr_bBoolTest[2] := FALSE; END_IF
 
 CASE s_eCtrlMode OF
 
@@ -1689,35 +1548,6 @@ s_fbHmiBtnPlaceTrolleyInTB.p_bStaEnabled := s_bStaReady AND GVL_Modules.g_emDock
 *)	]]></ST>
       </Implementation>
     </Method>
-    <Method Name="m_Outbound" Id="{6261bd7c-d400-4b5a-911e-fc663ac04169}">
-      <Declaration><![CDATA[METHOD PUBLIC m_Outbound : BOOL
-VAR
-	sReason : STRING;
-END_VAR]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[// Onderstaande sequencer zal nog verder moeten worden opgebouwd
-
-//Outbound cycle (happy flow)
-GVL_Modules.g_emPalletConveyor.m_ReqTB_ToCenter();
-
-GVL_Modules.g_emPalletConveyor.m_ReqCenteringTB();
-
-GVL_Modules.g_emPalletConveyor.m_ReqTB_ToDocking();
-
-GVL_Modules.g_emDockingInterface.m_ReqDockTB();
-
-GVL_Modules.g_emDockingInterface.m_ReqOpenInnerDoor();
-
-GVL_Modules.g_emLiftingTransport.m_ReqPlaceTrolleyInTB();
-
-GVL_Modules.g_emDockingInterface.m_ReqCloseInnerDoor();
-
-GVL_Modules.g_emDockingInterface.m_ReqUndockTB();
-
-GVL_Modules.g_emPalletConveyor.m_ReqTB_ToInfeed();
-]]></ST>
-      </Implementation>
-    </Method>
     <Method Name="m_SeqCleanroomConnect" Id="{90534ebe-9d21-4aeb-b2cc-cf785c67a06d}">
       <Declaration><![CDATA[METHOD PUBLIC m_SeqCleanroomConnect : BOOL
 VAR
@@ -1735,16 +1565,11 @@ s_bStaEmError :=
 	OR GVL_Modules.g_emDockingInterface.p_bStaError
 	OR GVL_Modules.g_emLiftingTransport.p_bStaError;
 	
-s_bCmdHold := FALSE;
-//--	GVL_Modules.g_emPalletConveyor.p_bCmdHold;
-	//++ OR GVL_Modules.g_emDockingInterface.p_bCmdHold
-	//++ OR GVL_Modules.g_emLiftingTransport.p_bCmdHold;
-
 s_fbSeqControlCleanroomConnect(
 	i_nSeqStep := s_eSeqCleanroomConnect,
 	i_sStepName := TO_STRING(s_eSeqCleanroomConnect),
 	i_bCmdReset := s_fbHmiBtnReset.p_bStaBtn OR s_bCmdAbort,
-	i_bStaError := s_bStaEmError OR s_bCmdHold);
+	i_bStaError := s_bStaEmError);
 
 s_tonTimer(PT := T#3600S);
 	
@@ -1757,20 +1582,13 @@ CASE s_eSeqCleanroomConnect OF
 	
 		IF s_eCtrlState = E_CtrlState.RUNNING THEN
 			s_eSeqCleanroomConnect := s_eResumeStep;
-			s_bCmdHold := FALSE;
 		END_IF
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ////READY//////////////////////////////////////////////////////////////////////////////////////////		
 	E_SeqCleanroomConnect.READY:
 		IF s_fbSeqControlCleanroomConnect.q_bStaEntry THEN
-		//??	s_bReqInbound := FALSE;
-		//??	s_bReqOutbound := FALSE;
-		//??	s_bReqDockTB := FALSE;
-		//??	s_bReqUndockTB := FALSE;
-		//??	s_bReqPickTrolleyFromTB := FALSE;
-		//??	s_bReqPlaceTrolleyInTB := FALSE;
-		s_eResumeStep := E_SeqCleanroomConnect.READY;
+			s_eResumeStep := E_SeqCleanroomConnect.READY;
 		END_IF
 		
 		IF s_eCtrlState <> E_CtrlState.RUNNING THEN
@@ -1827,10 +1645,10 @@ CASE s_eSeqCleanroomConnect OF
 		
 		IF GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering
 			AND GVL_Modules.g_emPalletConveyor.p_bStaReady THEN			
-			s_eSeqCleanroomConnect := E_SeqCleanroomConnect.DOCK_TB;
+			s_eSeqCleanroomConnect := E_SeqCleanroomConnect.START_DOCK_TB;
 		END_IF
 		
-	E_SeqCleanroomConnect.DOCK_TB:
+	E_SeqCleanroomConnect.START_DOCK_TB:
 		IF s_fbSeqControlCleanroomConnect.q_bStaEntry THEN
 			GVL_Modules.g_emDockingInterface.m_ReqDockTB();
 		END_IF
@@ -1844,9 +1662,17 @@ CASE s_eSeqCleanroomConnect OF
 			GVL_Modules.g_emPalletConveyor.m_ReqTB_ToDocking();
 		END_IF
 		
-		IF GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking
-			AND GVL_Modules.g_emPalletConveyor.p_bStaReady 
-			AND GVL_Modules.g_emDockingInterface.p_bStaDocked
+		IF GVL_Modules.g_emPalletConveyor.p_bStaTB_ReadyForDocking
+			AND GVL_Modules.g_emPalletConveyor.p_bStaReady THEN
+				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.FINISH_DOCK_TB;
+		END_IF
+
+ 	E_SeqCleanroomConnect.FINISH_DOCK_TB:
+		IF s_fbSeqControlCleanroomConnect.q_bStaEntry THEN
+			GVL_Modules.g_emDockingInterface.m_ReqDockTB();
+		END_IF
+		
+		IF GVL_Modules.g_emDockingInterface.p_bStaDocked
 			AND GVL_Modules.g_emDockingInterface.p_bStaReady THEN
 				IF ( (s_eReqAction = E_ReqAction.INBOUND) OR (s_eReqAction = E_ReqAction.OUTBOUND) ) THEN
 					s_eSeqCleanroomConnect := E_SeqCleanroomConnect.OPEN_INNER_TB_DOOR;
@@ -1877,12 +1703,16 @@ CASE s_eSeqCleanroomConnect OF
 			GVL_Modules.g_emPalletConveyor.m_ReqTB_ToInfeed();
 		END_IF
 		
-		IF NOT(GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking) THEN
+		s_osrReqDockTb(CLK := GVL_Modules.g_emPalletConveyor.p_bStaTB_DockPosFree); 
+		
+		IF s_osrReqDockTb.Q THEN	
 			GVL_Modules.g_emDockingInterface.m_ReqUndockTB();
 		END_IF
 	
 		IF GVL_Modules.g_emPalletConveyor.p_bStaTB_AtInfeed
-			AND GVL_Modules.g_emPalletConveyor.p_bStaReady THEN
+			AND GVL_Modules.g_emPalletConveyor.p_bStaReady
+			AND GVL_Modules.g_emDockingInterface.p_bStaUndocked
+			AND GVL_Modules.g_emDockingInterface.p_bStaReady THEN
 				s_bStaDockTbDone := FALSE;
 				s_bStaUnDockTbDone := TRUE;
 				s_bStaOpenInnerTbDoorDone := FALSE;
@@ -1912,10 +1742,6 @@ CASE s_eSeqCleanroomConnect OF
 				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.PICK_TROLLEY_FROM_TB;
 			ELSIF ( (s_eReqAction = E_ReqAction.OUTBOUND) OR (s_eReqAction = E_ReqAction.PLACE_TROLLEY_IN_TB) ) THEN 
 				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.OPEN_CLEANROOM_DOOR;
-//??			ELSIF (s_eReqAction = E_ReqAction.DOCK_TB) THEN
-//??				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.STOP;
-//??			ELSIF (s_eReqAction = E_ReqAction.OPEN_INNER_TB_DOOR) THEN
-//??				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.STOP;	
 			ELSE
 				s_bStaDockTbDone := FALSE;
 				s_bStaUnDockTbDone := FALSE;
@@ -2021,12 +1847,6 @@ CASE s_eSeqCleanroomConnect OF
 	//STOP/////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqCleanroomConnect.STOP:
 		//Do not use .qEnrty forced stop doesn't make use of fbSeqControl
-//--		s_bReqInbound := FALSE;
-//--		s_bReqOutbound := FALSE;
-//--		s_bReqDockTB := FALSE;
-//--		s_bReqUndockTB := FALSE;
-//--		s_bReqPickTrolleyFromTB := FALSE;
-//--		s_bReqPlaceTrolleyInTB := FALSE;
 		
 		s_eReqAction := E_ReqAction.NONE;
 				
@@ -2046,22 +1866,7 @@ CASE s_eSeqCleanroomConnect OF
 		END_IF
 
 END_CASE
-
-//TEST
-(*--
-IF s_arr_bBoolTest[0] THEN GVL_Modules.g_emDoors.m_ReqOpenOuterDoor(); s_arr_bBoolTest[0] := FALSE; END_IF
-IF s_arr_bBoolTest[1] THEN GVL_Modules.g_emDoors.m_ReqCloseOuterDoor(); s_arr_bBoolTest[1] := FALSE; END_IF
-IF s_arr_bBoolTest[2] THEN GVL_Modules.g_emDoors.m_ReqOpenInnerDoor(); s_arr_bBoolTest[2] := FALSE; END_IF
-IF s_arr_bBoolTest[3] THEN GVL_Modules.g_emDoors.m_ReqCloseInnerDoor(); s_arr_bBoolTest[3] := FALSE; END_IF
-
-s_arr_bBoolTest[9] := GVL_Modules.g_emDoors.p_bStaEnabled;
-s_arr_bBoolTest[10] := GVL_Modules.g_emDoors.p_bStaError;
-s_arr_bBoolTest[11] := GVL_Modules.g_emDoors.p_bStaOuterDoorClosed;
-s_arr_bBoolTest[12] := GVL_Modules.g_emDoors.p_bStaOuterDoorOpened;
-s_arr_bBoolTest[13] := GVL_Modules.g_emDoors.p_bStaInnerDoorClosed;
-s_arr_bBoolTest[14] := GVL_Modules.g_emDoors.p_bStaInnerDoorOpened;
-s_arr_bBoolTest[15] := GVL_Modules.g_emDoors.p_bStaReady;
-*)]]></ST>
+]]></ST>
       </Implementation>
     </Method>
     <LineIds Name="UN_CleanroomConnect">
@@ -2286,27 +2091,20 @@ s_arr_bBoolTest[15] := GVL_Modules.g_emDoors.p_bStaReady;
       <LineId Id="78" Count="0" />
     </LineIds>
     <LineIds Name="UN_CleanroomConnect._m_Modules">
-      <LineId Id="4966" Count="193" />
+      <LineId Id="4966" Count="3" />
+      <LineId Id="5315" Count="0" />
+      <LineId Id="4970" Count="1" />
+      <LineId Id="4973" Count="186" />
       <LineId Id="5285" Count="0" />
-      <LineId Id="5160" Count="124" />
+      <LineId Id="5160" Count="4" />
+      <LineId Id="5316" Count="0" />
+      <LineId Id="5165" Count="119" />
       <LineId Id="20" Count="0" />
     </LineIds>
-    <LineIds Name="UN_CleanroomConnect._m_SelectConfigFile">
-      <LineId Id="202" Count="0" />
-      <LineId Id="172" Count="1" />
-      <LineId Id="3" Count="30" />
-      <LineId Id="40" Count="1" />
-      <LineId Id="43" Count="2" />
-      <LineId Id="47" Count="14" />
-      <LineId Id="79" Count="5" />
-      <LineId Id="143" Count="0" />
-      <LineId Id="87" Count="12" />
-      <LineId Id="101" Count="2" />
-      <LineId Id="105" Count="6" />
-      <LineId Id="203" Count="0" />
-    </LineIds>
     <LineIds Name="UN_CleanroomConnect.m_FullCycle">
-      <LineId Id="1542" Count="259" />
+      <LineId Id="1542" Count="25" />
+      <LineId Id="1824" Count="0" />
+      <LineId Id="1569" Count="232" />
       <LineId Id="211" Count="0" />
     </LineIds>
     <LineIds Name="UN_CleanroomConnect.m_Main">
@@ -2314,18 +2112,11 @@ s_arr_bBoolTest[15] := GVL_Modules.g_emDoors.p_bStaReady;
       <LineId Id="6" Count="2" />
       <LineId Id="25" Count="0" />
       <LineId Id="24" Count="0" />
-      <LineId Id="9" Count="3" />
-      <LineId Id="20" Count="0" />
-      <LineId Id="19" Count="0" />
-      <LineId Id="26" Count="0" />
       <LineId Id="28" Count="0" />
-      <LineId Id="71" Count="1" />
-      <LineId Id="15" Count="0" />
+      <LineId Id="203" Count="0" />
+      <LineId Id="202" Count="0" />
+      <LineId Id="71" Count="0" />
       <LineId Id="5" Count="0" />
-      <LineId Id="59" Count="0" />
-      <LineId Id="81" Count="0" />
-      <LineId Id="83" Count="0" />
-      <LineId Id="80" Count="0" />
       <LineId Id="86" Count="0" />
       <LineId Id="90" Count="2" />
       <LineId Id="96" Count="0" />
@@ -2382,15 +2173,13 @@ s_arr_bBoolTest[15] := GVL_Modules.g_emDoors.p_bStaReady;
       <LineId Id="33" Count="24" />
       <LineId Id="31" Count="0" />
     </LineIds>
-    <LineIds Name="UN_CleanroomConnect.m_Outbound">
-      <LineId Id="100" Count="1" />
-      <LineId Id="111" Count="17" />
-      <LineId Id="91" Count="0" />
-    </LineIds>
     <LineIds Name="UN_CleanroomConnect.m_SeqCleanroomConnect">
-      <LineId Id="3359" Count="34" />
+      <LineId Id="3359" Count="10" />
+      <LineId Id="3375" Count="16" />
+      <LineId Id="3393" Count="0" />
       <LineId Id="3847" Count="0" />
-      <LineId Id="3394" Count="24" />
+      <LineId Id="3394" Count="3" />
+      <LineId Id="3404" Count="14" />
       <LineId Id="3423" Count="0" />
       <LineId Id="3816" Count="0" />
       <LineId Id="3424" Count="0" />
@@ -2429,6 +2218,13 @@ s_arr_bBoolTest[15] := GVL_Modules.g_emDoors.p_bStaReady;
       <LineId Id="3786" Count="2" />
       <LineId Id="3790" Count="5" />
       <LineId Id="3800" Count="0" />
+      <LineId Id="3959" Count="0" />
+      <LineId Id="3957" Count="1" />
+      <LineId Id="3956" Count="0" />
+      <LineId Id="3961" Count="0" />
+      <LineId Id="3960" Count="0" />
+      <LineId Id="3963" Count="0" />
+      <LineId Id="3962" Count="0" />
       <LineId Id="3799" Count="0" />
       <LineId Id="3796" Count="0" />
       <LineId Id="3804" Count="0" />
@@ -2441,7 +2237,11 @@ s_arr_bBoolTest[15] := GVL_Modules.g_emDoors.p_bStaReady;
       <LineId Id="3803" Count="0" />
       <LineId Id="3774" Count="0" />
       <LineId Id="3857" Count="0" />
-      <LineId Id="3860" Count="20" />
+      <LineId Id="3860" Count="14" />
+      <LineId Id="3964" Count="2" />
+      <LineId Id="3876" Count="4" />
+      <LineId Id="3971" Count="0" />
+      <LineId Id="3969" Count="0" />
       <LineId Id="3906" Count="4" />
       <LineId Id="3905" Count="0" />
       <LineId Id="3911" Count="0" />
@@ -2451,7 +2251,8 @@ s_arr_bBoolTest[15] := GVL_Modules.g_emDoors.p_bStaReady;
       <LineId Id="3855" Count="0" />
       <LineId Id="3532" Count="11" />
       <LineId Id="3827" Count="0" />
-      <LineId Id="3832" Count="9" />
+      <LineId Id="3832" Count="4" />
+      <LineId Id="3841" Count="0" />
       <LineId Id="3915" Count="4" />
       <LineId Id="3913" Count="1" />
       <LineId Id="3842" Count="0" />
@@ -2487,22 +2288,10 @@ s_arr_bBoolTest[15] := GVL_Modules.g_emDoors.p_bStaReady;
       <LineId Id="3898" Count="0" />
       <LineId Id="3603" Count="5" />
       <LineId Id="3845" Count="0" />
-      <LineId Id="3694" Count="12" />
+      <LineId Id="3694" Count="1" />
+      <LineId Id="3702" Count="4" />
       <LineId Id="3846" Count="0" />
       <LineId Id="3707" Count="12" />
-      <LineId Id="3721" Count="0" />
-      <LineId Id="3720" Count="0" />
-      <LineId Id="3723" Count="0" />
-      <LineId Id="3722" Count="0" />
-      <LineId Id="3724" Count="2" />
-      <LineId Id="3728" Count="0" />
-      <LineId Id="3727" Count="0" />
-      <LineId Id="3729" Count="0" />
-      <LineId Id="3736" Count="0" />
-      <LineId Id="3731" Count="0" />
-      <LineId Id="3734" Count="0" />
-      <LineId Id="3733" Count="0" />
-      <LineId Id="3735" Count="0" />
       <LineId Id="95" Count="0" />
     </LineIds>
   </POU>

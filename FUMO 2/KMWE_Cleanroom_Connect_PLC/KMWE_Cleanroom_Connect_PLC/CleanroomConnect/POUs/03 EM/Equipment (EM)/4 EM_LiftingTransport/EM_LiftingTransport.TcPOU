@@ -31,12 +31,11 @@ VAR_INPUT
 	i_ref_stSettings : REFERENCE TO ST_SettingsLiftingTransport;
 	
 	// External interlocks (from outside this EM)
-	i_fbExtIlckLiftUp : FB_Interlock;
-	i_fbExtIlckLiftDown : FB_Interlock;
-	i_fbExtIlckTransportExtract : FB_Interlock;
-	i_fbExtIlckTransportRetract : FB_Interlock;
-	
-//??	i_refTB : REFERENCE TO OBJ_Carrier;	//Mogelijk voor uiteindelijke machine, voor de FUMO's is dit nog niet echt relevant
+	{warning '#TODO: Delete unused (not written extrnal) inputs'}
+	i_stExtIlckLiftUp : ST_Interlock;			//-- NOT_USED
+	i_stExtIlckLiftDown : ST_Interlock;			//-- NOT_USED
+	i_stExtIlckTransportExtract : ST_Interlock;
+	i_stExtIlckTransportRetract : ST_Interlock;	//-- NOT_USED
 	
 	i_eCtrlState		: E_CtrlState;
 	
@@ -480,6 +479,9 @@ IF NOT SUPER^._m_Devices() THEN
 	RETURN;
 END_IF
 
+{warning '#TODO: Not clear if this is the right way to correct the lift speed'}
+//??s_cmLift.p_fSetOverride := (s_cmLift.p_fPosition / s_fActLiftPosition) * 100;
+
 //Control module
 s_cmLift(
 	i_bReqEnable := i_bReqEnable,
@@ -718,17 +720,13 @@ _m_Inputs := TRUE;
       <Implementation>
         <ST><![CDATA[
 //Lift/////////////////////////////////////////////////////////////////////////////////////////////
-//--i_fbExtIlckLiftDown();
-s_fbIlckHandlerLiftDown.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckLiftDown.p_bInterlocked;
-s_fbIlckHandlerLiftDown.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckLiftDown.p_sReason;
+s_fbIlckHandlerLiftDown.i_stInterlockList.arr_Interlocks[0] := i_stExtIlckLiftDown;
 s_fbIlckHandlerLiftDown.i_stInterlockList.arr_Interlocks[1].bState := //Transport not at retracter positon + starts at min level
 	( (s_fActTransportPosition < c_fMIN_TRANSPORT_POSITION_TO_LOWER_LIFT) OR (s_fActTransportPosition > c_fMAX_TRANSPORT_POSITION_TO_LOWER_LIFT) )
 	AND (s_fActLiftPosition < c_fMIN_LIFT_POSITION_TO_CHECK_INTERLOCK );
 s_fbIlckHandlerLiftDown();
 
-//--i_fbExtIlckLiftUp();
-s_fbIlckHandlerLiftUp.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckLiftUp.p_bInterlocked;
-s_fbIlckHandlerLiftUp.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckLiftUp.p_sReason;
+s_fbIlckHandlerLiftUp.i_stInterlockList.arr_Interlocks[0] := i_stExtIlckLiftUp;
 s_fbIlckHandlerLiftUp.i_stInterlockList.arr_Interlocks[1].bState := //Trolley not placed correctly at lift
 	NOT(s_bStaCabinAreaFree)
 	AND NOT (s_bStaTrolleyAtLiftPos)
@@ -751,15 +749,11 @@ ELSE
 END_IF
 
 //Transport////////////////////////////////////////////////////////////////////////////////////////
-//--i_fbExtIlckTransportRetract();
-s_fbIlckHandlerTransportRetract.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckTransportRetract.p_bInterlocked;
-s_fbIlckHandlerTransportRetract.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckTransportRetract.p_sReason;
+s_fbIlckHandlerTransportRetract.i_stInterlockList.arr_Interlocks[0] := i_stExtIlckTransportRetract;
 s_fbIlckHandlerTransportRetract.i_stInterlockList.arr_Interlocks[1].bState := FALSE;
 s_fbIlckHandlerTransportRetract();
 
-//--i_fbExtIlckTransportExtract();
-s_fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[0].bState := i_fbExtIlckTransportExtract.p_bInterlocked;
-s_fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[0].sReason := i_fbExtIlckTransportExtract.p_sReason;
+s_fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[0] := i_stExtIlckTransportExtract;
 s_fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[1].bState := //Lift not at correct position
 	(i_eCtrlMode <> E_CtrlMode.AUTOMATIC) AND (i_eCtrlMode <> E_CtrlMode.MANUAL) AND
 	((s_fActLiftPosition < c_fMIN_LIFT_HEIGHT_TO_EXTRACT_TRANSPORT) OR (s_fActLiftPosition > c_fMAX_LIFT_HEIGHT_TO_EXTRACT_TRANSPORT) );
@@ -1695,7 +1689,11 @@ p_fActTransportPosition := s_fActTransportPosition;
     </LineIds>
     <LineIds Name="EM_LiftingTransport._m_Devices">
       <LineId Id="365" Count="0" />
-      <LineId Id="306" Count="51" />
+      <LineId Id="306" Count="2" />
+      <LineId Id="370" Count="0" />
+      <LineId Id="369" Count="0" />
+      <LineId Id="368" Count="0" />
+      <LineId Id="309" Count="48" />
       <LineId Id="359" Count="4" />
       <LineId Id="5" Count="0" />
     </LineIds>
@@ -1751,17 +1749,25 @@ p_fActTransportPosition := s_fActTransportPosition;
     </LineIds>
     <LineIds Name="EM_LiftingTransport._m_Interlocks">
       <LineId Id="544" Count="0" />
-      <LineId Id="419" Count="4" />
+      <LineId Id="419" Count="0" />
+      <LineId Id="421" Count="0" />
+      <LineId Id="423" Count="0" />
       <LineId Id="531" Count="0" />
       <LineId Id="534" Count="0" />
-      <LineId Id="428" Count="5" />
+      <LineId Id="428" Count="1" />
+      <LineId Id="431" Count="0" />
+      <LineId Id="433" Count="0" />
       <LineId Id="540" Count="2" />
       <LineId Id="445" Count="3" />
       <LineId Id="549" Count="0" />
       <LineId Id="551" Count="9" />
       <LineId Id="550" Count="0" />
-      <LineId Id="449" Count="5" />
-      <LineId Id="459" Count="5" />
+      <LineId Id="449" Count="1" />
+      <LineId Id="452" Count="0" />
+      <LineId Id="454" Count="0" />
+      <LineId Id="459" Count="1" />
+      <LineId Id="462" Count="0" />
+      <LineId Id="464" Count="0" />
       <LineId Id="547" Count="0" />
       <LineId Id="526" Count="0" />
       <LineId Id="469" Count="0" />

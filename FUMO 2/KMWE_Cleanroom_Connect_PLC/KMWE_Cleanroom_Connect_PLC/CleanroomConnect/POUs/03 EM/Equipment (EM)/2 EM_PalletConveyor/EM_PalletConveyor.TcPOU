@@ -124,6 +124,10 @@ VAR
 	s_eSeqTransport : E_SeqTransport;
 	s_fbSeqTransportControl : FB_SeqControl;
 
+	s_ePreviousStep : E_SeqTransport;
+	s_eResumeStep : E_SeqTransport;
+	s_sResumeStep : STRING;
+	
 	s_eTmpLocation : E_Location;
 	s_eTmpCenteringDone : BOOL;
 	
@@ -884,7 +888,9 @@ s_fbSeqTransportControl(
 					AND i_bReqEnable, 
 	i_bStaError := s_bStaError OR NOT(i_bReqEnable));
 
-//Abbort operation (go to stop)
+s_sResumeStep := TO_STRING(s_eResumeStep); 	
+	
+//Force to stop	
 IF (i_eCtrlState = E_CtrlState.STOPPING) THEN
 	s_eSeqTransport := E_SeqTransport.STOP;
 END_IF	
@@ -920,6 +926,7 @@ CASE s_eSeqTransport OF
 	E_SeqTransport.READY:
 		IF s_fbSeqTransportControl.q_bStaEntry THEN
 //??			i_refTB.p_eActLocation := s_eTmpLocation;
+			s_eResumeStep := E_SeqTransport.READY;
 			s_eTmpLocation := E_Location.UNKNOWN;
 		END_IF
 		
@@ -1125,8 +1132,14 @@ CASE s_eSeqTransport OF
 			s_cmPalletConveyor.m_Stop();
 		END_IF
 		
-		IF s_cmPalletConveyor.p_bStaMotorStopped THEN
-			s_eSeqTransport := E_SeqTransport.READY;
+		IF (i_eCtrlState = E_CtrlState.RUNNING) THEN
+			IF s_cmPalletConveyor.p_bStaMotorStopped THEN
+				s_eSeqTransport := E_SeqTransport.READY;
+			END_IF
+		ELSE
+			IF i_eCtrlState = E_CtrlState.IDLE THEN
+				s_eSeqTransport := E_SeqTransport.START;
+			END_IF
 		END_IF
 		
 	E_SeqTransport.ERROR:
@@ -1789,11 +1802,12 @@ p_bStaTB_ReadyForDocking := s_bStaTB_AtDocking AND s_cmPalletConveyor.p_bStaMoto
     <LineIds Name="EM_PalletConveyor._m_SeqTransport">
       <LineId Id="1808" Count="0" />
       <LineId Id="1632" Count="8" />
+      <LineId Id="1992" Count="0" />
+      <LineId Id="1982" Count="0" />
+      <LineId Id="1993" Count="0" />
+      <LineId Id="1984" Count="2" />
       <LineId Id="1921" Count="0" />
-      <LineId Id="1813" Count="0" />
-      <LineId Id="1815" Count="1" />
-      <LineId Id="1641" Count="0" />
-      <LineId Id="1814" Count="0" />
+      <LineId Id="1983" Count="0" />
       <LineId Id="1642" Count="4" />
       <LineId Id="1809" Count="2" />
       <LineId Id="1966" Count="0" />
@@ -1811,7 +1825,9 @@ p_bStaTB_ReadyForDocking := s_bStaTB_AtDocking AND s_cmPalletConveyor.p_bStaMoto
       <LineId Id="1899" Count="0" />
       <LineId Id="1660" Count="0" />
       <LineId Id="1967" Count="0" />
-      <LineId Id="1661" Count="8" />
+      <LineId Id="1661" Count="3" />
+      <LineId Id="1991" Count="0" />
+      <LineId Id="1665" Count="4" />
       <LineId Id="1906" Count="1" />
       <LineId Id="1904" Count="1" />
       <LineId Id="1797" Count="0" />
@@ -1897,7 +1913,13 @@ p_bStaTB_ReadyForDocking := s_bStaTB_AtDocking AND s_cmPalletConveyor.p_bStaMoto
       <LineId Id="1846" Count="1" />
       <LineId Id="1769" Count="7" />
       <LineId Id="1963" Count="0" />
-      <LineId Id="1777" Count="11" />
+      <LineId Id="1777" Count="5" />
+      <LineId Id="1994" Count="0" />
+      <LineId Id="1783" Count="2" />
+      <LineId Id="1988" Count="2" />
+      <LineId Id="1987" Count="0" />
+      <LineId Id="1995" Count="0" />
+      <LineId Id="1786" Count="2" />
       <LineId Id="1964" Count="0" />
       <LineId Id="1789" Count="1" />
       <LineId Id="89" Count="0" />

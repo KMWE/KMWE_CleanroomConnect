@@ -18,19 +18,14 @@ VAR
 	//EM Docking Interface
 	s_fbIlckHandlerClampsToClose : FB_InterlockHandler;
 	s_fbIlckHandlerClampsToOpen : FB_InterlockHandler;
-//--	s_fbIlckHandlerDoorOpenerToClose : FB_InterlockHandler;
-//--	s_fbIlckHandlerDoorOpenerToOpen : FB_InterlockHandler;
-//--	s_fbIlckHandlerDoorShutterToClose : FB_InterlockHandler;
-//--	s_fbIlckHandlerDoorShutterToOpen : FB_InterlockHandler;
+	s_fbIlckHandlerOuterCabinDoorClose : FB_InterlockHandler;
+	s_fbIlckHandlerInnerCabinDoorClose : FB_InterlockHandler;
 	
 	//EM Lifting Transport
 	s_fbIlckHandlerTranportExtract : FB_InterlockHandler;
 	
 	//EM Doors
-//--	s_fbIlckHandlerOuterCabinDoorOpen : FB_InterlockHandler;
-	s_fbIlckHandlerOuterCabinDoorClose : FB_InterlockHandler;
-//--	s_fbIlckHandlerInnerCabinDoorOpen : FB_InterlockHandler;
-	s_fbIlckHandlerInnerCabinDoorClose : FB_InterlockHandler;
+	//..
 		
 //------------------------------------------//
 
@@ -79,6 +74,7 @@ VAR
 	
 	s_ePreviousStep : E_SeqCleanroomConnect;
 	s_eResumeStep : E_SeqCleanroomConnect;
+	s_sResumeStep : STRING;
 
 	s_eReqAction : E_ReqAction;
 
@@ -1344,7 +1340,14 @@ s_fbSeqControlCleanroomConnect(
 	i_bStaError := s_bStaEmError);
 
 s_tonTimer(PT := T#3600S);
+
+//Force to stop	
+IF (s_eCtrlState = E_CtrlState.STOPPING) THEN
+	s_eSeqCleanroomConnect := E_SeqCleanroomConnect.STOP;
+END_IF
 	
+s_sResumeStep := TO_STRING(s_eResumeStep); 
+
 CASE s_eSeqCleanroomConnect OF
 	E_SeqCleanroomConnect.IDLE:
 		s_eResumeStep := E_SeqCleanroomConnect.READY;
@@ -1456,7 +1459,7 @@ CASE s_eSeqCleanroomConnect OF
 					s_bStaPickTrolleyFromTbDone := FALSE;
 					s_bStaPlaceTrolleyInTbDone := FALSE;
 					
-					s_eSeqCleanroomConnect := E_SeqCleanroomConnect.STOP;
+					s_eSeqCleanroomConnect := E_SeqCleanroomConnect.READY;
 				END_IF		
 		END_IF	
 
@@ -1492,7 +1495,7 @@ CASE s_eSeqCleanroomConnect OF
 				s_bStaPickTrolleyFromTbDone := FALSE;
 				s_bStaPlaceTrolleyInTbDone := FALSE;
 					
-				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.STOP;
+				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.READY;
 		END_IF		
 		
 	//OPEN INNER TB DOOR //////////////////////////////////////////////////////////////////////////	
@@ -1522,7 +1525,7 @@ CASE s_eSeqCleanroomConnect OF
 				s_bStaPickTrolleyFromTbDone := FALSE;
 				s_bStaPlaceTrolleyInTbDone := FALSE;	
 			
-				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.STOP;
+				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.READY;
 			END_IF
 		END_IF
 	
@@ -1546,7 +1549,7 @@ CASE s_eSeqCleanroomConnect OF
 					IF ( (s_eReqAction = E_ReqAction.INBOUND) OR (s_eReqAction = E_ReqAction.OUTBOUND) ) THEN
 						s_eSeqCleanroomConnect := E_SeqCleanroomConnect.UNDOCK_TB;
 					ELSE
-						s_eSeqCleanroomConnect := E_SeqCleanroomConnect.STOP;
+						s_eSeqCleanroomConnect := E_SeqCleanroomConnect.READY;
 					END_IF	
 						
 				END_IF	
@@ -1571,7 +1574,7 @@ CASE s_eSeqCleanroomConnect OF
 				s_bStaPickTrolleyFromTbDone := TRUE;
 				s_bStaPlaceTrolleyInTbDone := FALSE;	
 			
-				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.STOP;
+				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.READY;
 			END_IF
 		END_IF
 
@@ -1587,7 +1590,7 @@ CASE s_eSeqCleanroomConnect OF
 			IF (s_eReqAction = E_ReqAction.OUTBOUND) THEN 
 				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.CLOSE_CLEANROOM_DOOR;
 			ELSIF (s_eReqAction = E_ReqAction.PLACE_TROLLEY_IN_TB) THEN
-				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.STOP;
+				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.READY;
 			ELSE
 				s_bStaDockTbDone := FALSE;
 				s_bStaUnDockTbDone := FALSE;
@@ -1596,7 +1599,7 @@ CASE s_eSeqCleanroomConnect OF
 				s_bStaPickTrolleyFromTbDone := FALSE;
 				s_bStaPlaceTrolleyInTbDone := TRUE;	
 			
-				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.STOP;
+				s_eSeqCleanroomConnect := E_SeqCleanroomConnect.READY;
 			END_IF
 		END_IF
 		
@@ -1622,8 +1625,12 @@ CASE s_eSeqCleanroomConnect OF
 		
 		s_eReqAction := E_ReqAction.NONE;
 				
-		s_eSeqCleanroomConnect := E_SeqCleanroomConnect.READY;
+//--		s_eSeqCleanroomConnect := E_SeqCleanroomConnect.READY;
 	
+		IF (s_eCtrlState = E_CtrlState.IDLE) THEN
+			s_eSeqCleanroomConnect := E_SeqCleanroomConnect.START;
+		END_IF
+
 	//ERROR////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqCleanroomConnect.ERROR:
 		IF s_fbSeqControlCleanroomConnect.q_bStaEntry THEN
@@ -1981,7 +1988,14 @@ END_CASE
     </LineIds>
     <LineIds Name="UN_CleanroomConnect.m_SeqCleanroomConnect">
       <LineId Id="3359" Count="10" />
-      <LineId Id="3375" Count="16" />
+      <LineId Id="3375" Count="6" />
+      <LineId Id="3980" Count="0" />
+      <LineId Id="3982" Count="2" />
+      <LineId Id="3981" Count="0" />
+      <LineId Id="3382" Count="0" />
+      <LineId Id="3976" Count="0" />
+      <LineId Id="3975" Count="0" />
+      <LineId Id="3383" Count="8" />
       <LineId Id="3393" Count="0" />
       <LineId Id="3847" Count="0" />
       <LineId Id="3394" Count="3" />
@@ -2096,6 +2110,9 @@ END_CASE
       <LineId Id="3845" Count="0" />
       <LineId Id="3694" Count="1" />
       <LineId Id="3702" Count="4" />
+      <LineId Id="3987" Count="1" />
+      <LineId Id="3986" Count="0" />
+      <LineId Id="3985" Count="0" />
       <LineId Id="3846" Count="0" />
       <LineId Id="3707" Count="12" />
       <LineId Id="95" Count="0" />

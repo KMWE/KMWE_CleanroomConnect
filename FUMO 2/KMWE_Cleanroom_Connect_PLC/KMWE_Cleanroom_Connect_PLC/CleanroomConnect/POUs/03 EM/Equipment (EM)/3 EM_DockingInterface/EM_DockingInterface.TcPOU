@@ -154,6 +154,7 @@ VAR
 	
 	s_ePreviousStep : E_SeqDockingInterface;
 	s_eResumeStep : E_SeqDockingInterface;
+	s_sResumeStep : STRING;
 	
 	s_tonTimer : TON;
 	
@@ -1380,7 +1381,9 @@ END_IF
 IF (s_eSeqDockingInterface > E_SeqDockingInterface.START) AND (s_eSeqDockingInterface < E_SeqDockingInterface.STOP) THEN
 	s_eLastStepPersistent := s_eSeqDockingInterface;
 END_IF 
-	
+
+s_sResumeStep := TO_STRING(s_eResumeStep);	
+
 CASE s_eSeqDockingInterface OF
 	
 	E_SeqDockingInterface.IDLE:
@@ -1439,6 +1442,8 @@ CASE s_eSeqDockingInterface OF
 //READY/////////////////////////////////////////////////////////////////////////////////////////////////////////		
 	E_SeqDockingInterface.READY:
 		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN
+			s_eResumeStep := E_SeqDockingInterface.READY;
+		
 //??			i_refTB.p_bUndockingDone S= s_bTmpUndockingDone;
 			s_bTmpUndockingDone := FALSE;
 		END_IF
@@ -1849,7 +1854,7 @@ CASE s_eSeqDockingInterface OF
 			END_IF
 		END_IF
 		
-		IF i_eCtrlState = E_CtrlState.IDLE THEN
+		IF (i_eCtrlState = E_CtrlState.IDLE) THEN
 			s_eSeqDockingInterface := E_SeqDockingInterface.START;
 		END_IF
 	
@@ -3020,7 +3025,9 @@ p_bStsReadyToSendTB := s_bStsReadyToSendTB;
       <LineId Id="803" Count="0" />
       <LineId Id="801" Count="1" />
       <LineId Id="804" Count="0" />
+      <LineId Id="1176" Count="0" />
       <LineId Id="223" Count="0" />
+      <LineId Id="1175" Count="0" />
       <LineId Id="19" Count="2" />
       <LineId Id="655" Count="0" />
       <LineId Id="23" Count="0" />
@@ -3067,6 +3074,7 @@ p_bStsReadyToSendTB := s_bStsReadyToSendTB;
       <LineId Id="947" Count="0" />
       <LineId Id="358" Count="0" />
       <LineId Id="529" Count="0" />
+      <LineId Id="1178" Count="1" />
       <LineId Id="531" Count="0" />
       <LineId Id="536" Count="0" />
       <LineId Id="527" Count="1" />

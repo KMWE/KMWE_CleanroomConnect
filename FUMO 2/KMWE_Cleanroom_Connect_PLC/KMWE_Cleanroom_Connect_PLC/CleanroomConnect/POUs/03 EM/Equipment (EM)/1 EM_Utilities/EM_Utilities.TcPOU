@@ -27,7 +27,7 @@ VAR
 	s_FbForceOutputLedRed : FB_ForceOutput;
 	s_FbForceOutputSnRestartSafety : FB_ForceOutput;
 		
-//++	s_cmTubeLedRgb : CM_TUBELED_RGB;
+	s_cmTubeLedRgb : CM_TUBELED_RGB;
 	
 	//States
 	s_bStaSafetyOk : BOOL := FALSE;
@@ -124,6 +124,7 @@ END_VAR
 
 VAR_INPUT
 	i_eCtrlState		: E_CtrlState;
+	i_ref_itf_LED_RGB : I_LED_RGB;
 END_VAR
 
 VAR_OUTPUT
@@ -131,6 +132,10 @@ VAR_OUTPUT
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[
+i_ref_itf_LED_RGB := s_cmTubeLedRgb; 
+
+s_cmTubeLedRgb();
+
 SUPER^();
 ]]></ST>
     </Implementation>
@@ -613,6 +618,8 @@ p_bStsPowerOk :=
       </Get>
     </Property>
     <LineIds Name="EM_Utilities">
+      <LineId Id="473" Count="1" />
+      <LineId Id="470" Count="1" />
       <LineId Id="342" Count="0" />
       <LineId Id="9" Count="0" />
       <LineId Id="207" Count="0" />

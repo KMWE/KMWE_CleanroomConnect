@@ -389,6 +389,14 @@ GVL_Modules.g_emDoors.i_bCmdReset := FALSE;
 GVL_Modules.g_emDoors.i_sEmName := 'EM Doors';
 *)
 
+//EM Air Treatment///////////////////////////////////////////////////////////////////////////////
+_m_AddModule(i_itfModuleBase := GVL_Modules.g_emAirTreatment);
+
+GVL_Modules.g_emAirTreatment.i_bReqEnable := FALSE;
+GVL_Modules.g_emAirTreatment.i_eCtrlMode := E_CtrlMode.IDLE;
+GVL_Modules.g_emAirTreatment.i_bCmdReset := FALSE;
+GVL_Modules.g_emAirTreatment.i_sEmName  := 'EM Air Treatment';
+
 //EM Interlocks////////////////////////////////////////////////////////////////////////////////////
 //EM Utilities/////////////////////////////////////////////////////////////////////////////////////
 //<none>
@@ -675,6 +683,30 @@ GVL_Modules.g_emDockingCabin.i_stSettings.stSettingsDockingInterface.tReleasePin
 //Settings AirTreatment
 //..GVL_Modules.g_emDockingCabin.i_stSettings.stSettingsAirTrearment.. := TODO;
 
+//EM Air Treatment/////////////////////////////////////////////////////////////////////////////////
+GVL_Modules.g_emAirTreatment.i_ref_stSettings REF= s_stSettings.stSettingsAirTreatment;
+
+//Pressure setpoints
+s_stSettings.stSettingsAirTreatment.fPressurizingPress := 25.1; //[Pa]
+s_stSettings.stSettingsAirTreatment.fFlushingPress := 25.2; //[Pa]
+s_stSettings.stSettingsAirTreatment.tFlushingTime := T#603S; //[s]
+s_stSettings.stSettingsAirTreatment.fEqualizingPress := 0.4; //[Pa]
+s_stSettings.stSettingsAirTreatment.fRange := 2.5; //[Pa]
+
+//Pressure controller 
+s_stSettings.stSettingsAirTreatment.fKp := 1.0; //P [factor]
+s_stSettings.stSettingsAirTreatment.fTn := 10.0; //I [s]
+s_stSettings.stSettingsAirTreatment.fTv := 0.0; //D [s]
+s_stSettings.stSettingsAirTreatment.fTd := 0.0; //D-time [s]
+
+
+//Settings CM Pallet Conveyor (via parameter file)
+//--20240924 s_stSettings.stSettingsPalletConveyor.fSpeedManual := 50.0; //mm/s
+//--20240924 s_stSettings.stSettingsPalletConveyor.fSpeedGoToInfeed := 100.0; //mm/s
+//--20240924 s_stSettings.stSettingsPalletConveyor.fSpeedGoToCentering := 100.0; //mm/s
+//--20240924 s_stSettings.stSettingsPalletConveyor.fSpeedGoToDocking := 50.0; //mm/s
+
+
 //------------------------------------------//
 //Hmi Startup
 GVL.g_sToHmiTopContent 		:= GVL.g_stHmiTopBar.GeneralTopbar;
@@ -869,6 +901,17 @@ GVL_Modules.g_emDoors(
 	i_fbExtIlckInnerDoorOpen := s_fbExtIlckInnerCabinDoorOpen,
 	i_fbExtIlckInnerDoorClose := s_fbExtIlckInnerCabinDoorClose);
 *)
+
+// EM_AirTreatment //////////////////////////////////////////////////////////////////////////////	
+// Interlocks
+// <none>
+
+GVL_Modules.g_emAirTreatment(
+	i_bReqEnable := bReqEnable,
+	i_eCtrlMode := s_eCtrlMode,
+	i_eCtrlState := s_eCtrlState,
+	i_bCmdReset:= p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn); //Add temp reset button
+
 s_bStaError :=
 	GVL_Modules.g_emUtilities.q_bStaError 
 	OR GVL_Modules.g_emPalletConveyor.q_bStaError
@@ -1773,6 +1816,9 @@ END_CASE
       <LineId Id="4412" Count="2" />
       <LineId Id="4408" Count="0" />
       <LineId Id="4419" Count="0" />
+      <LineId Id="4735" Count="0" />
+      <LineId Id="4738" Count="5" />
+      <LineId Id="4737" Count="0" />
       <LineId Id="4724" Count="0" />
       <LineId Id="4420" Count="0" />
       <LineId Id="4425" Count="0" />
@@ -1834,6 +1880,18 @@ END_CASE
       <LineId Id="3948" Count="0" />
       <LineId Id="4720" Count="0" />
       <LineId Id="4193" Count="18" />
+      <LineId Id="4744" Count="0" />
+      <LineId Id="4747" Count="1" />
+      <LineId Id="4761" Count="2" />
+      <LineId Id="4765" Count="0" />
+      <LineId Id="4767" Count="0" />
+      <LineId Id="4766" Count="0" />
+      <LineId Id="4768" Count="0" />
+      <LineId Id="4756" Count="0" />
+      <LineId Id="4754" Count="1" />
+      <LineId Id="4757" Count="3" />
+      <LineId Id="4749" Count="4" />
+      <LineId Id="4745" Count="1" />
       <LineId Id="4371" Count="0" />
       <LineId Id="4213" Count="17" />
       <LineId Id="4268" Count="0" />
@@ -1911,7 +1969,16 @@ END_CASE
       <LineId Id="5191" Count="5" />
       <LineId Id="5199" Count="0" />
       <LineId Id="5202" Count="2" />
-      <LineId Id="5253" Count="31" />
+      <LineId Id="5253" Count="13" />
+      <LineId Id="5386" Count="0" />
+      <LineId Id="5389" Count="1" />
+      <LineId Id="5408" Count="0" />
+      <LineId Id="5412" Count="0" />
+      <LineId Id="5414" Count="2" />
+      <LineId Id="5421" Count="0" />
+      <LineId Id="5417" Count="0" />
+      <LineId Id="5385" Count="0" />
+      <LineId Id="5267" Count="17" />
       <LineId Id="20" Count="0" />
     </LineIds>
     <LineIds Name="UN_CleanroomConnect.m_FullCycle">

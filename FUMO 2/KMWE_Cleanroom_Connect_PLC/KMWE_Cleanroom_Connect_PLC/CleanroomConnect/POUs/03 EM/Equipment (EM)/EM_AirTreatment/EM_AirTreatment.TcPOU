@@ -14,65 +14,84 @@ VAR_OUTPUT
 END_VAR
 
 VAR
-//------------------------------------------//
-	//Control Modules (Devices)
-	//??
+	//Control Modules
+	s_cmFanMotor : CM_DigOutput;
 	
-//------------------------------------------//
-//Inputs	
+	s_fbPIDPressCtrl : FB_BasicPID;
+		
+	//Inputs	
+	s_fbFanThermal : FB_DigInput;
 	s_fbDeltaP_CleanroomCabin : FB_AnaInput;
 	s_fbDeltaP_CabinAmbient : FB_AnaInput;
-//------------------------------------------//	
 	
-//------------------------------------------//
-//Outputs
-	s_fbFanMotor : FB_DigOutput;
+	//Outputs
 	s_fbFanSpeed : FB_AnaOutput;
 	
-//------------------------------------------//	
-
-//States
-	s_fDeltaP_CleanroomCabin : LREAL; //[Pa]
-	s_fDeltaP_CabinAmbient : LREAL; //[Pa]
+	//Requests
+	s_bReqEqualize : BOOL := FALSE;
+	s_bReqFlush : BOOL := FALSE;
+	s_bReqPressureize : BOOL := FALSE;
+	s_bReqStop : BOOL := FALSE;
 	
-//Commands
+	//Commands
 	s_bCmdFanMotorOn : BOOL;
 	
-//Alarms
-
-s_fbFanMotor.p_bStaError
-s_fbFanSpeed.p_bStaError
-s_fbDeltaP_CleanroomCabin.p_bStaError
-s_fbDeltaP_CabinAmbient.p_bStaError;	
-
-s_fbFanSpeed.p_bStaOverRange
-s_fbFanSpeed.p_bStaUnderRange
-s_fbDeltaP_CleanroomCabin.p_bStaOverRange
-s_fbDeltaP_CleanroomCabin.p_bStaUnderRange
-s_fbDeltaP_CabinAmbient.p_bStaOverRange
-s_fbDeltaP_CabinAmbient.p_bStaUnderRange;
-
+	//Setpoints
+	s_fSetFanSpeed : LREAL; //[%]
+	s_fSetPressure : LREAL; //[Pa]
+	
+	//States
+	s_bStaFanThemalOk : BOOL;
+	s_fActDeltaP_CleanroomCabin : LREAL; //[Pa]
+	s_fActDeltaP_CabinAmbient : LREAL; //[Pa]
+	
+	//Properties
+	s_bStaPressurized : BOOL;	
+	s_bStaFlushed : BOOL;
+	s_bStaEqualized : BOOL;
+	s_bStaStopped : BOOL;
+	
+	//Alarms
 	s_sReason : STRING;
 	s_sMessage : STRING;
 	
-	s_fbAlarmHandlerFanDriveError : FB_AlarmHandler;
-	s_fbAlarmHandlerFanSpeedError : FB_AlarmHandler;
-	s_fbAlarmHandlerDeltaP_CleanroomCabinError : FB_AlarmHandler;
-	s_fbAlarmHandlerDeltaP_CabinAmbinet : FB_AlarmHandler;
+	s_fbAlarmHandlerFanThermalError : FB_AlarmHandler;
 	
-	s_bErrFanDrive : BOOL;
-	s_bErrFanSpeed : BOOL;
-	s_bErrDeltaP_CleanroomCabinet : BOOL;
-	s_bErrDeltaP_CabinetAmbient : BOOL;
+	s_bErrFanThermalError : BOOL;
 	
 	//Warnings
-	s_fbAlarmHandlerOuterDoorNotOpened : FB_AlarmHandler;
-	
-	s_bWrnOuterDoorNotOpened : BOOL;
-	
 	s_bStaWarning : BOOL;
 	
+	//Params
+	s_fbParamPressurizingPress : FB_HmiParamHandler;
+	s_fbParamFlushingPress : FB_HmiParamHandler;
+	s_fbParamFlushingTime : FB_HmiParamHandler;
+	s_fbParamEqualizingPress : FB_HmiParamHandler;
 	
+	//Sequencers
+	s_eSequence : E_SeqAirTreatment;
+	s_fbSeqControl : FB_SeqControl;
+	
+	s_ePreviousStep : E_SeqAirTreatment;
+	s_eResumeStep : E_SeqAirTreatment;
+	s_sResumeStep : STRING;
+	
+	//Hmi
+	//Buttons
+	s_fbHmiBtnPressurize : FB_HmiBtn;
+	s_fbHmiBtnFlushing : FB_HmiBtn;
+	s_fbHmiBtnEqualizing : FB_HmiBtn;
+	s_fbHmiBtnStop : FB_HmiBtn;
+	
+	//Leds
+	s_fbHmiLedPressurized : FB_HmiLed;
+	s_fbHmiLedFlushed : FB_HmiLed;
+	s_fbHmiLedEqualized : FB_HmiLed;
+	s_fbHmiLedStopped : FB_HmiLed;
+	
+	{warning '#TODO: Het zou beter zijn om dit onder te brengen in de onderstaande control modules'}
+	s_bHmiForceOutputEnabled : BOOL;
+	s_bHmiForceOutputStartEnabled : BOOL;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -89,30 +108,17 @@ IF NOT SUPER^._m_Alarms() THEN
 END_IF
 
 // Alarm Handlers ( config --> init() )
-s_fbAlarmHandlerFanDriveError
-	(i_bStaActive := s_bErrFanDrive); 
-
-s_fbAlarmHandlerFanSpeedError
-	(i_bStaActive := s_bErrFanSpeed);
-
-s_fbAlarmHandlerDeltaP_CleanroomCabinError
-	(i_bStaActive := s_bErrDeltaP_CleanroomCabinet);
-	
-s_fbAlarmHandlerDeltaP_CabinAmbinet
-	(i_bStaActive := s_bErrDeltaP_CabinetAmbient);
-
-	
+s_fbAlarmHandlerFanThermalError
+	(i_bStaActive := s_bErrFanThermalError);
 	
 // Reset warnings
 IF i_bCmdReset THEN
-	s_bErrFanDrive := FALSE;
-	s_bErrFanSpeed := FALSE;
-	s_bErrDeltaP_CleanroomCabinet := FALSE;
-	s_bErrDeltaP_CabinetAmbient := FALSE;
+	s_bErrFanThermalError := FALSE;
 END_IF
 
-s_bStaError := 
-	s_fbFanMotor.p_bStaError
+s_bStaError :=
+	s_bErrFanThermalError 
+	OR s_cmFanMotor.p_bStaError
 	OR s_fbFanSpeed.p_bStaError
 	OR s_fbDeltaP_CleanroomCabin.p_bStaError
 	OR s_fbDeltaP_CabinAmbient.p_bStaError;	
@@ -129,50 +135,45 @@ _m_Alarms := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
+    <Method Name="_m_AutomaticControl" Id="{509e29d2-5405-43ca-a106-7cf46e984516}">
+      <Declaration><![CDATA[METHOD PRIVATE _m_AutomaticControl : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+//AirTreatment
+_m_Sequence();
+		]]></ST>
+      </Implementation>
+    </Method>
     <Method Name="_m_Devices" Id="{5634911e-9a37-47c7-962a-914403fd8d33}" FolderPath="Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Devices : BOOL
-]]></Declaration>
+VAR
+	fTaskTime : LREAL; //[s]
+END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[
 IF NOT SUPER^._m_Devices() THEN
 	RETURN;
 END_IF
 
-
+s_fbPIDPressCtrl(
+	fSetpointValue := s_fSetPressure, //[Pa]
+	fActualValue := s_fActDeltaP_CleanroomCabin, //[Pa]
+	fCtrlCycleTime := 0.010, //[s]
+	fKp := i_ref_stSettings.fKp, //P [factor]
+	fTn := i_ref_stSettings.fTn, //I [s]
+	fTv := i_ref_stSettings.fTv, //D [s]
+	fTd := i_ref_stSettings.fTd, //t [[s]
+);
 	
-s_cmPalletConveyor(
-	i_bReqEnable := i_bReqEnable,
+s_cmFanMotor(
+	i_bReqEnable:= i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
 	i_ref_eCtrlState := i_eCtrlState,
 	i_bCmdReset := i_bCmdReset,
-	i_bIclkForward := s_bIlckConveyorForward AND (i_eCtrlMode <> E_CtrlMode.IO),
-	i_bIclkBackward := s_bIlckConveyorBackward AND (i_eCtrlMode <> E_CtrlMode.IO));
-
-s_bStaBrakeReleased := s_cmPalletConveyor.p_bStaBrakeReleased;
-s_bStaDriveError := s_cmPalletConveyor.p_bStaError; 
-	
-s_cmCenteringUnit(
-	i_bReqEnable := i_bReqEnable,
-	i_eCtrlMode := i_eCtrlMode,
-	i_ref_eCtrlState := i_eCtrlState,
-	i_bCmdReset := i_bCmdReset,
-	i_bIclkOn := s_bIlckCenteringToCenter AND (i_eCtrlMode <> E_CtrlMode.IO),
-	i_bIclkOff := FALSE);
-	
-s_bStaCenteringCenter := s_cmCenteringUnit.p_bStaIsOn; 
-s_bStaCenteringIdle := s_cmCenteringUnit.p_bStaIsOff;
-	
-s_diStaAtInfeedPositionRear();
-s_diStaAtInfeedPositionFront();
-s_diStaAtCenteringPosition();
-s_diStaAtDockingPosition();
-s_diStaDoorOpened();	
-
-s_bStaAtInfeedRearPosition := s_diStaAtInfeedPositionRear.p_bStaInputDelayed;
-s_bStaAtInfeedFrontPosition := s_diStaAtInfeedPositionFront.p_bStaInputDelayed;
-s_bStaAtCenteringPosition := s_diStaAtCenteringPosition.p_bStaInputDelayed;
-s_bStaAtDockingPosition := s_diStaAtDockingPosition.p_bStaInputDelayed;
-s_bStaDoorOpened := s_diStaDoorOpened.p_bStaInputDelayed;
+	i_bIclkOn := FALSE,
+	i_bIclkOff := FALSE
+);
 	
 _m_Devices := TRUE;
 ]]></ST>
@@ -188,20 +189,16 @@ IF NOT SUPER^._m_Hmi() THEN
 END_IF
 
 //Buttons
-s_fbHmiBtnTB_ToInfeed();
-s_fbHmiBtnTB_ToCentering();
-s_fbHmiBtnTB_ToDocking();
-s_fbHmiBtnTB_Centering();
+s_fbHmiBtnPressurize();
+s_fbHmiBtnFlushing();
+s_fbHmiBtnEqualizing();
+s_fbHmiBtnStop();
 
 //Leds
-s_fbHmiLedInfeedRearPosition(i_bStaLed := s_bStaAtInfeedRearPosition);
-s_fbHmiLedInfeedFrontPosition(i_bStaLed := s_bStaAtInfeedFrontPosition);
-s_fbHmiLedCenteringPosition(i_bStaLed := s_bStaAtCenteringPosition);
-s_fbHmiLedDockingPosition(i_bStaLed := s_bStaAtDockingPosition);
-s_fbHmiLedDoorOpened(i_bStaLed := s_bStaDoorOpened);
-
-s_fbHmiLedCenteringCenter(i_bStaLed := s_bStaCenteringCenter);
-s_fbHmiLedCenteringIdle(i_bStaLed := s_bStaCenteringIdle);
+s_fbHmiLedPressurized(i_bStaLed := s_bStaPressurized);
+s_fbHmiLedFlushed(i_bStaLed := s_bStaFlushed);
+s_fbHmiLedEqualized(i_bStaLed := s_bStaEqualized);
+s_fbHmiLedStopped(i_bStaLed := s_bStaStopped);
 
 _m_Hmi := TRUE;
 ]]></ST>
@@ -217,6 +214,17 @@ IF NOT SUPER^._m_Init() THEN
 END_IF
 
 //Control Modules
+s_cmFanMotor.i_sCmName := 'Fan Drive';
+s_cmFanMotor.i_stSettings.bCfgDelay := FALSE;
+s_cmFanMotor.i_stSettings.tmOutputDelay := T#0S;
+
+s_fbFanThermal.i_stSettings.tmInputDelay := T#0S;
+	
+s_fbFanSpeed.i_stSettings.fMaxScaledOutput := 100; //[%]
+s_fbFanSpeed.i_stSettings.fMinScaledOutput := 0; //[%]
+s_fbFanSpeed.i_stSettings.nMaxOutput := 32767; //[raw]
+s_fbFanSpeed.i_stSettings.nMinOutput := 0; //[raw]
+
 s_fbDeltaP_CleanroomCabin.i_bReqEnable := FALSE;
 s_fbDeltaP_CleanroomCabin.i_sName := 'DeltaP between Cleanroom-Cabin';
 s_fbDeltaP_CleanroomCabin.i_stSettings.bDisableOverRange := TRUE;
@@ -237,86 +245,14 @@ s_fbDeltaP_CabinAmbient.i_stSettings.nMaxInput := 32767; //[raw]
 s_fbDeltaP_CabinAmbient.i_stSettings.nMinInput := 0; //[raw]
 s_fbDeltaP_CabinAmbient.i_stSettings.tmFilterTime := T#3S;
 
-s_fbFanMotor.i_stSettings.bCfgDelay := FALSE;
-s_fbFanMotor.i_stSettings.tmOutputDelay := T#0S;
-
-s_fbFanSpeed.i_stSettings.fMaxScaledOutput := 100; //[%]
-s_fbFanSpeed.i_stSettings.fMinScaledOutput := 0; //[%]
-s_fbFanSpeed.i_stSettings.nMaxOutput := 32767; //[raw]
-s_fbFanSpeed.i_stSettings.nMinOutput := 0; //[raw]
-
 //Alarms
-s_fbAlarmHandlerFanDriveError.i_eAlarmLevel := E_AlarmLevel.Alarm;
-s_fbAlarmHandlerFanDriveError.i_sAlarmText := CONCAT(i_sEmName, ': Motor Error');
-
-s_fbAlarmHandlerFanSpeedError.i_eAlarmLevel := E_AlarmLevel.Alarm;
-s_fbAlarmHandlerFanSpeedError.i_sAlarmText := CONCAT(i_sEmName, ': Analoge Output Error');
-
-s_fbAlarmHandlerDeltaP_CleanroomCabinError.i_eAlarmLevel := E_AlarmLevel.Alarm;
-s_fbAlarmHandlerDeltaP_CleanroomCabinError.i_sAlarmText := CONCAT(i_sEmName, ': DeltaP Cleanroom-Cabin Meassurment Error');
-
-s_fbAlarmHandlerDeltaP_CabinAmbinet.i_eAlarmLevel := E_AlarmLevel.Alarm;
-s_fbAlarmHandlerDeltaP_CabinAmbinet.i_sAlarmText := CONCAT(i_sEmName, ': DeltaP Cabin-Ambient Meassurment Error');
+s_fbAlarmHandlerFanThermalError.i_eAlarmLevel := E_AlarmLevel.Alarm;
+s_fbAlarmHandlerFanThermalError.i_sAlarmText := CONCAT(i_sEmName, ': Fan Thermal  Error');
 
 //Warnings
 
-
-s_cmPalletConveyor.i_bReqEnable := FALSE;
-s_cmPalletConveyor.i_eCtrlMode := E_CtrlMode.IDLE;
-s_cmPalletConveyor.i_sCmName := 'CM Pallet Conveyor';
-s_cmPalletConveyor.i_stSettings.tResetPulseDuration := T#1S;
-s_cmPalletConveyor.i_stSettings.tBrakeReleasedDelay := T#1S;
-s_cmPalletConveyor.i_stSettings.tMotorStoppedDelay := T#3S;
-s_cmPalletConveyor.i_stSettings.rMaxTargetSpeed := 200.0; // mm/s
-s_cmPalletConveyor.p_sCfgFwdName := 'Forward';
-s_cmPalletConveyor.p_sCfgBckName := 'Backward';
-
-s_cmCenteringUnit.i_bReqEnable := FALSE;
-s_cmCenteringUnit.i_eCtrlMode := E_CtrlMode.IDLE;
-s_cmCenteringUnit.i_sCmName := 'CM Centering Unit';
-s_cmCenteringUnit.i_stSettings.tValveOnTimeout := T#5S;
-s_cmCenteringUnit.i_stSettings.tValveOffTimeout := T#5S;
-
-s_cmCenteringUnit.p_bCfgBiStableValve := FALSE; // 5/2 monostable
-s_cmCenteringUnit.p_bCfgReverseValve := FALSE;
-s_cmCenteringUnit.p_sCfgOffName := 'Rest';
-s_cmCenteringUnit.p_sCfgOnName := 'Center';
-s_cmCenteringUnit.p_sCfgFB1Name := 'Rear';
-s_cmCenteringUnit.p_sCfgFB2Name := 'Front';
-
-s_diStaAtInfeedPositionRear.i_stSettings.tmInputDelay := T#0MS;
-s_diStaAtInfeedPositionFront.i_stSettings.tmInputDelay := T#0MS;
-s_diStaAtCenteringPosition.i_stSettings.tmInputDelay := T#0MS;
-s_diStaAtDockingPosition.i_stSettings.tmInputDelay := T#1000MS;
-s_diStaDoorOpened.i_stSettings.tmInputDelay := T#0MS;
-
 //Interlock strings
-//Conveyor
-//i_stInterlockList.arr_Interlocks[0].sReason --> External, dynamical will be written in m_input
-s_fbIlckHandlerConveyorBackward.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
-s_fbIlckHandlerConveyorBackward.i_stInterlockList.arr_Interlocks[2].sReason := 'Centering not at idle-position';
-s_fbIlckHandlerConveyorBackward.i_stInterlockList.arr_Interlocks[3].sReason := 'Already at infeed position';
-
-//i_stInterlockList.arr_Interlocks[0].sReason --> External, dynamical will be written in m_input
-s_fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
-s_fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[2].sReason := 'Centering not at idle-position';
-s_fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[3].sReason := 'Outer TB door not detected';
-s_fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[4].sReason := 'Centring position occupied';
-s_fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[5].sReason := 'Docking position occupied';
-
-//Centering
-s_fbIlckHandlerCenteringIdle.i_stInterlockList.arr_Interlocks[0].sReason := 'Utilities not OK';
-
-s_fbIlckHandlerCenteringCenter.i_stInterlockList.arr_Interlocks[0].sReason := 'Utilities not OK';
-s_fbIlckHandlerCenteringCenter.i_stInterlockList.arr_Interlocks[1].sReason := 'Conveyor not stopped';
-
-//Alarm config
-s_fbAlarmHandlerTravelTimeOut.i_eAlarmLevel := E_AlarmLevel.Warning;
-
-s_fbAlarmHandlerOuterDoorNotOpened.i_sAlarmText := CONCAT(i_sEmName, ': Outer-door open not detected');
-s_fbAlarmHandlerOuterDoorNotOpened.i_eAlarmLevel := E_AlarmLevel.Warning;
-
-s_fbAlarmHandlerCmdNotAllowed.i_eAlarmLevel := E_AlarmLevel.Alarm;
+//<none>
 
 //Hmi 
 	s_fbHmiBtnTB_ToInfeed.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
@@ -373,74 +309,15 @@ IF NOT SUPER^._m_Inputs() THEN
 	RETURN;
 END_IF
 
+s_fbFanThermal();
 s_fbDeltaP_CleanroomCabin(i_bReqEnable := i_bReqEnable);
 s_fbDeltaP_CabinAmbient(i_bReqEnable := i_bReqEnable);
 
-s_fDeltaP_CleanroomCabin := s_fbDeltaP_CleanroomCabin.p_fValue; 
-s_fDeltaP_CabinAmbient := s_fbDeltaP_CleanroomCabin.p_fValue;
+s_bStaFanThemalOk := s_fbFanThermal.p_bStaInputDelayed; 
+s_fActDeltaP_CleanroomCabin := s_fbDeltaP_CleanroomCabin.p_fValue; 
+s_fActDeltaP_CabinAmbient := s_fbDeltaP_CleanroomCabin.p_fValue;
 	
 _m_Inputs := TRUE;]]></ST>
-      </Implementation>
-    </Method>
-    <Method Name="_m_Interlocks" Id="{60dff7f7-23d4-439c-b82e-ba24eaae448e}" FolderPath="Base\">
-      <Declaration><![CDATA[METHOD PROTECTED _m_Interlocks
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[
-//Conveyor/////////////////////////////////////////////////////////////////////////////////////////
-s_fbIlckHandlerConveyorBackward.i_stInterlockList.arr_Interlocks[0] := i_stExtIlckConvBwd;
-s_fbIlckHandlerConveyorBackward.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
-s_fbIlckHandlerConveyorBackward.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_bStaCenteringIdle);
-//--fbIlckHandlerConveyorBackward.i_stInterlockList.arr_Interlocks[3].bState := s_bStaAtInfeedRearPosition;	//Not sure if this is really a interlock?
-s_fbIlckHandlerConveyorBackward();
-
-s_fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[0] := i_stExtIlckConvFwd;
-s_fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
-s_fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_bStaCenteringIdle);
-s_fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[3].bState := NOT(s_bStaDoorOpened) AND s_bStaAtInfeedRearPosition;
-s_fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[4].bState := s_bStaAtCenteringPosition AND (s_bStaAtInfeedFrontPosition OR s_bStaAtInfeedRearPosition); //Not sure if this is really a interlock?
-s_fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[5].bState := s_bStaAtDockingPosition AND FALSE; //Not sure if this is really a interlock?
-s_fbIlckHandlerConveyorForward();
-
-s_bIlckConveyorBackward := s_fbIlckHandlerConveyorBackward.p_bInterlocked;
-s_bIlckConveyorForward := s_fbIlckHandlerConveyorForward.p_bInterlocked;
-
-IF s_bIlckConveyorBackward THEN
-	s_cmPalletConveyor.p_sInterlockedReasonBackward := s_fbIlckHandlerConveyorBackward.p_sReason;
-ELSE
-	s_cmPalletConveyor.p_sInterlockedReasonBackward := '-';
-END_IF
-	
-IF s_bIlckConveyorForward THEN
-	s_cmPalletConveyor.p_sInterlockedReasonForward := s_fbIlckHandlerConveyorForward.p_sReason;
-ELSE
-	s_cmPalletConveyor.p_sInterlockedReasonForward := '-';
-END_IF
-
-//Centering////////////////////////////////////////////////////////////////////////////////////////
-s_fbIlckHandlerCenteringIdle.i_stInterlockList.arr_Interlocks[0].bState := NOT(i_bReqEnable);
-s_fbIlckHandlerCenteringIdle();
-
-s_fbIlckHandlerCenteringCenter.i_stInterlockList.arr_Interlocks[0].bState := NOT(i_bReqEnable);
-s_fbIlckHandlerCenteringCenter.i_stInterlockList.arr_Interlocks[1].bState := NOT(s_cmPalletConveyor.p_bStaMotorStopped);
-s_fbIlckHandlerCenteringCenter();
-
-s_bIlckCenteringToIdle := s_fbIlckHandlerCenteringIdle.p_bInterlocked;
-s_bIlckCenteringToCenter := s_fbIlckHandlerCenteringCenter.p_bInterlocked;
-  
-//Centring	
-IF s_bIlckCenteringToIdle THEN
-	s_cmCenteringUnit.p_sInterlockedReasonOff := s_fbIlckHandlerCenteringIdle.p_sReason;
-ELSE
-	s_cmCenteringUnit.p_sInterlockedReasonOff := '-';
-END_IF
-
-IF s_bIlckCenteringToCenter THEN
-	s_cmCenteringUnit.p_sInterlockedReasonOn := s_fbIlckHandlerCenteringCenter.p_sReason;
-ELSE
-	s_cmCenteringUnit.p_sInterlockedReasonOn := '-';
-END_IF
-	]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_Outputs" Id="{2e98bea2-16f9-4f60-a7e0-9054c21cce9c}" FolderPath="Base\">
@@ -452,14 +329,7 @@ IF NOT SUPER^._m_Outputs() THEN
 	RETURN;
 END_IF
 
-s_fbFanMotor.i_bStaOutput := s_bCmdFanMotorOn;
-s_fbFanMotor();
-
-IF __ISVALIDREF (i_ref_stSettings) THEN
-	s_fbFanSpeed.i_fValue := i_ref_stSettings;
-ELSE
-	s_fbFanSpeed.i_fValue := 0.0;	
-END_IF
+s_fbFanSpeed.i_fValue := s_fSetFanSpeed;
 
 s_fbFanSpeed();
 
@@ -479,104 +349,191 @@ IF NOT SUPER^._m_Params() THEN
 END_IF
 
 //Paramaters
-s_fbParamSpeedManual(
+
+s_fbParamPressurizingPress(
 	i_fDefaultValue := ,
-	i_sName := CONCAT(i_sEmName, ': Speed Manual'),
+	i_sName := CONCAT(i_sEmName, ': Pressurizing Pressure'),
 	i_nArrayFolderIndex := 1,
 	i_bIsNumber := TRUE);
 
-s_fbParamSpeedGoToInfeed(
+s_fbParamFlushingPress(
 	i_fDefaultValue := ,
-	i_sName := CONCAT(i_sEmName, ': Speed Go To Infeed'),
+	i_sName := CONCAT(i_sEmName, ': Flushing Pressure'),
+	i_nArrayFolderIndex := 1,
+	i_bIsNumber := TRUE);
+	
+s_fbParamFlushingTime(
+	i_fDefaultValue := ,
+	i_sName := CONCAT(i_sEmName, ': Flushing Time'),
 	i_nArrayFolderIndex := 1,
 	i_bIsNumber := TRUE);
 
-s_fbParamSpeedGoToCentering(
+s_fbParamEqualizingPress(
 	i_fDefaultValue := ,
-	i_sName := CONCAT(i_sEmName, ': Speed Go To Centering'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-	
-s_fbParamSpeedGoToDocking(
-	i_fDefaultValue := ,
-	i_sName := CONCAT(i_sEmName, ': Speed Go To Docking'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-
-s_fbParamDistanceToInfeed(
-	i_fDefaultValue := ,
-	i_sName := CONCAT(i_sEmName, ': Distance To Infeed'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-	
-s_fbParamDistanceToCentering(
-	i_fDefaultValue := ,
-	i_sName := CONCAT(i_sEmName, ': Distance To Centering'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-	
-s_fbParamDistanceToDocking(
-	i_fDefaultValue := ,
-	i_sName := CONCAT(i_sEmName, ': Distance To Docking'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-
-s_fbParamDistanceOuterDoorCheck(
-	i_fDefaultValue := ,
-	i_sName := CONCAT(i_sEmName, ': Distance Outer Door Check'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-	
-s_fbParamTravelTollerance(
-	i_fDefaultValue := ,
-	i_sName := CONCAT(i_sEmName, ': Travel Tollerance'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-	
-s_fbParamCenteringDuration(
-	i_fDefaultValue := ,
-	i_sName := CONCAT(i_sEmName, ': Centering Duration'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-	
-s_fbParamTimeoutCenteringToCenter(
-	i_fDefaultValue := ,
-	i_sName := CONCAT(i_sEmName, ': Timeout Centering To Center'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-	
-s_fbParamTimeoutCenteringToIdle(
-	i_fDefaultValue := ,
-	i_sName := CONCAT(i_sEmName, ': Timeout Centering To Idle'),
+	i_sName := CONCAT(i_sEmName, ': Equalizing Pressure'),
 	i_nArrayFolderIndex := 1,
 	i_bIsNumber := TRUE);
 		
 //Write to settings	
-i_ref_stSettings.fSpeedManual := s_fbParamSpeedManual.p_fValue;
-
-i_ref_stSettings.fSpeedGoToInfeed := s_fbParamSpeedGoToInfeed.p_fValue;
-
-i_ref_stSettings.fSpeedGoToCentering := s_fbParamSpeedGoToCentering.p_fValue;
-
-i_ref_stSettings.fSpeedGoToDocking := s_fbParamSpeedGoToDocking.p_fValue;
-
-i_ref_stSettings.fDistanceToInfeed := s_fbParamDistanceToInfeed.p_fValue;
-
-i_ref_stSettings.fDistanceToCentering := s_fbParamDistanceToCentering.p_fValue;
-
-i_ref_stSettings.fDistanceToDocking := s_fbParamDistanceToDocking.p_fValue;
-
-i_ref_stSettings.fDistanceOuterDoorCheck := s_fbParamDistanceOuterDoorCheck.p_fValue;
-
-i_ref_stSettings.fTravelTollerance := s_fbParamTravelTollerance.p_fValue;
-
-i_ref_stSettings.tCenteringDuration := LREAL_TO_TIME(s_fbParamCenteringDuration.p_fValue);
-
-i_ref_stSettings.tTimeoutCenteringToCenter := LREAL_TO_TIME(s_fbParamTimeoutCenteringToCenter.p_fValue);
-
-i_ref_stSettings.tTimeoutCenteringToIdle := LREAL_TO_TIME(s_fbParamTimeoutCenteringToIdle.p_fValue);
+i_ref_stSettings.fPressurizingPress := s_fbParamPressurizingPress.p_fValue;
+i_ref_stSettings.fFlushingPress := s_fbParamFlushingPress.p_fValue;
+i_ref_stSettings.tFlushingTime := LREAL_TO_TIME(s_fbParamFlushingTime.p_fValue);
+i_ref_stSettings.fEqualizingPress := s_fbParamEqualizingPress.p_fValue;
 
 _m_Params := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Sequence" Id="{30bdd7e8-cf50-43a5-ad3d-d9c666dc632a}">
+      <Declaration><![CDATA[METHOD PRIVATE _m_Sequence : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+s_fbSeqControl(
+	i_nSeqStep := s_eSequence, 
+	i_sStepName := TO_STRING(s_eSequence), 
+	i_bCmdReset := i_bCmdReset
+					AND (s_eSequence = E_SeqAirTreatment.ERROR) // Only reset/resume sequencer from ERROR state
+					AND NOT(s_bStaError)
+					{warning '#TODO: use s_bStaError instead of checking all state again'}
+					//--Also for all other EM's  
+					AND i_bReqEnable, 
+	i_bStaError := s_bStaError OR NOT(i_bReqEnable));
+
+s_sResumeStep := TO_STRING(s_eResumeStep); 	
+	
+//Force to stop	
+{warning '#TODO: Never stop air treatment'}
+IF (i_eCtrlState = E_CtrlState.STOPPING) THEN
+	s_eSequence := E_SeqAirTreatment.STOP;
+END_IF	
+	
+CASE s_eSequence OF
+	
+	E_SeqAirTreatment.IDLE:
+		IF (i_eCtrlState = E_CtrlState.IDLE) THEN
+			s_eSequence := E_SeqAirTreatment.START;
+		END_IF
+
+//START////////////////////////////////////////////////////////////////////////////////////////////			
+	E_SeqAirTreatment.START:
+		IF s_fbSeqControl.q_bStaEntry THEN
+			s_fbPIDPressCtrl.bReset := TRUE;
+			s_fSetFanSpeed := 0.0; //[%]
+			
+			s_sMessage := 'start';
+		END_IF		
+	
+		IF i_eCtrlState = E_CtrlState.RUNNING THEN
+			s_eSequence := E_SeqAirTreatment.READY;
+		END_IF
+
+//READY////////////////////////////////////////////////////////////////////////////////////////////		
+	E_SeqAirTreatment.READY:
+		IF s_fbSeqControl.q_bStaEntry THEN
+			s_eResumeStep := E_SeqTransport.READY;
+		END_IF
+		
+		//Return back to start
+		IF i_eCtrlState <> E_CtrlState.RUNNING THEN
+			s_eSequence := E_SeqAirTreatment.START;
+		END_IF
+		
+		IF s_bReqPressureize THEN
+			s_eSequence := E_SeqAirTreatment.PRESSURIZE;
+		ELSIF s_bReqFlush THEN
+			s_eSequence := E_SeqAirTreatment.FLUSHING;
+		ELSIF s_bReqEqualize THEN
+			s_eSequence := E_SeqAirTreatment.EQUALIZE;
+		END_IF
+			
+//PRESSURIZE///////////////////////////////////////////////////////////////////////////////////////		
+	E_SeqAirTreatment.PRESSURIZE:
+		IF s_fbSeqControl.q_bStaEntry THEN
+			s_bCmdFanMotorOn := TRUE;
+			s_fSetPressure := i_ref_stSettings.fPressurizingPress; //[Pa]
+			s_fbPIDPressCtrl.bReset := FALSE;
+		END_IF
+		
+		s_fSetFanSpeed := s_fbPIDPressCtrl.fCtrlOutput;
+		
+		s_bStaPressurized := F_InRange(s_fSetPressure, s_fActDeltaP_CleanroomCabin, i_ref_stSettings.fRange);
+		
+		IF s_bReqFlush THEN
+			s_eSequence := E_SeqAirTreatment.FLUSHING;
+		ELSIF s_bReqEqualize THEN
+			s_eSequence := E_SeqAirTreatment.EQUALIZE;
+		ELSIF s_bReqStop THEN	
+			s_eSequence := E_SeqAirTreatment.STOP;
+		END_IF
+		
+//FLUSING//////////////////////////////////////////////////////////////////////////////////////////		
+	E_SeqAirTreatment.FLUSHING:
+		IF s_fbSeqControl.q_bStaEntry THEN
+			s_bCmdFanMotorOn := TRUE;
+			s_fSetPressure := i_ref_stSettings.fFlushingPress; //[Pa]
+			s_fbPIDPressCtrl.bReset := FALSE;
+		END_IF
+		
+		s_fSetFanSpeed := s_fbPIDPressCtrl.fCtrlOutput;
+		
+		s_bStaFlushed := F_InRange(s_fSetPressure, s_fActDeltaP_CleanroomCabin, i_ref_stSettings.fRange);
+
+		IF s_bReqPressureize THEN
+			s_eSequence := E_SeqAirTreatment.PRESSURIZE;
+		ELSIF s_bReqEqualize THEN
+			s_eSequence := E_SeqAirTreatment.EQUALIZE;
+		ELSIF s_bReqStop THEN	
+			s_eSequence := E_SeqAirTreatment.STOP;
+		END_IF
+
+//EQUALIZING//////////////////////////////////////////////////////////////////////////////////////////		
+	E_SeqAirTreatment.EQUALIZE:
+		IF s_fbSeqControl.q_bStaEntry THEN
+			s_bCmdFanMotorOn := TRUE;
+			s_fSetPressure := i_ref_stSettings.fEqualizingPress; //[Pa]
+			s_fbPIDPressCtrl.bReset := FALSE;
+		END_IF
+		
+		s_fSetFanSpeed := s_fbPIDPressCtrl.fCtrlOutput;
+		
+		s_bStaFlushed := F_InRange(s_fSetPressure, s_fActDeltaP_CleanroomCabin, i_ref_stSettings.fRange);
+
+		IF s_bReqPressureize THEN
+			s_eSequence := E_SeqAirTreatment.PRESSURIZE;
+		ELSIF s_bReqFlush THEN
+			s_eSequence := E_SeqAirTreatment.FLUSHING;
+		ELSIF s_bReqStop THEN	
+			s_eSequence := E_SeqAirTreatment.STOP;
+		END_IF
+		
+//STOP/////////////////////////////////////////////////////////////////////////////////////////////		
+	E_SeqTransport.STOP:
+		IF s_fbSeqControl.q_bStaEntry THEN
+			s_bCmdFanMotorOn := FALSE;
+			s_fSetPressure := 0.0; //[Pa]
+			s_fbPIDPressCtrl.bReset := TRUE;
+		END_IF
+	
+	IF i_eCtrlState = E_CtrlState.IDLE THEN
+		s_eSequence := E_SeqAirTreatment.START;
+	
+	ELSIF (i_eCtrlState = E_CtrlState.RUNNING) THEN
+		s_eSequence := E_SeqAirTreatment.READY;
+	END_IF
+	
+//ERROR////////////////////////////////////////////////////////////////////////////////////////////	
+	E_SeqAirTreatment.ERROR:
+		s_cmFanMotor.m_Off();
+		s_fSetPressure := 0.0; //[Pa]
+		s_fSetFanSpeed := 0.0; //[%]
+END_CASE
+
+//Reset all reqeusts
+s_bReqEqualize := FALSE;
+s_bReqFlush := FALSE;
+s_bReqPressureize := FALSE;
+s_bReqStop := FALSE;
 ]]></ST>
       </Implementation>
     </Method>
@@ -584,14 +541,30 @@ _m_Params := TRUE;
       <Declaration><![CDATA[METHOD PUBLIC m_Equalize : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[]]></ST>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+s_bReqEqualize := TRUE;
+
+m_Equalize := TRUE;
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="m_Flush" Id="{91abc485-ede4-4dc8-9260-f53c4f914a84}">
       <Declaration><![CDATA[METHOD PUBLIC m_Flush : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[]]></ST>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+s_bReqFlush := TRUE;
+
+m_Flush := TRUE;
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="m_Main" Id="{c5e321ae-d9f4-4560-be7b-e65ffdd1bd10}" FolderPath="Base\">
@@ -606,8 +579,7 @@ END_IF
 CASE i_eCtrlMode OF
 
 	E_CtrlMode.IDLE:
-		s_eSeqTransport := E_SeqTransport.IDLE;
-//--		s_eSeqCentering := E_SeqCentering.IDLE;
+		s_eSequence := E_SeqAirTreatment.IDLE;
 		
 	E_CtrlMode.AUTOMATIC:
 		//Automatic commands are controlled by higher-layer unit
@@ -616,39 +588,20 @@ CASE i_eCtrlMode OF
 	E_CtrlMode.MANUAL:
 		//Execute manaual control (based on HMI buttons)
 		
-		//Store the selected action (so it could be rstart / resumed if two-hand-control is activated)
-		{warning '#TODO: Could be omitted if 2HCtrl is not used'}
-		IF s_fbHmiBtnTB_ToInfeed.p_osrBtnPress THEN
-			s_eActionSelection := E_ActionSelection.MOVE_TO_INFEED;
-		ELSIF s_fbHmiBtnTB_ToCentering.p_osrBtnPress THEN	
-			s_eActionSelection := E_ActionSelection.MOVE_TO_CENTER;
-		ELSIF s_fbHmiBtnTB_ToDocking.p_osrBtnPress THEN
-			s_eActionSelection := E_ActionSelection.MOVE_TO_DOCKING;
-		ELSIF s_fbHmiBtnTB_Centering.p_osrBtnPress THEN
-			s_eActionSelection := E_ActionSelection.CENTER_TB;
-		END_IF
-		
 		//Manual commands (convert HMI buttons to requests), only in state running
 		IF (i_eCtrlState = E_CtrlState.RUNNING) THEN
-			s_bReqTB_ToInfeed := s_fbHmiBtnTB_ToInfeed.p_osrBtnPress;
-			s_bReqTB_ToCenter := s_fbHmiBtnTB_ToCentering.p_osrBtnPress;
-			s_bReqTB_ToDocking := s_fbHmiBtnTB_ToDocking.p_osrBtnPress;
-			s_bReqCenteringTB := s_fbHmiBtnTB_Centering.p_osrBtnPress;
-		
-		//??	s_bReqTB_ToInfeed := (eActionSelection = E_ActionSelection.MOVE_TO_INFEED) AND i_bSta2HC_Active;
-		//??	s_bReqTB_ToCenter := (eActionSelection = E_ActionSelection.MOVE_TO_CENTER) AND i_bSta2HC_Active;
-		//??	s_bReqTB_ToDocking := (eActionSelection = E_ActionSelection.MOVE_TO_DOCKING) AND i_bSta2HC_Active;
-		//??	s_bReqCenteringTB := (eActionSelection = E_ActionSelection.CENTER_TB) AND i_bSta2HC_Active;
+			s_bReqPressureize := s_fbHmiBtnPressurize.p_osrBtnPress;
+			s_bReqFlush := s_fbHmiBtnFlushing.p_osrBtnPress;
+			s_bReqEqualize := s_fbHmiBtnEqualizing.p_osrBtnPress;
+			s_bReqStop := s_fbHmiBtnStop.p_osrBtnPress;
 		END_IF	
 		
 		_m_AutomaticControl();
 		
 	E_CtrlMode.MAINTENANCE:
 		//Execute maintenance control (HMI control module buttons)
-		s_eSeqTransport := E_SeqTransport.IDLE;
-//--		s_eSeqCentering := E_SeqCentering.IDLE;
+		s_eSequence := E_SeqAirTreatment.IDLE;
 		; 	//Maintenance control is implemented in lower-layer control modules
-							
 		
 	E_CtrlMode.IO:
 		//Execute IO-test control (HMI output force control)
@@ -667,65 +620,62 @@ END_CASE
 
 //Buttons visibility
 IF (i_eCtrlMode = E_CtrlMode.MANUAL) THEN
-	s_fbHmiBtnTB_ToInfeed.p_bStaVisible := TRUE;
-	s_fbHmiBtnTB_ToCentering.p_bStaVisible := TRUE;
-	s_fbHmiBtnTB_ToDocking.p_bStaVisible := TRUE;
-	s_fbHmiBtnTB_Centering.p_bStaVisible := TRUE;
+	s_fbHmiBtnPressurize.p_bStaVisible := TRUE;
+	s_fbHmiBtnFlushing.p_bStaVisible := TRUE;
+	s_fbHmiBtnEqualizing.p_bStaVisible := TRUE;
+	s_fbHmiBtnStop.p_bStaVisible := TRUE;
 ELSE
-	s_fbHmiBtnTB_ToInfeed.p_bStaVisible := FALSE;
-	s_fbHmiBtnTB_ToCentering.p_bStaVisible := FALSE;
-	s_fbHmiBtnTB_ToDocking.p_bStaVisible := FALSE;
-	s_fbHmiBtnTB_Centering.p_bStaVisible := FALSE;
+	s_fbHmiBtnPressurize.p_bStaVisible := FALSE;
+	s_fbHmiBtnFlushing.p_bStaVisible := FALSE;
+	s_fbHmiBtnEqualizing.p_bStaVisible := FALSE;
+	s_fbHmiBtnStop.p_bStaVisible := FALSE;
 END_IF
 
 //Buttons enabling
 IF i_bReqEnable AND (i_eCtrlMode = E_CtrlMode.MANUAL) AND (i_eCtrlState = E_CtrlState.RUNNING) THEN
 
-	//Transport
-	s_fbHmiBtnTB_ToInfeed.p_bStaEnabled :=
-		NOT(s_bIlckConveyorBackward)
-		AND NOT(s_bStaAtInfeedRearPosition) //Added extra condition here instead of interlock only 
-		AND NOT(s_cmPalletConveyor.p_bStaError)
-		AND (s_cmPalletConveyor.p_bStaMotorStopped) AND TRUE
-		AND NOT(s_bReqCenteringTB);
+	//Air Treatment
+	s_fbHmiBtnPressurize.p_bStaEnabled :=
+		((s_eSequence = E_SeqAirTreatment.READY)
+		OR (s_eSequence = E_SeqAirTreatment.FLUSHING)
+		OR (s_eSequence = E_SeqAirTreatment.EQUALIZE))
+		AND NOT(s_bStaError);
 	
-	s_fbHmiBtnTB_ToCentering.p_bStaEnabled :=
-		NOT(s_bIlckConveyorForward)
-		AND NOT(s_bStaAtCenteringPosition) //Added extra condition here instead of interlock only
-		AND NOT(s_cmPalletConveyor.p_bStaError)
-		AND (s_cmPalletConveyor.p_bStaMotorStopped)
-		AND NOT(s_bReqCenteringTB);
+	s_fbHmiBtnFlushing.p_bStaEnabled :=
+		((s_eSequence = E_SeqAirTreatment.READY)
+		OR (s_eSequence = E_SeqAirTreatment.PRESSURIZE)
+		OR (s_eSequence = E_SeqAirTreatment.EQUALIZE))
+		AND NOT(s_bStaError);
 	
-	s_fbHmiBtnTB_ToDocking.p_bStaEnabled :=
-		NOT(s_bIlckConveyorForward)
-		AND NOT(s_bStaAtDockingPosition) //Added extra condition here instead of interlock only
-		AND NOT(s_cmPalletConveyor.p_bStaError)
-		AND (s_cmPalletConveyor.p_bStaMotorStopped)
-		AND NOT(s_bReqCenteringTB);
+	s_fbHmiBtnEqualizing.p_bStaEnabled :=
+		((s_eSequence = E_SeqAirTreatment.READY)
+		OR (s_eSequence = E_SeqAirTreatment.PRESSURIZE)
+		OR (s_eSequence = E_SeqAirTreatment.FLUSHING))
+		AND NOT(s_bStaError);
 	
-	//Centering
-	s_fbHmiBtnTB_Centering.p_bStaEnabled :=
-		NOT(s_bIlckCenteringToCenter)
-		AND NOT(s_cmCenteringUnit.p_bStaError)
-		AND (s_eSeqTransport = E_SeqTransport.READY); 
+	s_fbHmiBtnStop.p_bStaEnabled :=
+		NOT(s_eSequence = E_SeqAirTreatment.STOP);
+		
 ELSE
-	s_fbHmiBtnTB_ToInfeed.p_bStaEnabled := FALSE;
-	s_fbHmiBtnTB_ToCentering.p_bStaEnabled := FALSE;
-	s_fbHmiBtnTB_ToDocking.p_bStaEnabled := FALSE;
-	s_fbHmiBtnTB_Centering.p_bStaEnabled := FALSE;
+	s_fbHmiBtnPressurize.p_bStaEnabled := FALSE;
+	s_fbHmiBtnFlushing.p_bStaEnabled := FALSE;
+	s_fbHmiBtnEqualizing.p_bStaEnabled := FALSE;
+	s_fbHmiBtnStop.p_bStaEnabled := FALSE;
 END_IF
 
 //MAINTENANCE-mode ////////////////////////////////////////////////////////////////////////////////
 
 //Stopping control modules
 IF (i_eCtrlMode = E_CtrlMode.MAINTENANCE) AND (i_eCtrlState = E_CtrlState.STOPPING) THEN 
-	s_cmPalletConveyor.m_Stop();
+	s_cmFanMotor.m_Off();
+	s_fSetFanSpeed := 0.0; //[%]
+	s_fbSeqControl.i_bCmdReset := TRUE;
 END_IF
 
 //IO-mode /////////////////////////////////////////////////////////////////////////////////////////
 IF (i_eCtrlMode = E_CtrlMode.IO) AND (i_eCtrlState = E_CtrlState.RUNNING) THEN
 	s_bHmiForceOutputEnabled := TRUE;
-	s_bHmiForceOutputStartEnabled := s_cmPalletConveyor.p_bStaBrakeReleasedQ;
+	s_bHmiForceOutputStartEnabled := s_cmFanMotor.p_bStaOutput;
 ELSE
 	s_bHmiForceOutputEnabled := FALSE;
 	s_bHmiForceOutputStartEnabled := FALSE;	
@@ -739,39 +689,47 @@ m_Main := TRUE;
       <Declaration><![CDATA[METHOD PUBLIC m_Pressurize : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[]]></ST>
+        <ST><![CDATA[
+IF NOT i_bReqEnable THEN 
+	RETURN;
+END_IF
+
+s_bReqPressureize := TRUE;
+
+m_Pressurize := TRUE;
+]]></ST>
       </Implementation>
     </Method>
-    <Property Name="p_bStaEqualizingDone" Id="{70485294-9ae5-46f7-b455-a30567b2984d}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaEqualizingDone : BOOL]]></Declaration>
+    <Property Name="p_bStaEqualized" Id="{70485294-9ae5-46f7-b455-a30567b2984d}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaEqualized : BOOL]]></Declaration>
       <Get Name="Get" Id="{512491e2-2c43-4c65-af17-560f948bfa0e}">
-        <Declaration><![CDATA[VAR
-END_VAR
-]]></Declaration>
+        <Declaration><![CDATA[]]></Declaration>
         <Implementation>
-          <ST><![CDATA[]]></ST>
+          <ST><![CDATA[
+p_bStaEqualized := s_bStaEqualized;
+]]></ST>
         </Implementation>
       </Get>
     </Property>
-    <Property Name="p_bStaFlushingDone" Id="{e8505bce-20c5-4e11-a93c-d9c8bb05b3bb}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaFlushingDone : BOOL]]></Declaration>
+    <Property Name="p_bStaFlushed" Id="{e8505bce-20c5-4e11-a93c-d9c8bb05b3bb}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaFlushed : BOOL]]></Declaration>
       <Get Name="Get" Id="{56be4fba-47da-4dfb-819b-1e2798cd877e}">
-        <Declaration><![CDATA[VAR
-END_VAR
-]]></Declaration>
+        <Declaration><![CDATA[]]></Declaration>
         <Implementation>
-          <ST><![CDATA[]]></ST>
+          <ST><![CDATA[
+p_bStaFlushed := s_bStaFlushed;
+]]></ST>
         </Implementation>
       </Get>
     </Property>
-    <Property Name="p_bStaPressurizingOK" Id="{7ff7c161-f01c-480d-8d30-a3ec8426337a}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaPressurizingOK : BOOL]]></Declaration>
+    <Property Name="p_bStaPressurized" Id="{7ff7c161-f01c-480d-8d30-a3ec8426337a}">
+      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaPressurized : BOOL]]></Declaration>
       <Get Name="Get" Id="{a6f3a68e-e97d-4c33-8765-cf3f9408337e}">
-        <Declaration><![CDATA[VAR
-END_VAR
-]]></Declaration>
+        <Declaration><![CDATA[]]></Declaration>
         <Implementation>
-          <ST><![CDATA[]]></ST>
+          <ST><![CDATA[
+p_bStaPressurized := s_bStaPressurized;
+]]></ST>
         </Implementation>
       </Get>
     </Property>
@@ -784,27 +742,16 @@ END_VAR
       <LineId Id="7" Count="0" />
       <LineId Id="85" Count="0" />
       <LineId Id="20" Count="0" />
-      <LineId Id="96" Count="0" />
-      <LineId Id="102" Count="0" />
-      <LineId Id="101" Count="0" />
-      <LineId Id="97" Count="0" />
-      <LineId Id="103" Count="1" />
-      <LineId Id="98" Count="0" />
-      <LineId Id="105" Count="1" />
-      <LineId Id="99" Count="0" />
-      <LineId Id="107" Count="0" />
-      <LineId Id="110" Count="0" />
-      <LineId Id="42" Count="0" />
+      <LineId Id="115" Count="0" />
+      <LineId Id="114" Count="0" />
       <LineId Id="111" Count="0" />
       <LineId Id="11" Count="0" />
       <LineId Id="33" Count="0" />
       <LineId Id="108" Count="0" />
-      <LineId Id="35" Count="0" />
-      <LineId Id="83" Count="0" />
-      <LineId Id="53" Count="0" />
       <LineId Id="34" Count="0" />
       <LineId Id="109" Count="0" />
       <LineId Id="57" Count="0" />
+      <LineId Id="116" Count="0" />
       <LineId Id="66" Count="0" />
       <LineId Id="68" Count="0" />
       <LineId Id="64" Count="0" />
@@ -819,23 +766,22 @@ END_VAR
       <LineId Id="10" Count="0" />
       <LineId Id="14" Count="0" />
     </LineIds>
+    <LineIds Name="EM_AirTreatment._m_AutomaticControl">
+      <LineId Id="473" Count="3" />
+    </LineIds>
     <LineIds Name="EM_AirTreatment._m_Devices">
       <LineId Id="41" Count="0" />
       <LineId Id="6" Count="2" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="86" Count="2" />
+      <LineId Id="90" Count="4" />
+      <LineId Id="85" Count="0" />
       <LineId Id="70" Count="0" />
-      <LineId Id="69" Count="0" />
-      <LineId Id="9" Count="3" />
-      <LineId Id="66" Count="0" />
-      <LineId Id="13" Count="0" />
-      <LineId Id="44" Count="0" />
-      <LineId Id="62" Count="0" />
-      <LineId Id="14" Count="6" />
-      <LineId Id="64" Count="0" />
-      <LineId Id="21" Count="0" />
-      <LineId Id="48" Count="1" />
-      <LineId Id="22" Count="1" />
-      <LineId Id="25" Count="0" />
-      <LineId Id="27" Count="13" />
+      <LineId Id="74" Count="2" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="80" Count="2" />
+      <LineId Id="39" Count="1" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="EM_AirTreatment._m_Hmi">
@@ -848,10 +794,7 @@ END_VAR
       <LineId Id="266" Count="1" />
       <LineId Id="248" Count="0" />
       <LineId Id="239" Count="0" />
-      <LineId Id="271" Count="4" />
-      <LineId Id="278" Count="0" />
-      <LineId Id="276" Count="0" />
-      <LineId Id="280" Count="0" />
+      <LineId Id="271" Count="3" />
       <LineId Id="292" Count="0" />
       <LineId Id="6" Count="0" />
       <LineId Id="351" Count="0" />
@@ -862,73 +805,26 @@ END_VAR
       <LineId Id="468" Count="0" />
       <LineId Id="8" Count="0" />
       <LineId Id="10" Count="0" />
+      <LineId Id="580" Count="2" />
+      <LineId Id="592" Count="0" />
+      <LineId Id="583" Count="0" />
+      <LineId Id="593" Count="0" />
+      <LineId Id="585" Count="2" />
+      <LineId Id="584" Count="0" />
+      <LineId Id="577" Count="0" />
       <LineId Id="537" Count="0" />
       <LineId Id="528" Count="0" />
       <LineId Id="530" Count="5" />
       <LineId Id="526" Count="0" />
       <LineId Id="538" Count="8" />
       <LineId Id="527" Count="0" />
-      <LineId Id="547" Count="0" />
-      <LineId Id="549" Count="0" />
-      <LineId Id="548" Count="0" />
-      <LineId Id="551" Count="3" />
-      <LineId Id="550" Count="0" />
       <LineId Id="555" Count="1" />
-      <LineId Id="565" Count="0" />
-      <LineId Id="560" Count="0" />
-      <LineId Id="569" Count="0" />
-      <LineId Id="574" Count="0" />
-      <LineId Id="573" Count="0" />
-      <LineId Id="575" Count="0" />
-      <LineId Id="570" Count="0" />
-      <LineId Id="562" Count="0" />
-      <LineId Id="567" Count="0" />
-      <LineId Id="571" Count="0" />
-      <LineId Id="563" Count="0" />
-      <LineId Id="559" Count="0" />
+      <LineId Id="590" Count="0" />
+      <LineId Id="589" Count="0" />
+      <LineId Id="588" Count="0" />
       <LineId Id="558" Count="0" />
-      <LineId Id="557" Count="0" />
-      <LineId Id="525" Count="0" />
-      <LineId Id="325" Count="0" />
-      <LineId Id="327" Count="1" />
-      <LineId Id="342" Count="0" />
-      <LineId Id="331" Count="2" />
-      <LineId Id="517" Count="0" />
-      <LineId Id="516" Count="0" />
-      <LineId Id="460" Count="0" />
-      <LineId Id="335" Count="2" />
-      <LineId Id="341" Count="0" />
-      <LineId Id="339" Count="0" />
-      <LineId Id="522" Count="0" />
-      <LineId Id="353" Count="1" />
-      <LineId Id="447" Count="3" />
-      <LineId Id="344" Count="0" />
-      <LineId Id="348" Count="3" />
-      <LineId Id="346" Count="0" />
       <LineId Id="471" Count="1" />
-      <LineId Id="484" Count="0" />
-      <LineId Id="476" Count="0" />
-      <LineId Id="512" Count="0" />
-      <LineId Id="475" Count="0" />
-      <LineId Id="473" Count="0" />
-      <LineId Id="477" Count="1" />
-      <LineId Id="513" Count="0" />
-      <LineId Id="481" Count="0" />
-      <LineId Id="483" Count="0" />
-      <LineId Id="479" Count="0" />
-      <LineId Id="498" Count="0" />
-      <LineId Id="485" Count="1" />
-      <LineId Id="493" Count="0" />
-      <LineId Id="496" Count="0" />
-      <LineId Id="495" Count="0" />
-      <LineId Id="511" Count="0" />
-      <LineId Id="502" Count="0" />
-      <LineId Id="504" Count="0" />
-      <LineId Id="508" Count="1" />
-      <LineId Id="505" Count="0" />
-      <LineId Id="326" Count="0" />
-      <LineId Id="520" Count="0" />
-      <LineId Id="519" Count="0" />
+      <LineId Id="591" Count="0" />
       <LineId Id="523" Count="0" />
       <LineId Id="38" Count="0" />
       <LineId Id="396" Count="2" />
@@ -968,62 +864,18 @@ END_VAR
     <LineIds Name="EM_AirTreatment._m_Inputs">
       <LineId Id="156" Count="0" />
       <LineId Id="103" Count="2" />
-      <LineId Id="303" Count="0" />
+      <LineId Id="424" Count="1" />
       <LineId Id="410" Count="0" />
       <LineId Id="422" Count="0" />
+      <LineId Id="426" Count="0" />
       <LineId Id="419" Count="2" />
       <LineId Id="373" Count="0" />
       <LineId Id="5" Count="0" />
     </LineIds>
-    <LineIds Name="EM_AirTreatment._m_Interlocks">
-      <LineId Id="303" Count="0" />
-      <LineId Id="267" Count="0" />
-      <LineId Id="306" Count="0" />
-      <LineId Id="390" Count="0" />
-      <LineId Id="244" Count="0" />
-      <LineId Id="246" Count="0" />
-      <LineId Id="273" Count="0" />
-      <LineId Id="386" Count="0" />
-      <LineId Id="409" Count="0" />
-      <LineId Id="234" Count="0" />
-      <LineId Id="391" Count="0" />
-      <LineId Id="238" Count="0" />
-      <LineId Id="240" Count="0" />
-      <LineId Id="338" Count="0" />
-      <LineId Id="274" Count="0" />
-      <LineId Id="280" Count="0" />
-      <LineId Id="282" Count="1" />
-      <LineId Id="406" Count="0" />
-      <LineId Id="396" Count="9" />
-      <LineId Id="394" Count="0" />
-      <LineId Id="224" Count="0" />
-      <LineId Id="175" Count="0" />
-      <LineId Id="185" Count="0" />
-      <LineId Id="275" Count="0" />
-      <LineId Id="187" Count="1" />
-      <LineId Id="389" Count="0" />
-      <LineId Id="182" Count="0" />
-      <LineId Id="279" Count="0" />
-      <LineId Id="278" Count="0" />
-      <LineId Id="276" Count="0" />
-      <LineId Id="258" Count="0" />
-      <LineId Id="340" Count="0" />
-      <LineId Id="351" Count="3" />
-      <LineId Id="339" Count="0" />
-      <LineId Id="358" Count="4" />
-      <LineId Id="357" Count="0" />
-      <LineId Id="373" Count="0" />
-    </LineIds>
     <LineIds Name="EM_AirTreatment._m_Outputs">
       <LineId Id="20" Count="0" />
       <LineId Id="6" Count="2" />
-      <LineId Id="36" Count="0" />
-      <LineId Id="27" Count="1" />
-      <LineId Id="39" Count="0" />
-      <LineId Id="35" Count="0" />
-      <LineId Id="29" Count="0" />
-      <LineId Id="41" Count="1" />
-      <LineId Id="40" Count="0" />
+      <LineId Id="44" Count="1" />
       <LineId Id="38" Count="0" />
       <LineId Id="30" Count="0" />
       <LineId Id="22" Count="1" />
@@ -1035,32 +887,122 @@ END_VAR
       <LineId Id="291" Count="0" />
       <LineId Id="164" Count="0" />
       <LineId Id="166" Count="1" />
-      <LineId Id="302" Count="71" />
-      <LineId Id="165" Count="0" />
+      <LineId Id="302" Count="1" />
+      <LineId Id="451" Count="0" />
+      <LineId Id="304" Count="10" />
+      <LineId Id="452" Count="0" />
+      <LineId Id="454" Count="3" />
+      <LineId Id="453" Count="0" />
+      <LineId Id="315" Count="5" />
       <LineId Id="374" Count="1" />
       <LineId Id="379" Count="0" />
-      <LineId Id="384" Count="1" />
-      <LineId Id="390" Count="1" />
-      <LineId Id="396" Count="1" />
+      <LineId Id="385" Count="0" />
+      <LineId Id="391" Count="0" />
+      <LineId Id="397" Count="0" />
       <LineId Id="448" Count="0" />
-      <LineId Id="403" Count="0" />
-      <LineId Id="408" Count="1" />
-      <LineId Id="414" Count="1" />
-      <LineId Id="420" Count="1" />
-      <LineId Id="426" Count="1" />
-      <LineId Id="447" Count="0" />
-      <LineId Id="433" Count="0" />
-      <LineId Id="446" Count="0" />
-      <LineId Id="439" Count="0" />
-      <LineId Id="444" Count="1" />
-      <LineId Id="377" Count="0" />
       <LineId Id="282" Count="0" />
       <LineId Id="292" Count="0" />
     </LineIds>
+    <LineIds Name="EM_AirTreatment._m_Sequence">
+      <LineId Id="1808" Count="0" />
+      <LineId Id="1632" Count="4" />
+      <LineId Id="2009" Count="0" />
+      <LineId Id="2012" Count="0" />
+      <LineId Id="2011" Count="0" />
+      <LineId Id="1639" Count="1" />
+      <LineId Id="1992" Count="0" />
+      <LineId Id="2013" Count="0" />
+      <LineId Id="1993" Count="0" />
+      <LineId Id="1984" Count="0" />
+      <LineId Id="2014" Count="0" />
+      <LineId Id="1985" Count="1" />
+      <LineId Id="1921" Count="0" />
+      <LineId Id="1983" Count="0" />
+      <LineId Id="1642" Count="2" />
+      <LineId Id="1809" Count="2" />
+      <LineId Id="1966" Count="0" />
+      <LineId Id="1812" Count="0" />
+      <LineId Id="1649" Count="0" />
+      <LineId Id="1654" Count="0" />
+      <LineId Id="2126" Count="0" />
+      <LineId Id="2144" Count="0" />
+      <LineId Id="2143" Count="0" />
+      <LineId Id="1920" Count="0" />
+      <LineId Id="1656" Count="1" />
+      <LineId Id="2029" Count="1" />
+      <LineId Id="2027" Count="0" />
+      <LineId Id="1967" Count="0" />
+      <LineId Id="1661" Count="2" />
+      <LineId Id="1991" Count="0" />
+      <LineId Id="1666" Count="1" />
+      <LineId Id="2031" Count="0" />
+      <LineId Id="1906" Count="1" />
+      <LineId Id="1904" Count="1" />
+      <LineId Id="1797" Count="0" />
+      <LineId Id="2032" Count="0" />
+      <LineId Id="2035" Count="0" />
+      <LineId Id="2038" Count="1" />
+      <LineId Id="2036" Count="0" />
+      <LineId Id="2033" Count="1" />
+      <LineId Id="1716" Count="2" />
+      <LineId Id="2042" Count="0" />
+      <LineId Id="2046" Count="0" />
+      <LineId Id="2048" Count="0" />
+      <LineId Id="1721" Count="0" />
+      <LineId Id="2049" Count="0" />
+      <LineId Id="2137" Count="0" />
+      <LineId Id="2136" Count="0" />
+      <LineId Id="2065" Count="0" />
+      <LineId Id="1722" Count="0" />
+      <LineId Id="2080" Count="0" />
+      <LineId Id="2082" Count="1" />
+      <LineId Id="2085" Count="0" />
+      <LineId Id="2118" Count="1" />
+      <LineId Id="2076" Count="1" />
+      <LineId Id="2066" Count="7" />
+      <LineId Id="2138" Count="1" />
+      <LineId Id="2062" Count="0" />
+      <LineId Id="2086" Count="2" />
+      <LineId Id="2092" Count="0" />
+      <LineId Id="2094" Count="0" />
+      <LineId Id="2116" Count="1" />
+      <LineId Id="2075" Count="0" />
+      <LineId Id="2096" Count="0" />
+      <LineId Id="2098" Count="7" />
+      <LineId Id="2140" Count="1" />
+      <LineId Id="2106" Count="3" />
+      <LineId Id="2112" Count="3" />
+      <LineId Id="2097" Count="0" />
+      <LineId Id="2095" Count="0" />
+      <LineId Id="1777" Count="1" />
+      <LineId Id="2125" Count="0" />
+      <LineId Id="2123" Count="1" />
+      <LineId Id="2120" Count="1" />
+      <LineId Id="1782" Count="0" />
+      <LineId Id="2132" Count="0" />
+      <LineId Id="2131" Count="0" />
+      <LineId Id="2133" Count="0" />
+      <LineId Id="1994" Count="0" />
+      <LineId Id="1784" Count="0" />
+      <LineId Id="1995" Count="0" />
+      <LineId Id="1786" Count="0" />
+      <LineId Id="2128" Count="0" />
+      <LineId Id="1787" Count="0" />
+      <LineId Id="2129" Count="0" />
+      <LineId Id="2134" Count="1" />
+      <LineId Id="1790" Count="0" />
+      <LineId Id="1999" Count="3" />
+      <LineId Id="1998" Count="0" />
+      <LineId Id="2130" Count="0" />
+      <LineId Id="89" Count="0" />
+    </LineIds>
     <LineIds Name="EM_AirTreatment.m_Equalize">
+      <LineId Id="5" Count="6" />
       <LineId Id="3" Count="0" />
+      <LineId Id="12" Count="0" />
     </LineIds>
     <LineIds Name="EM_AirTreatment.m_Flush">
+      <LineId Id="5" Count="7" />
       <LineId Id="3" Count="0" />
     </LineIds>
     <LineIds Name="EM_AirTreatment.m_Main">
@@ -1068,41 +1010,25 @@ END_VAR
       <LineId Id="2483" Count="2" />
       <LineId Id="2529" Count="3" />
       <LineId Id="3154" Count="0" />
-      <LineId Id="2534" Count="2" />
+      <LineId Id="2535" Count="1" />
       <LineId Id="3070" Count="0" />
       <LineId Id="2900" Count="0" />
       <LineId Id="2949" Count="0" />
       <LineId Id="2951" Count="0" />
       <LineId Id="3073" Count="0" />
-      <LineId Id="3077" Count="0" />
-      <LineId Id="3118" Count="0" />
-      <LineId Id="3139" Count="0" />
-      <LineId Id="3119" Count="0" />
-      <LineId Id="3124" Count="0" />
-      <LineId Id="3128" Count="0" />
-      <LineId Id="3125" Count="0" />
-      <LineId Id="3129" Count="0" />
-      <LineId Id="3126" Count="0" />
-      <LineId Id="3130" Count="0" />
-      <LineId Id="3127" Count="0" />
-      <LineId Id="3122" Count="0" />
       <LineId Id="3120" Count="0" />
       <LineId Id="3076" Count="0" />
       <LineId Id="3115" Count="0" />
       <LineId Id="3063" Count="2" />
       <LineId Id="3061" Count="0" />
-      <LineId Id="3133" Count="0" />
-      <LineId Id="3136" Count="1" />
-      <LineId Id="3134" Count="1" />
       <LineId Id="3116" Count="0" />
       <LineId Id="3131" Count="0" />
       <LineId Id="2954" Count="0" />
       <LineId Id="2950" Count="0" />
       <LineId Id="2916" Count="0" />
       <LineId Id="3084" Count="0" />
-      <LineId Id="3086" Count="1" />
+      <LineId Id="3086" Count="0" />
       <LineId Id="3075" Count="0" />
-      <LineId Id="2919" Count="0" />
       <LineId Id="3081" Count="0" />
       <LineId Id="2907" Count="0" />
       <LineId Id="3088" Count="0" />
@@ -1133,20 +1059,25 @@ END_VAR
       <LineId Id="3041" Count="1" />
       <LineId Id="3091" Count="0" />
       <LineId Id="3030" Count="0" />
-      <LineId Id="3002" Count="3" />
-      <LineId Id="3150" Count="0" />
-      <LineId Id="3006" Count="5" />
-      <LineId Id="3151" Count="0" />
-      <LineId Id="3012" Count="5" />
-      <LineId Id="3152" Count="0" />
-      <LineId Id="3018" Count="1" />
-      <LineId Id="3092" Count="0" />
-      <LineId Id="3020" Count="8" />
+      <LineId Id="3002" Count="0" />
+      <LineId Id="3006" Count="0" />
+      <LineId Id="3156" Count="2" />
+      <LineId Id="3007" Count="1" />
+      <LineId Id="3159" Count="2" />
+      <LineId Id="3012" Count="2" />
+      <LineId Id="3162" Count="2" />
+      <LineId Id="3018" Count="3" />
+      <LineId Id="3165" Count="0" />
+      <LineId Id="3024" Count="4" />
       <LineId Id="2997" Count="0" />
       <LineId Id="3097" Count="1" />
       <LineId Id="3095" Count="0" />
       <LineId Id="3094" Count="0" />
-      <LineId Id="3100" Count="2" />
+      <LineId Id="3100" Count="0" />
+      <LineId Id="3166" Count="0" />
+      <LineId Id="3168" Count="0" />
+      <LineId Id="3167" Count="0" />
+      <LineId Id="3102" Count="0" />
       <LineId Id="3108" Count="0" />
       <LineId Id="2937" Count="1" />
       <LineId Id="2940" Count="0" />
@@ -1158,16 +1089,24 @@ END_VAR
       <LineId Id="179" Count="0" />
     </LineIds>
     <LineIds Name="EM_AirTreatment.m_Pressurize">
+      <LineId Id="5" Count="6" />
       <LineId Id="3" Count="0" />
+      <LineId Id="12" Count="0" />
     </LineIds>
-    <LineIds Name="EM_AirTreatment.p_bStaEqualizingDone.Get">
+    <LineIds Name="EM_AirTreatment.p_bStaEqualized.Get">
+      <LineId Id="5" Count="0" />
       <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
     </LineIds>
-    <LineIds Name="EM_AirTreatment.p_bStaFlushingDone.Get">
+    <LineIds Name="EM_AirTreatment.p_bStaFlushed.Get">
+      <LineId Id="5" Count="0" />
       <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
     </LineIds>
-    <LineIds Name="EM_AirTreatment.p_bStaPressurizingOK.Get">
+    <LineIds Name="EM_AirTreatment.p_bStaPressurized.Get">
+      <LineId Id="5" Count="0" />
       <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>

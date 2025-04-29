@@ -78,7 +78,6 @@ VAR
 	s_bStaTB_AtCentering : BOOL;
 	s_bStaTB_AtDocking : BOOL;
 	s_bStaTB_CenteringDone : BOOL;
-
 	
 	//Interlockes	
 	s_bIlckConveyorBackward : BOOL := TRUE;
@@ -1126,7 +1125,7 @@ CASE s_eSeqTransport OF
 			s_eSeqTransport := E_SeqTransport.ERROR;		
 		END_IF
 
-//STOP		
+//STOP/////////////////////////////////////////////////////////////////////////////////////////////	
 	E_SeqTransport.STOP:
 		IF s_fbSeqTransportControl.q_bStaEntry THEN
 			s_cmPalletConveyor.m_Stop();
@@ -1141,7 +1140,8 @@ CASE s_eSeqTransport OF
 				s_eSeqTransport := E_SeqTransport.START;
 			END_IF
 		END_IF
-		
+
+//ERROR////////////////////////////////////////////////////////////////////////////////////////////		
 	E_SeqTransport.ERROR:
 		s_cmPalletConveyor.m_Stop();
 		s_cmCenteringUnit.m_Stop();
@@ -1919,6 +1919,7 @@ p_bStaTB_ReadyForDocking := s_bStaTB_AtDocking AND s_cmPalletConveyor.p_bStaMoto
       <LineId Id="1988" Count="2" />
       <LineId Id="1987" Count="0" />
       <LineId Id="1995" Count="0" />
+      <LineId Id="1997" Count="0" />
       <LineId Id="1786" Count="2" />
       <LineId Id="1964" Count="0" />
       <LineId Id="1789" Count="1" />

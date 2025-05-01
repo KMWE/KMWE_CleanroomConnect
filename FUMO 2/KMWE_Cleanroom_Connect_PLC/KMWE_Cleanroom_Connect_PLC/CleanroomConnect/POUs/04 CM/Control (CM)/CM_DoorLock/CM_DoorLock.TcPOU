@@ -48,7 +48,7 @@ VAR
 	s_wrnDoorStatusUnknown : BOOL;
 	s_wrnReqUnlockTimeout : BOOL;
 	s_wrnDoorNotClosed : BOOL;
-		
+	
 	s_fbR_TrigReqToggleLock : R_TRIG; 
 	
 	//Sequence
@@ -93,21 +93,21 @@ s_tonUnlockRequestTimeout(
 // Wrtie error bits
 s_wrnReqUnlockTimeout := (s_tonUnlockRequestTimeout.Q);	
 s_wrnDoorStatusUnknown := NOT(s_bStaDoorIsClosed) AND NOT(s_bStaDoorIsOpened);
-	
+
 // Alarm Handlers
 s_fbAlmHdlrDoorStatusUnknown(
 	i_bStaActive := s_wrnDoorStatusUnknown);
-	
+
 s_fbAlmHdlrReqUnlockTimeout(
 	i_bStaActive := s_wrnReqUnlockTimeout);
-	
+
 s_fbAlmHdlrDoorNotClosed(
 	i_bStaActive := s_wrnDoorNotClosed);
-	
+
 IF i_bCmdReset OR s_bStaDoorIsClosed THEN
 	s_wrnDoorNotClosed := FALSE;
-END_IF	
-	
+END_IF
+
 // Alarm collector
 s_bStaError :=
 	FALSE;
@@ -176,7 +176,7 @@ CASE s_eSequence OF
 		ELSIF s_bOsrReqToggleLock OR s_bReqActivateLock THEN
 			s_eSequence := E_SeqDoorLock.LOCKED;
 		END_IF
-
+	
 	E_SeqDoorLock.UNLOCKED:
 		s_bCmdActivateLock := FALSE;
 		s_bCmdLockStatus := TRUE; //Unlocked
@@ -192,21 +192,21 @@ CASE s_eSequence OF
 		ELSIF s_bOsrReqToggleLock OR s_bReqActivateLock THEN
 			s_eSequence := E_SeqDoorLock.LOCKED;
 		END_IF
-
+	
 	E_SeqDoorLock.DOOR_OPENED:
 		;//No actions
-
+	
 		IF s_bStaDoorIsClosed THEN
 			s_eSequence := E_SeqDoorLock.DOOR_CLOSED;
 		END_IF
-
+	
 	E_SeqDoorLock.ERROR:
 		;//No actions
 		
 		IF i_bCmdReset THEN
 			s_eSequence := E_SeqDoorLock.INIT;
 		END_IF
-		
+	
 ELSE
 	s_eSequence := E_SeqDoorLock.INIT;
 END_CASE
@@ -235,7 +235,7 @@ IF NOT(s_bHmiInit) THEN
 	
 	//Button names
 	//<none>
-
+	
 	s_bHmiInit := TRUE;
 END_IF
 
@@ -246,7 +246,7 @@ s_stHmiData.bStaRequestStatus := s_fbHmiLedRequestStatus.p_bStaLed;
 s_stHmiData.bStaLockIsActivated := s_fbHmiLedLockIsActivated.p_bStaLed;
 s_stHmiData.bStaDoorIsClosed := s_fbHmiLedDoorIsClosed.p_bStaLed;
 s_stHmiData.bStaDoorIsOpened := s_fbHmiLedDoorIsOpened.p_bStaLed;
-	
+
 //From Hmi
 //<none>
 
@@ -352,7 +352,7 @@ IF NOT i_bReqEnable THEN
 END_IF
 
 IF (s_eSequence = E_SeqDoorLock.DOOR_CLOSED)
-	OR (s_eSequence = E_SeqDoorLock.REQUEST_PENDING) //Return to LOCKED if pending is cancled 
+	OR (s_eSequence = E_SeqDoorLock.REQUEST_PENDING) //Return to LOCKED if pending is cancled
 THEN
 	s_bReqActivateLock := TRUE;
 ELSE
@@ -423,7 +423,7 @@ PROPERTY PUBLIC p_bStaLockedAndDoorClosed : BOOL]]></Declaration>
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaLockedAndDoorClosed := 
+p_bStaLockedAndDoorClosed :=
 	s_bCmdActivateLock
 	AND s_bStaDoorIsClosed;
 ]]></ST>
@@ -454,179 +454,5 @@ p_bStaWarning := s_bStaWarning;
         </Implementation>
       </Get>
     </Property>
-    <LineIds Name="CM_DoorLock">
-      <LineId Id="410" Count="0" />
-      <LineId Id="47" Count="0" />
-      <LineId Id="411" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_DoorLock._m_Alarms">
-      <LineId Id="28" Count="0" />
-      <LineId Id="19" Count="2" />
-      <LineId Id="165" Count="0" />
-      <LineId Id="167" Count="2" />
-      <LineId Id="166" Count="0" />
-      <LineId Id="170" Count="0" />
-      <LineId Id="172" Count="0" />
-      <LineId Id="157" Count="0" />
-      <LineId Id="189" Count="0" />
-      <LineId Id="171" Count="0" />
-      <LineId Id="118" Count="0" />
-      <LineId Id="154" Count="0" />
-      <LineId Id="163" Count="0" />
-      <LineId Id="173" Count="0" />
-      <LineId Id="175" Count="0" />
-      <LineId Id="174" Count="0" />
-      <LineId Id="156" Count="0" />
-      <LineId Id="176" Count="1" />
-      <LineId Id="144" Count="0" />
-      <LineId Id="182" Count="0" />
-      <LineId Id="187" Count="0" />
-      <LineId Id="184" Count="0" />
-      <LineId Id="183" Count="0" />
-      <LineId Id="134" Count="0" />
-      <LineId Id="180" Count="0" />
-      <LineId Id="188" Count="0" />
-      <LineId Id="179" Count="0" />
-      <LineId Id="135" Count="0" />
-      <LineId Id="160" Count="0" />
-      <LineId Id="137" Count="0" />
-      <LineId Id="181" Count="0" />
-      <LineId Id="5" Count="0" />
-      <LineId Id="10" Count="0" />
-      <LineId Id="29" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_DoorLock._m_Devices">
-      <LineId Id="650" Count="0" />
-      <LineId Id="567" Count="14" />
-      <LineId Id="651" Count="1" />
-      <LineId Id="655" Count="0" />
-      <LineId Id="658" Count="1" />
-      <LineId Id="657" Count="0" />
-      <LineId Id="660" Count="0" />
-      <LineId Id="654" Count="0" />
-      <LineId Id="653" Count="0" />
-      <LineId Id="582" Count="4" />
-      <LineId Id="589" Count="60" />
-      <LineId Id="13" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_DoorLock._m_Hmi">
-      <LineId Id="17" Count="3" />
-      <LineId Id="122" Count="0" />
-      <LineId Id="124" Count="5" />
-      <LineId Id="132" Count="5" />
-      <LineId Id="168" Count="0" />
-      <LineId Id="171" Count="3" />
-      <LineId Id="138" Count="0" />
-      <LineId Id="169" Count="0" />
-      <LineId Id="151" Count="0" />
-      <LineId Id="175" Count="0" />
-      <LineId Id="89" Count="0" />
-      <LineId Id="91" Count="0" />
-      <LineId Id="105" Count="0" />
-      <LineId Id="104" Count="0" />
-      <LineId Id="95" Count="1" />
-      <LineId Id="94" Count="0" />
-      <LineId Id="121" Count="0" />
-      <LineId Id="106" Count="0" />
-      <LineId Id="102" Count="0" />
-      <LineId Id="97" Count="1" />
-      <LineId Id="84" Count="0" />
-      <LineId Id="15" Count="0" />
-      <LineId Id="87" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_DoorLock._m_Init">
-      <LineId Id="21" Count="0" />
-      <LineId Id="15" Count="2" />
-      <LineId Id="28" Count="0" />
-      <LineId Id="30" Count="0" />
-      <LineId Id="29" Count="0" />
-      <LineId Id="31" Count="0" />
-      <LineId Id="55" Count="0" />
-      <LineId Id="57" Count="0" />
-      <LineId Id="56" Count="0" />
-      <LineId Id="59" Count="1" />
-      <LineId Id="58" Count="0" />
-      <LineId Id="26" Count="1" />
-      <LineId Id="49" Count="3" />
-      <LineId Id="47" Count="0" />
-      <LineId Id="46" Count="0" />
-      <LineId Id="34" Count="0" />
-      <LineId Id="33" Count="0" />
-      <LineId Id="40" Count="0" />
-      <LineId Id="35" Count="1" />
-      <LineId Id="41" Count="0" />
-      <LineId Id="37" Count="1" />
-      <LineId Id="53" Count="0" />
-      <LineId Id="32" Count="0" />
-      <LineId Id="24" Count="0" />
-      <LineId Id="5" Count="0" />
-      <LineId Id="23" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_DoorLock._m_Inputs">
-      <LineId Id="13" Count="0" />
-      <LineId Id="5" Count="2" />
-      <LineId Id="82" Count="0" />
-      <LineId Id="24" Count="0" />
-      <LineId Id="23" Count="0" />
-      <LineId Id="14" Count="0" />
-      <LineId Id="74" Count="0" />
-      <LineId Id="9" Count="0" />
-      <LineId Id="8" Count="0" />
-      <LineId Id="17" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_DoorLock._m_Outputs">
-      <LineId Id="29" Count="0" />
-      <LineId Id="7" Count="2" />
-      <LineId Id="64" Count="0" />
-      <LineId Id="96" Count="0" />
-      <LineId Id="83" Count="0" />
-      <LineId Id="97" Count="0" />
-      <LineId Id="10" Count="0" />
-      <LineId Id="39" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_DoorLock.m_Lock">
-      <LineId Id="56" Count="0" />
-      <LineId Id="44" Count="4" />
-      <LineId Id="58" Count="1" />
-      <LineId Id="57" Count="0" />
-      <LineId Id="51" Count="4" />
-      <LineId Id="3" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_DoorLock.m_Unlock">
-      <LineId Id="67" Count="0" />
-      <LineId Id="52" Count="2" />
-      <LineId Id="68" Count="1" />
-      <LineId Id="59" Count="1" />
-      <LineId Id="29" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_DoorLock.p_bReqPrepUnlock.Get">
-      <LineId Id="4" Count="0" />
-      <LineId Id="6" Count="0" />
-      <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_DoorLock.p_bStaDoorIsClosed.Get">
-      <LineId Id="5" Count="0" />
-      <LineId Id="7" Count="0" />
-      <LineId Id="6" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_DoorLock.p_bStaDoorIsOpened.Get">
-      <LineId Id="5" Count="0" />
-      <LineId Id="7" Count="0" />
-      <LineId Id="6" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_DoorLock.p_bStaLockedAndDoorClosed.Get">
-      <LineId Id="5" Count="0" />
-      <LineId Id="7" Count="2" />
-      <LineId Id="6" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_DoorLock.p_bStaUnlocked.Get">
-      <LineId Id="8" Count="0" />
-      <LineId Id="5" Count="1" />
-    </LineIds>
-    <LineIds Name="CM_DoorLock.p_bStaWarning.Get">
-      <LineId Id="5" Count="0" />
-      <LineId Id="7" Count="0" />
-      <LineId Id="6" Count="0" />
-    </LineIds>
   </POU>
 </TcPlcObject>

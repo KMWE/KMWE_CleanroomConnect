@@ -123,8 +123,8 @@ VAR
 	s_fbHmiLedDriveError : FB_HmiLed;
 	
 	//Sequence
-	s_eSeqNcTask : E_SeqServo;
-	s_fbSeqNcTaskControl : FB_SeqControl;
+	s_eSequence : E_SeqServo;
+	s_fbSeqControl : FB_SeqControl;
 	s_mcDirection : Tc2_MC2.MC_Direction;
 END_VAR
 ]]></Declaration>
@@ -247,34 +247,34 @@ IF NOT SUPER^._m_Devices() THEN
 	RETURN;
 END_IF
 
-s_fbSeqNcTaskControl(
-	i_nSeqStep := s_eSeqNcTask, 
-	i_sStepName := TO_STRING(s_eSeqNcTask), 
+s_fbSeqControl(
+	i_nSeqStep := s_eSequence, 
+	i_sStepName := TO_STRING(s_eSequence), 
 	i_bCmdReset := FALSE, 
 	i_bStaError := FALSE);
 
 //Exception stop
-IF (s_eSeqNcTask <> E_SeqServo.STOP) AND s_bReqNcStop THEN 
-	s_eSeqNcTask := E_SeqServo.STOP;
+IF (s_eSequence <> E_SeqServo.STOP) AND s_bReqNcStop THEN 
+	s_eSequence := E_SeqServo.STOP;
 END_IF		
 
 //Exception error
-IF ((s_eSeqNcTask <> E_SeqServo.ERROR) OR (s_eSeqNcTask <> E_SeqServo.RESET)) AND s_bStaError THEN  
-	s_eSeqNcTask := E_SeqServo.ERROR;
+IF ((s_eSequence <> E_SeqServo.ERROR) OR (s_eSequence <> E_SeqServo.RESET)) AND s_bStaError THEN  
+	s_eSequence := E_SeqServo.ERROR;
 END_IF
 
-CASE s_eSeqNcTask OF
+CASE s_eSequence OF
 
 	E_SeqServo.IDLE:
 		
 		IF s_bReqNcStop THEN 
-			s_eSeqNcTask := E_SeqServo.STOP;
+			s_eSequence := E_SeqServo.STOP;
 		ELSIF s_bReqNcHome THEN
-			s_eSeqNcTask := E_SeqServo.HOME;
+			s_eSequence := E_SeqServo.HOME;
 		ELSIF s_bReqNcJog THEN
-			s_eSeqNcTask := E_SeqServo.JOG;
+			s_eSequence := E_SeqServo.JOG;
 		ELSIF s_bReqNcMoveAbs THEN
-			s_eSeqNcTask := E_SeqServo.MOVE_ABS;	
+			s_eSequence := E_SeqServo.MOVE_ABS;	
 		END_IF
 		
 	E_SeqServo.STOP:
@@ -293,19 +293,19 @@ CASE s_eSeqNcTask OF
 *)
 		IF s_fbMcStop.Done THEN
 			s_bReqNcStop := FALSE;
-			s_eSeqNcTask := E_SeqServo.IDLE;
+			s_eSequence := E_SeqServo.IDLE;
 		ELSIF s_fbMcStop.Error THEN
 			s_bReqNcStop := FALSE;
-			s_eSeqNcTask := E_SeqServo.ERROR;
+			s_eSequence := E_SeqServo.ERROR;
 		END_IF
 			
 	E_SeqServo.RESET:
 		IF s_fbMcReset.Done THEN
 			s_bReqNcReset := FALSE;
-			s_eSeqNcTask := E_SeqServo.IDLE;
+			s_eSequence := E_SeqServo.IDLE;
 		ELSIF s_fbMcReset.Error THEN
 			s_bReqNcReset := FALSE;
-			s_eSeqNcTask := E_SeqServo.ERROR;	
+			s_eSequence := E_SeqServo.ERROR;	
 		END_IF
 
 	E_SeqServo.HOME:
@@ -326,10 +326,10 @@ CASE s_eSeqNcTask OF
 *)	
 		IF s_fbMcHome.Done THEN
 			s_bReqNcHome := FALSE;
-			s_eSeqNcTask := E_SeqServo.IDLE;
+			s_eSequence := E_SeqServo.IDLE;
 		ELSIF s_fbMcHome.ERROR THEN
 			s_bReqNcHome := FALSE;
-			s_eSeqNcTask := E_SeqServo.ERROR;
+			s_eSequence := E_SeqServo.ERROR;
 		END_IF
 	
 	E_SeqServo.JOG:
@@ -352,10 +352,10 @@ CASE s_eSeqNcTask OF
 *)	
 		IF (NOT(s_fbHmiBtnJogPos.p_bStaBtn OR s_fbHmiBtnJogNeg.p_bStaBtn) AND NOT(s_fbMcJog.Busy)) OR s_fbMcJog.CommandAborted THEN
 			s_bReqNcJog := FALSE;
-			s_eSeqNcTask := E_SeqServo.IDLE;
+			s_eSequence := E_SeqServo.IDLE;
 		ELSIF s_fbMcJog.Error THEN
 			s_bReqNcJog := FALSE;
-			s_eSeqNcTask := E_SeqServo.ERROR;	
+			s_eSequence := E_SeqServo.ERROR;	
 		END_IF
 			
 	E_SeqServo.MOVE_ABS:
@@ -388,10 +388,10 @@ CASE s_eSeqNcTask OF
 *)	
 		IF s_fbMcMoveAbs.Done OR s_fbMcMoveAbs.CommandAborted THEN
 			s_bReqNcMoveAbs := FALSE;
-			s_eSeqNcTask := E_SeqServo.IDLE;
+			s_eSequence := E_SeqServo.IDLE;
 		ELSIF s_fbMcMoveAbs.Error THEN
 			s_bReqNcMoveAbs := FALSE;
-			s_eSeqNcTask := E_SeqServo.ERROR;
+			s_eSequence := E_SeqServo.ERROR;
 		END_IF
 		
 	E_SeqServo.ERROR:
@@ -404,7 +404,7 @@ CASE s_eSeqNcTask OF
 			ErrorID => s_nErrorID);
 *)	
 		IF s_bReqNcReset THEN
-			s_eSeqNcTask := E_SeqServo.RESET;
+			s_eSequence := E_SeqServo.RESET;
 		END_IF
 		
 END_CASE
@@ -522,7 +522,7 @@ IF NOT(s_bHmiInit) THEN
 END_IF
 
 //Servo State
-s_stHmiData.sState := TO_STRING(s_eSeqNcTask);
+s_stHmiData.sState := TO_STRING(s_eSequence);
 
 //Button enabled
 s_stHmiData.bBtnHomeEnabled := s_fbHmiBtnHome.p_bStaEnabled;
@@ -1206,475 +1206,5 @@ s_sInterlockedReasonPos := p_sInterlockedReasonPos;
         </Implementation>
       </Set>
     </Property>
-    <LineIds Name="CM_Servo">
-      <LineId Id="2015" Count="24" />
-      <LineId Id="633" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_Servo._m_Alarms">
-      <LineId Id="28" Count="0" />
-      <LineId Id="19" Count="2" />
-      <LineId Id="103" Count="0" />
-      <LineId Id="79" Count="0" />
-      <LineId Id="86" Count="0" />
-      <LineId Id="224" Count="0" />
-      <LineId Id="155" Count="0" />
-      <LineId Id="226" Count="0" />
-      <LineId Id="225" Count="0" />
-      <LineId Id="170" Count="0" />
-      <LineId Id="157" Count="0" />
-      <LineId Id="194" Count="0" />
-      <LineId Id="202" Count="0" />
-      <LineId Id="196" Count="0" />
-      <LineId Id="190" Count="0" />
-      <LineId Id="189" Count="0" />
-      <LineId Id="160" Count="1" />
-      <LineId Id="158" Count="0" />
-      <LineId Id="163" Count="2" />
-      <LineId Id="200" Count="0" />
-      <LineId Id="197" Count="0" />
-      <LineId Id="199" Count="0" />
-      <LineId Id="166" Count="0" />
-      <LineId Id="201" Count="0" />
-      <LineId Id="167" Count="1" />
-      <LineId Id="162" Count="0" />
-      <LineId Id="90" Count="0" />
-      <LineId Id="45" Count="0" />
-      <LineId Id="33" Count="0" />
-      <LineId Id="37" Count="0" />
-      <LineId Id="204" Count="0" />
-      <LineId Id="93" Count="0" />
-      <LineId Id="143" Count="1" />
-      <LineId Id="140" Count="0" />
-      <LineId Id="183" Count="0" />
-      <LineId Id="148" Count="1" />
-      <LineId Id="180" Count="0" />
-      <LineId Id="215" Count="0" />
-      <LineId Id="217" Count="0" />
-      <LineId Id="216" Count="0" />
-      <LineId Id="147" Count="0" />
-      <LineId Id="211" Count="0" />
-      <LineId Id="209" Count="0" />
-      <LineId Id="214" Count="0" />
-      <LineId Id="213" Count="0" />
-      <LineId Id="212" Count="0" />
-      <LineId Id="210" Count="0" />
-      <LineId Id="60" Count="0" />
-      <LineId Id="32" Count="0" />
-      <LineId Id="110" Count="0" />
-      <LineId Id="172" Count="0" />
-      <LineId Id="174" Count="1" />
-      <LineId Id="177" Count="0" />
-      <LineId Id="5" Count="0" />
-      <LineId Id="218" Count="2" />
-      <LineId Id="173" Count="0" />
-      <LineId Id="10" Count="0" />
-      <LineId Id="29" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_Servo._m_Devices">
-      <LineId Id="962" Count="0" />
-      <LineId Id="732" Count="2" />
-      <LineId Id="746" Count="5" />
-      <LineId Id="964" Count="0" />
-      <LineId Id="752" Count="1" />
-      <LineId Id="946" Count="0" />
-      <LineId Id="755" Count="0" />
-      <LineId Id="965" Count="0" />
-      <LineId Id="756" Count="0" />
-      <LineId Id="937" Count="1" />
-      <LineId Id="945" Count="0" />
-      <LineId Id="939" Count="0" />
-      <LineId Id="757" Count="5" />
-      <LineId Id="767" Count="6" />
-      <LineId Id="1067" Count="0" />
-      <LineId Id="775" Count="0" />
-      <LineId Id="1054" Count="11" />
-      <LineId Id="1089" Count="0" />
-      <LineId Id="776" Count="2" />
-      <LineId Id="947" Count="2" />
-      <LineId Id="779" Count="5" />
-      <LineId Id="951" Count="0" />
-      <LineId Id="954" Count="0" />
-      <LineId Id="950" Count="0" />
-      <LineId Id="785" Count="0" />
-      <LineId Id="1090" Count="0" />
-      <LineId Id="790" Count="0" />
-      <LineId Id="987" Count="12" />
-      <LineId Id="985" Count="1" />
-      <LineId Id="791" Count="2" />
-      <LineId Id="952" Count="0" />
-      <LineId Id="955" Count="0" />
-      <LineId Id="953" Count="0" />
-      <LineId Id="794" Count="2" />
-      <LineId Id="1002" Count="14" />
-      <LineId Id="1000" Count="1" />
-      <LineId Id="797" Count="2" />
-      <LineId Id="957" Count="1" />
-      <LineId Id="956" Count="0" />
-      <LineId Id="800" Count="2" />
-      <LineId Id="1019" Count="24" />
-      <LineId Id="1017" Count="1" />
-      <LineId Id="803" Count="2" />
-      <LineId Id="959" Count="2" />
-      <LineId Id="806" Count="0" />
-      <LineId Id="923" Count="0" />
-      <LineId Id="925" Count="0" />
-      <LineId Id="1046" Count="5" />
-      <LineId Id="1044" Count="1" />
-      <LineId Id="926" Count="0" />
-      <LineId Id="928" Count="0" />
-      <LineId Id="924" Count="0" />
-      <LineId Id="807" Count="1" />
-      <LineId Id="1052" Count="0" />
-      <LineId Id="887" Count="0" />
-      <LineId Id="889" Count="10" />
-      <LineId Id="888" Count="0" />
-      <LineId Id="817" Count="15" />
-      <LineId Id="846" Count="0" />
-      <LineId Id="1074" Count="14" />
-      <LineId Id="1073" Count="0" />
-      <LineId Id="863" Count="0" />
-      <LineId Id="922" Count="0" />
-      <LineId Id="916" Count="5" />
-      <LineId Id="867" Count="17" />
-      <LineId Id="929" Count="0" />
-      <LineId Id="931" Count="5" />
-      <LineId Id="930" Count="0" />
-      <LineId Id="1053" Count="0" />
-      <LineId Id="886" Count="0" />
-      <LineId Id="13" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_Servo._m_Hmi">
-      <LineId Id="17" Count="3" />
-      <LineId Id="509" Count="0" />
-      <LineId Id="511" Count="0" />
-      <LineId Id="606" Count="0" />
-      <LineId Id="616" Count="0" />
-      <LineId Id="612" Count="0" />
-      <LineId Id="614" Count="0" />
-      <LineId Id="613" Count="0" />
-      <LineId Id="618" Count="6" />
-      <LineId Id="617" Count="0" />
-      <LineId Id="615" Count="0" />
-      <LineId Id="610" Count="0" />
-      <LineId Id="609" Count="0" />
-      <LineId Id="625" Count="0" />
-      <LineId Id="605" Count="0" />
-      <LineId Id="602" Count="0" />
-      <LineId Id="599" Count="0" />
-      <LineId Id="591" Count="0" />
-      <LineId Id="593" Count="4" />
-      <LineId Id="592" Count="0" />
-      <LineId Id="536" Count="0" />
-      <LineId Id="515" Count="1" />
-      <LineId Id="543" Count="0" />
-      <LineId Id="542" Count="0" />
-      <LineId Id="546" Count="2" />
-      <LineId Id="545" Count="0" />
-      <LineId Id="549" Count="0" />
-      <LineId Id="552" Count="0" />
-      <LineId Id="551" Count="0" />
-      <LineId Id="550" Count="0" />
-      <LineId Id="553" Count="1" />
-      <LineId Id="521" Count="3" />
-      <LineId Id="600" Count="0" />
-      <LineId Id="525" Count="9" />
-      <LineId Id="510" Count="0" />
-      <LineId Id="564" Count="0" />
-      <LineId Id="587" Count="3" />
-      <LineId Id="563" Count="0" />
-      <LineId Id="570" Count="16" />
-      <LineId Id="569" Count="0" />
-      <LineId Id="127" Count="0" />
-      <LineId Id="129" Count="0" />
-      <LineId Id="310" Count="3" />
-      <LineId Id="315" Count="1" />
-      <LineId Id="137" Count="1" />
-      <LineId Id="320" Count="7" />
-      <LineId Id="319" Count="0" />
-      <LineId Id="318" Count="0" />
-      <LineId Id="224" Count="1" />
-      <LineId Id="305" Count="0" />
-      <LineId Id="329" Count="0" />
-      <LineId Id="340" Count="0" />
-      <LineId Id="338" Count="0" />
-      <LineId Id="337" Count="0" />
-      <LineId Id="341" Count="3" />
-      <LineId Id="330" Count="0" />
-      <LineId Id="274" Count="0" />
-      <LineId Id="346" Count="0" />
-      <LineId Id="345" Count="0" />
-      <LineId Id="277" Count="0" />
-      <LineId Id="347" Count="0" />
-      <LineId Id="280" Count="2" />
-      <LineId Id="469" Count="1" />
-      <LineId Id="489" Count="1" />
-      <LineId Id="477" Count="0" />
-      <LineId Id="488" Count="0" />
-      <LineId Id="484" Count="1" />
-      <LineId Id="483" Count="0" />
-      <LineId Id="486" Count="0" />
-      <LineId Id="492" Count="1" />
-      <LineId Id="491" Count="0" />
-      <LineId Id="494" Count="0" />
-      <LineId Id="496" Count="0" />
-      <LineId Id="506" Count="0" />
-      <LineId Id="497" Count="0" />
-      <LineId Id="495" Count="0" />
-      <LineId Id="498" Count="0" />
-      <LineId Id="500" Count="0" />
-      <LineId Id="507" Count="0" />
-      <LineId Id="501" Count="0" />
-      <LineId Id="499" Count="0" />
-      <LineId Id="502" Count="0" />
-      <LineId Id="504" Count="1" />
-      <LineId Id="503" Count="0" />
-      <LineId Id="240" Count="2" />
-      <LineId Id="252" Count="11" />
-      <LineId Id="267" Count="0" />
-      <LineId Id="250" Count="0" />
-      <LineId Id="423" Count="2" />
-      <LineId Id="251" Count="0" />
-      <LineId Id="223" Count="0" />
-      <LineId Id="171" Count="0" />
-      <LineId Id="15" Count="0" />
-      <LineId Id="87" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_Servo._m_Init">
-      <LineId Id="21" Count="0" />
-      <LineId Id="15" Count="2" />
-      <LineId Id="128" Count="1" />
-      <LineId Id="131" Count="1" />
-      <LineId Id="182" Count="0" />
-      <LineId Id="153" Count="0" />
-      <LineId Id="183" Count="0" />
-      <LineId Id="159" Count="0" />
-      <LineId Id="184" Count="0" />
-      <LineId Id="167" Count="0" />
-      <LineId Id="165" Count="0" />
-      <LineId Id="185" Count="0" />
-      <LineId Id="162" Count="1" />
-      <LineId Id="186" Count="0" />
-      <LineId Id="161" Count="0" />
-      <LineId Id="192" Count="0" />
-      <LineId Id="76" Count="0" />
-      <LineId Id="28" Count="0" />
-      <LineId Id="89" Count="0" />
-      <LineId Id="34" Count="19" />
-      <LineId Id="63" Count="2" />
-      <LineId Id="11" Count="0" />
-      <LineId Id="84" Count="0" />
-      <LineId Id="92" Count="2" />
-      <LineId Id="91" Count="0" />
-      <LineId Id="62" Count="0" />
-      <LineId Id="95" Count="0" />
-      <LineId Id="66" Count="0" />
-      <LineId Id="68" Count="6" />
-      <LineId Id="106" Count="0" />
-      <LineId Id="108" Count="4" />
-      <LineId Id="115" Count="0" />
-      <LineId Id="117" Count="6" />
-      <LineId Id="116" Count="0" />
-      <LineId Id="67" Count="0" />
-      <LineId Id="124" Count="2" />
-      <LineId Id="5" Count="0" />
-      <LineId Id="23" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_Servo._m_Inputs">
-      <LineId Id="13" Count="0" />
-      <LineId Id="5" Count="2" />
-      <LineId Id="97" Count="1" />
-      <LineId Id="95" Count="0" />
-      <LineId Id="33" Count="0" />
-      <LineId Id="35" Count="1" />
-      <LineId Id="34" Count="0" />
-      <LineId Id="104" Count="12" />
-      <LineId Id="102" Count="0" />
-      <LineId Id="117" Count="1" />
-      <LineId Id="103" Count="0" />
-      <LineId Id="25" Count="2" />
-      <LineId Id="100" Count="0" />
-      <LineId Id="85" Count="0" />
-      <LineId Id="56" Count="2" />
-      <LineId Id="60" Count="0" />
-      <LineId Id="62" Count="0" />
-      <LineId Id="68" Count="1" />
-      <LineId Id="55" Count="0" />
-      <LineId Id="86" Count="7" />
-      <LineId Id="40" Count="0" />
-      <LineId Id="9" Count="0" />
-      <LineId Id="8" Count="0" />
-      <LineId Id="17" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_Servo._m_Outputs">
-      <LineId Id="29" Count="0" />
-      <LineId Id="7" Count="2" />
-      <LineId Id="212" Count="0" />
-      <LineId Id="10" Count="0" />
-      <LineId Id="39" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_Servo.m_MoveAbsolute">
-      <LineId Id="314" Count="1" />
-      <LineId Id="294" Count="0" />
-      <LineId Id="285" Count="0" />
-      <LineId Id="289" Count="3" />
-      <LineId Id="288" Count="0" />
-      <LineId Id="293" Count="0" />
-      <LineId Id="227" Count="0" />
-      <LineId Id="244" Count="0" />
-      <LineId Id="268" Count="0" />
-      <LineId Id="266" Count="0" />
-      <LineId Id="242" Count="0" />
-      <LineId Id="228" Count="0" />
-      <LineId Id="12" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_Servo.m_Reset">
-      <LineId Id="294" Count="0" />
-      <LineId Id="296" Count="0" />
-      <LineId Id="293" Count="0" />
-      <LineId Id="227" Count="0" />
-      <LineId Id="244" Count="0" />
-      <LineId Id="268" Count="0" />
-      <LineId Id="266" Count="0" />
-      <LineId Id="242" Count="0" />
-      <LineId Id="228" Count="0" />
-      <LineId Id="12" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_Servo.m_Stop">
-      <LineId Id="315" Count="0" />
-      <LineId Id="294" Count="0" />
-      <LineId Id="316" Count="0" />
-      <LineId Id="285" Count="0" />
-      <LineId Id="314" Count="0" />
-      <LineId Id="288" Count="0" />
-      <LineId Id="293" Count="0" />
-      <LineId Id="227" Count="0" />
-      <LineId Id="244" Count="0" />
-      <LineId Id="268" Count="0" />
-      <LineId Id="266" Count="0" />
-      <LineId Id="242" Count="0" />
-      <LineId Id="228" Count="0" />
-      <LineId Id="12" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_Servo.p_bActive.Get">
-      <LineId Id="5" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="6" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_Servo.p_bAtPosition.Get">
-      <LineId Id="5" Count="0" />
-      <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_Servo.p_bBusy.Get">
-      <LineId Id="5" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="6" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_Servo.p_bCommandAborted.Get">
-      <LineId Id="5" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="6" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_Servo.p_bDone.Get">
-      <LineId Id="5" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="6" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_Servo.p_bError.Get">
-      <LineId Id="3" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="4" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_Servo.p_bHomed.Get">
-      <LineId Id="5" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="7" Count="0" />
-      <LineId Id="6" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_Servo.p_bMoveAbsDone.Get">
-      <LineId Id="5" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="6" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_Servo.p_bStandstill.Get">
-      <LineId Id="5" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="6" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_Servo.p_bWarning.Get">
-      <LineId Id="3" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="4" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_Servo.p_fPosition.Get">
-      <LineId Id="3" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="4" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_Servo.p_fSetOverride.Set">
-      <LineId Id="6" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="7" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_Servo.p_fSetTargetPosition.Get">
-      <LineId Id="3" Count="2" />
-    </LineIds>
-    <LineIds Name="CM_Servo.p_fSetTargetPosition.Set">
-      <LineId Id="6" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="7" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_Servo.p_fTorque.Get">
-      <LineId Id="3" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="4" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_Servo.p_fVelocity.Get">
-      <LineId Id="3" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="4" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_Servo.p_nErrorID.Get">
-      <LineId Id="5" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="6" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_Servo.p_sCfgNegName.Get">
-      <LineId Id="3" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="4" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_Servo.p_sCfgNegName.Set">
-      <LineId Id="7" Count="0" />
-      <LineId Id="5" Count="1" />
-    </LineIds>
-    <LineIds Name="CM_Servo.p_sCfgPosName.Get">
-      <LineId Id="3" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="4" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_Servo.p_sCfgPosName.Set">
-      <LineId Id="7" Count="0" />
-      <LineId Id="5" Count="1" />
-    </LineIds>
-    <LineIds Name="CM_Servo.p_sInterlockedReasonNeg.Get">
-      <LineId Id="5" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="6" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_Servo.p_sInterlockedReasonNeg.Set">
-      <LineId Id="6" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="7" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_Servo.p_sInterlockedReasonPos.Get">
-      <LineId Id="5" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="6" Count="0" />
-    </LineIds>
-    <LineIds Name="CM_Servo.p_sInterlockedReasonPos.Set">
-      <LineId Id="6" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="7" Count="0" />
-    </LineIds>
   </POU>
 </TcPlcObject>

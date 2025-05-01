@@ -22,14 +22,14 @@ END_VAR
 
 VAR
 	s_eActionSelection : E_ActionSelection;
-
-	//Interlocks	
+	
+	//Interlocks
 	s_fbIlckHandlerConveyorBackward : FB_InterlockHandler;
 	s_fbIlckHandlerConveyorForward : FB_InterlockHandler;
-
+	
 	s_fbIlckHandlerCenteringIdle : FB_InterlockHandler;
 	s_fbIlckHandlerCenteringCenter : FB_InterlockHandler;
-
+	
 //------------------------------------------//
 	//Control Modules (Devices)
 	s_cmPalletConveyor : CM_MOVITRAC_B;
@@ -79,7 +79,7 @@ VAR
 	s_bStaTB_AtDocking : BOOL;
 	s_bStaTB_CenteringDone : BOOL;
 	
-	//Interlockes	
+	//Interlockes
 	s_bIlckConveyorBackward : BOOL := TRUE;
 	s_bIlckConveyorForward : BOOL := TRUE;
 	
@@ -118,11 +118,11 @@ VAR
 	s_fbParamCenteringDuration : FB_HmiParamHandler;
 	s_fbParamTimeoutCenteringToCenter : FB_HmiParamHandler;
 	s_fbParamTimeoutCenteringToIdle : FB_HmiParamHandler;
-
+	
 	//Sequencers
-	s_eSeqTransport : E_SeqTransport;
-	s_fbSeqTransportControl : FB_SeqControl;
-
+	s_eSequence : E_SeqTransport;
+	s_fbSeqControl : FB_SeqControl;
+	
 	s_ePreviousStep : E_SeqTransport;
 	s_eResumeStep : E_SeqTransport;
 	s_sResumeStep : STRING;
@@ -133,27 +133,27 @@ VAR
 	s_tMaxTravelTime : TIME;
 	s_tDoorCheckTime : TIME;
 	s_bDoorCheckTimeDisabled : BOOL := FALSE;
-
+	
 //-- Intergrated in Transport sequencer	
 //--	s_eSeqCentering : E_SeqCentering;
 //--	s_fbSeqCenteringControl : FB_SeqControl;
-
+	
 	//Hmi
 	//Buttons
-	s_fbHmiBtnTB_ToInfeed				: FB_HmiBtn;
-	s_fbHmiBtnTB_ToCentering			: FB_HmiBtn;
-	s_fbHmiBtnTB_ToDocking				: FB_HmiBtn;
-	s_fbHmiBtnTB_Centering				: FB_HmiBtn;
+	s_fbHmiBtnTB_ToInfeed : FB_HmiBtn;
+	s_fbHmiBtnTB_ToCentering : FB_HmiBtn;
+	s_fbHmiBtnTB_ToDocking : FB_HmiBtn;
+	s_fbHmiBtnTB_Centering : FB_HmiBtn;
 	
 	//Leds
-	s_fbHmiLedInfeedRearPosition		: FB_HmiLed;
-	s_fbHmiLedInfeedFrontPosition		: FB_HmiLed;
-	s_fbHmiLedCenteringPosition			: FB_HmiLed;
-	s_fbHmiLedDockingPosition			: FB_HmiLed;
-	s_fbHmiLedDoorOpened				: FB_HmiLed;
+	s_fbHmiLedInfeedRearPosition : FB_HmiLed;
+	s_fbHmiLedInfeedFrontPosition : FB_HmiLed;
+	s_fbHmiLedCenteringPosition : FB_HmiLed;
+	s_fbHmiLedDockingPosition : FB_HmiLed;
+	s_fbHmiLedDoorOpened : FB_HmiLed;
 	
-	s_fbHmiLedCenteringIdle				: FB_HmiLed;
-	s_fbHmiLedCenteringCenter			: FB_HmiLed;
+	s_fbHmiLedCenteringIdle	: FB_HmiLed;
+	s_fbHmiLedCenteringCenter : FB_HmiLed;
 	
 	{warning '#TODO: Het zou beter zijn om dit onder te brengen in de onderstaande control modules'}
 	s_bHmiForceOutputEnabled : BOOL;
@@ -877,11 +877,11 @@ END_CASE
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-s_fbSeqTransportControl(
-	i_nSeqStep := s_eSeqTransport, 
-	i_sStepName := TO_STRING(s_eSeqTransport), 
+s_fbSeqControl(
+	i_nSeqStep := s_eSequence, 
+	i_sStepName := TO_STRING(s_eSequence), 
 	i_bCmdReset := i_bCmdReset
-					AND (s_eSeqTransport = E_SeqTransport.ERROR) // Only reset/resume sequencer from ERROR state
+					AND (s_eSequence = E_SeqTransport.ERROR) // Only reset/resume sequencer from ERROR state
 					AND NOT(s_cmCenteringUnit.p_bStaError)
 					AND NOT(s_cmPalletConveyor.p_bStaError)
 					AND i_bReqEnable, 
@@ -891,39 +891,39 @@ s_sResumeStep := TO_STRING(s_eResumeStep);
 	
 //Force to stop	
 IF (i_eCtrlState = E_CtrlState.STOPPING) THEN
-	s_eSeqTransport := E_SeqTransport.STOP;
+	s_eSequence := E_SeqTransport.STOP;
 END_IF	
 	
-CASE s_eSeqTransport OF
+CASE s_eSequence OF
 	
 	E_SeqTransport.IDLE:
 		s_eTmpLocation := E_Location.UNKNOWN;
 	
 		IF (i_eCtrlState = E_CtrlState.IDLE) THEN
-			s_eSeqTransport := E_SeqTransport.START;
+			s_eSequence := E_SeqTransport.START;
 		END_IF
 
 //START////////////////////////////////////////////////////////////////////////////////////////////			
 	E_SeqTransport.START:
-		IF s_fbSeqTransportControl.q_bStaEntry THEN
+		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmPalletConveyor.m_Stop();
 			s_cmCenteringUnit.m_Off();
 			//--s_bCmdHold := FALSE;
 			s_sMessage := '***';
 		END_IF		
 	
-		IF s_cmPalletConveyor.p_bStaMotorStopped AND_THEN NOT(s_cmPalletConveyor.p_bStaBrakeReleased) AND s_fbSeqTransportControl.q_tmStepTime > T#1S THEN
+		IF s_cmPalletConveyor.p_bStaMotorStopped AND_THEN NOT(s_cmPalletConveyor.p_bStaBrakeReleased) AND s_fbSeqControl.q_tmStepTime > T#1S THEN
 		//??IF s_cmPalletConveyor.p_bStaMotorStopped AND_THEN NOT(s_cmPalletConveyor.p_bStaBrakeReleased) AND s_fbSeqTransportControl.q_tmStepTime > T#1S 
 		//??	AND NOT(i_bSta2HC_Active) THEN	
 		
 			IF i_eCtrlState = E_CtrlState.RUNNING THEN
-				s_eSeqTransport := E_SeqTransport.READY;
+				s_eSequence := E_SeqTransport.READY;
 			END_IF
 		END_IF
 
 //READY////////////////////////////////////////////////////////////////////////////////////////////		
 	E_SeqTransport.READY:
-		IF s_fbSeqTransportControl.q_bStaEntry THEN
+		IF s_fbSeqControl.q_bStaEntry THEN
 //??			i_refTB.p_eActLocation := s_eTmpLocation;
 			s_eResumeStep := E_SeqTransport.READY;
 			s_eTmpLocation := E_Location.UNKNOWN;
@@ -932,13 +932,13 @@ CASE s_eSeqTransport OF
 //??		i_refTB.p_bOuterDoorOpened S= s_bStaAtInfeedRearPosition AND s_bStaAtInfeedFrontPosition AND s_bStaDoorOpened;
 	
 		IF i_eCtrlState <> E_CtrlState.RUNNING THEN
-			s_eSeqTransport := E_SeqTransport.START;
+			s_eSequence := E_SeqTransport.START;
 		END_IF
 		
 		IF s_bReqTB_ToInfeed THEN
 		
 			IF _m_CmdTB_ToInfeed(i_refReason := s_sMessage) THEN
-				s_eSeqTransport := E_SeqTransport.MOVE_TO_INFEED;
+				s_eSequence := E_SeqTransport.MOVE_TO_INFEED;
 			ELSE //If failed (command not allowed): the message will be written with the interlock reason
 				//--s_bCmdHold := TRUE;
 				;
@@ -949,7 +949,7 @@ CASE s_eSeqTransport OF
 		ELSIF s_bReqTB_ToCenter THEN	
 		
 			IF _m_CmdTB_ToCenter(i_refReason := s_sMessage) THEN
-				s_eSeqTransport := E_SeqTransport.MOVE_TO_CENTERING;
+				s_eSequence := E_SeqTransport.MOVE_TO_CENTERING;
 			ELSE //If failed (command not allowed): the message will be written with the interlock reason
 				//--s_bCmdHold := TRUE;
 				;
@@ -960,7 +960,7 @@ CASE s_eSeqTransport OF
 		ELSIF s_bReqTB_ToDocking THEN
 	
 			IF _m_CmdTB_ToDocking(i_refReason := s_sMessage) THEN
-				s_eSeqTransport := E_SeqTransport.MOVE_TO_DOCKING;
+				s_eSequence := E_SeqTransport.MOVE_TO_DOCKING;
 			ELSE //If failed (command not allowed): the message will be written with the interlock reason
 				//--s_bCmdHold := TRUE;
 				;
@@ -971,7 +971,7 @@ CASE s_eSeqTransport OF
 		ELSIF s_bReqCenteringTB THEN
 
 			IF _m_CmdCenteringTB(i_refReason := s_sMessage) THEN
-				s_eSeqTransport := E_SeqTransport.PUSHER_TO_CENTER;
+				s_eSequence := E_SeqTransport.PUSHER_TO_CENTER;
 			ELSE //If failed (command not allowed): the message will be written with the interlock reason
 				;	
 			END_IF
@@ -982,7 +982,7 @@ CASE s_eSeqTransport OF
 
 //MOVE TO INFEED///////////////////////////////////////////////////////////////////////////////////		
 	E_SeqTransport.MOVE_TO_INFEED:
-		IF s_fbSeqTransportControl.q_bStaEntry THEN		
+		IF s_fbSeqControl.q_bStaEntry THEN		
 			s_tMaxTravelTime :=
 				_CalcMaxTravelTime(
 					i_fBaseRampTime := 4.0,
@@ -1007,16 +1007,16 @@ CASE s_eSeqTransport OF
 		//--IF s_bStaAtInfeedRearPosition THEN //added condigion InfeedFrontPosition, then pallet will be transported al little but further to correct postition.
 		IF s_bStaAtInfeedRearPosition AND s_bStaAtInfeedFrontPosition THEN
 			s_eTmpLocation := E_Location.INFEED;
-			s_eSeqTransport := E_SeqTransport.STOP;
-		ELSIF s_fbSeqTransportControl.q_tmStepTime > s_tMaxTravelTime THEN
+			s_eSequence := E_SeqTransport.STOP;
+		ELSIF s_fbSeqControl.q_tmStepTime > s_tMaxTravelTime THEN
 			s_bErrTravelTimeOut := TRUE;
 			s_sReason := 'Moving to infeed - timeout';
-			s_eSeqTransport := E_SeqTransport.ERROR;
+			s_eSequence := E_SeqTransport.ERROR;
 		END_IF
 		
 //CENTERING////////////////////////////////////////////////////////////////////////////////////////		
 	E_SeqTransport.MOVE_TO_CENTERING:
-		IF s_fbSeqTransportControl.q_bStaEntry THEN
+		IF s_fbSeqControl.q_bStaEntry THEN
 			s_tMaxTravelTime :=
 				_CalcMaxTravelTime(
 					i_fBaseRampTime := 4.0,
@@ -1043,58 +1043,58 @@ CASE s_eSeqTransport OF
 		IF s_bStaAtCenteringPosition THEN
 			s_bDoorCheckTimeDisabled := FALSE;
 			s_eTmpLocation := E_Location.CENTERING;
-			s_eSeqTransport := E_SeqTransport.MOVE_TO_CENTERING_STOP;
+			s_eSequence := E_SeqTransport.MOVE_TO_CENTERING_STOP;
 		
-		ELSIF s_fbSeqTransportControl.q_tmStepTime < s_tDoorCheckTime 
+		ELSIF s_fbSeqControl.q_tmStepTime < s_tDoorCheckTime 
 			AND NOT(s_bStaDoorOpened) 
 			AND s_bStaAtInfeedRearPosition THEN
 			s_bWrnOuterDoorNotOpened := TRUE;
 			s_bDoorCheckTimeDisabled := TRUE; //Disable error after first occurance (to prevent invalid retriggering at reties)
-			s_eSeqTransport := E_SeqTransport.ERROR;
+			s_eSequence := E_SeqTransport.ERROR;
 			
-		ELSIF s_fbSeqTransportControl.q_tmStepTime > s_tMaxTravelTime THEN
+		ELSIF s_fbSeqControl.q_tmStepTime > s_tMaxTravelTime THEN
 			s_bErrTravelTimeOut := TRUE;
 			s_sReason := 'Moving to Centering - timeout';
-			s_eSeqTransport := E_SeqTransport.ERROR;
+			s_eSequence := E_SeqTransport.ERROR;
 		
 		END_IF
 
 	E_SeqTransport.MOVE_TO_CENTERING_STOP:
-		IF s_fbSeqTransportControl.q_bStaEntry THEN
+		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmPalletConveyor.m_Stop();
 		END_IF
 		
 		IF s_cmPalletConveyor.p_bStaMotorStopped THEN
-			s_eSeqTransport := E_SeqTransport.PUSHER_TO_CENTER;
+			s_eSequence := E_SeqTransport.PUSHER_TO_CENTER;
 		END_IF
 		
 	E_SeqTransport.PUSHER_TO_CENTER:
-		IF s_fbSeqTransportControl.q_bStaEntry THEN
+		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmCenteringUnit.m_On();
 		END_IF
 		
 		IF s_cmCenteringUnit.p_bStaIsOn THEN
-			s_eSeqTransport := E_SeqTransport.PUSHER_AT_CENTER;
+			s_eSequence := E_SeqTransport.PUSHER_AT_CENTER;
 		END_IF
 	
 	E_SeqTransport.PUSHER_AT_CENTER:
-		IF s_fbSeqTransportControl.q_tmStepTime > i_ref_stSettings.tCenteringDuration THEN
+		IF s_fbSeqControl.q_tmStepTime > i_ref_stSettings.tCenteringDuration THEN
 			s_eTmpCenteringDone := TRUE;
-			s_eSeqTransport := E_SeqTransport.PUSHER_TO_IDLE;
+			s_eSequence := E_SeqTransport.PUSHER_TO_IDLE;
 		END_IF
 	
 	E_SeqTransport.PUSHER_TO_IDLE:
-		IF s_fbSeqTransportControl.q_bStaEntry THEN
+		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmCenteringUnit.m_Off();
 		END_IF
 		
 		IF s_cmCenteringUnit.p_bStaIsOff THEN
-			s_eSeqTransport := E_SeqTransport.READY;
+			s_eSequence := E_SeqTransport.READY;
 		END_IF
 
 //MOVE TO DOCKING//////////////////////////////////////////////////////////////////////////////////		
 	E_SeqTransport.MOVE_TO_DOCKING:
-		IF s_fbSeqTransportControl.q_bStaEntry THEN
+		IF s_fbSeqControl.q_bStaEntry THEN
 			s_tMaxTravelTime :=
 				_CalcMaxTravelTime(
 					i_fBaseRampTime := 4.0,
@@ -1118,26 +1118,26 @@ CASE s_eSeqTransport OF
 		
 		IF s_bStaAtDockingPosition THEN
 			s_eTmpLocation := E_Location.DOCKING;
-			s_eSeqTransport := E_SeqTransport.STOP;
-		ELSIF s_fbSeqTransportControl.q_tmStepTime > s_tMaxTravelTime THEN
+			s_eSequence := E_SeqTransport.STOP;
+		ELSIF s_fbSeqControl.q_tmStepTime > s_tMaxTravelTime THEN
 			s_bErrTravelTimeOut := TRUE;
 			s_sReason := 'Moving to docking - timeout';
-			s_eSeqTransport := E_SeqTransport.ERROR;		
+			s_eSequence := E_SeqTransport.ERROR;		
 		END_IF
 
 //STOP/////////////////////////////////////////////////////////////////////////////////////////////	
 	E_SeqTransport.STOP:
-		IF s_fbSeqTransportControl.q_bStaEntry THEN
+		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmPalletConveyor.m_Stop();
 		END_IF
 		
 		IF (i_eCtrlState = E_CtrlState.RUNNING) THEN
 			IF s_cmPalletConveyor.p_bStaMotorStopped THEN
-				s_eSeqTransport := E_SeqTransport.READY;
+				s_eSequence := E_SeqTransport.READY;
 			END_IF
 		ELSE
 			IF i_eCtrlState = E_CtrlState.IDLE THEN
-				s_eSeqTransport := E_SeqTransport.START;
+				s_eSequence := E_SeqTransport.START;
 			END_IF
 		END_IF
 
@@ -1162,7 +1162,7 @@ END_IF
 CASE i_eCtrlMode OF
 
 	E_CtrlMode.IDLE:
-		s_eSeqTransport := E_SeqTransport.IDLE;
+		s_eSequence := E_SeqTransport.IDLE;
 //--		s_eSeqCentering := E_SeqCentering.IDLE;
 		
 	E_CtrlMode.AUTOMATIC:
@@ -1201,7 +1201,7 @@ CASE i_eCtrlMode OF
 		
 	E_CtrlMode.MAINTENANCE:
 		//Execute maintenance control (HMI control module buttons)
-		s_eSeqTransport := E_SeqTransport.IDLE;
+		s_eSequence := E_SeqTransport.IDLE;
 //--		s_eSeqCentering := E_SeqCentering.IDLE;
 		; 	//Maintenance control is implemented in lower-layer control modules
 							
@@ -1263,7 +1263,7 @@ IF i_bReqEnable AND (i_eCtrlMode = E_CtrlMode.MANUAL) AND (i_eCtrlState = E_Ctrl
 	s_fbHmiBtnTB_Centering.p_bStaEnabled :=
 		NOT(s_bIlckCenteringToCenter)
 		AND NOT(s_cmCenteringUnit.p_bStaError)
-		AND (s_eSeqTransport = E_SeqTransport.READY); 
+		AND (s_eSequence = E_SeqTransport.READY); 
 ELSE
 	s_fbHmiBtnTB_ToInfeed.p_bStaEnabled := FALSE;
 	s_fbHmiBtnTB_ToCentering.p_bStaEnabled := FALSE;
@@ -1357,7 +1357,7 @@ PROPERTY PUBLIC p_bStaReady : BOOL]]></Declaration>
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaReady := (s_eSeqTransport = E_SeqTransport.READY);
+p_bStaReady := (s_eSequence = E_SeqTransport.READY);
 ]]></ST>
         </Implementation>
       </Get>
@@ -1434,665 +1434,5 @@ p_bStaTB_ReadyForDocking := s_bStaTB_AtDocking AND s_cmPalletConveyor.p_bStaMoto
         </Implementation>
       </Get>
     </Property>
-    <LineIds Name="EM_PalletConveyor">
-      <LineId Id="221" Count="0" />
-      <LineId Id="9" Count="0" />
-      <LineId Id="766" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor._CalcMaxTravelTime">
-      <LineId Id="40" Count="0" />
-      <LineId Id="7" Count="0" />
-      <LineId Id="9" Count="0" />
-      <LineId Id="38" Count="0" />
-      <LineId Id="25" Count="1" />
-      <LineId Id="24" Count="0" />
-      <LineId Id="23" Count="0" />
-      <LineId Id="35" Count="0" />
-      <LineId Id="31" Count="0" />
-      <LineId Id="30" Count="0" />
-      <LineId Id="36" Count="0" />
-      <LineId Id="34" Count="0" />
-      <LineId Id="10" Count="0" />
-      <LineId Id="42" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor._m_Alarms">
-      <LineId Id="12" Count="0" />
-      <LineId Id="8" Count="1" />
-      <LineId Id="7" Count="0" />
-      <LineId Id="16" Count="0" />
-      <LineId Id="20" Count="0" />
-      <LineId Id="45" Count="1" />
-      <LineId Id="44" Count="0" />
-      <LineId Id="48" Count="0" />
-      <LineId Id="50" Count="0" />
-      <LineId Id="78" Count="3" />
-      <LineId Id="42" Count="0" />
-      <LineId Id="11" Count="0" />
-      <LineId Id="33" Count="0" />
-      <LineId Id="35" Count="0" />
-      <LineId Id="83" Count="0" />
-      <LineId Id="53" Count="0" />
-      <LineId Id="34" Count="0" />
-      <LineId Id="56" Count="1" />
-      <LineId Id="66" Count="0" />
-      <LineId Id="68" Count="0" />
-      <LineId Id="64" Count="0" />
-      <LineId Id="82" Count="0" />
-      <LineId Id="69" Count="0" />
-      <LineId Id="71" Count="0" />
-      <LineId Id="73" Count="0" />
-      <LineId Id="75" Count="1" />
-      <LineId Id="32" Count="0" />
-      <LineId Id="10" Count="0" />
-      <LineId Id="14" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor._m_AutomaticControl">
-      <LineId Id="473" Count="4" />
-      <LineId Id="481" Count="0" />
-      <LineId Id="293" Count="0" />
-      <LineId Id="479" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor._m_CmdCenteringTB">
-      <LineId Id="34" Count="0" />
-      <LineId Id="26" Count="2" />
-      <LineId Id="71" Count="0" />
-      <LineId Id="88" Count="2" />
-      <LineId Id="122" Count="0" />
-      <LineId Id="98" Count="0" />
-      <LineId Id="117" Count="0" />
-      <LineId Id="99" Count="0" />
-      <LineId Id="77" Count="0" />
-      <LineId Id="100" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor._m_CmdTB_ToCenter">
-      <LineId Id="34" Count="0" />
-      <LineId Id="26" Count="2" />
-      <LineId Id="121" Count="0" />
-      <LineId Id="123" Count="0" />
-      <LineId Id="142" Count="0" />
-      <LineId Id="126" Count="0" />
-      <LineId Id="147" Count="0" />
-      <LineId Id="127" Count="0" />
-      <LineId Id="141" Count="0" />
-      <LineId Id="128" Count="0" />
-      <LineId Id="122" Count="0" />
-      <LineId Id="77" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor._m_CmdTB_ToDocking">
-      <LineId Id="34" Count="0" />
-      <LineId Id="26" Count="2" />
-      <LineId Id="71" Count="0" />
-      <LineId Id="110" Count="0" />
-      <LineId Id="122" Count="0" />
-      <LineId Id="112" Count="0" />
-      <LineId Id="127" Count="0" />
-      <LineId Id="113" Count="2" />
-      <LineId Id="108" Count="0" />
-      <LineId Id="100" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor._m_CmdTB_ToInfeed">
-      <LineId Id="34" Count="0" />
-      <LineId Id="26" Count="2" />
-      <LineId Id="71" Count="0" />
-      <LineId Id="109" Count="0" />
-      <LineId Id="115" Count="0" />
-      <LineId Id="111" Count="0" />
-      <LineId Id="120" Count="0" />
-      <LineId Id="112" Count="2" />
-      <LineId Id="107" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor._m_Devices">
-      <LineId Id="41" Count="0" />
-      <LineId Id="6" Count="6" />
-      <LineId Id="66" Count="0" />
-      <LineId Id="13" Count="0" />
-      <LineId Id="44" Count="0" />
-      <LineId Id="62" Count="0" />
-      <LineId Id="14" Count="6" />
-      <LineId Id="64" Count="0" />
-      <LineId Id="21" Count="0" />
-      <LineId Id="48" Count="1" />
-      <LineId Id="22" Count="1" />
-      <LineId Id="25" Count="0" />
-      <LineId Id="27" Count="13" />
-      <LineId Id="5" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor._m_Hmi">
-      <LineId Id="222" Count="0" />
-      <LineId Id="7" Count="2" />
-      <LineId Id="361" Count="0" />
-      <LineId Id="356" Count="0" />
-      <LineId Id="260" Count="0" />
-      <LineId Id="264" Count="0" />
-      <LineId Id="266" Count="1" />
-      <LineId Id="248" Count="0" />
-      <LineId Id="239" Count="0" />
-      <LineId Id="271" Count="4" />
-      <LineId Id="278" Count="0" />
-      <LineId Id="276" Count="0" />
-      <LineId Id="280" Count="0" />
-      <LineId Id="292" Count="0" />
-      <LineId Id="6" Count="0" />
-      <LineId Id="351" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor._m_Init">
-      <LineId Id="203" Count="0" />
-      <LineId Id="5" Count="1" />
-      <LineId Id="468" Count="0" />
-      <LineId Id="8" Count="0" />
-      <LineId Id="10" Count="0" />
-      <LineId Id="325" Count="0" />
-      <LineId Id="327" Count="1" />
-      <LineId Id="342" Count="0" />
-      <LineId Id="331" Count="2" />
-      <LineId Id="517" Count="0" />
-      <LineId Id="516" Count="0" />
-      <LineId Id="460" Count="0" />
-      <LineId Id="335" Count="2" />
-      <LineId Id="341" Count="0" />
-      <LineId Id="339" Count="0" />
-      <LineId Id="522" Count="0" />
-      <LineId Id="353" Count="1" />
-      <LineId Id="447" Count="3" />
-      <LineId Id="344" Count="0" />
-      <LineId Id="348" Count="3" />
-      <LineId Id="346" Count="0" />
-      <LineId Id="471" Count="1" />
-      <LineId Id="484" Count="0" />
-      <LineId Id="476" Count="0" />
-      <LineId Id="512" Count="0" />
-      <LineId Id="475" Count="0" />
-      <LineId Id="473" Count="0" />
-      <LineId Id="477" Count="1" />
-      <LineId Id="513" Count="0" />
-      <LineId Id="481" Count="0" />
-      <LineId Id="483" Count="0" />
-      <LineId Id="479" Count="0" />
-      <LineId Id="498" Count="0" />
-      <LineId Id="485" Count="1" />
-      <LineId Id="493" Count="0" />
-      <LineId Id="496" Count="0" />
-      <LineId Id="495" Count="0" />
-      <LineId Id="511" Count="0" />
-      <LineId Id="502" Count="0" />
-      <LineId Id="504" Count="0" />
-      <LineId Id="508" Count="1" />
-      <LineId Id="505" Count="0" />
-      <LineId Id="326" Count="0" />
-      <LineId Id="520" Count="0" />
-      <LineId Id="519" Count="0" />
-      <LineId Id="523" Count="0" />
-      <LineId Id="38" Count="0" />
-      <LineId Id="396" Count="2" />
-      <LineId Id="395" Count="0" />
-      <LineId Id="388" Count="0" />
-      <LineId Id="400" Count="2" />
-      <LineId Id="399" Count="0" />
-      <LineId Id="390" Count="0" />
-      <LineId Id="404" Count="2" />
-      <LineId Id="403" Count="0" />
-      <LineId Id="453" Count="0" />
-      <LineId Id="458" Count="0" />
-      <LineId Id="457" Count="0" />
-      <LineId Id="456" Count="0" />
-      <LineId Id="455" Count="0" />
-      <LineId Id="454" Count="0" />
-      <LineId Id="414" Count="0" />
-      <LineId Id="424" Count="1" />
-      <LineId Id="415" Count="0" />
-      <LineId Id="426" Count="1" />
-      <LineId Id="416" Count="0" />
-      <LineId Id="428" Count="0" />
-      <LineId Id="417" Count="0" />
-      <LineId Id="429" Count="2" />
-      <LineId Id="445" Count="0" />
-      <LineId Id="444" Count="0" />
-      <LineId Id="443" Count="0" />
-      <LineId Id="420" Count="0" />
-      <LineId Id="433" Count="0" />
-      <LineId Id="436" Count="0" />
-      <LineId Id="422" Count="0" />
-      <LineId Id="437" Count="0" />
-      <LineId Id="411" Count="0" />
-      <LineId Id="4" Count="0" />
-      <LineId Id="500" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor._m_Inputs">
-      <LineId Id="156" Count="0" />
-      <LineId Id="103" Count="2" />
-      <LineId Id="303" Count="0" />
-      <LineId Id="107" Count="0" />
-      <LineId Id="394" Count="0" />
-      <LineId Id="396" Count="0" />
-      <LineId Id="393" Count="0" />
-      <LineId Id="397" Count="0" />
-      <LineId Id="368" Count="0" />
-      <LineId Id="376" Count="0" />
-      <LineId Id="369" Count="3" />
-      <LineId Id="377" Count="0" />
-      <LineId Id="398" Count="0" />
-      <LineId Id="382" Count="2" />
-      <LineId Id="378" Count="1" />
-      <LineId Id="373" Count="0" />
-      <LineId Id="5" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor._m_Interlocks">
-      <LineId Id="303" Count="0" />
-      <LineId Id="267" Count="0" />
-      <LineId Id="306" Count="0" />
-      <LineId Id="390" Count="0" />
-      <LineId Id="244" Count="0" />
-      <LineId Id="246" Count="0" />
-      <LineId Id="273" Count="0" />
-      <LineId Id="386" Count="0" />
-      <LineId Id="409" Count="0" />
-      <LineId Id="234" Count="0" />
-      <LineId Id="391" Count="0" />
-      <LineId Id="238" Count="0" />
-      <LineId Id="240" Count="0" />
-      <LineId Id="338" Count="0" />
-      <LineId Id="274" Count="0" />
-      <LineId Id="280" Count="0" />
-      <LineId Id="282" Count="1" />
-      <LineId Id="406" Count="0" />
-      <LineId Id="396" Count="9" />
-      <LineId Id="394" Count="0" />
-      <LineId Id="224" Count="0" />
-      <LineId Id="175" Count="0" />
-      <LineId Id="185" Count="0" />
-      <LineId Id="275" Count="0" />
-      <LineId Id="187" Count="1" />
-      <LineId Id="389" Count="0" />
-      <LineId Id="182" Count="0" />
-      <LineId Id="279" Count="0" />
-      <LineId Id="278" Count="0" />
-      <LineId Id="276" Count="0" />
-      <LineId Id="258" Count="0" />
-      <LineId Id="340" Count="0" />
-      <LineId Id="351" Count="3" />
-      <LineId Id="339" Count="0" />
-      <LineId Id="358" Count="4" />
-      <LineId Id="357" Count="0" />
-      <LineId Id="373" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor._m_Outputs">
-      <LineId Id="20" Count="0" />
-      <LineId Id="6" Count="2" />
-      <LineId Id="22" Count="1" />
-      <LineId Id="16" Count="0" />
-      <LineId Id="5" Count="0" />
-      <LineId Id="25" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor._m_Params">
-      <LineId Id="291" Count="0" />
-      <LineId Id="164" Count="0" />
-      <LineId Id="166" Count="1" />
-      <LineId Id="302" Count="71" />
-      <LineId Id="165" Count="0" />
-      <LineId Id="374" Count="1" />
-      <LineId Id="379" Count="0" />
-      <LineId Id="384" Count="1" />
-      <LineId Id="390" Count="1" />
-      <LineId Id="396" Count="1" />
-      <LineId Id="448" Count="0" />
-      <LineId Id="403" Count="0" />
-      <LineId Id="408" Count="1" />
-      <LineId Id="414" Count="1" />
-      <LineId Id="420" Count="1" />
-      <LineId Id="426" Count="1" />
-      <LineId Id="447" Count="0" />
-      <LineId Id="433" Count="0" />
-      <LineId Id="446" Count="0" />
-      <LineId Id="439" Count="0" />
-      <LineId Id="444" Count="1" />
-      <LineId Id="377" Count="0" />
-      <LineId Id="282" Count="0" />
-      <LineId Id="292" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor._m_SeqCentering">
-      <LineId Id="521" Count="0" />
-      <LineId Id="446" Count="8" />
-      <LineId Id="532" Count="0" />
-      <LineId Id="574" Count="3" />
-      <LineId Id="573" Count="0" />
-      <LineId Id="533" Count="0" />
-      <LineId Id="456" Count="3" />
-      <LineId Id="526" Count="0" />
-      <LineId Id="530" Count="1" />
-      <LineId Id="527" Count="0" />
-      <LineId Id="461" Count="4" />
-      <LineId Id="562" Count="0" />
-      <LineId Id="564" Count="1" />
-      <LineId Id="563" Count="0" />
-      <LineId Id="466" Count="4" />
-      <LineId Id="548" Count="0" />
-      <LineId Id="550" Count="0" />
-      <LineId Id="556" Count="1" />
-      <LineId Id="553" Count="2" />
-      <LineId Id="549" Count="0" />
-      <LineId Id="471" Count="1" />
-      <LineId Id="558" Count="0" />
-      <LineId Id="473" Count="4" />
-      <LineId Id="500" Count="0" />
-      <LineId Id="515" Count="0" />
-      <LineId Id="517" Count="0" />
-      <LineId Id="503" Count="0" />
-      <LineId Id="501" Count="0" />
-      <LineId Id="569" Count="1" />
-      <LineId Id="568" Count="0" />
-      <LineId Id="567" Count="0" />
-      <LineId Id="524" Count="0" />
-      <LineId Id="479" Count="1" />
-      <LineId Id="537" Count="0" />
-      <LineId Id="481" Count="0" />
-      <LineId Id="518" Count="1" />
-      <LineId Id="482" Count="3" />
-      <LineId Id="560" Count="0" />
-      <LineId Id="487" Count="1" />
-      <LineId Id="539" Count="0" />
-      <LineId Id="544" Count="0" />
-      <LineId Id="543" Count="0" />
-      <LineId Id="542" Count="0" />
-      <LineId Id="540" Count="0" />
-      <LineId Id="545" Count="0" />
-      <LineId Id="547" Count="0" />
-      <LineId Id="546" Count="0" />
-      <LineId Id="489" Count="2" />
-      <LineId Id="509" Count="0" />
-      <LineId Id="492" Count="1" />
-      <LineId Id="578" Count="6" />
-      <LineId Id="494" Count="4" />
-      <LineId Id="72" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor._m_SeqTransport">
-      <LineId Id="1808" Count="0" />
-      <LineId Id="1632" Count="8" />
-      <LineId Id="1992" Count="0" />
-      <LineId Id="1982" Count="0" />
-      <LineId Id="1993" Count="0" />
-      <LineId Id="1984" Count="2" />
-      <LineId Id="1921" Count="0" />
-      <LineId Id="1983" Count="0" />
-      <LineId Id="1642" Count="4" />
-      <LineId Id="1809" Count="2" />
-      <LineId Id="1966" Count="0" />
-      <LineId Id="1812" Count="0" />
-      <LineId Id="1649" Count="0" />
-      <LineId Id="1654" Count="1" />
-      <LineId Id="1965" Count="0" />
-      <LineId Id="1912" Count="0" />
-      <LineId Id="1920" Count="0" />
-      <LineId Id="1656" Count="2" />
-      <LineId Id="1818" Count="0" />
-      <LineId Id="1820" Count="0" />
-      <LineId Id="1819" Count="0" />
-      <LineId Id="1901" Count="1" />
-      <LineId Id="1899" Count="0" />
-      <LineId Id="1660" Count="0" />
-      <LineId Id="1967" Count="0" />
-      <LineId Id="1661" Count="3" />
-      <LineId Id="1991" Count="0" />
-      <LineId Id="1665" Count="4" />
-      <LineId Id="1906" Count="1" />
-      <LineId Id="1904" Count="1" />
-      <LineId Id="1797" Count="0" />
-      <LineId Id="1800" Count="0" />
-      <LineId Id="1671" Count="2" />
-      <LineId Id="1924" Count="0" />
-      <LineId Id="1917" Count="0" />
-      <LineId Id="1676" Count="0" />
-      <LineId Id="1821" Count="0" />
-      <LineId Id="1678" Count="1" />
-      <LineId Id="1803" Count="0" />
-      <LineId Id="1802" Count="0" />
-      <LineId Id="1794" Count="0" />
-      <LineId Id="1685" Count="1" />
-      <LineId Id="1910" Count="0" />
-      <LineId Id="1918" Count="0" />
-      <LineId Id="1689" Count="3" />
-      <LineId Id="1804" Count="1" />
-      <LineId Id="1703" Count="2" />
-      <LineId Id="1911" Count="0" />
-      <LineId Id="1919" Count="0" />
-      <LineId Id="1708" Count="2" />
-      <LineId Id="1969" Count="1" />
-      <LineId Id="1978" Count="0" />
-      <LineId Id="1971" Count="2" />
-      <LineId Id="1979" Count="0" />
-      <LineId Id="1974" Count="2" />
-      <LineId Id="1980" Count="0" />
-      <LineId Id="1977" Count="0" />
-      <LineId Id="1962" Count="0" />
-      <LineId Id="1716" Count="2" />
-      <LineId Id="1866" Count="0" />
-      <LineId Id="1871" Count="4" />
-      <LineId Id="1867" Count="0" />
-      <LineId Id="1869" Count="0" />
-      <LineId Id="1720" Count="2" />
-      <LineId Id="1824" Count="0" />
-      <LineId Id="1830" Count="2" />
-      <LineId Id="1827" Count="1" />
-      <LineId Id="1860" Count="0" />
-      <LineId Id="1829" Count="0" />
-      <LineId Id="1822" Count="1" />
-      <LineId Id="1723" Count="0" />
-      <LineId Id="1864" Count="0" />
-      <LineId Id="1724" Count="6" />
-      <LineId Id="1961" Count="0" />
-      <LineId Id="1731" Count="2" />
-      <LineId Id="1893" Count="0" />
-      <LineId Id="1879" Count="4" />
-      <LineId Id="1876" Count="1" />
-      <LineId Id="1735" Count="3" />
-      <LineId Id="1835" Count="0" />
-      <LineId Id="1842" Count="3" />
-      <LineId Id="1839" Count="2" />
-      <LineId Id="1861" Count="0" />
-      <LineId Id="1833" Count="1" />
-      <LineId Id="1739" Count="6" />
-      <LineId Id="1792" Count="0" />
-      <LineId Id="1746" Count="7" />
-      <LineId Id="1760" Count="2" />
-      <LineId Id="1927" Count="6" />
-      <LineId Id="1925" Count="0" />
-      <LineId Id="1934" Count="0" />
-      <LineId Id="1936" Count="0" />
-      <LineId Id="1939" Count="5" />
-      <LineId Id="1938" Count="0" />
-      <LineId Id="1945" Count="0" />
-      <LineId Id="1956" Count="3" />
-      <LineId Id="1955" Count="0" />
-      <LineId Id="1954" Count="0" />
-      <LineId Id="1947" Count="6" />
-      <LineId Id="1946" Count="0" />
-      <LineId Id="1960" Count="0" />
-      <LineId Id="1926" Count="0" />
-      <LineId Id="1763" Count="1" />
-      <LineId Id="1886" Count="5" />
-      <LineId Id="1884" Count="1" />
-      <LineId Id="1766" Count="2" />
-      <LineId Id="1848" Count="0" />
-      <LineId Id="1856" Count="2" />
-      <LineId Id="1853" Count="2" />
-      <LineId Id="1862" Count="0" />
-      <LineId Id="1846" Count="1" />
-      <LineId Id="1769" Count="7" />
-      <LineId Id="1963" Count="0" />
-      <LineId Id="1777" Count="5" />
-      <LineId Id="1994" Count="0" />
-      <LineId Id="1783" Count="2" />
-      <LineId Id="1988" Count="2" />
-      <LineId Id="1987" Count="0" />
-      <LineId Id="1995" Count="0" />
-      <LineId Id="1997" Count="0" />
-      <LineId Id="1786" Count="2" />
-      <LineId Id="1964" Count="0" />
-      <LineId Id="1789" Count="1" />
-      <LineId Id="89" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor.m_Main">
-      <LineId Id="2946" Count="0" />
-      <LineId Id="2483" Count="2" />
-      <LineId Id="2529" Count="3" />
-      <LineId Id="3154" Count="0" />
-      <LineId Id="2534" Count="2" />
-      <LineId Id="3070" Count="0" />
-      <LineId Id="2900" Count="0" />
-      <LineId Id="2949" Count="0" />
-      <LineId Id="2951" Count="0" />
-      <LineId Id="3073" Count="0" />
-      <LineId Id="3077" Count="0" />
-      <LineId Id="3118" Count="0" />
-      <LineId Id="3139" Count="0" />
-      <LineId Id="3119" Count="0" />
-      <LineId Id="3124" Count="0" />
-      <LineId Id="3128" Count="0" />
-      <LineId Id="3125" Count="0" />
-      <LineId Id="3129" Count="0" />
-      <LineId Id="3126" Count="0" />
-      <LineId Id="3130" Count="0" />
-      <LineId Id="3127" Count="0" />
-      <LineId Id="3122" Count="0" />
-      <LineId Id="3120" Count="0" />
-      <LineId Id="3076" Count="0" />
-      <LineId Id="3115" Count="0" />
-      <LineId Id="3063" Count="2" />
-      <LineId Id="3061" Count="0" />
-      <LineId Id="3133" Count="0" />
-      <LineId Id="3136" Count="1" />
-      <LineId Id="3134" Count="1" />
-      <LineId Id="3116" Count="0" />
-      <LineId Id="3131" Count="0" />
-      <LineId Id="2954" Count="0" />
-      <LineId Id="2950" Count="0" />
-      <LineId Id="2916" Count="0" />
-      <LineId Id="3084" Count="0" />
-      <LineId Id="3086" Count="1" />
-      <LineId Id="3075" Count="0" />
-      <LineId Id="2919" Count="0" />
-      <LineId Id="3081" Count="0" />
-      <LineId Id="2907" Count="0" />
-      <LineId Id="3088" Count="0" />
-      <LineId Id="2910" Count="0" />
-      <LineId Id="2947" Count="0" />
-      <LineId Id="3145" Count="0" />
-      <LineId Id="2913" Count="0" />
-      <LineId Id="3089" Count="0" />
-      <LineId Id="2914" Count="0" />
-      <LineId Id="2948" Count="0" />
-      <LineId Id="2887" Count="0" />
-      <LineId Id="3054" Count="0" />
-      <LineId Id="3053" Count="0" />
-      <LineId Id="3049" Count="0" />
-      <LineId Id="2963" Count="0" />
-      <LineId Id="3050" Count="0" />
-      <LineId Id="3000" Count="0" />
-      <LineId Id="3031" Count="0" />
-      <LineId Id="3034" Count="0" />
-      <LineId Id="3036" Count="0" />
-      <LineId Id="3038" Count="0" />
-      <LineId Id="3040" Count="0" />
-      <LineId Id="3044" Count="0" />
-      <LineId Id="3046" Count="2" />
-      <LineId Id="3045" Count="0" />
-      <LineId Id="3032" Count="0" />
-      <LineId Id="3043" Count="0" />
-      <LineId Id="3041" Count="1" />
-      <LineId Id="3091" Count="0" />
-      <LineId Id="3030" Count="0" />
-      <LineId Id="3002" Count="3" />
-      <LineId Id="3150" Count="0" />
-      <LineId Id="3006" Count="5" />
-      <LineId Id="3151" Count="0" />
-      <LineId Id="3012" Count="5" />
-      <LineId Id="3152" Count="0" />
-      <LineId Id="3018" Count="1" />
-      <LineId Id="3092" Count="0" />
-      <LineId Id="3020" Count="8" />
-      <LineId Id="2997" Count="0" />
-      <LineId Id="3097" Count="1" />
-      <LineId Id="3095" Count="0" />
-      <LineId Id="3094" Count="0" />
-      <LineId Id="3100" Count="2" />
-      <LineId Id="3108" Count="0" />
-      <LineId Id="2937" Count="1" />
-      <LineId Id="2940" Count="0" />
-      <LineId Id="3142" Count="1" />
-      <LineId Id="2944" Count="0" />
-      <LineId Id="3141" Count="0" />
-      <LineId Id="2943" Count="0" />
-      <LineId Id="2888" Count="1" />
-      <LineId Id="179" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor.m_ReqCenteringTB">
-      <LineId Id="34" Count="0" />
-      <LineId Id="26" Count="2" />
-      <LineId Id="71" Count="0" />
-      <LineId Id="77" Count="0" />
-      <LineId Id="103" Count="0" />
-      <LineId Id="102" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor.m_ReqTB_ToCenter">
-      <LineId Id="34" Count="0" />
-      <LineId Id="26" Count="2" />
-      <LineId Id="71" Count="0" />
-      <LineId Id="77" Count="0" />
-      <LineId Id="106" Count="0" />
-      <LineId Id="99" Count="0" />
-      <LineId Id="103" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor.m_ReqTB_ToDocking">
-      <LineId Id="34" Count="0" />
-      <LineId Id="26" Count="2" />
-      <LineId Id="71" Count="0" />
-      <LineId Id="77" Count="0" />
-      <LineId Id="100" Count="0" />
-      <LineId Id="99" Count="0" />
-      <LineId Id="103" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor.m_ReqTB_ToInfeed">
-      <LineId Id="34" Count="0" />
-      <LineId Id="26" Count="2" />
-      <LineId Id="71" Count="0" />
-      <LineId Id="77" Count="0" />
-      <LineId Id="100" Count="0" />
-      <LineId Id="99" Count="0" />
-      <LineId Id="103" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor.p_bStaReady.Get">
-      <LineId Id="5" Count="0" />
-      <LineId Id="7" Count="0" />
-      <LineId Id="6" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor.p_bStaTB_AtCentering.Get">
-      <LineId Id="5" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="6" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor.p_bStaTB_AtDocking.Get">
-      <LineId Id="5" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="6" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor.p_bStaTB_AtInfeed.Get">
-      <LineId Id="5" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="6" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor.p_bStaTB_CenteringDone.Get">
-      <LineId Id="8" Count="0" />
-      <LineId Id="7" Count="0" />
-      <LineId Id="6" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor.p_bStaTB_DockPosFree.Get">
-      <LineId Id="5" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="6" Count="0" />
-    </LineIds>
-    <LineIds Name="EM_PalletConveyor.p_bStaTB_ReadyForDocking.Get">
-      <LineId Id="5" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="6" Count="0" />
-    </LineIds>
   </POU>
 </TcPlcObject>

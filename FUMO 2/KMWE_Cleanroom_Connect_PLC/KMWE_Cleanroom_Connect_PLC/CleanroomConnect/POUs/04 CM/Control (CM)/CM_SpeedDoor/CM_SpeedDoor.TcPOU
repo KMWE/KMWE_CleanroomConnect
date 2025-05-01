@@ -62,9 +62,9 @@ VAR
 	s_sCfgOpenName : STRING(c_MAX_FB_NAME_LENGTH) := 'Open';
 	
 	// Alarms	
-	s_fbAlarmHandlerOpeningTimeout : FB_AlarmHandler;
-	s_fbAlarmHandlerClosingTimeout : FB_AlarmHandler;
 	s_fbAlarmHandlerDoorController : FB_AlarmHandler;
+	s_fbAlarmHandlerOpeningTimeout : FB_AlarmHandler;
+	s_fbAlarmHandlerClosingTimeout : FB_AlarmHandler;	
 	
 	s_fbAlarmHandlerOpenInterlocked : FB_AlarmHandler;
 	s_fbAlarmHandlerCloseInterlocked : FB_AlarmHandler;
@@ -123,25 +123,19 @@ s_tonClosingTimeout(
 	PT := i_stSettings.tDoorClosingTimeout );
 
 // Set error bits
-s_errDoorController := i_bReqEnable AND (s_bStaDoorControllerError OR s_errDoorController) AND NOT(i_bCmdReset) AND NOT(s_bCmdReset);
+s_errDoorController := i_bReqEnable AND (s_bStaDoorControllerError OR s_errDoorController) AND NOT(i_bCmdReset);
 s_errOpeningTimeout := (s_tonOpeningTimeout.Q OR s_errOpeningTimeout) AND NOT(i_bCmdReset);
 s_errClosingTimeout := (s_tonClosingTimeout.Q OR s_errClosingTimeout) AND NOT(i_bCmdReset);
 
 // Alarm Handlers
 s_fbAlarmHandlerDoorController(
-	i_bStaActive := s_errDoorController, 
-	i_eAlarmLevel := E_AlarmLevel.Alarm,
-	i_sAlarmText := CONCAT(i_sCmName , CONCAT(': Controller - ', 'has error (check DYNACO-system).')) );
+	i_bStaActive := s_errDoorController); 
 
 s_fbAlarmHandlerOpeningTimeout(
-	i_bStaActive := s_errOpeningTimeout,
-	i_eAlarmLevel := E_AlarmLevel.Alarm,
-	i_sAlarmText := CONCAT(i_sCmName , ': Door - opening timeout (check DYNACO-system).') );
+	i_bStaActive := s_errOpeningTimeout);
 	
 s_fbAlarmHandlerClosingTimeout(
-	i_bStaActive := s_errClosingTimeout,
-	i_eAlarmLevel := E_AlarmLevel.Alarm,
-	i_sAlarmText := CONCAT(i_sCmName , ': Door - closing timeout (check DYNACO-system).') );
+	i_bStaActive := s_errClosingTimeout);
 	
 // Alarm collector	
 s_bStaError := 
@@ -202,19 +196,19 @@ IF NOT(s_bHmiInit) THEN
 	s_bHmiInit := TRUE;
 END_IF
 
-	s_stHmiData.sState := '';
+s_stHmiData.sState := '';
 
-	s_stHmiData.bStaOpen := s_bStaDoorIsOpened;
-	s_stHmiData.bStaClose := s_bStaDoorIsClosed;
-	s_stHmiData.bStaOpenError := s_fbHmiLedErrorOpen.p_bStaLed;
-	s_stHmiData.bStaCloseError  := s_fbHmiLedErrorClose.p_bStaLed;
-	s_stHmiData.bStaError := s_fbHmiLedErrorController.p_bStaLed;
-	s_stHmiData.bStaReset := s_fbHmiLedReset.p_bStaLed;
-	s_stHmiData.bBtnOpenEnabled := s_fbHmiBtnManualOpen.p_bStaEnabled;
-	s_stHmiData.bBtnCloseEnabled := s_fbHmiBtnManualClose.p_bStaEnabled;
-	s_stHmiData.bBtnResetEnabled := s_fbHmiBtnManualClose.p_bStaEnabled;
-	s_stHmiData.s_sInterlockedReasonClose := s_sInterlockedReasonClose;
-	s_stHmiData.s_sInterlockedReasonOpen := s_sInterlockedReasonOpen;
+s_stHmiData.bStaOpen := s_bStaDoorIsOpened;
+s_stHmiData.bStaClose := s_bStaDoorIsClosed;
+s_stHmiData.bStaOpenError := s_fbHmiLedErrorOpen.p_bStaLed;
+s_stHmiData.bStaCloseError  := s_fbHmiLedErrorClose.p_bStaLed;
+s_stHmiData.bStaError := s_fbHmiLedErrorController.p_bStaLed;
+s_stHmiData.bStaReset := s_fbHmiLedReset.p_bStaLed;
+s_stHmiData.bBtnOpenEnabled := s_fbHmiBtnManualOpen.p_bStaEnabled;
+s_stHmiData.bBtnCloseEnabled := s_fbHmiBtnManualClose.p_bStaEnabled;
+s_stHmiData.bBtnResetEnabled := s_fbHmiBtnManualClose.p_bStaEnabled;
+s_stHmiData.s_sInterlockedReasonClose := s_sInterlockedReasonClose;
+s_stHmiData.s_sInterlockedReasonOpen := s_sInterlockedReasonOpen;
 
 //From Hmi
 IF s_stHmiData.bCmdClosePressed THEN
@@ -299,10 +293,16 @@ IF NOT SUPER^._m_Init() THEN
 END_IF
 
 //Alarm config
-s_fbAlarmHandlerClosingTimeout.i_eAlarmLevel := E_AlarmLevel.Alarm;
-s_fbAlarmHandlerOpeningTimeout.i_eAlarmLevel := E_AlarmLevel.Alarm;
 s_fbAlarmHandlerDoorController.i_eAlarmLevel := E_AlarmLevel.Alarm;
+s_fbAlarmHandlerDoorController.i_sAlarmText := CONCAT(i_sCmName , CONCAT(': Controller - ', 'has error (check DYNACO-system).'));
 
+s_fbAlarmHandlerOpeningTimeout.i_eAlarmLevel := E_AlarmLevel.Alarm;
+s_fbAlarmHandlerOpeningTimeout.i_sAlarmText := CONCAT(i_sCmName , ': Door - opening timeout (check DYNACO-system).');
+
+s_fbAlarmHandlerClosingTimeout.i_eAlarmLevel := E_AlarmLevel.Alarm;
+s_fbAlarmHandlerClosingTimeout.i_sAlarmText := CONCAT(i_sCmName , ': Door - closing timeout (check DYNACO-system).');
+
+{warning '#TODDO: Warning below are not used. Delete?'}
 s_fbAlarmHandlerCloseInterlocked.i_eAlarmLevel := E_AlarmLevel.Warning;
 s_fbAlarmHandlerOpenInterlocked.i_eAlarmLevel := E_AlarmLevel.Warning;
 
@@ -383,10 +383,10 @@ IF __ISVALIDREF(i_ref_eCtrlState) THEN
 END_IF
 
 // Generate reset pulse for resetting speeddoor controller (via IO)
-//--s_tofResetPulse(
-//--	IN := s_bReqReset AND NOT(s_tofResetPulse.Q),
-//--	PT := i_stSettings.tResetPulseDuration );
-s_tofResetPulse(PT := i_stSettings.tResetPulseDuration , IN := (i_bCmdReset AND s_bStaDoorControllerError) OR s_bReqReset);
+s_tofResetPulse(
+	IN := (i_bCmdReset AND s_bStaDoorControllerError) OR s_bReqReset,
+	PT := i_stSettings.tResetPulseDuration);
+ 
 s_bReqReset := FALSE;
 
 s_bCmdReset := s_tofResetPulse.Q;
@@ -634,11 +634,10 @@ s_sInterlockedReasonOpen := p_sInterlockedReasonOpen;
       <LineId Id="45" Count="0" />
       <LineId Id="33" Count="0" />
       <LineId Id="37" Count="0" />
-      <LineId Id="34" Count="1" />
       <LineId Id="92" Count="0" />
-      <LineId Id="94" Count="4" />
-      <LineId Id="100" Count="2" />
-      <LineId Id="99" Count="0" />
+      <LineId Id="94" Count="1" />
+      <LineId Id="98" Count="0" />
+      <LineId Id="100" Count="1" />
       <LineId Id="93" Count="0" />
       <LineId Id="60" Count="0" />
       <LineId Id="32" Count="0" />
@@ -707,8 +706,15 @@ s_sInterlockedReasonOpen := p_sInterlockedReasonOpen;
       <LineId Id="21" Count="0" />
       <LineId Id="15" Count="2" />
       <LineId Id="26" Count="0" />
-      <LineId Id="28" Count="2" />
-      <LineId Id="33" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="74" Count="1" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="80" Count="0" />
       <LineId Id="32" Count="0" />
       <LineId Id="31" Count="0" />
       <LineId Id="27" Count="0" />
@@ -743,9 +749,10 @@ s_sInterlockedReasonOpen := p_sInterlockedReasonOpen;
       <LineId Id="85" Count="0" />
       <LineId Id="82" Count="0" />
       <LineId Id="5" Count="0" />
-      <LineId Id="46" Count="0" />
-      <LineId Id="59" Count="1" />
       <LineId Id="94" Count="0" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="98" Count="0" />
+      <LineId Id="100" Count="0" />
       <LineId Id="55" Count="0" />
       <LineId Id="84" Count="0" />
       <LineId Id="75" Count="0" />

@@ -933,434 +933,8 @@ _m_Modules := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="m_FullCycle" Id="{85945a60-1e58-4d91-af47-0c270dd5f580}">
-      <Declaration><![CDATA[METHOD PUBLIC m_FullCycle : BOOL
-
-VAR_INPUT
-	i_objTB : REFERENCE TO OBJ_Carrier;
-END_VAR
-
-
-VAR_INST
-	osrTbToCenter : R_TRIG;
-	osrTbToDocking : R_TRIG;
-	osrTbToInfeed : R_TRIG;
-	osrCenterTb : R_TRIG;
-	
-	osrDockTb : R_TRIG;
-	osrUndockTb : R_TRIG;
-	osrOpenInnerDoor : R_TRIG;
-	osrCloseInnerDoor : R_TRIG;
-	
-	osrPickTrolleyFromTb : R_TRIG;
-	osrPlaceTrollerInTb : R_TRIG;
-	
-	arr_bTestCmd : ARRAY[0..15] OF BOOL;
-END_VAR]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[IF NOT(__ISVALIDREF(i_objTB)) THEN
-	RETURN;
-END_IF
-
-m_SeqCleanroomConnect();
-
-//Pallet Conveyor
-IF arr_bTestCmd[0] THEN GVL_Modules.g_emPalletConveyor.m_ReqTB_ToInfeed(); arr_bTestCmd[0] := FALSE; END_IF
-IF arr_bTestCmd[1] THEN GVL_Modules.g_emPalletConveyor.m_ReqTB_ToCenter(); arr_bTestCmd[1] := FALSE; END_IF
-IF arr_bTestCmd[2] THEN GVL_Modules.g_emPalletConveyor.m_ReqCenteringTB(); arr_bTestCmd[2] := FALSE; END_IF
-IF arr_bTestCmd[3] THEN GVL_Modules.g_emPalletConveyor.m_ReqTB_ToDocking(); arr_bTestCmd[3] := FALSE; END_IF
-
-//Docking Interface
-IF arr_bTestCmd[4] THEN GVL_Modules.g_emDockingInterface.m_ReqDockTB(); arr_bTestCmd[4] := FALSE; END_IF
-IF arr_bTestCmd[5] THEN GVL_Modules.g_emDockingInterface.m_ReqOpenInnerDoor(); arr_bTestCmd[5] := FALSE; END_IF
-IF arr_bTestCmd[6] THEN GVL_Modules.g_emDockingInterface.m_ReqCloseInnerDoor(); arr_bTestCmd[6] := FALSE; END_IF
-IF arr_bTestCmd[7] THEN GVL_Modules.g_emDockingInterface.m_ReqUndockTB(); arr_bTestCmd[7] := FALSE; END_IF
-
-//Lifting transport
-IF arr_bTestCmd[8] THEN GVL_Modules.g_emLiftingTransport.m_ReqGoToIdle(); arr_bTestCmd[8] := FALSE; END_IF
-IF arr_bTestCmd[9] THEN GVL_Modules.g_emLiftingTransport.m_ReqPickTrolleyFromTB(); arr_bTestCmd[9] := FALSE; END_IF
-IF arr_bTestCmd[10] THEN GVL_Modules.g_emLiftingTransport.m_ReqPlaceTrolleyInTB(); arr_bTestCmd[10] := FALSE; END_IF
-
-
-//Unit will control lower-layer control modules based on data in Object Carrier
-//By changing the data in this object the behanvior can be manipulated / controlled.
-
-{warning '#TODO: Na gaan of het in onderstaande code niet beter zou zijn om puur te kijken naar de data uit de struct ipv naar properties uit de onderliggende modules?'}
-// zoals bij voorbeeld voor TB centered status
-
-//EM_PalletConveyor
-IF i_objTB.p_eDestination <> E_Location.UNKNOWN	THEN
-
-	//Transporting TB to Center
-	osrTbToCenter(
-		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING) 
-		AND i_objTB.p_eDestination > i_objTB.p_eActLocation
-		AND i_objTB.p_eActLocation < E_Location.CENTERING  
-		AND i_objTB.p_bOuterDoorOpened
-		AND i_objTB.p_bApprovedAtInfeed);
-	
-	IF osrTbToCenter.Q THEN
-		GVL_Modules.g_emPalletConveyor.m_ReqTB_ToCenter();
-	END_IF
-			
-	//Transporting TB to Docking
-	osrTbToDocking(
-		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING)
-		AND i_objTB.p_eDestination > i_objTB.p_eActLocation
-		AND i_objTB.p_eActLocation < E_Location.DOCKING 
-		AND GVL_Modules.g_emPalletConveyor.p_bStaTB_CenteringDone
-		AND GVL_Modules.g_emDockingInterface.p_bStaUndocked);
-	
-	IF osrTbToDocking.Q THEN
-		GVL_Modules.g_emPalletConveyor.m_ReqTB_ToDocking();
-	END_IF	
-		
-	//Transporting TB to Infeed
-	osrTbToInfeed(
-		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING)
-		AND i_objTB.p_eDestination < i_objTB.p_eActLocation
-		AND i_objTB.p_eActLocation > E_Location.INFEED
-		AND GVL_Modules.g_emDockingInterface.p_bStaUndocked);
-	
-	IF osrTbToInfeed.Q THEN
-		GVL_Modules.g_emPalletConveyor.m_ReqTB_ToInfeed();
-	END_IF
-	
-	//Centering TB
-	osrCenterTb(
-		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING) 
-		AND i_objTB.p_eActLocation = E_Location.CENTERING  
-		AND NOT(GVL_Modules.g_emPalletConveyor.p_bStaTB_CenteringDone));
-	
-	IF osrCenterTb.Q THEN
-		GVL_Modules.g_emPalletConveyor.m_ReqCenteringTB();
-	END_IF
-	
-END_IF
-	
-//EM_DockingInterface
-IF i_objTB.p_eDestination <> E_Location.UNKNOWN	THEN
-	
-	//Docking TB
-	osrDockTb(
-		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING) 
-		AND i_objTB.p_eActLocation = E_Location.DOCKING
-		AND i_objTB.p_eDestination > E_Location.DOCKING 
-		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaDocked));
-
-	IF osrDockTb.Q THEN
-		GVL_Modules.g_emDockingInterface.m_ReqDockTB();
-	END_IF
-	
-	//Undocking TB
-	osrUndockTb(
-		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING)
-		AND i_objTB.p_eActLocation = E_Location.DOCKING //Is this about the TB or Trolley location? 
-		AND i_objTB.p_eDestination < E_Location.DOCKING
-		AND GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosed
-		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaUndocked));
-	
-	IF osrUndockTb.Q THEN
-		GVL_Modules.g_emDockingInterface.m_ReqUndockTB();
-	END_IF
-
-	//Opening Inner Door TB
-	osrOpenInnerDoor(
-		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING)
-		AND i_objTB.p_eActLocation = E_Location.DOCKING
-		AND i_objTB.p_eDestination > E_Location.DOCKING
-		AND GVL_Modules.g_emDockingInterface.p_bStaDocked
-		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpened));
-	
-	IF osrOpenInnerDoor.Q THEN
-		GVL_Modules.g_emDockingInterface.m_ReqOpenInnerDoor();
-	END_IF
-			
-	//Closing Inner Door TB
-	osrCloseInnerDoor(
-		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING)
-		AND i_objTB.p_eActLocation = E_Location.DOCKING
-		AND i_objTB.p_eDestination < E_Location.DOCKING
-		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosed));
-	
-	IF osrCloseInnerDoor.Q THEN
-		GVL_Modules.g_emDockingInterface.m_ReqCloseInnerDoor();
-	END_IF
-	
-END_IF	
-
-//EM_LiftingTransport
-IF i_objTB.p_eDestination <> E_Location.UNKNOWN	THEN
-
-	//Picking trolley from TB
-	osrPickTrolleyFromTb(
-		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING) 
-		AND i_objTB.p_eDestination > i_objTB.p_eActLocation
-		AND i_objTB.p_eActLocation < E_Location.CENTERING  
-		AND i_objTB.p_bOuterDoorOpened
-		AND i_objTB.p_bApprovedAtInfeed);
-	
-	IF osrPickTrolleyFromTb.Q THEN
-		GVL_Modules.g_emLiftingTransport.m_ReqPickTrolleyFromTB();
-	END_IF
-	
-	//Place trolley TB TB
-	osrPickTrolleyFromTb(
-		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING) 
-		AND i_objTB.p_eDestination > i_objTB.p_eActLocation
-		AND i_objTB.p_eActLocation < E_Location.CENTERING  
-		AND i_objTB.p_bOuterDoorOpened
-		AND i_objTB.p_bApprovedAtInfeed);
-	
-	IF osrPickTrolleyFromTb.Q THEN
-		GVL_Modules.g_emLiftingTransport.m_ReqPickTrolleyFromTB();
-	END_IF
-	
-END_IF
-	
-(* Lod Code 20241108	
-//EM_PalletConveyor
-	
-	//Transporting TB to Center
-	IF i_objTB.p_eDestination <> E_Location.UNKNOWN
-		AND i_objTB.p_eDestination > i_objTB.p_eActLocation
-		AND i_objTB.p_eActLocation < E_Location.CENTERING  
-		AND i_objTB.p_bOuterDoorOpened
-		AND i_objTB.p_bApprovedAtInfeed THEN
-			GVL_Modules.g_emPalletConveyor.m_ReqTB_ToCenter();
-			
-	//Transporting TB to Docking		
-	ELSIF i_objTB.p_eDestination <> E_Location.UNKNOWN
-		AND i_objTB.p_eDestination > i_objTB.p_eActLocation
-		AND i_objTB.p_eActLocation < E_Location.DOCKING 
-		AND GVL_Modules.g_emPalletConveyor.p_bStaTB_CenteringDone
-		AND GVL_Modules.g_emDockingInterface.p_bStaUndocked THEN
-			GVL_Modules.g_emPalletConveyor.m_ReqTB_ToDocking();
-	
-	//Transporting TB to Infeed
-	ELSIF i_objTB.p_eDestination <> E_Location.UNKNOWN
-		AND i_objTB.p_eDestination < i_objTB.p_eActLocation
-		AND i_objTB.p_eActLocation > E_Location.INFEED
-		AND GVL_Modules.g_emDockingInterface.p_bStaUndocked THEN 
-			GVL_Modules.g_emPalletConveyor.m_ReqTB_ToInfeed();
-	
-	END_IF
-	
-	//Centering TB
-	IF i_objTB.p_eDestination <> E_Location.UNKNOWN
-		AND i_objTB.p_eActLocation = E_Location.CENTERING  
-		AND NOT(GVL_Modules.g_emPalletConveyor.p_bStaTB_CenteringDone) THEN
-		///AND NOT(i_objTB.p_bCenteringDone) AND NOT(bTest) THEN
-		; 
-		//	GVL_Modules.g_emPalletConveyor.m_ReqCenteringTB();
-	END_IF
-	
-	osrCenterTb(
-		CLK := i_objTB.p_eDestination <> E_Location.UNKNOWN
-		AND i_objTB.p_eActLocation = E_Location.CENTERING  
-		AND NOT(GVL_Modules.g_emPalletConveyor.p_bStaTB_CenteringDone));
-	
-	IF osrCenterTb.Q THEN
-		GVL_Modules.g_emPalletConveyor.m_ReqCenteringTB();
-	END_IF
-	
-//EM_DockingInterface
-
-	//Docking TB
-	IF i_objTB.p_eDestination <> E_Location.UNKNOWN
-		AND i_objTB.p_eActLocation = E_Location.DOCKING
-		AND i_objTB.p_eDestination > E_Location.DOCKING 
-		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaDocked) THEN
-			GVL_Modules.g_emDockingInterface.m_ReqDockTB();
-			
-	//Undocking TB
-	ELSIF i_objTB.p_eDestination <> E_Location.UNKNOWN
-		AND i_objTB.p_eActLocation = E_Location.DOCKING		//Is this about the TB or Trolley location? 
-		AND i_objTB.p_eDestination < E_Location.DOCKING
-		AND GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosedAndLocked
-		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaUndocked) THEN  
-			GVL_Modules.g_emDockingInterface.m_ReqUndockTB();
-
-	//Opening Inner Door TB
-	ELSIF i_objTB.p_eDestination <> E_Location.UNKNOWN
-		AND i_objTB.p_eActLocation = E_Location.DOCKING
-		AND i_objTB.p_eDestination > E_Location.DOCKING
-		AND GVL_Modules.g_emDockingInterface.p_bStaDocked
-		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpenedAndReleased) THEN  
-			GVL_Modules.g_emDockingInterface.m_ReqOpenInnerDoor();
-			
-	//Closing Inner Door TB
-	ELSIF i_objTB.p_eDestination <> E_Location.UNKNOWN
-		AND i_objTB.p_eActLocation = E_Location.DOCKING
-		AND i_objTB.p_eDestination < E_Location.DOCKING
-		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosedAndLocked) THEN  
-			GVL_Modules.g_emDockingInterface.m_ReqCloseInnerDoor();
-			
-	END_IF
-*)
-//EM_LiftingTransport
-	//Get Trolley from TB to Cabin
-	//Get Trolley from Cabin to TB
-	//..	
-	
-//EM_Doors
-	//Open Cabin door Infeed
-	//Close Cabin door Infeed
-	
-	//Release Cleanroom Door
-	//Lock Cleanroom Door
-	//..
-
-//EM_..	
-	
-	
-//-- Old Code
-//FullCycle
-//++	m_Inbound();
-//	Wait(T#5S)
-//	m_Outbound();]]></ST>
-      </Implementation>
-    </Method>
-    <Method Name="m_Main" Id="{bf5d9d9d-3881-4722-ad23-ed0781ff35d5}">
-      <Declaration><![CDATA[METHOD PUBLIC m_Main : BOOL
-VAR
-	s_bStaReady : BOOL;
-END_VAR
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[
-IF NOT SUPER^.m_Main() THEN
-	RETURN;
-END_IF
-
-GVL.g_osrNotify();
-GVL.g_osrNotify.CLK := FALSE;	
-
-
-
-m_Main := TRUE;
-
-CASE s_eCtrlMode OF
-
-	E_CtrlMode.IDLE:
-		s_eReqAction := E_ReqAction.NONE;	
-	
-	E_CtrlMode.AUTOMATIC:
-		//Wait for commands from 
-		IF s_fbHmiBtnInbound.p_osrBtnPress THEN
-			//--s_bReqInbound := TRUE;
-			s_eReqAction := E_ReqAction.INBOUND;
-		END_IF
-		
-		IF s_fbHmiBtnOutbound.p_osrBtnPress THEN
-			//--s_bReqOutbound := TRUE;
-			s_eReqAction := E_ReqAction.OUTBOUND;
-		END_IF
-		
-		IF s_fbHmiBtnDockTB.p_osrBtnPress THEN
-			//--s_bReqDockTB := TRUE;
-			s_eReqAction := E_ReqAction.DOCK_TB;
-		END_IF
-		
-		IF s_fbHmiBtnUndockTB.p_osrBtnPress THEN
-			//--s_bReqUndockTB := TRUE;
-			s_eReqAction := E_ReqAction.UNDOCK_TB;
-		END_IF
-		
-		IF s_fbHmiBtnOpenInnerTBDoor.p_osrBtnPress THEN
-			//--s_bReqUndockTB := TRUE;
-			s_eReqAction := E_ReqAction.OPEN_INNER_TB_DOOR;
-		END_IF
-		
-		IF s_fbHmiBtnCloseInnerTBDoor.p_osrBtnPress THEN
-			//--s_bReqUndockTB := TRUE;
-			s_eReqAction := E_ReqAction.CLOSE_INNER_TB_DOOR;
-		END_IF
-			
-		IF s_fbHmiBtnPickTrolleyFromTB.p_osrBtnPress THEN
-			//--s_bReqPickTrolleyFromTB := TRUE;
-			s_eReqAction := E_ReqAction.PICK_TROLLEY_FROM_TB;
-		END_IF
-		
-		IF s_fbHmiBtnPlaceTrolleyInTB.p_osrBtnPress THEN
-			//--s_bReqPlaceTrolleyInTB := TRUE;
-			s_eReqAction := E_ReqAction.PLACE_TROLLEY_IN_TB;
-		END_IF
-		
-		m_SeqCleanroomConnect();
-		
-	E_CtrlMode.MANUAL:
-		;
-		
-	E_CtrlMode.MAINTENANCE:
-		;
-		
-	E_CtrlMode.IO:
-		;
-		
-	E_CtrlMode.CLEANING:
-		;
-		
-END_CASE
-
-IF s_eCtrlMode <> E_CtrlMode.AUTOMATIC THEN
-	//Reset all commands
-//--	s_bReqInbound := FALSE;
-//--	s_bReqOutbound := FALSE;
-//--	s_bReqDockTB := FALSE;
-//--	s_bReqUndockTB := FALSE;
-//--	s_bReqPickTrolleyFromTB := FALSE;
-//--	s_bReqPlaceTrolleyInTB := FALSE;
-	s_eReqAction := E_ReqAction.NONE;	
-END_IF
-
-s_bStaReady := (s_eSequence = E_SeqCleanroomConnect.READY);
-
-
-s_fbHmiBtnDockTB.p_bStaEnabled := s_bStaReady AND NOT(GVL_Modules.g_emDockingInterface.p_bStaDocked);
-s_fbHmiBtnUndockTB.p_bStaEnabled := s_bStaReady AND NOT(GVL_Modules.g_emDockingInterface.p_bStaUnDocked) AND (GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosed);
-s_fbHmiBtnOpenInnerTBDoor.p_bStaEnabled := s_bStaReady AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpened) AND (GVL_Modules.g_emDockingInterface.p_bStaDocked);
-s_fbHmiBtnCloseInnerTBDoor.p_bStaEnabled := s_bStaReady AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosed);
-s_fbHmiBtnPickTrolleyFromTB.p_bStaEnabled := s_bStaReady AND GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpened;  
-s_fbHmiBtnPlaceTrolleyInTB.p_bStaEnabled := s_bStaReady AND GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpened;
-
-// Paul Schippers: just a test with the use of interfaces
-//??itfEmDoors.m_CloseOuterDoor();
-
-//??itfEmDockingInterface.m_OpenDockingClamps();
-
-//IF NOT(itfEmAirTreatment.p_bStaPressurizingOK) THEN 
-//	itfEmAirTreatment.m_Pressurize();
-//END_IF
-
-(*	
-	// Interlocks (doors must work as an airlock, only one door may be opened at all times)
-	s_bIlckCabinDoorOuterToOpen :=
-		s_cmDoorLockCleanroom.p_bStaError
-		OR NOT(s_cmDoorLockCleanroom.p_bStaEnabled)
-		NOT(s_cmDoorLockCleanroom.p_bStaDoorIsClosed)
-		OR NOT (s_cmDoorLockCleanroom.p_bStaLockIsApplied)
-		OR s_cmDoorLockCleanroom.p_bStaLockIsReleased
-		OR TRUE (*Air treathment unit must be running and ok*)
-		OR TRUE (*Add more..*);
-	s_bIlckCabinDoorOuterToClose :=
-		TRUE (*Opening must be free*)
-		OR TRUE (*Add more..*);
-	
-	s_bIlckDoorLockCleanroomToOpen :=
-		s_cmCabinDoorOuter.p_bStaError
-		OR NOT(s_cmCabinDoorOuter.p_bStaEnabled)
-		OR NOT(s_cmCabinDoorOuter.p_bStaIsClosed)
-		OR s_cmCabinDoorOuter.p_bStaIsClosing
-		OR s_cmCabinDoorOuter.p_bStaIsOpened
-		OR s_cmCabinDoorOuter.p_bStaIsOpening
-		OR TRUE (*Air treathment unit must be running and ok*)
-		OR TRUE (*Add more..*);
-*)	]]></ST>
-      </Implementation>
-    </Method>
-    <Method Name="m_SeqCleanroomConnect" Id="{90534ebe-9d21-4aeb-b2cc-cf785c67a06d}">
-      <Declaration><![CDATA[METHOD PUBLIC m_SeqCleanroomConnect : BOOL
+    <Method Name="_m_Sequence" Id="{90534ebe-9d21-4aeb-b2cc-cf785c67a06d}">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Sequence : BOOL
 VAR
 	sReason : STRING;
 END_VAR]]></Declaration>
@@ -1689,6 +1263,431 @@ CASE s_eSequence OF
 
 END_CASE
 ]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_FullCycle" Id="{85945a60-1e58-4d91-af47-0c270dd5f580}">
+      <Declaration><![CDATA[METHOD PUBLIC m_FullCycle : BOOL
+
+VAR_INPUT
+	i_objTB : REFERENCE TO OBJ_Carrier;
+END_VAR
+
+
+VAR_INST
+	osrTbToCenter : R_TRIG;
+	osrTbToDocking : R_TRIG;
+	osrTbToInfeed : R_TRIG;
+	osrCenterTb : R_TRIG;
+	
+	osrDockTb : R_TRIG;
+	osrUndockTb : R_TRIG;
+	osrOpenInnerDoor : R_TRIG;
+	osrCloseInnerDoor : R_TRIG;
+	
+	osrPickTrolleyFromTb : R_TRIG;
+	osrPlaceTrollerInTb : R_TRIG;
+	
+	arr_bTestCmd : ARRAY[0..15] OF BOOL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT(__ISVALIDREF(i_objTB)) THEN
+	RETURN;
+END_IF
+
+m_SeqCleanroomConnect();
+
+//Pallet Conveyor
+IF arr_bTestCmd[0] THEN GVL_Modules.g_emPalletConveyor.m_ReqTB_ToInfeed(); arr_bTestCmd[0] := FALSE; END_IF
+IF arr_bTestCmd[1] THEN GVL_Modules.g_emPalletConveyor.m_ReqTB_ToCenter(); arr_bTestCmd[1] := FALSE; END_IF
+IF arr_bTestCmd[2] THEN GVL_Modules.g_emPalletConveyor.m_ReqCenteringTB(); arr_bTestCmd[2] := FALSE; END_IF
+IF arr_bTestCmd[3] THEN GVL_Modules.g_emPalletConveyor.m_ReqTB_ToDocking(); arr_bTestCmd[3] := FALSE; END_IF
+
+//Docking Interface
+IF arr_bTestCmd[4] THEN GVL_Modules.g_emDockingInterface.m_ReqDockTB(); arr_bTestCmd[4] := FALSE; END_IF
+IF arr_bTestCmd[5] THEN GVL_Modules.g_emDockingInterface.m_ReqOpenInnerDoor(); arr_bTestCmd[5] := FALSE; END_IF
+IF arr_bTestCmd[6] THEN GVL_Modules.g_emDockingInterface.m_ReqCloseInnerDoor(); arr_bTestCmd[6] := FALSE; END_IF
+IF arr_bTestCmd[7] THEN GVL_Modules.g_emDockingInterface.m_ReqUndockTB(); arr_bTestCmd[7] := FALSE; END_IF
+
+//Lifting transport
+IF arr_bTestCmd[8] THEN GVL_Modules.g_emLiftingTransport.m_ReqGoToIdle(); arr_bTestCmd[8] := FALSE; END_IF
+IF arr_bTestCmd[9] THEN GVL_Modules.g_emLiftingTransport.m_ReqPickTrolleyFromTB(); arr_bTestCmd[9] := FALSE; END_IF
+IF arr_bTestCmd[10] THEN GVL_Modules.g_emLiftingTransport.m_ReqPlaceTrolleyInTB(); arr_bTestCmd[10] := FALSE; END_IF
+
+
+//Unit will control lower-layer control modules based on data in Object Carrier
+//By changing the data in this object the behanvior can be manipulated / controlled.
+
+{warning '#TODO: Na gaan of het in onderstaande code niet beter zou zijn om puur te kijken naar de data uit de struct ipv naar properties uit de onderliggende modules?'}
+// zoals bij voorbeeld voor TB centered status
+
+//EM_PalletConveyor
+IF i_objTB.p_eDestination <> E_Location.UNKNOWN	THEN
+
+	//Transporting TB to Center
+	osrTbToCenter(
+		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING) 
+		AND i_objTB.p_eDestination > i_objTB.p_eActLocation
+		AND i_objTB.p_eActLocation < E_Location.CENTERING  
+		AND i_objTB.p_bOuterDoorOpened
+		AND i_objTB.p_bApprovedAtInfeed);
+	
+	IF osrTbToCenter.Q THEN
+		GVL_Modules.g_emPalletConveyor.m_ReqTB_ToCenter();
+	END_IF
+			
+	//Transporting TB to Docking
+	osrTbToDocking(
+		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING)
+		AND i_objTB.p_eDestination > i_objTB.p_eActLocation
+		AND i_objTB.p_eActLocation < E_Location.DOCKING 
+		AND GVL_Modules.g_emPalletConveyor.p_bStaTB_CenteringDone
+		AND GVL_Modules.g_emDockingInterface.p_bStaUndocked);
+	
+	IF osrTbToDocking.Q THEN
+		GVL_Modules.g_emPalletConveyor.m_ReqTB_ToDocking();
+	END_IF	
+		
+	//Transporting TB to Infeed
+	osrTbToInfeed(
+		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING)
+		AND i_objTB.p_eDestination < i_objTB.p_eActLocation
+		AND i_objTB.p_eActLocation > E_Location.INFEED
+		AND GVL_Modules.g_emDockingInterface.p_bStaUndocked);
+	
+	IF osrTbToInfeed.Q THEN
+		GVL_Modules.g_emPalletConveyor.m_ReqTB_ToInfeed();
+	END_IF
+	
+	//Centering TB
+	osrCenterTb(
+		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING) 
+		AND i_objTB.p_eActLocation = E_Location.CENTERING  
+		AND NOT(GVL_Modules.g_emPalletConveyor.p_bStaTB_CenteringDone));
+	
+	IF osrCenterTb.Q THEN
+		GVL_Modules.g_emPalletConveyor.m_ReqCenteringTB();
+	END_IF
+	
+END_IF
+	
+//EM_DockingInterface
+IF i_objTB.p_eDestination <> E_Location.UNKNOWN	THEN
+	
+	//Docking TB
+	osrDockTb(
+		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING) 
+		AND i_objTB.p_eActLocation = E_Location.DOCKING
+		AND i_objTB.p_eDestination > E_Location.DOCKING 
+		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaDocked));
+
+	IF osrDockTb.Q THEN
+		GVL_Modules.g_emDockingInterface.m_ReqDockTB();
+	END_IF
+	
+	//Undocking TB
+	osrUndockTb(
+		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING)
+		AND i_objTB.p_eActLocation = E_Location.DOCKING //Is this about the TB or Trolley location? 
+		AND i_objTB.p_eDestination < E_Location.DOCKING
+		AND GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosed
+		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaUndocked));
+	
+	IF osrUndockTb.Q THEN
+		GVL_Modules.g_emDockingInterface.m_ReqUndockTB();
+	END_IF
+
+	//Opening Inner Door TB
+	osrOpenInnerDoor(
+		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING)
+		AND i_objTB.p_eActLocation = E_Location.DOCKING
+		AND i_objTB.p_eDestination > E_Location.DOCKING
+		AND GVL_Modules.g_emDockingInterface.p_bStaDocked
+		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpened));
+	
+	IF osrOpenInnerDoor.Q THEN
+		GVL_Modules.g_emDockingInterface.m_ReqOpenInnerDoor();
+	END_IF
+			
+	//Closing Inner Door TB
+	osrCloseInnerDoor(
+		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING)
+		AND i_objTB.p_eActLocation = E_Location.DOCKING
+		AND i_objTB.p_eDestination < E_Location.DOCKING
+		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosed));
+	
+	IF osrCloseInnerDoor.Q THEN
+		GVL_Modules.g_emDockingInterface.m_ReqCloseInnerDoor();
+	END_IF
+	
+END_IF	
+
+//EM_LiftingTransport
+IF i_objTB.p_eDestination <> E_Location.UNKNOWN	THEN
+
+	//Picking trolley from TB
+	osrPickTrolleyFromTb(
+		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING) 
+		AND i_objTB.p_eDestination > i_objTB.p_eActLocation
+		AND i_objTB.p_eActLocation < E_Location.CENTERING  
+		AND i_objTB.p_bOuterDoorOpened
+		AND i_objTB.p_bApprovedAtInfeed);
+	
+	IF osrPickTrolleyFromTb.Q THEN
+		GVL_Modules.g_emLiftingTransport.m_ReqPickTrolleyFromTB();
+	END_IF
+	
+	//Place trolley TB TB
+	osrPickTrolleyFromTb(
+		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING) 
+		AND i_objTB.p_eDestination > i_objTB.p_eActLocation
+		AND i_objTB.p_eActLocation < E_Location.CENTERING  
+		AND i_objTB.p_bOuterDoorOpened
+		AND i_objTB.p_bApprovedAtInfeed);
+	
+	IF osrPickTrolleyFromTb.Q THEN
+		GVL_Modules.g_emLiftingTransport.m_ReqPickTrolleyFromTB();
+	END_IF
+	
+END_IF
+	
+(* Lod Code 20241108	
+//EM_PalletConveyor
+	
+	//Transporting TB to Center
+	IF i_objTB.p_eDestination <> E_Location.UNKNOWN
+		AND i_objTB.p_eDestination > i_objTB.p_eActLocation
+		AND i_objTB.p_eActLocation < E_Location.CENTERING  
+		AND i_objTB.p_bOuterDoorOpened
+		AND i_objTB.p_bApprovedAtInfeed THEN
+			GVL_Modules.g_emPalletConveyor.m_ReqTB_ToCenter();
+			
+	//Transporting TB to Docking		
+	ELSIF i_objTB.p_eDestination <> E_Location.UNKNOWN
+		AND i_objTB.p_eDestination > i_objTB.p_eActLocation
+		AND i_objTB.p_eActLocation < E_Location.DOCKING 
+		AND GVL_Modules.g_emPalletConveyor.p_bStaTB_CenteringDone
+		AND GVL_Modules.g_emDockingInterface.p_bStaUndocked THEN
+			GVL_Modules.g_emPalletConveyor.m_ReqTB_ToDocking();
+	
+	//Transporting TB to Infeed
+	ELSIF i_objTB.p_eDestination <> E_Location.UNKNOWN
+		AND i_objTB.p_eDestination < i_objTB.p_eActLocation
+		AND i_objTB.p_eActLocation > E_Location.INFEED
+		AND GVL_Modules.g_emDockingInterface.p_bStaUndocked THEN 
+			GVL_Modules.g_emPalletConveyor.m_ReqTB_ToInfeed();
+	
+	END_IF
+	
+	//Centering TB
+	IF i_objTB.p_eDestination <> E_Location.UNKNOWN
+		AND i_objTB.p_eActLocation = E_Location.CENTERING  
+		AND NOT(GVL_Modules.g_emPalletConveyor.p_bStaTB_CenteringDone) THEN
+		///AND NOT(i_objTB.p_bCenteringDone) AND NOT(bTest) THEN
+		; 
+		//	GVL_Modules.g_emPalletConveyor.m_ReqCenteringTB();
+	END_IF
+	
+	osrCenterTb(
+		CLK := i_objTB.p_eDestination <> E_Location.UNKNOWN
+		AND i_objTB.p_eActLocation = E_Location.CENTERING  
+		AND NOT(GVL_Modules.g_emPalletConveyor.p_bStaTB_CenteringDone));
+	
+	IF osrCenterTb.Q THEN
+		GVL_Modules.g_emPalletConveyor.m_ReqCenteringTB();
+	END_IF
+	
+//EM_DockingInterface
+
+	//Docking TB
+	IF i_objTB.p_eDestination <> E_Location.UNKNOWN
+		AND i_objTB.p_eActLocation = E_Location.DOCKING
+		AND i_objTB.p_eDestination > E_Location.DOCKING 
+		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaDocked) THEN
+			GVL_Modules.g_emDockingInterface.m_ReqDockTB();
+			
+	//Undocking TB
+	ELSIF i_objTB.p_eDestination <> E_Location.UNKNOWN
+		AND i_objTB.p_eActLocation = E_Location.DOCKING		//Is this about the TB or Trolley location? 
+		AND i_objTB.p_eDestination < E_Location.DOCKING
+		AND GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosedAndLocked
+		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaUndocked) THEN  
+			GVL_Modules.g_emDockingInterface.m_ReqUndockTB();
+
+	//Opening Inner Door TB
+	ELSIF i_objTB.p_eDestination <> E_Location.UNKNOWN
+		AND i_objTB.p_eActLocation = E_Location.DOCKING
+		AND i_objTB.p_eDestination > E_Location.DOCKING
+		AND GVL_Modules.g_emDockingInterface.p_bStaDocked
+		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpenedAndReleased) THEN  
+			GVL_Modules.g_emDockingInterface.m_ReqOpenInnerDoor();
+			
+	//Closing Inner Door TB
+	ELSIF i_objTB.p_eDestination <> E_Location.UNKNOWN
+		AND i_objTB.p_eActLocation = E_Location.DOCKING
+		AND i_objTB.p_eDestination < E_Location.DOCKING
+		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosedAndLocked) THEN  
+			GVL_Modules.g_emDockingInterface.m_ReqCloseInnerDoor();
+			
+	END_IF
+*)
+//EM_LiftingTransport
+	//Get Trolley from TB to Cabin
+	//Get Trolley from Cabin to TB
+	//..	
+	
+//EM_Doors
+	//Open Cabin door Infeed
+	//Close Cabin door Infeed
+	
+	//Release Cleanroom Door
+	//Lock Cleanroom Door
+	//..
+
+//EM_..	
+	
+	
+//-- Old Code
+//FullCycle
+//++	m_Inbound();
+//	Wait(T#5S)
+//	m_Outbound();]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="m_Main" Id="{bf5d9d9d-3881-4722-ad23-ed0781ff35d5}">
+      <Declaration><![CDATA[METHOD PUBLIC m_Main : BOOL
+VAR
+	s_bStaReady : BOOL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT SUPER^.m_Main() THEN
+	RETURN;
+END_IF
+
+GVL.g_osrNotify();
+GVL.g_osrNotify.CLK := FALSE;	
+
+
+
+m_Main := TRUE;
+
+CASE s_eCtrlMode OF
+
+	E_CtrlMode.IDLE:
+		s_eReqAction := E_ReqAction.NONE;	
+	
+	E_CtrlMode.AUTOMATIC:
+		//Wait for commands from 
+		IF s_fbHmiBtnInbound.p_osrBtnPress THEN
+			//--s_bReqInbound := TRUE;
+			s_eReqAction := E_ReqAction.INBOUND;
+		END_IF
+		
+		IF s_fbHmiBtnOutbound.p_osrBtnPress THEN
+			//--s_bReqOutbound := TRUE;
+			s_eReqAction := E_ReqAction.OUTBOUND;
+		END_IF
+		
+		IF s_fbHmiBtnDockTB.p_osrBtnPress THEN
+			//--s_bReqDockTB := TRUE;
+			s_eReqAction := E_ReqAction.DOCK_TB;
+		END_IF
+		
+		IF s_fbHmiBtnUndockTB.p_osrBtnPress THEN
+			//--s_bReqUndockTB := TRUE;
+			s_eReqAction := E_ReqAction.UNDOCK_TB;
+		END_IF
+		
+		IF s_fbHmiBtnOpenInnerTBDoor.p_osrBtnPress THEN
+			//--s_bReqUndockTB := TRUE;
+			s_eReqAction := E_ReqAction.OPEN_INNER_TB_DOOR;
+		END_IF
+		
+		IF s_fbHmiBtnCloseInnerTBDoor.p_osrBtnPress THEN
+			//--s_bReqUndockTB := TRUE;
+			s_eReqAction := E_ReqAction.CLOSE_INNER_TB_DOOR;
+		END_IF
+			
+		IF s_fbHmiBtnPickTrolleyFromTB.p_osrBtnPress THEN
+			//--s_bReqPickTrolleyFromTB := TRUE;
+			s_eReqAction := E_ReqAction.PICK_TROLLEY_FROM_TB;
+		END_IF
+		
+		IF s_fbHmiBtnPlaceTrolleyInTB.p_osrBtnPress THEN
+			//--s_bReqPlaceTrolleyInTB := TRUE;
+			s_eReqAction := E_ReqAction.PLACE_TROLLEY_IN_TB;
+		END_IF
+		
+		_m_Sequence();
+		
+	E_CtrlMode.MANUAL:
+		;
+		
+	E_CtrlMode.MAINTENANCE:
+		;
+		
+	E_CtrlMode.IO:
+		;
+		
+	E_CtrlMode.CLEANING:
+		;
+		
+END_CASE
+
+IF s_eCtrlMode <> E_CtrlMode.AUTOMATIC THEN
+	//Reset all commands
+//--	s_bReqInbound := FALSE;
+//--	s_bReqOutbound := FALSE;
+//--	s_bReqDockTB := FALSE;
+//--	s_bReqUndockTB := FALSE;
+//--	s_bReqPickTrolleyFromTB := FALSE;
+//--	s_bReqPlaceTrolleyInTB := FALSE;
+	s_eReqAction := E_ReqAction.NONE;	
+END_IF
+
+s_bStaReady := (s_eSequence = E_SeqCleanroomConnect.READY);
+
+
+s_fbHmiBtnDockTB.p_bStaEnabled := s_bStaReady AND NOT(GVL_Modules.g_emDockingInterface.p_bStaDocked);
+s_fbHmiBtnUndockTB.p_bStaEnabled := s_bStaReady AND NOT(GVL_Modules.g_emDockingInterface.p_bStaUnDocked) AND (GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosed);
+s_fbHmiBtnOpenInnerTBDoor.p_bStaEnabled := s_bStaReady AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpened) AND (GVL_Modules.g_emDockingInterface.p_bStaDocked);
+s_fbHmiBtnCloseInnerTBDoor.p_bStaEnabled := s_bStaReady AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosed);
+s_fbHmiBtnPickTrolleyFromTB.p_bStaEnabled := s_bStaReady AND GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpened;  
+s_fbHmiBtnPlaceTrolleyInTB.p_bStaEnabled := s_bStaReady AND GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpened;
+
+// Paul Schippers: just a test with the use of interfaces
+//??itfEmDoors.m_CloseOuterDoor();
+
+//??itfEmDockingInterface.m_OpenDockingClamps();
+
+//IF NOT(itfEmAirTreatment.p_bStaPressurizingOK) THEN 
+//	itfEmAirTreatment.m_Pressurize();
+//END_IF
+
+(*	
+	// Interlocks (doors must work as an airlock, only one door may be opened at all times)
+	s_bIlckCabinDoorOuterToOpen :=
+		s_cmDoorLockCleanroom.p_bStaError
+		OR NOT(s_cmDoorLockCleanroom.p_bStaEnabled)
+		NOT(s_cmDoorLockCleanroom.p_bStaDoorIsClosed)
+		OR NOT (s_cmDoorLockCleanroom.p_bStaLockIsApplied)
+		OR s_cmDoorLockCleanroom.p_bStaLockIsReleased
+		OR TRUE (*Air treathment unit must be running and ok*)
+		OR TRUE (*Add more..*);
+	s_bIlckCabinDoorOuterToClose :=
+		TRUE (*Opening must be free*)
+		OR TRUE (*Add more..*);
+	
+	s_bIlckDoorLockCleanroomToOpen :=
+		s_cmCabinDoorOuter.p_bStaError
+		OR NOT(s_cmCabinDoorOuter.p_bStaEnabled)
+		OR NOT(s_cmCabinDoorOuter.p_bStaIsClosed)
+		OR s_cmCabinDoorOuter.p_bStaIsClosing
+		OR s_cmCabinDoorOuter.p_bStaIsOpened
+		OR s_cmCabinDoorOuter.p_bStaIsOpening
+		OR TRUE (*Air treathment unit must be running and ok*)
+		OR TRUE (*Add more..*);
+*)	]]></ST>
       </Implementation>
     </Method>
   </POU>

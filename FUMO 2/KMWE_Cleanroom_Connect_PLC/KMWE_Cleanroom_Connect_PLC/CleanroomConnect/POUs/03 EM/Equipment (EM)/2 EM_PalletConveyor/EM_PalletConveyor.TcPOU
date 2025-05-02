@@ -172,7 +172,7 @@ SUPER^();
     </Implementation>
     <Folder Name="Base" Id="{067ba958-c4fb-4bce-8177-9625e918c776}" />
     <Method Name="_CalcMaxTravelTime" Id="{124056bd-8750-438f-b5d1-d60729a56962}">
-      <Declaration><![CDATA[METHOD PRIVATE _CalcMaxTravelTime : TIME
+      <Declaration><![CDATA[METHOD PROTECTED _CalcMaxTravelTime : TIME
 VAR_INPUT
 	i_fBaseRampTime : LREAL; //Base ramp-up time (setting frequency convertor), to reach 3000rpm, 200mm/s
 	i_fBaseSpeed : LREAL; //Base max. speed (setting frequency converor), 2000mm/s
@@ -249,12 +249,11 @@ _m_Alarms := TRUE;
       </Implementation>
     </Method>
     <Method Name="_m_AutomaticControl" Id="{bf60d7a3-961e-4fdb-af02-f325c49fcd52}">
-      <Declaration><![CDATA[METHOD PRIVATE _m_AutomaticControl : BOOL
+      <Declaration><![CDATA[METHOD PROTECTED _m_AutomaticControl : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[
-//Pallet Conveyor
-_m_SeqTransport();
+        <ST><![CDATA[//Pallet Conveyor
+_m_Sequence();
 		
 //Pallet Centering
 //--centering functionality is build into the transport sequencer
@@ -263,7 +262,7 @@ _m_SeqTransport();
       </Implementation>
     </Method>
     <Method Name="_m_CmdCenteringTB" Id="{ff42404a-08cf-4a4b-a12c-748d8f3fd351}">
-      <Declaration><![CDATA[METHOD PRIVATE _m_CmdCenteringTB : BOOL
+      <Declaration><![CDATA[METHOD PROTECTED _m_CmdCenteringTB : BOOL
 VAR_INPUT
 	i_refReason : REFERENCE TO STRING;
 END_VAR
@@ -286,7 +285,7 @@ END_IF
       </Implementation>
     </Method>
     <Method Name="_m_CmdTB_ToCenter" Id="{9a04d893-3f3d-441b-875a-c54a1fc8d77d}">
-      <Declaration><![CDATA[METHOD PRIVATE _m_CmdTB_ToCenter : BOOL
+      <Declaration><![CDATA[METHOD PROTECTED _m_CmdTB_ToCenter : BOOL
 VAR_INPUT
 	i_refReason : REFERENCE TO STRING;
 END_VAR
@@ -309,7 +308,7 @@ END_IF
       </Implementation>
     </Method>
     <Method Name="_m_CmdTB_ToDocking" Id="{2bfcdc46-8a0a-4837-b71a-35dd909a0ae6}">
-      <Declaration><![CDATA[METHOD PRIVATE _m_CmdTB_ToDocking : BOOL
+      <Declaration><![CDATA[METHOD PROTECTED _m_CmdTB_ToDocking : BOOL
 VAR_INPUT
 	i_refReason : REFERENCE TO STRING;
 END_VAR
@@ -332,7 +331,7 @@ END_IF
       </Implementation>
     </Method>
     <Method Name="_m_CmdTB_ToInfeed" Id="{cf16f0e7-53a6-4bd4-b559-f1ce284b5a59}">
-      <Declaration><![CDATA[METHOD PRIVATE _m_CmdTB_ToInfeed : BOOL
+      <Declaration><![CDATA[METHOD PROTECTED _m_CmdTB_ToInfeed : BOOL
 VAR_INPUT
 	i_refReason : REFERENCE TO STRING;
 END_VAR
@@ -761,7 +760,7 @@ _m_Params := TRUE;
       </Implementation>
     </Method>
     <Method Name="_m_SeqCentering" Id="{9ea29294-eb8f-4625-80fc-76ae8a3e8898}">
-      <Declaration><![CDATA[METHOD PRIVATE _m_SeqCentering : BOOL
+      <Declaration><![CDATA[METHOD PROTECTED _m_SeqCentering : BOOL
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
@@ -871,8 +870,8 @@ END_CASE
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_SeqTransport" Id="{7bf2ff54-007b-4f2a-966d-421cf756f1be}">
-      <Declaration><![CDATA[METHOD PRIVATE _m_SeqTransport : BOOL
+    <Method Name="_m_Sequence" Id="{7bf2ff54-007b-4f2a-966d-421cf756f1be}">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Sequence : BOOL
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[

@@ -259,17 +259,16 @@ _m_Alarms := TRUE;
       </Implementation>
     </Method>
     <Method Name="_m_AutomaticControl" Id="{51dbf1d4-9c3c-42ad-87fe-cdadd1984100}">
-      <Declaration><![CDATA[METHOD PRIVATE _m_AutomaticControl : BOOL
+      <Declaration><![CDATA[METHOD PROTECTED _m_AutomaticControl : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[
-//Lifting Transport
-_m_SeqLiftingTransport();
+        <ST><![CDATA[//Lifting Transport
+_m_Sequence();
 		]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_CmdGoToIdle" Id="{5f07294c-c083-4786-a1a2-586c95e439f7}">
-      <Declaration><![CDATA[METHOD PRIVATE _m_CmdGoToIdle : BOOL
+      <Declaration><![CDATA[METHOD PROTECTED _m_CmdGoToIdle : BOOL
 VAR_INPUT
 	i_refReason : REFERENCE TO STRING(128);
 END_VAR
@@ -300,7 +299,7 @@ END_IF
       </Implementation>
     </Method>
     <Method Name="_m_CmdPickTrolleyFromTB" Id="{3a534c15-c636-468b-8b82-6fd59e761d1a}">
-      <Declaration><![CDATA[METHOD PRIVATE _m_CmdPickTrolleyFromTB : BOOL
+      <Declaration><![CDATA[METHOD PROTECTED _m_CmdPickTrolleyFromTB : BOOL
 VAR_INPUT
 	i_refReason : REFERENCE TO STRING(128);
 END_VAR
@@ -335,7 +334,7 @@ END_IF
       </Implementation>
     </Method>
     <Method Name="_m_CmdPlaceTrolleyInTB" Id="{fddfe49e-6281-47a3-8534-8abf984608e2}">
-      <Declaration><![CDATA[METHOD PRIVATE _m_CmdPlaceTrolleyInTB : BOOL
+      <Declaration><![CDATA[METHOD PROTECTED _m_CmdPlaceTrolleyInTB : BOOL
 VAR_INPUT
 	i_refReason : REFERENCE TO STRING(128);
 END_VAR
@@ -371,7 +370,7 @@ END_IF
     </Method>
     <Method Name="_m_ConvLiftHeightToSpindPos" Id="{8617e5f7-c58b-4537-8cd1-e74ba22bdca2}">
       <Declaration><![CDATA[///Convert Lift Height To Spindle Position
-METHOD PRIVATE _m_ConvLiftHeightToSpindPos : LREAL
+METHOD PROTECTED _m_ConvLiftHeightToSpindPos : LREAL
 VAR_INPUT
 	i_fSetLiftHeight : LREAL; //[mm]
 	
@@ -398,7 +397,7 @@ _m_ConvLiftHeightToSpindPos := c_fLEG_LENGTH - (s_fScissorBase - c_fSPINDLE_OFFS
     </Method>
     <Method Name="_m_ConvLiftToMotorPos" Id="{3e5c7f8b-1cdb-4f91-8994-492b3f27a304}">
       <Declaration><![CDATA[///Convert Lift (desired) To Motor Position
-METHOD PRIVATE _m_ConvLiftToMotorPos : ST_PositioningProfile
+METHOD PROTECTED _m_ConvLiftToMotorPos : ST_PositioningProfile
 VAR_INPUT
 	i_stPosProf : ST_PositioningProfile;
 END_VAR
@@ -417,7 +416,7 @@ _m_ConvLiftToMotorPos.fPos := _m_ConvLiftHeightToSpindPos(i_stPosProf.fPos);
     </Method>
     <Method Name="_m_ConvSpindPosToLiftHeight" Id="{b4c945b7-7c49-44aa-94eb-77b098eae95c}">
       <Declaration><![CDATA[///Convert Spindle Position To Lift Height
-METHOD PRIVATE _m_ConvSpindPosToLiftHeight : LREAL
+METHOD PROTECTED _m_ConvSpindPosToLiftHeight : LREAL
 VAR_INPUT
 	i_fActSpindPos : LREAL; //[mm]
 END_VAR
@@ -449,7 +448,7 @@ _m_ConvSpindPosToLiftHeight := s_fScissorHeight - c_fHEIGHT_OFFSET;
     </Method>
     <Method Name="_m_ConvTranspToMotorPos" Id="{5ab8735e-3225-492d-860a-94723f1f74f0}">
       <Declaration><![CDATA[///Convert Transport (desired) To Motor Position
-METHOD PRIVATE _m_ConvTranspToMotorPos : ST_PositioningProfile
+METHOD PROTECTED _m_ConvTranspToMotorPos : ST_PositioningProfile
 VAR_INPUT
 	i_stPosProf : ST_PositioningProfile;
 END_VAR
@@ -823,8 +822,8 @@ _m_Params := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_SeqLiftingTransport" Id="{adfb5128-2b00-4a29-b7de-b50ba035879a}">
-      <Declaration><![CDATA[METHOD PRIVATE _m_SeqLiftingTransport : BOOL
+    <Method Name="_m_Sequence" Id="{adfb5128-2b00-4a29-b7de-b50ba035879a}">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Sequence : BOOL
 VAR
 	s_bError : BOOL;
 	s_bDontWait : BOOL; //local written from setting

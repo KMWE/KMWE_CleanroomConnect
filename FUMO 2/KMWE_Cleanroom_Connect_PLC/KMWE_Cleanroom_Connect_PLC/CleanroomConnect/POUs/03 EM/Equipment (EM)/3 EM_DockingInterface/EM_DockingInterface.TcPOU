@@ -260,8 +260,7 @@ SUPER^();
     </Implementation>
     <Folder Name="Base" Id="{07fbcd8f-5aa9-45bb-81ec-c9a513967daf}" />
     <Method Name="_m_AdoptPressureSelection" Id="{bdf5c402-b106-4275-8b75-e0584a90338e}">
-      <Declaration><![CDATA[METHOD PRIVATE _m_AdoptPressureSelection : BOOL
-]]></Declaration>
+      <Declaration><![CDATA[METHOD PROTECTED _m_AdoptPressureSelection : BOOL]]></Declaration>
       <Implementation>
         <ST><![CDATA[
 //Let pressure selection toggle follow automatic state
@@ -337,17 +336,16 @@ _m_Alarms := TRUE;
       </Implementation>
     </Method>
     <Method Name="_m_AutomaticControl" Id="{ee0253ab-2fda-4db0-933c-ed048e84d0ed}">
-      <Declaration><![CDATA[METHOD PRIVATE _m_AutomaticControl : BOOL
+      <Declaration><![CDATA[METHOD PROTECTED _m_AutomaticControl : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[
-//Docking Interface
-_m_SeqDockingInterface();
+        <ST><![CDATA[//Docking Interface
+_m_Sequence();
 ]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_CmdCloseInnerDoor" Id="{410bcb72-5351-4d55-ac55-5d0e27ce8155}">
-      <Declaration><![CDATA[METHOD PRIVATE _m_CmdCloseInnerDoor : BOOL
+      <Declaration><![CDATA[METHOD PROTECTED _m_CmdCloseInnerDoor : BOOL
 VAR_INPUT
 	i_refReason : REFERENCE TO STRING;
 END_VAR
@@ -371,7 +369,7 @@ END_IF
       </Implementation>
     </Method>
     <Method Name="_m_CmdDockTB" Id="{8e382bf6-1d32-4474-a8a5-7c183a3c7036}">
-      <Declaration><![CDATA[METHOD PRIVATE _m_CmdDockTB : BOOL
+      <Declaration><![CDATA[METHOD PROTECTED _m_CmdDockTB : BOOL
 VAR_INPUT
 	i_refReason : REFERENCE TO STRING;
 END_VAR
@@ -394,7 +392,7 @@ END_IF
       </Implementation>
     </Method>
     <Method Name="_m_CmdOpenInnerDoor" Id="{8be47e79-6c29-4713-b252-eb11a6bb46fb}">
-      <Declaration><![CDATA[METHOD PRIVATE _m_CmdOpenInnerDoor : BOOL
+      <Declaration><![CDATA[METHOD PROTECTED _m_CmdOpenInnerDoor : BOOL
 VAR_INPUT
 	i_refReason : REFERENCE TO STRING;
 END_VAR
@@ -418,7 +416,7 @@ END_IF
       </Implementation>
     </Method>
     <Method Name="_m_CmdUndockTB" Id="{b328f671-5464-49bf-836c-f1f93f3d32af}">
-      <Declaration><![CDATA[METHOD PRIVATE _m_CmdUndockTB : BOOL
+      <Declaration><![CDATA[METHOD PROTECTED _m_CmdUndockTB : BOOL
 VAR_INPUT
 	i_refReason : REFERENCE TO STRING;
 END_VAR
@@ -1148,7 +1146,7 @@ END_IF
       </Implementation>
     </Method>
     <Method Name="_m_MaintenanceControl" Id="{cf85508a-2caa-42ea-a56c-5902a15aaf22}">
-      <Declaration><![CDATA[METHOD PRIVATE _m_MaintenanceControl : BOOL
+      <Declaration><![CDATA[METHOD PROTECTED _m_MaintenanceControl : BOOL
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
@@ -1350,8 +1348,29 @@ _m_Params := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_SeqDockingInterface" Id="{99e9476f-c6f4-43bb-b223-447cd5d85ec0}">
-      <Declaration><![CDATA[METHOD PRIVATE _m_SeqDockingInterface : BOOL
+    <Method Name="_m_SeqStartup" Id="{c8d2def1-61a3-43d6-a687-bb0d54548919}">
+      <Declaration><![CDATA[METHOD PROTECTED _m_SeqStartup : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+s_cmClampsUpperHighPressure.m_Off();
+s_cmClampsLowerHighPressure.m_Off();
+
+IF s_cmDoorOpener.m_Off() AND s_bStaDoorOpenerAlmostClosed THEN //Close Door Opener
+	//--IF s_cmDoorShutter.m_On() THEN //Close Door Shutter		--> Door Shutter must be opened befor docking can be started
+	IF s_cmDoorShutter.m_Off() THEN //Open Door Shutter
+		IF s_cmUnlockingPinUpper.m_Off() AND s_cmUnlockingPinLower.m_Off() THEN //Lock Unlocking Pins
+			IF s_cmDockingClampsUpper.m_Off() AND s_cmDockingClampsLower.m_Off() THEN // Open Docking Clamps
+				_m_SeqStartup := TRUE;
+			END_IF
+		END_IF						
+	END_IF
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="_m_Sequence" Id="{99e9476f-c6f4-43bb-b223-447cd5d85ec0}">
+      <Declaration><![CDATA[METHOD PROTECTED _m_Sequence : BOOL
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
@@ -1917,27 +1936,6 @@ s_bReqDockTB := FALSE;
 s_bReqUndockTB := FALSE;
 s_bReqOpenInnerDoor := FALSE;
 s_bReqCloseInnerDoor := FALSE;
-]]></ST>
-      </Implementation>
-    </Method>
-    <Method Name="_m_SeqStartup" Id="{c8d2def1-61a3-43d6-a687-bb0d54548919}">
-      <Declaration><![CDATA[METHOD PRIVATE _m_SeqStartup : BOOL
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[
-s_cmClampsUpperHighPressure.m_Off();
-s_cmClampsLowerHighPressure.m_Off();
-
-IF s_cmDoorOpener.m_Off() AND s_bStaDoorOpenerAlmostClosed THEN //Close Door Opener
-	//--IF s_cmDoorShutter.m_On() THEN //Close Door Shutter		--> Door Shutter must be opened befor docking can be started
-	IF s_cmDoorShutter.m_Off() THEN //Open Door Shutter
-		IF s_cmUnlockingPinUpper.m_Off() AND s_cmUnlockingPinLower.m_Off() THEN //Lock Unlocking Pins
-			IF s_cmDockingClampsUpper.m_Off() AND s_cmDockingClampsLower.m_Off() THEN // Open Docking Clamps
-				_m_SeqStartup := TRUE;
-			END_IF
-		END_IF						
-	END_IF
-END_IF
 ]]></ST>
       </Implementation>
     </Method>

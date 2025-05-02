@@ -833,26 +833,28 @@ END_VAR
         <ST><![CDATA[
 //Register previous step
 IF s_eSequence <> s_ePreviousStep
-	AND s_eSequence <> E_SeqLiftingTransport.STOP 
+	AND s_eSequence <> E_SeqLiftingTransport.STOP
 	AND s_eSequence <> E_SeqLiftingTransport.ERROR THEN
 	s_ePreviousStep := s_eSequence;
-END_IF	
+END_IF
 
 s_bDontWait := NOT(i_ref_stSettings.bWaitForNextStep);
-	
-s_fbSeqControl(
-	i_nSeqStep := s_eSequence, 
-	i_sStepName := TO_STRING(s_eSequence), 
-	i_bCmdReset := i_bCmdReset
-					AND (s_eSequence = E_SeqLiftingTransport.ERROR) // Only reset/resume sequencer from ERROR state
-					AND NOT(s_cmLift.p_bStaError)
-					AND NOT(s_cmTransport.p_bStaError)
-					AND i_bReqEnable, 
-	i_bStaError := s_bStaError OR NOT(i_bReqEnable));
 
+s_fbSeqControl(
+	i_nSeqStep := s_eSequence,
+	i_sStepName := TO_STRING(s_eSequence),
+	i_bCmdReset := 
+		i_bCmdReset
+		AND i_bReqEnable
+		AND (s_eSequence = E_SeqLiftingTransport.ERROR) // Only reset/resume sequencer from ERROR state
+		AND NOT(s_bStaError),
+//--		AND NOT(s_cmLift.p_bStaError)
+//--		AND NOT(s_cmTransport.p_bStaError)
+	i_bStaError := s_bStaError OR NOT(i_bReqEnable));
+	
 	s_bActionDone R= s_fbSeqControl.q_bStaEntry;
 
-//Force to stop	
+//Force to stop
 IF (i_eCtrlState = E_CtrlState.STOPPING) THEN
 	s_eSequence := E_SeqLiftingTransport.STOP;
 END_IF
@@ -861,7 +863,7 @@ END_IF
 IF (s_eSequence > E_SeqLiftingTransport.START) AND (s_eSequence < E_SeqLiftingTransport.STOP) THEN
 	s_eLastStepPersistent := s_eSequence;
 END_IF
-	
+
 s_sResumeStep := TO_STRING(s_eResumeStep);
 
 CASE s_eSequence OF
@@ -869,17 +871,17 @@ CASE s_eSequence OF
 	E_SeqLiftingTransport.IDLE:
 		s_eResumeStep := E_SeqLiftingTransport.READY;
 		s_eSequence := E_SeqLiftingTransport.START;
-
+	
 	E_SeqLiftingTransport.START:  // Afhankelijk van de voorgaande stap, stappen programma hervatten. Wanneer actie voltooit
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_sMessage := 'start';
 		END_IF
-	
+		
 		IF i_eCtrlState = E_CtrlState.RUNNING THEN
 			s_eSequence := s_eResumeStep;
 		END_IF
-
-///////////////////////////////////////////////////////////////////////////////////////////////////			
+		
+///////////////////////////////////////////////////////////////////////////////////////////////////
 // READY //////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqLiftingTransport.READY:
 		IF s_fbSeqControl.q_bStaEntry THEN
@@ -892,31 +894,31 @@ CASE s_eSequence OF
 			//ELSE	If failed (command not allowed): the message will be written with the interlock reason
 			END_IF
 			s_bReqGoToIdle := FALSE;
-		
+			
 		ELSIF s_bReqPickTrolleyFromTB THEN
 			IF _m_CmdPickTrolleyFromTB(i_refReason := s_sMessage) THEN
 				s_eSequence := E_SeqLiftingTransport.LIFT_PRE_PICK_FROM_TB;
 			//ELSE	If failed (command not allowed): the message will be written with the interlock reason
 			END_IF
 			s_bReqPickTrolleyFromTB := FALSE;
-		
+			
 		ELSIF s_bReqPlaceTrolleyInTB THEN
-			IF _m_CmdPlaceTrolleyInTB(i_refReason := s_sMessage) THEN			
+			IF _m_CmdPlaceTrolleyInTB(i_refReason := s_sMessage) THEN
 				s_eSequence := E_SeqLiftingTransport.LIFT_PRE_PICK_FROM_CABIN;
 			//ELSE	If failed (command not allowed): the message will be written with the interlock reason
 			END_IF
 			s_bReqPlaceTrolleyInTB := FALSE;
 		END_IF
-
+		
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-// GO TO IDLE /////////////////////////////////////////////////////////////////////////////////////		
+// GO TO IDLE /////////////////////////////////////////////////////////////////////////////////////
 	E_SeqLiftingTransport.TRANSPORT_TO_IDLE:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmTransport.m_MoveAbsolute(_m_ConvTranspToMotorPos(i_ref_stSettings.arr_stTransportPositioningProfile[0]));
 		END_IF
-					
+		
 		s_bActionDone S= s_cmTransport.p_bMoveAbsDone;
-	
+		
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
 			s_eSequence := E_SeqLiftingTransport.LIFT_TO_IDLE;
@@ -924,8 +926,8 @@ CASE s_eSequence OF
 		ELSIF s_bError THEN
 			s_eSequence := E_SeqLiftingTransport.ERROR;
 		END_IF
-			
-	E_SeqLiftingTransport.LIFT_TO_IDLE:	
+		
+	E_SeqLiftingTransport.LIFT_TO_IDLE:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmLift.m_MoveAbsolute(_m_ConvLiftToMotorPos(i_ref_stSettings.arr_stLiftPositioningProfile[0]));
 		END_IF
@@ -938,32 +940,32 @@ CASE s_eSequence OF
 		
 		ELSIF s_bError THEN
 			s_eSequence := E_SeqLiftingTransport.ERROR;
-		END_IF		
-
-///////////////////////////////////////////////////////////////////////////////////////////////////		
+		END_IF
+		
+///////////////////////////////////////////////////////////////////////////////////////////////////
 /// PICK TROLLEY FROM TB //////////////////////////////////////////////////////////////////////////
 	E_SeqLiftingTransport.LIFT_PRE_PICK_FROM_TB:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmLift.m_MoveAbsolute(_m_ConvLiftToMotorPos(i_ref_stSettings.arr_stLiftPositioningProfile[1]));
 			s_bStaTrolleyPlacedInTB := FALSE;
 		END_IF
-					
+		
 		s_bActionDone S= s_cmLift.p_bMoveAbsDone;
-	
+		
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
-			s_eSequence := E_SeqLiftingTransport.TRANSPORT_PRE_PICK_FROM_TB;	
+			s_eSequence := E_SeqLiftingTransport.TRANSPORT_PRE_PICK_FROM_TB;
 		ELSIF s_bError THEN
 			s_eSequence := E_SeqLiftingTransport.ERROR;
 		END_IF
-			
+		
 	E_SeqLiftingTransport.TRANSPORT_PRE_PICK_FROM_TB:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmTransport.m_MoveAbsolute(_m_ConvTranspToMotorPos(i_ref_stSettings.arr_stTransportPositioningProfile[1]));
 		END_IF
-			
+		
 		s_bActionDone S= s_cmTransport.p_bMoveAbsDone;
-	
+		
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
 			s_eSequence := E_SeqLiftingTransport.TRANSPORT_PICK_FROM_TB;
@@ -976,9 +978,9 @@ CASE s_eSequence OF
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmTransport.m_MoveAbsolute(_m_ConvTranspToMotorPos(i_ref_stSettings.arr_stTransportPositioningProfile[2]));
 		END_IF
-	
+		
 		s_bActionDone S= s_cmTransport.p_bMoveAbsDone;
-			
+		
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
 			s_eSequence := E_SeqLiftingTransport.LIFT_PICK_FROM_TB;
@@ -986,14 +988,14 @@ CASE s_eSequence OF
 		ELSIF s_bError THEN
 			s_eSequence := E_SeqLiftingTransport.ERROR;
 		END_IF
-	
+		
 	E_SeqLiftingTransport.LIFT_PICK_FROM_TB:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmLift.m_MoveAbsolute(_m_ConvLiftToMotorPos(i_ref_stSettings.arr_stLiftPositioningProfile[2]));
 		END_IF
-	
+		
 		s_bActionDone S= s_cmLift.p_bMoveAbsDone;
-	
+		
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
 			s_eSequence := E_SeqLiftingTransport.CHECK_TROLLEY_UNLOCKED;
@@ -1001,44 +1003,44 @@ CASE s_eSequence OF
 		ELSIF s_bError THEN
 			s_eSequence := E_SeqLiftingTransport.ERROR;
 		END_IF
-
+		
 	E_SeqLiftingTransport.CHECK_TROLLEY_UNLOCKED:
 		IF (s_fbSeqControl.q_tmStepTime > T#3S) 
 			AND NOT(s_bStaTrolleyLocked) AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE; 
 			s_eSequence := E_SeqLiftingTransport.LIFT_RAISE_FROM_TB;
-	
+			
 		ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN
 			IF i_ref_stSettings.bAutoRecoveryToIdle THEN
 				s_eSequence := E_SeqLiftingTransport.RECOVERY_UNLOCKED_FAILED;
 			ELSE
 				s_bErrUnlockTrolleyFailed := TRUE;
-				s_eSequence := E_SeqLiftingTransport.ERROR;	
+				s_eSequence := E_SeqLiftingTransport.ERROR;
 			END_IF
 		END_IF
-
+		
 	E_SeqLiftingTransport.RECOVERY_UNLOCKED_FAILED:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmLift.m_MoveAbsolute(_m_ConvLiftToMotorPos(i_ref_stSettings.arr_stLiftPositioningProfile[1]));
 		END_IF
 		
 		s_bActionDone S= s_cmLift.p_bMoveAbsDone;
-			
+		
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
 			s_eSequence := E_SeqLiftingTransport.TRANSPORT_TO_IDLE;
-		
+			
 		ELSIF s_bError THEN
 			s_eSequence := E_SeqLiftingTransport.ERROR;
 		END_IF
-			
+		
 	E_SeqLiftingTransport.LIFT_RAISE_FROM_TB:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmLift.m_MoveAbsolute(_m_ConvLiftToMotorPos(i_ref_stSettings.arr_stLiftPositioningProfile[3]));
 		END_IF
 		
 		s_bActionDone S= s_cmLift.p_bMoveAbsDone;
-	
+		
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
 			s_eSequence := E_SeqLiftingTransport.TRANSPORT_PLACE_IN_CABIN;
@@ -1046,14 +1048,14 @@ CASE s_eSequence OF
 		ELSIF s_bError THEN
 			s_eSequence := E_SeqLiftingTransport.ERROR;
 		END_IF
-
+		
 	E_SeqLiftingTransport.TRANSPORT_PLACE_IN_CABIN:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmTransport.m_MoveAbsolute(_m_ConvTranspToMotorPos(i_ref_stSettings.arr_stTransportPositioningProfile[3]));
 		END_IF
 		
 		s_bActionDone S= s_cmTransport.p_bMoveAbsDone;
-	
+		
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
 			s_eSequence := E_SeqLiftingTransport.LIFT_PRE_PLACE_IN_CABIN;
@@ -1066,9 +1068,9 @@ CASE s_eSequence OF
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmLift.m_MoveAbsolute(_m_ConvLiftToMotorPos(i_ref_stSettings.arr_stLiftPositioningProfile[4]));
 		END_IF
-	
+		
 		s_bActionDone S= s_cmLift.p_bMoveAbsDone;
-	
+		
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
 			s_eSequence := E_SeqLiftingTransport.LIFT_PLACE_IN_CABIN;
@@ -1081,9 +1083,9 @@ CASE s_eSequence OF
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmLift.m_MoveAbsolute(_m_ConvLiftToMotorPos(i_ref_stSettings.arr_stLiftPositioningProfile[5]));
 		END_IF
-	
+		
 		s_bActionDone S= s_cmLift.p_bMoveAbsDone;
-	
+		
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
 			s_eSequence := E_SeqLiftingTransport.CHECK_TROLLEY_PLACED;
@@ -1092,7 +1094,7 @@ CASE s_eSequence OF
 			s_eSequence := E_SeqLiftingTransport.ERROR;
 		END_IF
 		
-	E_SeqLiftingTransport.CHECK_TROLLEY_PLACED:	
+	E_SeqLiftingTransport.CHECK_TROLLEY_PLACED:
 		IF s_bStaTrolleyAtLiftPos THEN
 			s_bStaTrolleyPickedFromTB := TRUE;												/////////////////////
 			s_eSequence := E_SeqLiftingTransport.READY;
@@ -1101,21 +1103,21 @@ CASE s_eSequence OF
 			s_bErrNoTrolleyPlaced := TRUE;
 			s_eSequence := E_SeqLiftingTransport.ERROR;
 		END_IF
-	
+		
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// PICK TROLLEY FROM CABIN ///////////////////////////////////////////////////////////////////////		
+/// PICK TROLLEY FROM CABIN ///////////////////////////////////////////////////////////////////////
 	E_SeqLiftingTransport.LIFT_PRE_PICK_FROM_CABIN:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmLift.m_MoveAbsolute(_m_ConvLiftToMotorPos(i_ref_stSettings.arr_stLiftPositioningProfile[6]));
 			s_bStaTrolleyPickedFromTB := FALSE;
 		END_IF
-	
+		
 		s_bActionDone S= s_cmLift.p_bMoveAbsDone;
-	
+		
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
 			s_eSequence := E_SeqLiftingTransport.LIFT_PICK_FROM_CABIN;
-
+		
 		ELSIF s_bError THEN
 			s_eSequence := E_SeqLiftingTransport.ERROR;
 		END_IF
@@ -1124,9 +1126,9 @@ CASE s_eSequence OF
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmLift.m_MoveAbsolute(_m_ConvLiftToMotorPos(i_ref_stSettings.arr_stLiftPositioningProfile[7]));
 		END_IF
-	
+		
 		s_bActionDone S= s_cmLift.p_bMoveAbsDone;
-	
+		
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
 			s_eSequence := E_SeqLiftingTransport.LIFT_RAISE_FROM_CABIN;
@@ -1139,9 +1141,9 @@ CASE s_eSequence OF
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmLift.m_MoveAbsolute(_m_ConvLiftToMotorPos(i_ref_stSettings.arr_stLiftPositioningProfile[8]));
 		END_IF
-	
+		
 		s_bActionDone S= s_cmLift.p_bMoveAbsDone;
-	
+		
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
 			s_eSequence := E_SeqLiftingTransport.TRANSPORT_PRE_PLACE_IN_TB;
@@ -1149,14 +1151,14 @@ CASE s_eSequence OF
 		ELSIF s_bError THEN
 			s_eSequence := E_SeqLiftingTransport.ERROR;
 		END_IF
-	
+		
 	E_SeqLiftingTransport.TRANSPORT_PRE_PLACE_IN_TB:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmTransport.m_MoveAbsolute(_m_ConvTranspToMotorPos(i_ref_stSettings.arr_stTransportPositioningProfile[4]));
 		END_IF
-	
+		
 		s_bActionDone S= s_cmTransport.p_bMoveAbsDone;
-	
+		
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
 			s_eSequence := E_SeqLiftingTransport.TRANSPORT_PLACE_IN_TB;
@@ -1164,14 +1166,14 @@ CASE s_eSequence OF
 		ELSIF s_bError THEN
 			s_eSequence := E_SeqLiftingTransport.ERROR;
 		END_IF
-	
+		
 	E_SeqLiftingTransport.TRANSPORT_PLACE_IN_TB:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmTransport.m_MoveAbsolute(_m_ConvTranspToMotorPos(i_ref_stSettings.arr_stTransportPositioningProfile[5]));
 		END_IF
-	
+		
 		s_bActionDone S= s_cmTransport.p_bMoveAbsDone;
-	
+		
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
 			s_eSequence := E_SeqLiftingTransport.LIFT_PRE_PLACE_IN_TB;
@@ -1179,14 +1181,14 @@ CASE s_eSequence OF
 		ELSIF s_bError THEN
 			s_eSequence := E_SeqLiftingTransport.ERROR;
 		END_IF
-
+		
 	E_SeqLiftingTransport.LIFT_PRE_PLACE_IN_TB:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmLift.m_MoveAbsolute(_m_ConvLiftToMotorPos(i_ref_stSettings.arr_stLiftPositioningProfile[9]));
 		END_IF
-	
+		
 		s_bActionDone S= s_cmLift.p_bMoveAbsDone;
-	
+		
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
 			s_eSequence := E_SeqLiftingTransport.LIFT_PLACE_IN_TB;
@@ -1194,14 +1196,14 @@ CASE s_eSequence OF
 		ELSIF s_bError THEN
 			s_eSequence := E_SeqLiftingTransport.ERROR;
 		END_IF
-			
+		
 	E_SeqLiftingTransport.LIFT_PLACE_IN_TB:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmLift.m_MoveAbsolute(_m_ConvLiftToMotorPos(i_ref_stSettings.arr_stLiftPositioningProfile[10]));
 		END_IF
-	
+		
 		s_bActionDone S= s_cmLift.p_bMoveAbsDone;
-	
+		
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
 			s_eSequence := E_SeqLiftingTransport.CHECK_TROLLEY_LOCKED;
@@ -1209,20 +1211,20 @@ CASE s_eSequence OF
 		ELSIF s_bError THEN
 			s_eSequence := E_SeqLiftingTransport.ERROR;
 		END_IF
-	
+		
 	E_SeqLiftingTransport.CHECK_TROLLEY_LOCKED:
 		IF (s_fbSeqControl.q_tmStepTime > T#3S)
 			AND s_bStaTrolleyLocked AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
 			s_bStaTrolleyPlacedInTB := TRUE; //Note can be resetted 
 			s_eSequence := E_SeqLiftingTransport.TRANSPORT_RETURN_IN_CABIN;
-		
+			
 		ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN
-			IF i_ref_stSettings.bAutoRecoveryToIdle THEN	
+			IF i_ref_stSettings.bAutoRecoveryToIdle THEN
 			s_eSequence := E_SeqLiftingTransport.RECOVERY_LOCKED_FAILED;
 			ELSE
 				s_bErrLockTrolleyFailed := TRUE;
-				s_eSequence := E_SeqLiftingTransport.ERROR;	
+				s_eSequence := E_SeqLiftingTransport.ERROR;
 			END_IF
 		END_IF
 		
@@ -1232,7 +1234,7 @@ CASE s_eSequence OF
 		END_IF
 		
 		s_bActionDone S= s_cmLift.p_bMoveAbsDone;
-	
+		
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
 			s_eSequence := E_SeqLiftingTransport.TRANSPORT_TO_IDLE;
@@ -1245,33 +1247,33 @@ CASE s_eSequence OF
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmTransport.m_MoveAbsolute(_m_ConvTranspToMotorPos(i_ref_stSettings.arr_stTransportPositioningProfile[0]));
 		END_IF
-			
+		
 		s_bActionDone S= s_cmTransport.p_bMoveAbsDone;
-	
+		
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
 			s_eSequence := E_SeqLiftingTransport.LIFT_RETURN_IN_CABIN;
-		
+			
 		ELSIF s_bError THEN
 			s_eSequence := E_SeqLiftingTransport.ERROR;
 		END_IF
-
+		
 	E_SeqLiftingTransport.LIFT_RETURN_IN_CABIN:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmLift.m_MoveAbsolute(_m_ConvLiftToMotorPos(i_ref_stSettings.arr_stLiftPositioningProfile[0]));
 		END_IF
-	
+		
 		s_bActionDone S= s_cmLift.p_bMoveAbsDone;
-	
+		
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
 			s_eSequence := E_SeqLiftingTransport.CHECK_CABIN_EMPTY;
-		
+			
 		ELSIF s_bError THEN
 			s_eSequence := E_SeqLiftingTransport.ERROR;
 		END_IF
-			
-	E_SeqLiftingTransport.CHECK_CABIN_EMPTY:	
+		
+	E_SeqLiftingTransport.CHECK_CABIN_EMPTY:
 		IF s_bStaCabinAreaFree THEN
 			s_bStaTrolleyPlacedInTB := TRUE;												/////////////////////
 			s_eSequence := E_SeqLiftingTransport.READY;
@@ -1282,17 +1284,17 @@ CASE s_eSequence OF
 		END_IF
 		
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-// STOP ///////////////////////////////////////////////////////////////////////////////////////////	
+// STOP ///////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqLiftingTransport.STOP:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmLift.m_Stop(
 				i_fDec := i_ref_stSettings.stSettingsServoLift.fStopDec,
 				i_fJrk := i_ref_stSettings.stSettingsServoLift.fStopJrk);
-
+				
 			s_cmTransport.m_Stop(
 				i_fDec := i_ref_stSettings.stSettingsServoTransport.fStopDec,
 				i_fJrk := i_ref_stSettings.stSettingsServoTransport.fStopJrk);
-		
+				
 			IF s_ePreviousStep > E_SeqLiftingTransport.START
 				AND s_ePreviousStep < E_SeqLiftingTransport.ERROR THEN
 					s_eResumeStep := s_ePreviousStep;
@@ -1302,7 +1304,7 @@ CASE s_eSequence OF
 		IF i_eCtrlState = E_CtrlState.IDLE THEN
 			s_eSequence := E_SeqLiftingTransport.START;
 		END_IF
-
+		
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // ERROR //////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqLiftingTransport.ERROR:
@@ -1312,7 +1314,7 @@ CASE s_eSequence OF
 					s_eResumeStep := s_ePreviousStep;
 			END_IF
 		END_IF
-	
+		
 END_CASE
 ]]></ST>
       </Implementation>

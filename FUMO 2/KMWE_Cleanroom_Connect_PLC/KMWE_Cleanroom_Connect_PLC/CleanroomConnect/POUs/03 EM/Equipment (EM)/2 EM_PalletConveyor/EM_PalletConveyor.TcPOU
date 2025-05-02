@@ -233,11 +233,11 @@ IF i_bCmdReset THEN
 	s_bWrnOuterDoorNotOpened := FALSE;
 END_IF
 
-s_bStaError := 
+s_bStaError :=
 	s_cmPalletConveyor.p_bStaError
 	OR s_cmCenteringUnit.p_bStaError
 	OR s_fbAlarmHandlerTravelTimeOut.q_bStaActive
-	OR s_fbAlarmHandlerCmdNotAllowed.q_bStaActive;	
+	OR s_fbAlarmHandlerCmdNotAllowed.q_bStaActive;
 
 s_bStaWarning :=
 	s_fbAlarmHandlerOuterDoorNotOpened.q_bStaActive
@@ -876,22 +876,24 @@ END_CASE
       <Implementation>
         <ST><![CDATA[
 s_fbSeqControl(
-	i_nSeqStep := s_eSequence, 
-	i_sStepName := TO_STRING(s_eSequence), 
-	i_bCmdReset := i_bCmdReset
-					AND (s_eSequence = E_SeqTransport.ERROR) // Only reset/resume sequencer from ERROR state
-					AND NOT(s_cmCenteringUnit.p_bStaError)
-					AND NOT(s_cmPalletConveyor.p_bStaError)
-					AND i_bReqEnable, 
+	i_nSeqStep := s_eSequence,
+	i_sStepName := TO_STRING(s_eSequence),
+	i_bCmdReset := 
+		i_bCmdReset
+		AND i_bReqEnable
+		AND (s_eSequence = E_SeqTransport.ERROR) // Only reset/resume sequencer from ERROR state
+		AND NOT(s_bStaError),
+//--					AND NOT(s_cmCenteringUnit.p_bStaError)
+//--					AND NOT(s_cmPalletConveyor.p_bStaError)
 	i_bStaError := s_bStaError OR NOT(i_bReqEnable));
 
-s_sResumeStep := TO_STRING(s_eResumeStep); 	
-	
-//Force to stop	
+s_sResumeStep := TO_STRING(s_eResumeStep);
+
+//Force to stop
 IF (i_eCtrlState = E_CtrlState.STOPPING) THEN
 	s_eSequence := E_SeqTransport.STOP;
-END_IF	
-	
+END_IF
+
 CASE s_eSequence OF
 	
 	E_SeqTransport.IDLE:
@@ -900,26 +902,26 @@ CASE s_eSequence OF
 		IF (i_eCtrlState = E_CtrlState.IDLE) THEN
 			s_eSequence := E_SeqTransport.START;
 		END_IF
-
+	
 //START////////////////////////////////////////////////////////////////////////////////////////////			
 	E_SeqTransport.START:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmPalletConveyor.m_Stop();
 			s_cmCenteringUnit.m_Off();
 			//--s_bCmdHold := FALSE;
-			s_sMessage := '***';
-		END_IF		
-	
+			s_sMessage := 'start';
+		END_IF
+		
 		IF s_cmPalletConveyor.p_bStaMotorStopped AND_THEN NOT(s_cmPalletConveyor.p_bStaBrakeReleased) AND s_fbSeqControl.q_tmStepTime > T#1S THEN
-		//??IF s_cmPalletConveyor.p_bStaMotorStopped AND_THEN NOT(s_cmPalletConveyor.p_bStaBrakeReleased) AND s_fbSeqTransportControl.q_tmStepTime > T#1S 
-		//??	AND NOT(i_bSta2HC_Active) THEN	
+		//??IF s_cmPalletConveyor.p_bStaMotorStopped AND_THEN NOT(s_cmPalletConveyor.p_bStaBrakeReleased) AND s_fbSeqTransportControl.q_tmStepTime > T#1S
+		//??	AND NOT(i_bSta2HC_Active) THEN
 		
 			IF i_eCtrlState = E_CtrlState.RUNNING THEN
 				s_eSequence := E_SeqTransport.READY;
 			END_IF
 		END_IF
-
-//READY////////////////////////////////////////////////////////////////////////////////////////////		
+	
+//READY////////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqTransport.READY:
 		IF s_fbSeqControl.q_bStaEntry THEN
 //??			i_refTB.p_eActLocation := s_eTmpLocation;
@@ -928,13 +930,13 @@ CASE s_eSequence OF
 		END_IF
 		
 //??		i_refTB.p_bOuterDoorOpened S= s_bStaAtInfeedRearPosition AND s_bStaAtInfeedFrontPosition AND s_bStaDoorOpened;
-	
+		
 		IF i_eCtrlState <> E_CtrlState.RUNNING THEN
 			s_eSequence := E_SeqTransport.START;
 		END_IF
 		
 		IF s_bReqTB_ToInfeed THEN
-		
+			
 			IF _m_CmdTB_ToInfeed(i_refReason := s_sMessage) THEN
 				s_eSequence := E_SeqTransport.MOVE_TO_INFEED;
 			ELSE //If failed (command not allowed): the message will be written with the interlock reason
@@ -944,43 +946,43 @@ CASE s_eSequence OF
 			
 			s_bReqTB_ToInfeed := FALSE;
 			
-		ELSIF s_bReqTB_ToCenter THEN	
-		
+		ELSIF s_bReqTB_ToCenter THEN
+			
 			IF _m_CmdTB_ToCenter(i_refReason := s_sMessage) THEN
 				s_eSequence := E_SeqTransport.MOVE_TO_CENTERING;
 			ELSE //If failed (command not allowed): the message will be written with the interlock reason
 				//--s_bCmdHold := TRUE;
 				;
-			END_IF	
-		
+			END_IF
+			
 			s_bReqTB_ToCenter := FALSE;
 			
 		ELSIF s_bReqTB_ToDocking THEN
-	
+			
 			IF _m_CmdTB_ToDocking(i_refReason := s_sMessage) THEN
 				s_eSequence := E_SeqTransport.MOVE_TO_DOCKING;
 			ELSE //If failed (command not allowed): the message will be written with the interlock reason
 				//--s_bCmdHold := TRUE;
 				;
-			END_IF	
-		
+			END_IF
+			
 			s_bReqTB_ToDocking := FALSE;
-
+			
 		ELSIF s_bReqCenteringTB THEN
-
+			
 			IF _m_CmdCenteringTB(i_refReason := s_sMessage) THEN
 				s_eSequence := E_SeqTransport.PUSHER_TO_CENTER;
 			ELSE //If failed (command not allowed): the message will be written with the interlock reason
-				;	
+				;
 			END_IF
 			
 			s_bReqCenteringTB := FALSE;
+			
+		END_IF
 		
-		END_IF		
-
-//MOVE TO INFEED///////////////////////////////////////////////////////////////////////////////////		
+//MOVE TO INFEED///////////////////////////////////////////////////////////////////////////////////
 	E_SeqTransport.MOVE_TO_INFEED:
-		IF s_fbSeqControl.q_bStaEntry THEN		
+		IF s_fbSeqControl.q_bStaEntry THEN
 			s_tMaxTravelTime :=
 				_CalcMaxTravelTime(
 					i_fBaseRampTime := 4.0,
@@ -992,8 +994,8 @@ CASE s_eSequence OF
 			s_cmPalletConveyor.m_StartBackward(i_rTargetSpeed := i_ref_stSettings.fSpeedGoToInfeed);
 		END_IF
 		
-		//??IF i_bSta2HC_Active THEN	
-		//??	IF s_fbSeqTransportControl.q_bStaEntry THEN		
+		//??IF i_bSta2HC_Active THEN
+		//??	IF s_fbSeqTransportControl.q_bStaEntry THEN
 		//??		s_tMaxTravelTime := LREAL_TO_TIME((i_ref_stSettings.fDistanceToInfeed / i_ref_stSettings.fSpeedGoToInfeed) * i_ref_stSettings.fTravelTollerance * 1000);
 		//??		s_cmPalletConveyor.m_StartBackward(i_rTargetSpeed := i_ref_stSettings.fSpeedGoToInfeed);
 		//??	END_IF
@@ -1012,7 +1014,7 @@ CASE s_eSequence OF
 			s_eSequence := E_SeqTransport.ERROR;
 		END_IF
 		
-//CENTERING////////////////////////////////////////////////////////////////////////////////////////		
+//CENTERING////////////////////////////////////////////////////////////////////////////////////////	
 	E_SeqTransport.MOVE_TO_CENTERING:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_tMaxTravelTime :=
@@ -1027,7 +1029,7 @@ CASE s_eSequence OF
 			s_cmPalletConveyor.m_StartForward(i_rTargetSpeed := i_ref_stSettings.fSpeedGoToCentering);
 		END_IF
 		
-		//??IF i_bSta2HC_Active THEN	
+		//??IF i_bSta2HC_Active THEN
 		//??	IF s_fbSeqTransportControl.q_bStaEntry THEN
 		//??		s_tMaxTravelTime := LREAL_TO_TIME((i_ref_stSettings.fDistanceToCentering / i_ref_stSettings.fSpeedGoToCentering) * i_ref_stSettings.fTravelTollerance * 1000);
 		//??		s_tDoorCheckTime := LREAL_TO_TIME((i_ref_stSettings.fDistanceOuterDoorCheck / i_ref_stSettings.fSpeedGoToCentering) * 1000);
@@ -1043,8 +1045,8 @@ CASE s_eSequence OF
 			s_eTmpLocation := E_Location.CENTERING;
 			s_eSequence := E_SeqTransport.MOVE_TO_CENTERING_STOP;
 		
-		ELSIF s_fbSeqControl.q_tmStepTime < s_tDoorCheckTime 
-			AND NOT(s_bStaDoorOpened) 
+		ELSIF s_fbSeqControl.q_tmStepTime < s_tDoorCheckTime
+			AND NOT(s_bStaDoorOpened)
 			AND s_bStaAtInfeedRearPosition THEN
 			s_bWrnOuterDoorNotOpened := TRUE;
 			s_bDoorCheckTimeDisabled := TRUE; //Disable error after first occurance (to prevent invalid retriggering at reties)
@@ -1056,7 +1058,7 @@ CASE s_eSequence OF
 			s_eSequence := E_SeqTransport.ERROR;
 		
 		END_IF
-
+		
 	E_SeqTransport.MOVE_TO_CENTERING_STOP:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmPalletConveyor.m_Stop();
@@ -1074,13 +1076,13 @@ CASE s_eSequence OF
 		IF s_cmCenteringUnit.p_bStaIsOn THEN
 			s_eSequence := E_SeqTransport.PUSHER_AT_CENTER;
 		END_IF
-	
+		
 	E_SeqTransport.PUSHER_AT_CENTER:
 		IF s_fbSeqControl.q_tmStepTime > i_ref_stSettings.tCenteringDuration THEN
 			s_eTmpCenteringDone := TRUE;
 			s_eSequence := E_SeqTransport.PUSHER_TO_IDLE;
 		END_IF
-	
+		
 	E_SeqTransport.PUSHER_TO_IDLE:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmCenteringUnit.m_Off();
@@ -1089,8 +1091,8 @@ CASE s_eSequence OF
 		IF s_cmCenteringUnit.p_bStaIsOff THEN
 			s_eSequence := E_SeqTransport.READY;
 		END_IF
-
-//MOVE TO DOCKING//////////////////////////////////////////////////////////////////////////////////		
+		
+//MOVE TO DOCKING//////////////////////////////////////////////////////////////////////////////////
 	E_SeqTransport.MOVE_TO_DOCKING:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_tMaxTravelTime :=
@@ -1100,11 +1102,11 @@ CASE s_eSequence OF
 					i_TargetSpeed := i_ref_stSettings.fSpeedGoToDocking,
 					i_TargetDistance := i_ref_stSettings.fDistanceToDocking,
 					i_Tollerance := i_ref_stSettings.fTravelTollerance);
-			
+					
 			s_cmPalletConveyor.m_StartForward(i_rTargetSpeed := i_ref_stSettings.fSpeedGoToDocking);
 		END_IF
 		
-		//??IF i_bSta2HC_Active THEN	
+		//??IF i_bSta2HC_Active THEN
 		//??	IF s_fbSeqTransportControl.q_bStaEntry THEN
 		//??		s_tMaxTravelTime := LREAL_TO_TIME((i_ref_stSettings.fDistanceToDocking / i_ref_stSettings.fSpeedGoToDocking) * i_ref_stSettings.fTravelTollerance * 1000);
 		//??		s_cmPalletConveyor.m_StartForward(i_rTargetSpeed := i_ref_stSettings.fSpeedGoToDocking);
@@ -1120,10 +1122,10 @@ CASE s_eSequence OF
 		ELSIF s_fbSeqControl.q_tmStepTime > s_tMaxTravelTime THEN
 			s_bErrTravelTimeOut := TRUE;
 			s_sReason := 'Moving to docking - timeout';
-			s_eSequence := E_SeqTransport.ERROR;		
+			s_eSequence := E_SeqTransport.ERROR;
 		END_IF
-
-//STOP/////////////////////////////////////////////////////////////////////////////////////////////	
+		
+//STOP/////////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqTransport.STOP:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmPalletConveyor.m_Stop();
@@ -1138,8 +1140,8 @@ CASE s_eSequence OF
 				s_eSequence := E_SeqTransport.START;
 			END_IF
 		END_IF
-
-//ERROR////////////////////////////////////////////////////////////////////////////////////////////		
+		
+//ERROR////////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqTransport.ERROR:
 		s_cmPalletConveyor.m_Stop();
 		s_cmCenteringUnit.m_Stop();

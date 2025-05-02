@@ -1375,23 +1375,25 @@ END_IF
       <Implementation>
         <ST><![CDATA[
 //Register previous step
-IF s_eSequence <> s_ePreviousStep 
-	AND s_eSequence <> E_SeqDockingInterface.STOP 
+IF s_eSequence <> s_ePreviousStep
+	AND s_eSequence <> E_SeqDockingInterface.STOP
 	AND s_eSequence <> E_SeqDockingInterface.ERROR THEN
 	s_ePreviousStep := s_eSequence;
 END_IF
 
 s_fbSeqControl(
-	i_nSeqStep := s_eSequence, 
-	i_sStepName := TO_STRING(s_eSequence), 
-	i_bCmdReset := i_bCmdReset 
-					AND (s_eSequence = E_SeqDockingInterface.ERROR) // Only reset/resume sequencer from ERROR state
-					AND i_bReqEnable,   
+	i_nSeqStep := s_eSequence,
+	i_sStepName := TO_STRING(s_eSequence),
+	i_bCmdReset := 
+		i_bCmdReset
+		AND i_bReqEnable
+		AND (s_eSequence = E_SeqDockingInterface.ERROR) // Only reset/resume sequencer from ERROR state
+		AND NOT(s_bStaError),
 	i_bStaError := s_bStaError OR NOT(i_bReqEnable));
-		
+	
 s_tonTimer(PT := T#3600S);
 
-//Force to stop	
+//Force to stop
 IF (i_eCtrlState = E_CtrlState.STOPPING) THEN
 	s_eSequence := E_SeqDockingInterface.STOP;
 END_IF
@@ -1401,7 +1403,7 @@ IF (s_eSequence > E_SeqDockingInterface.START) AND (s_eSequence < E_SeqDockingIn
 	s_eLastStepPersistent := s_eSequence;
 END_IF 
 
-s_sResumeStep := TO_STRING(s_eResumeStep);	
+s_sResumeStep := TO_STRING(s_eResumeStep);
 
 CASE s_eSequence OF
 	
@@ -1416,26 +1418,26 @@ CASE s_eSequence OF
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_sMessage := 'start';
 		END_IF
-	
+		
 		s_tonTimer.IN := FALSE;
 		
 		//Added state running before continuing the sequense (automatically)
 		IF i_eCtrlState = E_CtrlState.RUNNING THEN
 			
 			s_eSequence := s_eResumeStep;
-		
+			
 			{warning '#TODO: Check if statup() is good to use or not?'}
 			//--IF _m_SeqStartup() AND s_fbSeqDockingInterfaceControl.q_tmStepTime > T#1S THEN
 			//--	s_eSeqDockingInterface := s_eResumeStep;
 			//--END_IF
 		END_IF
-			
+		
 	E_SeqDockingInterface.PREPARE_READY:
-		IF s_fbSeqControl.q_bStaEntry THEN	
+		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmClampsUpperHighPressure.m_Off();
 			s_cmClampsLowerHighPressure.m_Off();
 		END_IF
-			
+		
 		IF s_cmDockingClampsUpper.m_On() AND s_cmDockingClampsLower.m_On() THEN
 			IF s_cmDoorOpener.m_Off() THEN
 				IF s_cmDoorShutter.m_On() THEN
@@ -1447,8 +1449,8 @@ CASE s_eSequence OF
 				END_IF
 			END_IF
 		END_IF
-	
-//??		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN	
+		
+//??		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN
 //??			s_cmClampsUpperHighPressure.m_Off();
 //??			s_cmClampsLowerHighPressure.m_Off();
 //??		END_IF
@@ -1458,15 +1460,15 @@ CASE s_eSequence OF
 //??		END_IF
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//READY/////////////////////////////////////////////////////////////////////////////////////////////////////////		
+//READY/////////////////////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqDockingInterface.READY:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_eResumeStep := E_SeqDockingInterface.READY;
-		
+			
 //??			i_refTB.p_bUndockingDone S= s_bTmpUndockingDone;
 			s_bTmpUndockingDone := FALSE;
 		END_IF
-	
+		
 		//Resturn to start
 		IF i_eCtrlState <> E_CtrlState.RUNNING THEN
 			s_eSequence := E_SeqDockingInterface.START;
@@ -1476,13 +1478,13 @@ CASE s_eSequence OF
 		IF s_bReqDockTB THEN
 			IF _m_CmdDockTB(i_refReason := s_sMessage) THEN	
 				
-				{warning #DELETE: "Disabled Doors" option can be deleted, IF FUMO3 is build}	
+				{warning #DELETE: "Disabled Doors" option can be deleted, IF FUMO3 is build}
 				IF i_bTestDisableCabinDoors THEN
 					s_eSequence := E_SeqDockingInterface.DOCK_OPEN_DOCKING_CLAMPS;
 				ELSE
 					s_eSequence := E_SeqDockingInterface.OPEN_OUTER_CABIN_DOOR;
 				END_IF
-					
+				
 			ELSE
 				s_bErrCmdNotAllowed := TRUE;
 			END_IF
@@ -1490,7 +1492,7 @@ CASE s_eSequence OF
 		
 		//Command Undock TB////////////////////////////////////////////////////////////////////////
 		IF s_bReqUnDockTB THEN
-			IF _m_CmdUndockTB(i_refReason := s_sMessage) THEN	
+			IF _m_CmdUndockTB(i_refReason := s_sMessage) THEN
 				s_eSequence := E_SeqDockingInterface.UNDOCK_OPEN_DOCKING_CLAMPS;
 			ELSE
 				s_bErrCmdNotAllowed := TRUE;
@@ -1499,9 +1501,9 @@ CASE s_eSequence OF
 		
 		//Command Open Inner TB Door //////////////////////////////////////////////////////////////
 		IF s_bReqOpenInnerDoor THEN
-			IF _m_CmdOpenInnerDoor(i_refReason := s_sMessage) THEN	
+			IF _m_CmdOpenInnerDoor(i_refReason := s_sMessage) THEN
 				
-				{warning '#DELETE: "Disabled Doors" option can be deleted, IF FUMO3 is build'}	
+				{warning '#DELETE: "Disabled Doors" option can be deleted, IF FUMO3 is build'}
 				IF i_bTestDisableCabinDoors THEN
 					s_eSequence := E_SeqDockingInterface.RELEASE_UNLOCKING_PINS;
 				ELSE
@@ -1515,7 +1517,7 @@ CASE s_eSequence OF
 		
 		//Command Close Inner TB Door /////////////////////////////////////////////////////////////
 		IF s_bReqCloseInnerDoor THEN
-			IF _m_CmdCloseInnerDoor(i_refReason := s_sMessage) THEN	
+			IF _m_CmdCloseInnerDoor(i_refReason := s_sMessage) THEN
 				s_eSequence := E_SeqDockingInterface.CLOSE_DOOR_OPENER;
 			ELSE
 				s_bErrCmdNotAllowed := TRUE;
@@ -1525,12 +1527,12 @@ CASE s_eSequence OF
 //DOCK TB /////////////////////////////////////////////////////////////////////////////////////////
 {warning '#TODO: Not clear why this step is needed?'} // Not used at this point, if this keeps the case then delete
 	E_SeqDockingInterface.PREPAPRE_DOCK:
-		IF s_fbSeqControl.q_bStaEntry THEN	
+		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmClampsUpperHighPressure.m_Off();
 			s_cmClampsLowerHighPressure.m_Off();
 		END_IF
-			
-		IF s_cmDockingClampsUpper.m_Off() AND s_cmDockingClampsLower.m_Off() 
+		
+		IF s_cmDockingClampsUpper.m_Off() AND s_cmDockingClampsLower.m_Off()
 			AND (s_fbSeqControl.q_tmStepTime >= T#2S) THEN
 //--			IF s_cmDoorOpener.m_Off() THEN
 //--				IF s_cmDoorShutter.m_On() THEN
@@ -1543,31 +1545,31 @@ CASE s_eSequence OF
 		END_IF
 	
 	E_SeqDockingInterface.OPEN_OUTER_CABIN_DOOR:
-		IF s_fbSeqControl.q_bStaEntry THEN	
+		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmOuterCabinDoor.m_Open();
 		END_IF
-			
+		
 		IF s_cmOuterCabinDoor.p_bStaIsOpened THEN
 			s_eSequence := E_SeqDockingInterface.DOCK_OPEN_DOCKING_CLAMPS;
 		END_IF
-	
+		
 	E_SeqDockingInterface.DOCK_OPEN_DOCKING_CLAMPS:
-		IF s_fbSeqControl.q_bStaEntry THEN	
+		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmDockingClampsUpper.m_Off();
 			s_cmDockingClampsLower.m_Off();
 		END_IF
 		
 		IF s_cmDockingClampsUpper.p_bStaIsOff AND s_cmDockingClampsLower.p_bStaIsOff THEN
 			s_eSequence := E_SeqDockingInterface.WAIT_FOR_TB_PLACED;
-		END_IF	
+		END_IF
 		
 	E_SeqDockingInterface.WAIT_FOR_TB_PLACED:
-		IF s_fbSeqControl.q_bStaEntry THEN	
+		IF s_fbSeqControl.q_bStaEntry THEN
 			; //Ready to receive signal is written in _mOutputs(), based on this step ANS state RUNNING
 		END_IF
 		
 		IF s_bStaTbAtDockingPosition THEN
-			IF NOT(i_ref_stSettings.bCloseClampsAfterEachOther) THEN 
+			IF NOT(i_ref_stSettings.bCloseClampsAfterEachOther) THEN
 				s_eSequence := E_SeqDockingInterface.DOCK_CLOSE_DOCKING_CLAMPS; //(option 1)
 			ELSE
 				s_eSequence := E_SeqDockingInterface.CLOSE_LOWER_DOCKING_CLAMPS; //(option 2)
@@ -1575,14 +1577,14 @@ CASE s_eSequence OF
 		END_IF
 		
 		IF s_bReqUnDockTB THEN //Escape
-			IF _m_CmdUndockTB(i_refReason := s_sMessage) THEN	
+			IF _m_CmdUndockTB(i_refReason := s_sMessage) THEN
 				s_eSequence := E_SeqDockingInterface.UNDOCK_CLOSE_DOCKING_CLAMPS;
 			ELSE
 				s_bErrCmdNotAllowed := TRUE;
 			END_IF
 		END_IF 
 		
-	//(option 1)	
+	//(option 1)
 	E_SeqDockingInterface.DOCK_CLOSE_DOCKING_CLAMPS:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmClampsUpperHighPressure.m_Off();
@@ -1596,25 +1598,25 @@ CASE s_eSequence OF
 			s_tonTimer.IN := FALSE;
 			s_eSequence := E_SeqDockingInterface.COMPRESS_ALL_SEAL;
 		//ELSE
-		//  In case of error all docking clamps will be openeed (this is implemented in error-step)		
+		//  In case of error all docking clamps will be openeed (this is implemented in error-step)
 		END_IF
 	
 	E_SeqDockingInterface.COMPRESS_ALL_SEAL:
-		IF s_fbSeqControl.q_bStaEntry THEN	
+		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmClampsUpperHighPressure.m_On();
 			s_cmClampsLowerHighPressure.m_On();
 		END_IF
 		
 		IF s_fbSeqControl.q_tmStepTime >= i_ref_stSettings.tCompressSealDuration
-			//Check if all docking clamps are closed 
+			//Check if all docking clamps are closed
 			AND (s_cmDockingClampsUpper.p_bStaIsOn AND s_cmDockingClampsLower.p_bStaIsOn) THEN
-//??			i_refTB.p_bDockingDone := TRUE;	
+//??			i_refTB.p_bDockingDone := TRUE;
 			s_eSequence := E_SeqDockingInterface.DOCK_TB_DONE;
 		END_IF
 	
 	//(option 2)
 	E_SeqDockingInterface.CLOSE_LOWER_DOCKING_CLAMPS:
-		IF s_fbSeqControl.q_bStaEntry THEN	
+		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmClampsLowerHighPressure.m_Off();
 		END_IF
 		
@@ -1625,22 +1627,22 @@ CASE s_eSequence OF
 			s_tonTimer.IN := FALSE;
 			s_eSequence := E_SeqDockingInterface.COMPRESS_LOWER_SEAL;
 		//ELSE
-		//  In case of error all docking clamps will be openeed (this is implemented in error-step)		
+		//  In case of error all docking clamps will be openeed (this is implemented in error-step)
 		END_IF
-	
+		
 	E_SeqDockingInterface.COMPRESS_LOWER_SEAL:
-		IF s_fbSeqControl.q_bStaEntry THEN	
+		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmClampsLowerHighPressure.m_On();
 		END_IF
 		
 		IF s_fbSeqControl.q_tmStepTime >= i_ref_stSettings.tCompressSealDuration
-			//Check if lower docking clamps are closed 
+			//Check if lower docking clamps are closed
 			AND (s_cmDockingClampsLower.p_bStaIsOn OR (s_cmDockingClampsLower.i_stSettings.tValveOnTimeout = T#0S)) THEN
 			s_eSequence := E_SeqDockingInterface.CLOSE_UPPER_DOCKING_CLAMPS;
 		END_IF
 		
 	E_SeqDockingInterface.CLOSE_UPPER_DOCKING_CLAMPS:
-		IF s_fbSeqControl.q_bStaEntry THEN	
+		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmClampsUpperHighPressure.m_Off();
 			s_cmClampsLowerHighPressure.m_Off(); //Back to low pressure at lower clamps
 		END_IF
@@ -1652,25 +1654,25 @@ CASE s_eSequence OF
 			s_tonTimer.IN := FALSE;
 			s_eSequence := E_SeqDockingInterface.COMPRESS_UPPER_SEAL;
 		//ELSE
-		//  In case of error all docking clamps will be openeed (this is implemented in error-step)		
+		//  In case of error all docking clamps will be openeed (this is implemented in error-step)
 		END_IF
-	
+		
 	E_SeqDockingInterface.COMPRESS_UPPER_SEAL:
-		IF s_fbSeqControl.q_bStaEntry THEN	
+		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmClampsUpperHighPressure.m_On();
 			s_cmClampsLowerHighPressure.m_On();
 		END_IF
 		
 		IF s_fbSeqControl.q_tmStepTime >= i_ref_stSettings.tCompressSealDuration
-			//Check if all docking clamps are closed 
+			//Check if all docking clamps are closed
 			AND ((s_cmDockingClampsLower.p_bStaIsOn OR (s_cmDockingClampsLower.i_stSettings.tValveOnTimeout = T#0S)) AND s_cmDockingClampsUpper.p_bStaIsOn) THEN
-//??			i_refTB.p_bDockingDone := TRUE;	
+//??			i_refTB.p_bDockingDone := TRUE;
 			s_eSequence := E_SeqDockingInterface.DOCK_TB_DONE;
 		END_IF
-	
+		
 	E_SeqDockingInterface.DOCK_TB_DONE:
 		IF s_fbSeqControl.q_bStaEntry THEN
-			{warning '#TODO: Nog goed bepalen waar dit moet plaatsvinden nu nog maar op een plek'}	
+			{warning '#TODO: Nog goed bepalen waar dit moet plaatsvinden nu nog maar op een plek'}
 //--			s_bStaDocked := TRUE;
 //--			s_bStaUndocked := FALSE;
 		END_IF
@@ -1678,12 +1680,12 @@ CASE s_eSequence OF
 		IF (s_fbSeqControl.q_tmStepTime > T#2S) THEN
 			s_eSequence := E_SeqDockingInterface.READY;
 		END_IF
-
-//UNDOCK TB////////////////////////////////////////////////////////////////////////////////////////	
+		
+//UNDOCK TB////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqDockingInterface.UNDOCK_OPEN_DOCKING_CLAMPS:
-		IF s_fbSeqControl.q_bStaEntry THEN	
+		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmDockingClampsUpper.m_Off();
-			s_cmDockingClampsLower.m_Off();;
+			s_cmDockingClampsLower.m_Off();
 		END_IF
 		
 		IF s_cmDockingClampsUpper.p_bStaIsOff AND s_cmDockingClampsLower.p_bStaIsOff THEN
@@ -1695,13 +1697,13 @@ CASE s_eSequence OF
 			; //Ready to send signal is written in _mOutputs(), based on this step ANS state RUNNING
 		END_IF
 		
-		IF s_bStaDockingPositionFree THEN	
+		IF s_bStaDockingPositionFree THEN
 			s_eSequence := E_SeqDockingInterface.UNDOCK_CLOSE_DOCKING_CLAMPS;
 		END_IF
 		
 		IF s_bReqDockTB THEN //Escape
-			IF _m_CmdDockTB(i_refReason := s_sMessage) THEN	
-				IF NOT(i_ref_stSettings.bCloseClampsAfterEachOther) THEN 
+			IF _m_CmdDockTB(i_refReason := s_sMessage) THEN
+				IF NOT(i_ref_stSettings.bCloseClampsAfterEachOther) THEN
 					s_eSequence := E_SeqDockingInterface.DOCK_CLOSE_DOCKING_CLAMPS; //(option 1)
 				ELSE
 					s_eSequence := E_SeqDockingInterface.CLOSE_LOWER_DOCKING_CLAMPS; //(option 2)
@@ -1712,34 +1714,34 @@ CASE s_eSequence OF
 		END_IF
 		
 	E_SeqDockingInterface.UNDOCK_CLOSE_DOCKING_CLAMPS:
-		IF s_fbSeqControl.q_bStaEntry THEN	
+		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmDockingClampsUpper.m_On();
 			s_cmDockingClampsLower.m_On();
 		END_IF
 		
 		IF s_cmDockingClampsUpper.p_bStaIsOn AND s_cmDockingClampsLower.p_bStaIsOn THEN
 		
-			{warning '#DELETE: "Disabled Doors" option can be deleted, IF FUMO3 is build'}	
-			IF i_bTestDisableCabinDoors THEN	
+			{warning '#DELETE: "Disabled Doors" option can be deleted, IF FUMO3 is build'}
+			IF i_bTestDisableCabinDoors THEN
 				s_eSequence := E_SeqDockingInterface.UNDOCK_TB_DONE;
 			ELSE
 				s_eSequence := E_SeqDockingInterface.CLOSE_OUTER_CABIN_DOOR;
 			END_IF
 			
-		END_IF	
-
+		END_IF
+	
 	E_SeqDockingInterface.CLOSE_OUTER_CABIN_DOOR:
-		IF s_fbSeqControl.q_bStaEntry THEN	
+		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmOuterCabinDoor.m_Close();
 		END_IF
-			
+		
 		IF s_cmOuterCabinDoor.p_bStaIsClosed THEN
 			s_eSequence := E_SeqDockingInterface.UNDOCK_TB_DONE;
 		END_IF
-	
+		
 	E_SeqDockingInterface.UNDOCK_TB_DONE:
 		IF s_fbSeqControl.q_bStaEntry THEN
-			{warning '#TODO: Nog goed bepalen waar dit moet plaatsvinden nu nog maar op een plek'}	
+			{warning '#TODO: Nog goed bepalen waar dit moet plaatsvinden nu nog maar op een plek'}
 //--			s_bStaDocked := FALSE;
 //--			s_bStaUndocked := TRUE;
 		END_IF
@@ -1747,27 +1749,27 @@ CASE s_eSequence OF
 		IF (s_fbSeqControl.q_tmStepTime > T#2S) THEN
 			s_eSequence := E_SeqDockingInterface.READY;
 		END_IF
-	
-//OPEN INNER TB DOOR///////////////////////////////////////////////////////////////////////////////	
+		
+//OPEN INNER TB DOOR///////////////////////////////////////////////////////////////////////////////
 	E_SeqDockingInterface.OPEN_INNER_CABIN_DOOR:
-		IF s_fbSeqControl.q_bStaEntry THEN	
+		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmInnerCabinDoor.m_Open();
 		END_IF
-			
+		
 		IF s_cmInnerCabinDoor.p_bStaIsOpened THEN
 			s_eSequence := E_SeqDockingInterface.RELEASE_UNLOCKING_PINS;
 		END_IF
-
+		
 	E_SeqDockingInterface.RELEASE_UNLOCKING_PINS:
 		{warning '#DELETE AFTER TESTING: Functionality to skip the control of unlocking pins can be removed if it is no longer needed'}
 		// Set value to TRUE to skip the release movemnt of the locking pins, if testing with test box.
 		IF NOT(s_bTmpDisableUnlockingPinsRelease) THEN
 		
-			IF s_fbSeqControl.q_bStaEntry THEN	
+			IF s_fbSeqControl.q_bStaEntry THEN
 				s_cmUnlockingPinUpper.m_On();
 				s_cmUnlockingPinLower.m_On();
 			END_IF
-		
+			
 			s_tonTimer.IN := s_cmUnlockingPinUpper.p_bStaIsOn AND s_cmUnlockingPinLower.p_bStaIsOn;
 			{warning #TODO: Nog beslissen wat te doen, trigger met entry OF METHOD RETURN?}
 //--			s_tonTimer.IN := s_cmUnlockingPinUpper.m_On() AND s_cmUnlockingPinLower.m_On();
@@ -1779,7 +1781,7 @@ CASE s_eSequence OF
 			
 		ELSE
 			s_eSequence := E_SeqDockingInterface.OPEN_DOOR_SHUTTER;
-		END_IF	
+		END_IF
 		
 	E_SeqDockingInterface.OPEN_DOOR_SHUTTER:
 		s_tonTimer.IN := s_cmDoorShutter.m_Off();
@@ -1788,24 +1790,24 @@ CASE s_eSequence OF
 			s_tonTimer.IN := FALSE;
 			s_eSequence := E_SeqDockingInterface.OPEN_DOOR_OPENER;
 		END_IF
-	
+		
 	E_SeqDockingInterface.OPEN_DOOR_OPENER:
 		IF s_cmDoorOpener.m_On() THEN
 //??			i_refTB.p_bOpenInnerDoorDone := TRUE;
 			s_eSequence := E_SeqDockingInterface.OPEN_INNER_TB_DOOR_DONE;
 		END_IF
-	
+		
 	E_SeqDockingInterface.OPEN_INNER_TB_DOOR_DONE:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			;
 //--			s_bStaInnerDoorOpenedAndReleased := TRUE;
 //--			s_bStaInnerDoorClosedAndLocked := FALSE;
 		END_IF
-	
+		
 		IF (s_fbSeqControl.q_tmStepTime > T#2S) THEN
 			s_eSequence := E_SeqDockingInterface.READY;
 		END_IF
-			
+		
 //CLOSE INNER TB DOOR//////////////////////////////////////////////////////////////////////////////			
 	E_SeqDockingInterface.CLOSE_DOOR_OPENER:
 		s_tonTimer.IN := s_cmDoorOpener.m_Off();
@@ -1827,7 +1829,7 @@ CASE s_eSequence OF
 			s_tonTimer.IN := FALSE;
 			s_eSequence := E_SeqDockingInterface.LOCK_UNLOCKING_PINS;
 		END_IF
-	
+		
 	E_SeqDockingInterface.LOCK_UNLOCKING_PINS:
 		s_tonTimer.IN := (s_cmUnlockingPinUpper.m_Off() AND s_cmUnlockingPinLower.m_Off());
 		
@@ -1835,7 +1837,7 @@ CASE s_eSequence OF
 			s_tonTimer.IN := FALSE;
 //??			i_refTB.p_bCloseInnerDoorDone := TRUE;
 			
-			{warning #DELETE: "Disabled Doors" option can be deleted, IF FUMO3 is build}	
+			{warning #DELETE: "Disabled Doors" option can be deleted, IF FUMO3 is build}
 			IF i_bTestDisableCabinDoors THEN
 				s_eSequence := E_SeqDockingInterface.CLOSE_INNER_TB_DOOR_DONE;
 			ELSE
@@ -1845,13 +1847,13 @@ CASE s_eSequence OF
 		END_IF
 		
 	E_SeqDockingInterface.CLOSE_INNER_CABIN_DOOR:
-		IF s_fbSeqControl.q_bStaEntry THEN	
+		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmInnerCabinDoor.m_Close();
 		END_IF
-			
+		
 		IF s_cmInnerCabinDoor.p_bStaIsClosed THEN
 			s_eSequence := E_SeqDockingInterface.CLOSE_INNER_TB_DOOR_DONE;
-		END_IF	
+		END_IF
 		
 	E_SeqDockingInterface.CLOSE_INNER_TB_DOOR_DONE:
 		IF s_fbSeqControl.q_bStaEntry THEN
@@ -1859,12 +1861,12 @@ CASE s_eSequence OF
 //--			s_bStaInnerDoorOpenedAndReleased := FALSE;
 //--			s_bStaInnerDoorClosedAndLocked := TRUE;
 		END_IF
-	
+		
 		IF (s_fbSeqControl.q_tmStepTime > T#2S) THEN
 			s_eSequence := E_SeqDockingInterface.READY;
-		END_IF	
-
-//STOP/////////////////////////////////////////////////////////////////////////////////////////////		
+		END_IF
+		
+//STOP/////////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqDockingInterface.STOP:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			IF s_ePreviousStep > E_SeqDockingInterface.START
@@ -1876,25 +1878,25 @@ CASE s_eSequence OF
 		IF (i_eCtrlState = E_CtrlState.IDLE) THEN
 			s_eSequence := E_SeqDockingInterface.START;
 		END_IF
-	
-//ERROR////////////////////////////////////////////////////////////////////////////////////////////		
+		
+//ERROR////////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqDockingInterface.ERROR:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			IF s_ePreviousStep > E_SeqDockingInterface.START
 				AND s_ePreviousStep < E_SeqDockingInterface.ERROR THEN
 				s_eResumeStep := s_ePreviousStep;
 			ELSE
-				{warning '#TODO: Is this still the correct way to go'} 
+				{warning '#TODO: Is this still the correct way to go'}
 				s_eResumeStep := E_SeqDockingInterface.PREPARE_READY;
 			END_IF
 			
 			//Error response: During "Dock TB"
 			IF i_ref_stSettings.bOpenClampsAfterClosingTimeout AND_THEN
-				(s_ePreviousStep >= E_SeqDockingInterface.DOCK_CLOSE_DOCKING_CLAMPS AND s_ePreviousStep <= E_SeqDockingInterface.COMPRESS_UPPER_SEAL)	
+				(s_ePreviousStep >= E_SeqDockingInterface.DOCK_CLOSE_DOCKING_CLAMPS AND s_ePreviousStep <= E_SeqDockingInterface.COMPRESS_UPPER_SEAL)
 				//--(s_ePreviousStep = E_SeqDockingInterface.CLOSE_ALL_DOCKING_CLAMPS
 				//--OR s_ePreviousStep = E_SeqDockingInterface.CLOSE_LOWER_DOCKING_CLAMPS
 				//--OR s_ePreviousStep = E_SeqDockingInterface.CLOSE_UPPER_DOCKING_CLAMPS)
-				AND (s_cmDockingClampsUpper.p_bStaError OR s_cmDockingClampsLower.p_bStaError) 
+				AND (s_cmDockingClampsUpper.p_bStaError OR s_cmDockingClampsLower.p_bStaError)
 				THEN
 				//Open all docking clamps if closing on low pressure has failed
 				s_cmClampsUpperHighPressure.m_Off();
@@ -1906,16 +1908,16 @@ CASE s_eSequence OF
 				s_eResumeStep := E_SeqDockingInterface.READY;
 				
 			//Error response: During "Open Inner Door"
-			ELSIF FALSE THEN	
+			ELSIF FALSE THEN
 				; // TBD (reverse sequence?)
 				
 				//Resume from "TB Docked"
 				s_eResumeStep := E_SeqDockingInterface.DOCK_TB_DONE;
-			
+				
 			//Error response: During "Close Inner Door"
-			ELSIF FALSE THEN	
+			ELSIF FALSE THEN
 				; // TBD (reverse sequence?)
-	
+				
 				//Resume from "Inner Door Opened"
 				s_eResumeStep := E_SeqDockingInterface.DOCK_TB_DONE;
 				
@@ -1928,11 +1930,11 @@ CASE s_eSequence OF
 			s_cmUnlockingPinLower.m_Stop();
 			
 		END_IF
-
-END_CASE	
+		
+END_CASE
 
 {warning '#TODO: remove on all other location where THIS is written TO FALSE, it is non nessecary as it wil BY cylically be written FASLE here'}
-s_bReqDockTB := FALSE; 
+s_bReqDockTB := FALSE;
 s_bReqUndockTB := FALSE;
 s_bReqOpenInnerDoor := FALSE;
 s_bReqCloseInnerDoor := FALSE;

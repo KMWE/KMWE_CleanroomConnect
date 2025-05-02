@@ -7,6 +7,10 @@ VAR
 	
 	s_bTestDisableCabinDoors : BOOL := FALSE;
 	
+//Control Modules
+	s_cmCabinStateIndicator : CM_TubeLedRgb;
+	s_cmDoorLockCleanroomDoor : CM_DoorLock;
+	
 //------------------------------------------//
 //Function Blocks
 	sFbModeStateControl : FB_ModeStateControl;
@@ -96,16 +100,14 @@ VAR
 	s_fbHmiBtnCloseInnerTBDoor : FB_HmiBtn;
 	s_fbHmiBtnPickTrolleyFromTB : FB_HmiBtn;
 	s_fbHmiBtnPlaceTrolleyInTB : FB_HmiBtn;
-	
 //------------------------------------------//
 
-//--s_bCreate : BOOL;
-//--s_bDestroy : BOOL;
-
-//--s_arr_bBoolTest : ARRAY [0..15] OF BOOL;
-
 END_VAR
-]]></Declaration>
+
+VAR CONSTANT
+	c_bBLINK : BOOL := TRUE;
+	c_bON : BOOL := FALSE;
+END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[
 SUPER^();
@@ -139,14 +141,76 @@ _m_Alarms := TRUE;
       <Declaration><![CDATA[METHOD PROTECTED _m_Devices : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[
-IF NOT SUPER^._m_Devices() THEN
+        <ST><![CDATA[IF NOT SUPER^._m_Devices() THEN
 	RETURN;
 END_IF
 
 //------------------------------------------//
 // Control Modules
 
+
+
+
+
+//Severity from high to low 
+	//RED = Not Accesible, dirty air after opening outer cabin door 
+	//MAGENTA = Not Accesible, dirty air after opening outer cabin door
+	//BLUE = Pressurize (flash = busy, on = done)
+	//CYAN = Flush (flash = busy, on = done)
+	//YELLOW = Equalize (flash = busy, on = done)
+	//GREEN = Accessible (flash = request pending, on = done)
+	//WHITE = Worklight
+//Outside air
+IF TRUE THEN
+	
+	s_cmCabinStateIndicator.m_Red(TRUE);
+	
+
+ELSIF TRUE THEN
+	s_cmCabinStateIndicator.m_Magenta(TRUE);
+
+//Pressurize
+ELSIF TRUE THEN
+	s_cmCabinStateIndicator.m_Blue(TRUE);
+	
+//Flush	
+ELSIF TRUE THEN
+	s_cmCabinStateIndicator.m_Cyan(TRUE);
+
+//Equalize
+ELSIF TRUE THEN
+	s_cmCabinStateIndicator.m_Yellow(TRUE);
+
+//Access Request Pending... wait for other modules are in the correct state
+ELSIF s_cmDoorLockCleanroomDoor.p_bReqAccessRequest THEN
+	s_cmCabinStateIndicator.m_Green(c_bBLINK);
+	
+//Access Granted
+ELSIF s_cmDoorLockCleanroomDoor.p_bStaAccessGranted
+	AND NOT(s_cmDoorLockCleanroomDoor.p_bStaDoorIsOpened) THEN
+	s_cmCabinStateIndicator.m_Green(c_bON);
+
+//Entering cabin - Bright illumination
+ELSIF s_cmDoorLockCleanroomDoor.p_bStaDoorIsOpened THEN
+	s_cmCabinStateIndicator.m_White(TRUE);
+END_IF
+
+s_cmCabinStateIndicator();
+
+
+//Cleanroom Door Lock
+s_cmDoorLockCleanroomDoor.i_bAllowUnlock :=
+	GVL_Modules.g_emLiftingTransport.p_bStaAtIdlePosition
+	AND (GVL_Modules.g_emDockingInterface.p_bStaDocked
+		OR GVL_Modules.g_emDockingInterface.p_bStaOuterDoorClosed);
+	{warning '#TODO: FUMO3 - Activate conditions below in future'}
+//++	AND (GVL_Modules.g_emAirTreatment.p_bStaClean
+//++		AND GVL_Modules.g_emAirTreatment.p_bStaEqualized);
+
+s_cmDoorLockCleanroomDoor(
+	i_bReqEnable := TRUE,
+	i_eCtrlMode := s_eCtrlMode,
+	i_bCmdReset := p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn); //Add temp reset button
 //------------------------------------------//
 
 //------------------------------------------//
@@ -344,6 +408,18 @@ GVL.g_fbHmiBtnSimulation();
 IF NOT SUPER^._m_Init() THEN
 	RETURN;
 END_IF
+
+//CM Config////////////////////////////////////////////////////////////////////////////////////////
+//CM Cleanroom Door////////////////////////////////////////////////////////////////////////////////
+s_cmDoorLockCleanroomDoor.i_bReqEnable := FALSE;
+s_cmDoorLockCleanroomDoor.i_eCtrlMode := E_CtrlMode.IDLE;
+s_cmDoorLockCleanroomDoor.i_bCmdReset := FALSE;
+s_cmDoorLockCleanroomDoor.i_sCmName := 'CM Cleanroom Door';
+
+//CM Settings//////////////////////////////////////////////////////////////////////////////////////
+//CM Cleanroom Door////////////////////////////////////////////////////////////////////////////////
+s_cmDoorLockCleanroomDoor.i_stSettings.bAutoLockAtInit := TRUE;
+s_cmDoorLockCleanroomDoor.i_stSettings.tUnlockingRequestTimeout := T#30S;
 
 //EM Config////////////////////////////////////////////////////////////////////////////////////////
 //EM Utilities/////////////////////////////////////////////////////////////////////////////////////
@@ -821,6 +897,8 @@ bReqEnable :=
 	AND GVL_Modules.g_emUtilities.p_bStaAirPressureOk
 	AND NOT GVL_Modules.g_emUtilities.p_bStaError;
 
+GVL_Modules.g_emLiftingTransport.p_bStaAtIdlePosition
+
 // EM_PalletConveyor //////////////////////////////////////////////////////////////////////////////	
 // Interlocks
 s_fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[0].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaClampsOpened) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking;
@@ -977,7 +1055,7 @@ CASE s_eSequence OF
 		END_IF
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-////READY//////////////////////////////////////////////////////////////////////////////////////////		
+////READY//////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqCleanroomConnect.READY:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_eResumeStep := E_SeqCleanroomConnect.READY;
@@ -988,8 +1066,8 @@ CASE s_eSequence OF
 		END_IF
 		
 		//Via seperate commands te steps below can be initiated, depanding on a certain value the next command can be strated automatically.
-		;	
-	
+		;
+		
 		//Check if all equipment is ready (available for operation)
 		s_bStaAllEmReady := 
 			GVL_Modules.g_emPalletConveyor.p_bStaReady AND
@@ -1003,7 +1081,7 @@ CASE s_eSequence OF
 			OR (s_eReqAction = E_ReqAction.DOCK_TB) ) THEN
 				s_eSequence := E_SeqCleanroomConnect.TB_TO_CENTER;
 		
-		//REQUEST UNDOCK TB////////////////////////////////////////////////////////////////////////		
+		//REQUEST UNDOCK TB////////////////////////////////////////////////////////////////////////
 		ELSIF s_bStaAllEmReady 
 			AND (s_eReqAction = E_ReqAction.UNDOCK_TB) THEN
 				s_eSequence := E_SeqCleanroomConnect.UNDOCK_TB;
@@ -1016,9 +1094,9 @@ CASE s_eSequence OF
 		//REQUEST CLOSE INNER TB DOOR//////////////////////////////////////////////////////////////
 		ELSIF s_bStaAllEmReady
 			AND (s_eReqAction = E_ReqAction.CLOSE_INNER_TB_DOOR) THEN
-				s_eSequence := E_SeqCleanroomConnect.CLOSE_INNER_TB_DOOR;	
+				s_eSequence := E_SeqCleanroomConnect.CLOSE_INNER_TB_DOOR;
 			
-		//REQUEST PICK TROLLEY FROM TB/////////////////////////////////////////////////////////////	
+		//REQUEST PICK TROLLEY FROM TB/////////////////////////////////////////////////////////////
 		ELSIF s_bStaAllEmReady
 			AND (s_eReqAction = E_ReqAction.PICK_TROLLEY_FROM_TB) THEN
 				s_eSequence := E_SeqCleanroomConnect.PICK_TROLLEY_FROM_TB;
@@ -1044,11 +1122,11 @@ CASE s_eSequence OF
 		IF s_fbSeqControl.q_bStaEntry THEN
 			GVL_Modules.g_emDockingInterface.m_ReqDockTB();
 		END_IF
-
+		
 		IF GVL_Modules.g_emDockingInterface.p_bStsReadyToReceiveTB THEN
 			s_eSequence := E_SeqCleanroomConnect.TB_TO_DOCKING;
 		END_IF
-
+		
 	E_SeqCleanroomConnect.TB_TO_DOCKING:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			GVL_Modules.g_emPalletConveyor.m_ReqTB_ToDocking();
@@ -1058,7 +1136,7 @@ CASE s_eSequence OF
 			AND GVL_Modules.g_emPalletConveyor.p_bStaReady THEN
 				s_eSequence := E_SeqCleanroomConnect.FINISH_DOCK_TB;
 		END_IF
-
+		
  	E_SeqCleanroomConnect.FINISH_DOCK_TB:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			GVL_Modules.g_emDockingInterface.m_ReqDockTB();
@@ -1077,15 +1155,15 @@ CASE s_eSequence OF
 					s_bStaPlaceTrolleyInTbDone := FALSE;
 					
 					s_eSequence := E_SeqCleanroomConnect.READY;
-				END_IF		
-		END_IF	
-
-	//UNDOCK TB////////////////////////////////////////////////////////////////////////////////////	
+				END_IF
+		END_IF
+	
+	//UNDOCK TB////////////////////////////////////////////////////////////////////////////////////
 	E_SeqCleanroomConnect.UNDOCK_TB:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			GVL_Modules.g_emDockingInterface.m_ReqUndockTB();
 		END_IF
-	
+		
 		IF GVL_Modules.g_emDockingInterface.p_bStaClampsOpened THEN
 			s_eSequence := E_SeqCleanroomConnect.TB_TO_INFEED;
 		END_IF
@@ -1095,12 +1173,12 @@ CASE s_eSequence OF
 			GVL_Modules.g_emPalletConveyor.m_ReqTB_ToInfeed();
 		END_IF
 		
-		s_osrReqDockTb(CLK := GVL_Modules.g_emPalletConveyor.p_bStaTB_DockPosFree); 
+		s_osrReqDockTb(CLK := GVL_Modules.g_emPalletConveyor.p_bStaTB_DockPosFree);
 		
-		IF s_osrReqDockTb.Q THEN	
+		IF s_osrReqDockTb.Q THEN
 			GVL_Modules.g_emDockingInterface.m_ReqUndockTB();
 		END_IF
-	
+		
 		IF GVL_Modules.g_emPalletConveyor.p_bStaTB_AtInfeed
 			AND GVL_Modules.g_emPalletConveyor.p_bStaReady
 			AND GVL_Modules.g_emDockingInterface.p_bStaUndocked
@@ -1111,11 +1189,11 @@ CASE s_eSequence OF
 				s_bStaCloseInnerTbDoorDone := FALSE;
 				s_bStaPickTrolleyFromTbDone := FALSE;
 				s_bStaPlaceTrolleyInTbDone := FALSE;
-					
+				
 				s_eSequence := E_SeqCleanroomConnect.READY;
-		END_IF		
+		END_IF
 		
-	//OPEN INNER TB DOOR //////////////////////////////////////////////////////////////////////////	
+	//OPEN INNER TB DOOR //////////////////////////////////////////////////////////////////////////
 	E_SeqCleanroomConnect.OPEN_INNER_TB_DOOR:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			GVL_Modules.g_emDockingInterface.m_ReqOpenInnerDoor();
@@ -1126,13 +1204,13 @@ CASE s_eSequence OF
 			
 			s_eSequence := E_SeqCleanroomConnect.FLUSHING;
 		END_IF
-	
+		
 	E_SeqCleanroomConnect.FLUSHING:
 		IF s_fbSeqControl.q_tmStepTime > T#5S THEN
 			{warning '#TODO: Add future/FUMO3 code'}
-			IF ( (s_eReqAction = E_ReqAction.INBOUND) (*OR (s_eReqAction = E_ReqAction.PICK_TROLLEY_FROM_TB)*) ) THEN 
+			IF ( (s_eReqAction = E_ReqAction.INBOUND) (*OR (s_eReqAction = E_ReqAction.PICK_TROLLEY_FROM_TB)*) ) THEN
 				s_eSequence := E_SeqCleanroomConnect.PICK_TROLLEY_FROM_TB;
-			ELSIF ( (s_eReqAction = E_ReqAction.OUTBOUND) OR (s_eReqAction = E_ReqAction.PLACE_TROLLEY_IN_TB) ) THEN 
+			ELSIF ( (s_eReqAction = E_ReqAction.OUTBOUND) OR (s_eReqAction = E_ReqAction.PLACE_TROLLEY_IN_TB) ) THEN
 				s_eSequence := E_SeqCleanroomConnect.OPEN_CLEANROOM_DOOR;
 			ELSE
 				s_bStaDockTbDone := FALSE;
@@ -1140,8 +1218,8 @@ CASE s_eSequence OF
 				s_bStaOpenInnerTbDoorDone := TRUE;
 				s_bStaCloseInnerTbDoorDone := FALSE;
 				s_bStaPickTrolleyFromTbDone := FALSE;
-				s_bStaPlaceTrolleyInTbDone := FALSE;	
-			
+				s_bStaPlaceTrolleyInTbDone := FALSE;
+				
 				s_eSequence := E_SeqCleanroomConnect.READY;
 			END_IF
 		END_IF
@@ -1160,18 +1238,18 @@ CASE s_eSequence OF
 				s_bStaCloseInnerTbDoorDone := TRUE;
 				s_bStaPickTrolleyFromTbDone := FALSE;
 				s_bStaPlaceTrolleyInTbDone := FALSE;
-			
+				
 				IF GVL_Modules.g_emDockingInterface.p_bStaReady THEN
 				
 					IF ( (s_eReqAction = E_ReqAction.INBOUND) OR (s_eReqAction = E_ReqAction.OUTBOUND) ) THEN
 						s_eSequence := E_SeqCleanroomConnect.UNDOCK_TB;
 					ELSE
 						s_eSequence := E_SeqCleanroomConnect.READY;
-					END_IF	
-						
-				END_IF	
-		END_IF	
-	
+					END_IF
+					
+				END_IF
+		END_IF
+		
 	//PICK TROLLEY FROM TB/////////////////////////////////////////////////////////////////////////
 	E_SeqCleanroomConnect.PICK_TROLLEY_FROM_TB:
 		IF s_fbSeqControl.q_bStaEntry THEN
@@ -1189,12 +1267,12 @@ CASE s_eSequence OF
 				s_bStaOpenInnerTbDoorDone := FALSE;
 				s_bStaCloseInnerTbDoorDone := FALSE;
 				s_bStaPickTrolleyFromTbDone := TRUE;
-				s_bStaPlaceTrolleyInTbDone := FALSE;	
-			
+				s_bStaPlaceTrolleyInTbDone := FALSE;
+				
 				s_eSequence := E_SeqCleanroomConnect.READY;
 			END_IF
 		END_IF
-
+	
 	//PLACE TROLLEY IN TB//////////////////////////////////////////////////////////////////////////
 	E_SeqCleanroomConnect.PLACE_TROLLEY_IN_TB:
 		IF s_fbSeqControl.q_bStaEntry THEN
@@ -1215,12 +1293,12 @@ CASE s_eSequence OF
 				s_bStaCloseInnerTbDoorDone := FALSE;
 				s_bStaPickTrolleyFromTbDone := FALSE;
 				s_bStaPlaceTrolleyInTbDone := TRUE;	
-			
+				
 				s_eSequence := E_SeqCleanroomConnect.READY;
 			END_IF
 		END_IF
 		
-	//OPEN CLEANROOM DOOR//////////////////////////////////////////////////////////////////////////	
+	//OPEN CLEANROOM DOOR//////////////////////////////////////////////////////////////////////////
 	E_SeqCleanroomConnect.OPEN_CLEANROOM_DOOR:
 		;
 		{warning '#TODO: Add future/FUMO3 code'}
@@ -1229,30 +1307,30 @@ CASE s_eSequence OF
 		ELSIF (s_eReqAction = E_ReqAction.OUTBOUND) THEN	
 			s_eSequence := E_SeqCleanroomConnect.PLACE_TROLLEY_IN_TB;
 		END_IF
-
+	
 	//CLOSE CLEANROOM DOOR/////////////////////////////////////////////////////////////////////////
 	E_SeqCleanroomConnect.CLOSE_CLEANROOM_DOOR:
 		;
 		{warning '#TODO: Add future/FUMO3 code'}
-		s_eSequence := E_SeqCleanroomConnect.CLOSE_INNER_TB_DOOR;	
+		s_eSequence := E_SeqCleanroomConnect.CLOSE_INNER_TB_DOOR;
 		
 	//STOP/////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqCleanroomConnect.STOP:
 		//Do not use .qEnrty forced stop doesn't make use of fbSeqControl
 		
 		s_eReqAction := E_ReqAction.NONE;
-				
+		
 //--		s_eSeqCleanroomConnect := E_SeqCleanroomConnect.READY;
-	
+		
 		IF (s_eCtrlState = E_CtrlState.IDLE) THEN
 			s_eSequence := E_SeqCleanroomConnect.START;
 		END_IF
-
+		
 	//ERROR////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqCleanroomConnect.ERROR:
 		IF s_fbSeqControl.q_bStaEntry THEN
-			s_eReqAction := E_ReqAction.NONE;	
-		
+			s_eReqAction := E_ReqAction.NONE;
+			
 			IF s_ePreviousStep > E_SeqCleanroomConnect.START
 				AND s_ePreviousStep < E_SeqCleanroomConnect.ERROR THEN
 				s_eResumeStep := s_ePreviousStep;
@@ -1260,7 +1338,7 @@ CASE s_eSequence OF
 				s_eResumeStep := E_SeqCleanroomConnect.IDLE;
 			END_IF
 		END_IF
-
+		
 END_CASE
 ]]></ST>
       </Implementation>

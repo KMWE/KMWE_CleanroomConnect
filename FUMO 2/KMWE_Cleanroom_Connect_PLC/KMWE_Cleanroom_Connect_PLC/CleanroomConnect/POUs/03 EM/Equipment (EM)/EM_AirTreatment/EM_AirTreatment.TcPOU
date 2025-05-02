@@ -49,6 +49,7 @@ VAR
 	s_bStaPressurized : BOOL;
 	s_bStaFlushed : BOOL;
 	s_bStaEqualized : BOOL;
+	s_bStaClean : BOOL;
 	s_bStaStopped : BOOL;
 	
 	//Alarms
@@ -394,45 +395,43 @@ _m_Params := TRUE;
       <Implementation>
         <ST><![CDATA[
 s_fbSeqControl(
-	i_nSeqStep := s_eSequence, 
-	i_sStepName := TO_STRING(s_eSequence), 
-	i_bCmdReset := i_bCmdReset
-					AND (s_eSequence = E_SeqAirTreatment.ERROR) // Only reset/resume sequencer from ERROR state
-					AND NOT(s_bStaError)
-					{warning '#TODO: use s_bStaError instead of checking all state again'}
-					//--Also for all other EM's  
-					AND i_bReqEnable, 
+	i_nSeqStep := s_eSequence,
+	i_sStepName := TO_STRING(s_eSequence),
+	i_bCmdReset :=
+		i_bCmdReset
+		AND i_bReqEnable
+		AND (s_eSequence = E_SeqAirTreatment.ERROR) // Only reset/resume sequencer from ERROR state
+		AND NOT(s_bStaError),
 	i_bStaError := s_bStaError OR NOT(i_bReqEnable));
 
-s_sResumeStep := TO_STRING(s_eResumeStep); 	
-	
+s_sResumeStep := TO_STRING(s_eResumeStep);
+
 //Force to stop	
 {warning '#TODO: Never stop air treatment'}
 IF (i_eCtrlState = E_CtrlState.STOPPING) THEN
 	s_eSequence := E_SeqAirTreatment.STOP;
-END_IF	
-	
+END_IF
+
 CASE s_eSequence OF
-	
 	E_SeqAirTreatment.IDLE:
 		IF (i_eCtrlState = E_CtrlState.IDLE) THEN
 			s_eSequence := E_SeqAirTreatment.START;
 		END_IF
-
-//START////////////////////////////////////////////////////////////////////////////////////////////			
+		
+//START////////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqAirTreatment.START:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_fbPIDPressCtrl.bReset := TRUE;
 			s_fSetFanSpeed := 0.0; //[%]
 			
 			s_sMessage := 'start';
-		END_IF		
-	
+		END_IF
+		
 		IF i_eCtrlState = E_CtrlState.RUNNING THEN
 			s_eSequence := E_SeqAirTreatment.READY;
 		END_IF
-
-//READY////////////////////////////////////////////////////////////////////////////////////////////		
+		
+//READY////////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqAirTreatment.READY:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_eResumeStep := E_SeqTransport.READY;
@@ -450,8 +449,8 @@ CASE s_eSequence OF
 		ELSIF s_bReqEqualize THEN
 			s_eSequence := E_SeqAirTreatment.EQUALIZE;
 		END_IF
-			
-//PRESSURIZE///////////////////////////////////////////////////////////////////////////////////////		
+		
+//PRESSURIZE///////////////////////////////////////////////////////////////////////////////////////
 	E_SeqAirTreatment.PRESSURIZE:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_bCmdFanMotorOn := TRUE;
@@ -471,7 +470,7 @@ CASE s_eSequence OF
 			s_eSequence := E_SeqAirTreatment.STOP;
 		END_IF
 		
-//FLUSING//////////////////////////////////////////////////////////////////////////////////////////		
+//FLUSING//////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqAirTreatment.FLUSHING:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_bCmdFanMotorOn := TRUE;
@@ -484,7 +483,7 @@ CASE s_eSequence OF
 		s_bStaFlushed :=
 			F_InRange(s_fSetPressure, s_fActDeltaP_CleanroomCabin, i_ref_stSettings.fRange)
 			AND (s_fbSeqControl.q_tmStepTime > i_ref_stSettings.tFlushingTime);
-		
+			
 		IF s_bReqPressureize THEN
 			s_eSequence := E_SeqAirTreatment.PRESSURIZE;
 		ELSIF s_bReqEqualize THEN
@@ -492,8 +491,8 @@ CASE s_eSequence OF
 		ELSIF s_bReqStop THEN	
 			s_eSequence := E_SeqAirTreatment.STOP;
 		END_IF
-
-//EQUALIZING//////////////////////////////////////////////////////////////////////////////////////////		
+		
+//EQUALIZING//////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqAirTreatment.EQUALIZE:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_bCmdFanMotorOn := TRUE;
@@ -504,31 +503,31 @@ CASE s_eSequence OF
 		s_fSetFanSpeed := LIMIT(0.0, s_fbPIDPressCtrl.fCtrlOutput, 100.0);
 		
 		s_bStaFlushed := F_InRange(s_fSetPressure, s_fActDeltaP_CleanroomCabin, i_ref_stSettings.fRange);
-
+		
 		IF s_bReqPressureize THEN
 			s_eSequence := E_SeqAirTreatment.PRESSURIZE;
 		ELSIF s_bReqFlush THEN
 			s_eSequence := E_SeqAirTreatment.FLUSHING;
-		ELSIF s_bReqStop THEN	
+		ELSIF s_bReqStop THEN
 			s_eSequence := E_SeqAirTreatment.STOP;
 		END_IF
 		
-//STOP/////////////////////////////////////////////////////////////////////////////////////////////		
+//STOP/////////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqAirTreatment.STOP:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_bCmdFanMotorOn := FALSE;
 			s_fSetPressure := 0.0; //[Pa]
 			s_fbPIDPressCtrl.bReset := TRUE;
 		END_IF
-	
+		
 	IF i_eCtrlState = E_CtrlState.IDLE THEN
 		s_eSequence := E_SeqAirTreatment.START;
-	
+		
 	ELSIF (i_eCtrlState = E_CtrlState.RUNNING) THEN
 		s_eSequence := E_SeqAirTreatment.READY;
 	END_IF
 	
-//ERROR////////////////////////////////////////////////////////////////////////////////////////////	
+//ERROR////////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqAirTreatment.ERROR:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmFanMotor.m_Off();
@@ -709,6 +708,18 @@ m_Pressurize := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
+    <Property Name="p_bStaClean" Id="{c64f561d-0884-42bd-857b-b397f22112d9}">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bStaClean : BOOL]]></Declaration>
+      <Get Name="Get" Id="{db5b9560-568a-4fb0-b83e-3f67a106ae96}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaClean := s_bStaClean;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
     <Property Name="p_bStaEqualized" Id="{70485294-9ae5-46f7-b455-a30567b2984d}">
       <Declaration><![CDATA[{attribute 'monitoring':='call'}
 PROPERTY PUBLIC p_bStaEqualized : BOOL]]></Declaration>
@@ -741,6 +752,18 @@ PROPERTY PUBLIC p_bStaPressurized : BOOL]]></Declaration>
         <Implementation>
           <ST><![CDATA[
 p_bStaPressurized := s_bStaPressurized;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaStopped" Id="{1b9417ea-2a30-4473-907e-a8c6943bb545}">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bStaStopped : BOOL]]></Declaration>
+      <Get Name="Get" Id="{ee712eba-a0f5-46e1-a8c8-95ee7254923f}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaStopped := s_bStaStopped;
 ]]></ST>
         </Implementation>
       </Get>

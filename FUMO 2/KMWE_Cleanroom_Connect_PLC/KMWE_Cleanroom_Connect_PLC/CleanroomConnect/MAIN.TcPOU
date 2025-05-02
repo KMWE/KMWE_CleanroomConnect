@@ -17,10 +17,7 @@ VAR
 	fbModeStateControl : FB_ModeStateControl;
 	
 	s_arrBool : ARRAY[0..15] OF BOOL;
-	s_cmTubeLedRgb : CM_TubeLedRgb;
-	itf_LED_RGB : I_LedRgb;
 	
-	cmDoorLock : CM_DoorLock;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -36,40 +33,7 @@ fbModeStateControl();
 	
 GVL.g_unCleanroomConnect.p_bCmdReset := GVL_KMWEGenericLib.g_fbAlarmManager.p_osrReset;
 GVL.g_unCleanroomConnect();
-
-//TEST
-itf_LED_RGB := GVL_Modules.g_emUtilities.i_ref_itf_LED_RGB;
-
-//++itf_LED_RGB := s_cmTubeLedRgb;
-
-//s_cmTubeLedRgb();
-
-IF itf_LED_RGB <> 0 THEN
- 
-	IF s_arrBool[0] THEN itf_LED_RGB.m_Off(s_arrBool[11]); s_arrBool[0] := FALSE; END_IF
-	IF s_arrBool[1] THEN itf_LED_RGB.m_Red(s_arrBool[11]); s_arrBool[1] := FALSE; END_IF
-	IF s_arrBool[2] THEN itf_LED_RGB.m_Green(s_arrBool[11]); s_arrBool[2] := FALSE; END_IF
-	IF s_arrBool[3] THEN itf_LED_RGB.m_Blue(s_arrBool[11]); s_arrBool[3] := FALSE; END_IF
-	IF s_arrBool[4] THEN itf_LED_RGB.m_Yellow(s_arrBool[11]); s_arrBool[4] := FALSE; END_IF
-	IF s_arrBool[5] THEN itf_LED_RGB.m_Magenta(s_arrBool[11]); s_arrBool[5] := FALSE; END_IF
-	IF s_arrBool[6] THEN itf_LED_RGB.m_Cyan(s_arrBool[11]); s_arrBool[6] := FALSE; END_IF
-	IF s_arrBool[7] THEN itf_LED_RGB.m_White(s_arrBool[11]); s_arrBool[7] := FALSE; END_IF
-
-END_IF
-
-IF s_arrBool[14] THEN cmDoorLock.m_Lock(); s_arrBool[14] := FALSE; END_IF
-IF s_arrBool[15] THEN cmDoorLock.m_Unlock(); s_arrBool[15] := FALSE; END_IF
-
-cmDoorLock(
-	i_bReqEnable:= , 
-	i_eCtrlMode:= , 
-	i_bCmdReset:= , 
-	i_sCmName:= , 
-	i_stSettings:= , 
-	i_bAllowUnlock:= );
-
-
- ]]></ST>
+]]></ST>
     </Implementation>
   </POU>
 </TcPlcObject>

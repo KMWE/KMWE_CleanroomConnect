@@ -2,29 +2,31 @@
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
   <POU Name="CM_TubeLedRgb" Id="{595df5ed-8c43-4c64-84d2-9ba9d4b953e6}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK CM_TubeLedRgb IMPLEMENTS I_LedRgb
-VAR_OUTPUT
+VAR
+	//Outputs
 	Q_bColorRed AT %Q* : BOOL;
 	Q_bColorGreen AT %Q* : BOOL;
 	Q_bColorBlue AT %Q* : BOOL;
 	Q_bColorWhite AT %Q* : BOOL;
-END_VAR
-VAR
+	
+	//Variables
 	s_bColorRed : BOOL;
 	s_bColorGreen : BOOL;
 	s_bColorBlue : BOOL;
 	s_bColorWhite : BOOL;
-
+	s_nStaColor : BYTE; //Binairy code RGBW
+	
 	s_bFlash : BOOL;
 	s_fbFlash : FB_Flash;
-END_VAR]]></Declaration>
+END_VAR
+]]></Declaration>
     <Implementation>
       <ST><![CDATA[
 s_fbFlash(
 	i_bExcecute := TRUE,
 	t_tOnTime := T#750MS,
-	t_tOffTime := T#750MS,
-	o_bQ => );
-
+	t_tOffTime := T#750MS);
+	
 IF s_bFlash THEN
 	Q_bColorRed := s_bColorRed AND s_fbFlash.o_bQ;
 	Q_bColorGreen := s_bColorGreen AND s_fbFlash.o_bQ;
@@ -35,10 +37,10 @@ ELSE
 	Q_bColorGreen := s_bColorGreen;
 	Q_bColorBlue := s_bColorBlue;
 	Q_bColorWhite := s_bColorWhite;
-END_IF	
+END_IF
 ]]></ST>
     </Implementation>
-    <Method Name="m_Blue" Id="{811cd9fc-1a9c-4a3c-8f72-d33a4a0f6dcb}">
+    <Method Name="m_Blue" Id="{d57b0497-a91a-4eae-8ab3-33ff974915fa}">
       <Declaration><![CDATA[METHOD PUBLIC m_Blue : BOOL
 VAR_INPUT
 	i_bFlash : BOOL;
@@ -50,122 +52,148 @@ s_bColorRed := FALSE;
 s_bColorGreen := FALSE;
 s_bColorBlue := TRUE;
 s_bColorWhite := FALSE;
+s_nStaColor := 4;
 
 s_bFlash := i_bFlash;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="m_Cyan" Id="{b5b902f2-be03-4a64-b2bb-64fe70cfdaef}">
+    <Method Name="m_Cyan" Id="{fe6a9e1a-de65-436f-b497-7fc6b195b9fe}">
       <Declaration><![CDATA[METHOD PUBLIC m_Cyan : BOOL
 VAR_INPUT
 	i_bFlash : BOOL;
-END_VAR]]></Declaration>
+END_VAR
+]]></Declaration>
       <Implementation>
         <ST><![CDATA[
 s_bColorRed := FALSE;
 s_bColorGreen := TRUE;
 s_bColorBlue := TRUE;
 s_bColorWhite := FALSE;
+s_nStaColor := 6;
 
 s_bFlash := i_bFlash;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="m_Green" Id="{ce16dd08-2cb3-42e7-b1f0-7228760bacfc}">
+    <Method Name="m_Green" Id="{5b8239f4-a47d-49ab-b71e-dde0e6e7a3a2}">
       <Declaration><![CDATA[METHOD PUBLIC m_Green : BOOL
 VAR_INPUT
 	i_bFlash : BOOL;
-END_VAR]]></Declaration>
+END_VAR
+]]></Declaration>
       <Implementation>
         <ST><![CDATA[
 s_bColorRed := FALSE;
 s_bColorGreen := TRUE;
 s_bColorBlue := FALSE;
 s_bColorWhite := FALSE;
+s_nStaColor := 2;
 
 s_bFlash := i_bFlash;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="m_Magenta" Id="{d186cc63-c07a-4047-a047-2a07b860d415}">
+    <Method Name="m_Magenta" Id="{6a1891b6-ba70-4e68-82c9-b34683cfce47}">
       <Declaration><![CDATA[METHOD PUBLIC m_Magenta : BOOL
 VAR_INPUT
 	i_bFlash : BOOL;
-END_VAR]]></Declaration>
+END_VAR
+]]></Declaration>
       <Implementation>
         <ST><![CDATA[
 s_bColorRed := TRUE;
 s_bColorGreen := FALSE;
 s_bColorBlue := TRUE;
 s_bColorWhite := FALSE;
+s_nStaColor := 5;
 
 s_bFlash := i_bFlash;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="m_Off" Id="{cbede21d-7f97-47a3-9390-3ee13ec52ca1}">
+    <Method Name="m_Off" Id="{ecf7c0ec-aeb1-4f25-9b33-59f6fa463870}">
       <Declaration><![CDATA[METHOD PUBLIC m_Off : BOOL
 VAR_INPUT
 	i_bFlash : BOOL;
-END_VAR]]></Declaration>
+END_VAR
+]]></Declaration>
       <Implementation>
         <ST><![CDATA[
 s_bColorRed := FALSE;
 s_bColorGreen := FALSE;
 s_bColorBlue := FALSE;
 s_bColorWhite := FALSE;
+s_nStaColor := 0;
 
 s_bFlash := i_bFlash;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="m_Red" Id="{d35a4945-5d60-4fb4-9589-c3ea10729b99}">
+    <Method Name="m_Red" Id="{97ed4e1e-4f76-4552-9da8-d9193d17516b}">
       <Declaration><![CDATA[METHOD PUBLIC m_Red : BOOL
 VAR_INPUT
 	i_bFlash : BOOL;
-END_VAR]]></Declaration>
+END_VAR
+]]></Declaration>
       <Implementation>
         <ST><![CDATA[
 s_bColorRed := TRUE;
 s_bColorGreen := FALSE;
 s_bColorBlue := FALSE;
 s_bColorWhite := FALSE;
+s_nStaColor := 1;
 
 s_bFlash := i_bFlash;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="m_White" Id="{54898620-fb17-4318-ace3-ab1962baf179}">
+    <Method Name="m_White" Id="{290105c0-46ae-4f2f-9dea-cc91419b9a9c}">
       <Declaration><![CDATA[METHOD PUBLIC m_White : BOOL
 VAR_INPUT
 	i_bFlash : BOOL;
-END_VAR]]></Declaration>
+END_VAR
+]]></Declaration>
       <Implementation>
         <ST><![CDATA[
 s_bColorRed := FALSE;
 s_bColorGreen := FALSE;
 s_bColorBlue := FALSE;
 s_bColorWhite := TRUE;
+s_nStaColor := 8;
 
 s_bFlash := i_bFlash;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="m_Yellow" Id="{d01841ca-9da5-44f7-a42f-be7c77a4e5f2}">
+    <Method Name="m_Yellow" Id="{b5d6329c-fb65-418c-8370-735d2a6d1618}">
       <Declaration><![CDATA[METHOD PUBLIC m_Yellow : BOOL
 VAR_INPUT
 	i_bFlash : BOOL;
-END_VAR]]></Declaration>
+END_VAR
+]]></Declaration>
       <Implementation>
         <ST><![CDATA[
 s_bColorRed := TRUE;
 s_bColorGreen := TRUE;
 s_bColorBlue := FALSE;
 s_bColorWhite := FALSE;
+s_nStaColor := 3;
 
 s_bFlash := i_bFlash;
 ]]></ST>
       </Implementation>
     </Method>
+    <Property Name="p_nStaColor" Id="{16cca93e-023e-4a33-82d3-73facd1cf405}">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_nStaColor : BYTE //Binairy code RGBW]]></Declaration>
+      <Get Name="Get" Id="{374cfdc8-85e5-4ebd-a15d-cbe78fc6fbaf}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_nStaColor := s_nStaColor;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
   </POU>
 </TcPlcObject>

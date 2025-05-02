@@ -20,7 +20,7 @@ VAR
 	// Requests
 	s_bReqActivateLock : BOOL; //external request
 	s_bReqActivateUnlock : BOOL; //external request
-	s_bReqPrepUnlock : BOOL;
+	s_bReqAccessRequest : BOOL;
 	
 	// Commands
 	s_bCmdActivateLock : BOOL;
@@ -80,14 +80,13 @@ SUPER^();
       <Declaration><![CDATA[METHOD PROTECTED _m_Alarms : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[
-IF NOT SUPER^._m_Alarms() THEN
+        <ST><![CDATA[IF NOT SUPER^._m_Alarms() THEN
 	RETURN;
 END_IF
 
 // Timeout (timers)
 s_tonUnlockRequestTimeout(
-	IN := i_bReqEnable AND (s_eSequence = E_SeqDoorLock.REQUEST_PENDING),
+	IN := i_bReqEnable AND (s_eSequence = E_SeqDoorLock.ACCESS_REQUEST_PENDING),
 	PT := i_stSettings.tUnlockingRequestTimeout);
 
 // Wrtie error bits
@@ -146,7 +145,7 @@ CASE s_eSequence OF
 			ELSE
 				s_bCmdActivateLock := FALSE;
 				s_bCmdLockStatus := TRUE; //Unlocked
-				s_bReqPrepUnlock := FALSE;
+				s_bReqAccessRequest := FALSE;
 				
 				s_eSequence := E_SeqDoorLock.DOOR_CLOSED;	
 			END_IF
@@ -160,16 +159,16 @@ CASE s_eSequence OF
 	E_SeqDoorLock.LOCKED:
 		s_bCmdActivateLock := TRUE;
 		s_bCmdLockStatus := FALSE; //Locked
-		s_bReqPrepUnlock := FALSE;
+		s_bReqAccessRequest := FALSE;
 	
 		IF s_bOsrReqToggleLock OR s_bReqActivateUnlock THEN
-			s_eSequence := E_SeqDoorLock.REQUEST_PENDING;
+			s_eSequence := E_SeqDoorLock.ACCESS_REQUEST_PENDING;
 		END_IF
 	
-	E_SeqDoorLock.REQUEST_PENDING:
+	E_SeqDoorLock.ACCESS_REQUEST_PENDING:
 		s_bCmdActivateLock := TRUE;
 		s_bCmdLockStatus := s_fbFlash.o_bQ; //Pending...
-		s_bReqPrepUnlock := TRUE;
+		s_bReqAccessRequest := TRUE;
 		
 		IF i_bAllowUnlock THEN
 			s_eSequence := E_SeqDoorLock.UNLOCKED;
@@ -180,7 +179,7 @@ CASE s_eSequence OF
 	E_SeqDoorLock.UNLOCKED:
 		s_bCmdActivateLock := FALSE;
 		s_bCmdLockStatus := TRUE; //Unlocked
-		s_bReqPrepUnlock := FALSE;
+		s_bReqAccessRequest := FALSE;
 	
 		s_eSequence := E_SeqDoorLock.DOOR_CLOSED;
 		
@@ -352,7 +351,7 @@ IF NOT i_bReqEnable THEN
 END_IF
 
 IF (s_eSequence = E_SeqDoorLock.DOOR_CLOSED)
-	OR (s_eSequence = E_SeqDoorLock.REQUEST_PENDING) //Return to LOCKED if pending is cancled
+	OR (s_eSequence = E_SeqDoorLock.ACCESS_REQUEST_PENDING) //Return to LOCKED if pending is cancled
 THEN
 	s_bReqActivateLock := TRUE;
 ELSE
@@ -379,15 +378,28 @@ m_Unlock := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Property Name="p_bReqPrepUnlock" Id="{fd14c4ab-e220-4286-8735-4fa941445d48}" FolderPath="Properties\">
+    <Property Name="p_bReqAccessRequest" Id="{fd14c4ab-e220-4286-8735-4fa941445d48}" FolderPath="Properties\">
       <Declaration><![CDATA[//Send request to higher-layer EM to prepare for unlocking
 {attribute 'monitoring':='call'}
-PROPERTY PUBLIC p_bReqPrepUnlock : BOOL]]></Declaration>
+PROPERTY PUBLIC p_bReqAccessRequest : BOOL]]></Declaration>
       <Get Name="Get" Id="{fe92706e-7336-4240-95e1-8213cfae1daf}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bReqPrepUnlock := s_bReqPrepUnlock;
+p_bReqAccessRequest := s_bReqAccessRequest;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaAccessGranted" Id="{3bfee502-fe62-46a0-8630-7bfa7ee8ede5}" FolderPath="Properties\">
+      <Declaration><![CDATA[//Send request to higher-layer EM to prepare for unlocking
+{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bStaAccessGranted : BOOL]]></Declaration>
+      <Get Name="Get" Id="{1bc40922-32a0-4b5f-9b2f-edaaa1fa675f}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaAccessGranted := (s_eSequence >= E_SeqDoorLock.UNLOCKED) AND (s_eSequence <= E_SeqDoorLock.DOOR_OPENED);
 ]]></ST>
         </Implementation>
       </Get>

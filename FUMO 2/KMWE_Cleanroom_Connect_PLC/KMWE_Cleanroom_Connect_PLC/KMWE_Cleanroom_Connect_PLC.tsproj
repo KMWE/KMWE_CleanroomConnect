@@ -2070,7 +2070,7 @@ External Setpoint Generation:
 		</Motion>
 		<Plc>
 			<Project GUID="{13F6CD22-9663-4738-8378-3A901949CB98}" Name="CleanroomConnect" PrjFilePath="CleanroomConnect\CleanroomConnect.plcproj" TmcFilePath="CleanroomConnect\CleanroomConnect.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" TmcPath="CleanroomConnect\CleanroomConnect.tmc" TmcHash="{02910D4B-8177-68BE-FD44-CB7E630FCC7A}">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" TmcPath="CleanroomConnect\CleanroomConnect.tmc" TmcHash="{AC6AD694-28D0-4682-022A-725B6ED36595}">
 					<Name>CleanroomConnect Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1">
@@ -2151,7 +2151,7 @@ External Setpoint Generation:
 						</Var>
 						<Var>
 							<Name>GVL_Modules.g_emUtilities.I_bStaTwinSAFE_Estop1ChA</Name>
-							<Comment><![CDATA[ En moeten er daan alarmen voor worden aangemaakt met name voor welke noodstop knop er is ingedrukt]]></Comment>
+							<Comment><![CDATA[ En moeten er dan alarmen voor worden aangemaakt met name voor welke noodstop knop er is ingedrukt]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
@@ -2175,7 +2175,12 @@ External Setpoint Generation:
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>GVL_Modules.g_emUtilities.I_bStaTwinSAFE_FbTransportUnitSTO</Name>
+							<Name>GVL_Modules.g_emUtilities.I_bStaTwinSAFE_DoorGuardCleanroomChA</Name>
+							<Comment><![CDATA[--	I_bStaTwinSAFE_FbTransportUnitSTO AT %I* : BOOL;]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emUtilities.I_bStaTwinSAFE_DoorGuardCleanroomChB</Name>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
@@ -3141,7 +3146,7 @@ External Setpoint Generation:
 			</Project>
 		</Plc>
 		<Safety>
-			<Project Disabled="true" GUID="{4BF2021E-CC78-407E-A7A4-653178BA8380}" Name="KMWE_Cleanroom_Connect_SAFETY" PrjFilePath="KMWE_Cleanroom_Connect_SAFETY\KMWE_Cleanroom_Connect_SAFETY.splcProj" TmcFilePath="KMWE_Cleanroom_Connect_SAFETY\KMWE_Cleanroom_Connect_SAFETY.tmc" GeneralArchiveSettings="#x000f" TargetArchiveSettings="#x0007" FileArchiveSettings="#x000e">
+			<Project GUID="{4BF2021E-CC78-407E-A7A4-653178BA8380}" Name="KMWE_Cleanroom_Connect_SAFETY" PrjFilePath="KMWE_Cleanroom_Connect_SAFETY\KMWE_Cleanroom_Connect_SAFETY.splcProj" TmcFilePath="KMWE_Cleanroom_Connect_SAFETY\KMWE_Cleanroom_Connect_SAFETY.tmc" GeneralArchiveSettings="#x000f" TargetArchiveSettings="#x0007" FileArchiveSettings="#x000e">
 				<Instance Id="#x01010010" KeepUnrestoredLinks="2">
 					<Name>KMWE_Cleanroom_Connect_SAFETY Instance</Name>
 					<TmcDesc GUID="{72A6D5B8-E98C-4604-8B90-09D1F8AB38A9}">
@@ -5743,6 +5748,10 @@ Bit 8 - 15 : reserved]]></Comment>
 		<OwnerA Name="TIPC^CleanroomConnect^CleanroomConnect Instance">
 			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K12 (EL1918 + TwinSAFE Logic)">
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_nTwinSATE_ProjectCrc" VarB="Device Info Data^Project CRC"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emLiftingTransport.Q_bDriveStateSTO" VarB="StandardOutputs^TwinSafeGroup1.FbTransportUnit_STO_28"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emUtilities.Q_bCmdErrAck" VarB="StandardOutputs^TwinSafeGroup1.ErrorAcknowledgement_1"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emUtilities.Q_bCmdRestartSafety" VarB="StandardOutputs^TwinSafeGroup1.RestartSafety_5"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emUtilities.Q_bCmdRun" VarB="StandardOutputs^TwinSafeGroup1.Run_2"/>
 			</OwnerB>
 			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K9 (EL7211-9014)">
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.I_nInfoDataInputLevel" VarB="DRV Info data 1^Info data 1"/>
@@ -5791,6 +5800,8 @@ Bit 8 - 15 : reserved]]></Comment>
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.I_bStaValveIsOn2" VarB="PlcTask Outputs^MAIN.simCentering.Q_bStaFeedbackOn2"/>
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.I_bStaMotorIsRunning" VarB="PlcTask Outputs^MAIN.sim_MOVITRAC_B.Q_bStaMotorIsRunning"/>
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.I_bStaReadyForOperation" VarB="PlcTask Outputs^MAIN.sim_MOVITRAC_B.Q_bStaReadyForOperation"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_bStaTwinSAFE_DoorGuardCleanroomChA" VarB="PlcTask Outputs^MAIN.simSafetyOK"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_bStaTwinSAFE_DoorGuardCleanroomChB" VarB="PlcTask Outputs^MAIN.simSafetyOK"/>
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_bStaTwinSAFE_Estop1ChA" VarB="PlcTask Outputs^MAIN.simSafetyOK"/>
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_bStaTwinSAFE_Estop1ChB" VarB="PlcTask Outputs^MAIN.simSafetyOK"/>
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_bStaTwinSAFE_Estop2ChA" VarB="PlcTask Outputs^MAIN.simSafetyOK"/>

@@ -5,8 +5,6 @@
 VAR
 	//Control modules
 	s_diSafetyOk : FB_DigInput;	//State from TwinSAFE
-//??	s_diEStopsInfeedOK : FB_DigInput;	//State from TwinSAFE
-//??	s_diEStopsCleanroomOK : FB_DigInput;	//State from TwinSAFE
 	s_diSafetyFbErr : FB_DigInput;	//State from TwinSAFE
 	s_diRestartSafety : FB_DigInput;
 	s_diPower400VacOk : FB_DigInput; //F1
@@ -32,6 +30,7 @@ VAR
 	s_bSafetyFbErr : BOOL := FALSE;
 	s_bEstopInfeedOk : BOOL := FALSE;
 	s_bEstopCleanroomOk : BOOL := FALSE;
+	s_bDoorGuardCleanroomOk : BOOL := FALSE;
 	s_bRestartSafety : BOOL := FALSE;
 	s_bStsPower400VacOk : BOOL := FALSE;
 	s_bStsPower230VacOk : BOOL := FALSE;
@@ -58,6 +57,7 @@ VAR
 	s_fbAlarmHandlerSafetyFbErr : FB_AlarmHandler;
 	s_fbAlarmHandlerEstopInfeedPressed : FB_AlarmHandler;
 	s_fbAlarmHandlerEstopCleanroomPressed : FB_AlarmHandler;
+	s_fbAlarmHandlerDoorGuardCleanroomOpened : FB_AlarmHandler;
 	s_fbAlarmHandlerPower400VacNotOk : FB_AlarmHandler;
 	s_fbAlarmHandlerPower230VacNotOk : FB_AlarmHandler;
 	s_fbAlarmHandlerPower230VacSocketsNotOk : FB_AlarmHandler;
@@ -70,6 +70,7 @@ VAR
 	s_bErrSafetyFbErr : BOOL;
 	s_bErrEstopInfeedPressed : BOOL;
 	s_bErrEstopCleanroomPressed : BOOL;
+	s_bErrDoorGuardCleanroomOpened : BOOL;
 	s_bErrPower400VacOk : BOOL;
 	s_bErrPower230VacOk : BOOL;
 	s_bWrnPower230VacSocketsOk : BOOL;
@@ -83,6 +84,7 @@ VAR
 	s_fbHmiLedSafetyFbErr : FB_HmiLed;
 	s_fbHmiLedEstopInfeedOk : FB_HmiLed;
 	s_fbHmiLedEstopCleanroomOk : FB_HmiLed;
+	s_fbHmiLedDoorGuardOk : FB_HmiLed;
 	s_fbHmiLedRestartSafety : FB_HmiLed;
 	s_fbHmiLedPower400VacOk : FB_HmiLed;
 	s_fbHmiLedPower230VacOk : FB_HmiLed;
@@ -103,14 +105,16 @@ VAR
 	Q_bCmdRestartSafety AT %Q* : BOOL; //Restart/reset safety blocks (reset Estop-safety-relay)
 	
 	{warning '#TODO: Nog beslissen of dat deze statussen ook weergegeven moeten gaan worden op het HMI'}
-	// En moeten er daan alarmen voor worden aangemaakt met name voor welke noodstop knop er is ingedrukt
+	// En moeten er dan alarmen voor worden aangemaakt met name voor welke noodstop knop er is ingedrukt
 	I_bStaTwinSAFE_Estop1ChA AT %I* : BOOL;
 	I_bStaTwinSAFE_Estop1ChB AT %I* : BOOL;
 	I_bStaTwinSAFE_Estop2ChA AT %I* : BOOL;
 	I_bStaTwinSAFE_Estop2ChB AT %I* : BOOL;
 	I_bStaTwinSAFE_FbPalletConveyorSTO AT %I* : BOOL;
 	I_bStaTwinSAFE_FbPotGrpValvesOFF AT %I* : BOOL;
-	I_bStaTwinSAFE_FbTransportUnitSTO AT %I* : BOOL;
+//--	I_bStaTwinSAFE_FbTransportUnitSTO AT %I* : BOOL;
+	I_bStaTwinSAFE_DoorGuardCleanroomChA AT %I* : BOOL;
+	I_bStaTwinSAFE_DoorGuardCleanroomChB AT %I* : BOOL;
 	
 	I_nTwinSATE_ProjectCrc AT %I* : WORD; //Cyclic Redundancy Check (check if TwinSAFE code is still the same)
 	s_nVerified_Crc : WORD := 16#0000;
@@ -147,6 +151,7 @@ s_bErrSafetyNotOk S= NOT(s_bStaSafetyOk);
 s_bErrSafetyFbErr S= s_bSafetyFbErr;
 s_bErrEstopInfeedPressed S= NOT(s_bEstopInfeedOk);
 s_bErrEstopCleanroomPressed S= NOT(s_bEstopCleanroomOk);
+s_bErrDoorGuardCleanroomOpened S= NOT(s_bDoorGuardCleanroomOk);
 s_bErrPower400VacOk S= NOT(s_bStsPower400VacOk);
 s_bErrPower230VacOk S= NOT(s_bStsPower230VacOk);
 s_bWrnPower230VacSocketsOk S= NOT(s_bStsPower230VacSocketsOk);
@@ -161,6 +166,7 @@ s_fbAlarmHandlerSafetyNotOk(i_bStaActive := s_bErrSafetyNotOk);
 s_fbAlarmHandlerSafetyFbErr(i_bStaActive := s_bErrSafetyFbErr);
 s_fbAlarmHandlerEstopInfeedPressed(i_bStaActive := s_bErrEstopInfeedPressed);
 s_fbAlarmHandlerEstopCleanroomPressed(i_bStaActive := s_bErrEstopCleanroomPressed);
+s_fbAlarmHandlerDoorGuardCleanroomOpened(i_bStaActive := s_bErrDoorGuardCleanroomOpened);
 s_fbAlarmHandlerPower400VacNotOk(i_bStaActive := s_bErrPower400VacOk);
 s_fbAlarmHandlerPower230VacNotOk(i_bStaActive := s_bErrPower230VacOk);
 s_fbAlarmHandlerPower230VacSocketsNotOk(i_bStaActive := s_bWrnPower230VacSocketsOk);
@@ -174,6 +180,7 @@ s_bErrSafetyNotOk R= i_bCmdReset AND s_bStaSafetyOk;
 s_bErrSafetyFbErr R= i_bCmdReset AND NOT(s_bSafetyFbErr);
 s_bErrEstopInfeedPressed R= i_bCmdReset AND s_bEstopInfeedOk;
 s_bErrEstopCleanroomPressed R= i_bCmdReset AND s_bEstopCleanroomOk;
+s_bErrDoorGuardCleanroomOpened R= i_bCmdReset AND s_bDoorGuardCleanroomOk;
 s_bErrPower400VacOk R= i_bCmdReset AND s_bStsPower400VacOk;
 s_bErrPower230VacOk R= i_bCmdReset AND s_bStsPower230VacOk;
 s_bWrnPower230VacSocketsOk R= i_bCmdReset AND s_bStsPower230VacSocketsOk;
@@ -198,7 +205,8 @@ s_bStaError :=
 	OR s_fbAlarmHandlerAirPressureNotOk.q_bStaActive
 	OR s_fbAlarmHandlerCabinetTemperatureNotOk.q_bStaActive;
 	
-s_bStaWarning := FALSE;	
+s_bStaWarning :=
+	s_fbAlarmHandlerDoorGuardCleanroomOpened.q_bStaActive;
 	
 _m_Alarms := TRUE;
 ]]></ST>
@@ -269,6 +277,7 @@ s_fbHmiLedSafetyOk(i_bStaLed := s_bStaSafetyOk);
 s_fbHmiLedSafetyFbErr(i_bStaLed := s_bSafetyFbErr);
 s_fbHmiLedEstopInfeedOk(i_bStaLed := s_bEstopInfeedOk);
 s_fbHmiLedEstopCleanroomOk(i_bStaLed := s_bEstopCleanroomOk);
+s_fbHmiLedDoorGuardOk(i_bStaLed := s_bDoorGuardCleanroomOk);
 s_fbHmiLedRestartSafety(i_bStaLed := s_bRestartSafetyState);
 s_fbHmiLedPower400VacOk(i_bStaLed := s_bStsPower400VacOk);
 s_fbHmiLedPower230VacOk(i_bStaLed := s_bStsPower230VacOk);
@@ -338,6 +347,9 @@ s_fbAlarmHandlerEstopInfeedPressed.i_eAlarmLevel := E_AlarmLevel.Alarm;
 s_fbAlarmHandlerEstopCleanroomPressed.i_sAlarmText := CONCAT(i_sEmName, ' - Emergency stop button cleanroom not OK');
 s_fbAlarmHandlerEstopCleanroomPressed.i_eAlarmLevel := E_AlarmLevel.Alarm;
 
+s_fbAlarmHandlerDoorGuardCleanroomOpened.i_sAlarmText := CONCAT(i_sEmName, ' - Door guard cleanroom not OK');
+s_fbAlarmHandlerDoorGuardCleanroomOpened.i_eAlarmLevel := E_AlarmLevel.Warning;
+
 s_fbAlarmHandlerPower400VacNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Power supply 400Vac not OK');
 s_fbAlarmHandlerPower400VacNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
 
@@ -368,6 +380,9 @@ s_fbHmiLedEstopInfeedOk.p_sToHmiDescriptionLed := 'Emergency stop button Infeed 
 
 s_fbHmiLedEstopCleanroomOk.p_bStaVisible := FALSE;
 s_fbHmiLedEstopCleanroomOk.p_sToHmiDescriptionLed := 'Emergency stop button Cleanroom OK';
+
+s_fbHmiLedDoorGuardOk.p_bStaVisible := FALSE;
+s_fbHmiLedDoorGuardOk.p_sToHmiDescriptionLed := 'Door Guard Cleanroom OK';
 
 s_fbHmiLedRestartSafety.p_bStaVisible := FALSE;
 s_fbHmiLedRestartSafety.p_sToHmiDescriptionLed := 'Restart Safety';
@@ -422,6 +437,7 @@ s_bStaSafetyOk := s_diSafetyOk.p_bStaInputDelayed AND s_diSafetyOk.p_bStaInput; 
 s_bSafetyFbErr := s_diSafetyFbErr.p_bStaInput;
 s_bEstopInfeedOk := I_bStaTwinSAFE_Estop1ChA AND I_bStaTwinSAFE_Estop1ChB;
 s_bEstopCleanroomOk := I_bStaTwinSAFE_Estop2ChA AND I_bStaTwinSAFE_Estop2ChB;
+s_bDoorGuardCleanroomOk := I_bStaTwinSAFE_DoorGuardCleanroomChA AND I_bStaTwinSAFE_DoorGuardCleanroomChB;
 s_bRestartSafety := s_diRestartSafety.p_bStaInput;  
 s_bStsPower400VacOk := s_diPower400VacOk.p_bStaInputDelayed AND s_diPower400VacOk.p_bStaInput; //on-delay only
 s_bStsPower230VacOk := s_diPower230VacOk.p_bStaInputDelayed AND s_diPower230VacOk.p_bStaInput; //on-delay only

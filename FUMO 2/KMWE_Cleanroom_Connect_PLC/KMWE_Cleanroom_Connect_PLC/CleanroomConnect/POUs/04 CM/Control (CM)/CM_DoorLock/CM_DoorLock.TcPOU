@@ -5,6 +5,8 @@
 VAR_INPUT
 	i_stSettings : ST_SettingsDoorLock;
 	i_bAllowUnlock : BOOL; //TRUE = Allowed to unlock
+	
+	i_ref_eCtrlState : REFERENCE TO E_CtrlState;
 END_VAR
 
 VAR
@@ -16,6 +18,10 @@ VAR
 	// Outputs
 	Q_bCmdLock AT %Q* : BOOL; //TRUE = Lock
 	Q_bSnReqStatus AT %Q* : BOOL; //FASLE = Locked, Blink = pending, TRUE = Unlocked
+	
+	// Force outputs (IO-test functions)
+	s_fbForceStaRequestLamp : FB_ForceOutput;
+	s_fbForceCmdLock : FB_ForceOutput;
 	
 	// Requests
 	s_bReqActivateLock : BOOL; //external request
@@ -334,8 +340,21 @@ IF NOT SUPER^._m_Outputs() THEN
 	RETURN;
 END_IF
 
-Q_bCmdLock := s_bCmdActivateLock;
-Q_bSnReqStatus := s_bCmdLockStatus;
+{warning #TODO: Nog bepalen OF het beter is om onderstaande code te verwerken in FB_Force output}
+IF __ISVALIDREF(i_ref_eCtrlState) THEN
+	IF (i_eCtrlMode <> E_CtrlMode.IO) OR (i_ref_eCtrlState <> E_CtrlState.RUNNING) THEN
+		s_fbForceStaRequestLamp.i_eForceValue := E_ForceValue.RELEASED;
+		s_fbForceCmdLock.i_eForceValue := E_ForceValue.RELEASED;
+	END_IF
+END_IF 
+
+s_fbForceStaRequestLamp(
+	i_ref_bCmdInput := s_bCmdLockStatus,
+	i_ref_bCmdOutput := Q_bSnReqStatus);
+	
+s_fbForceCmdLock(
+	i_ref_bCmdInput := s_bCmdActivateLock,
+	i_ref_bCmdOutput := Q_bCmdLock);
 
 _m_Outputs := TRUE;
 ]]></ST>

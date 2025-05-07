@@ -103,6 +103,11 @@ VAR
 	s_fbHmiBtnPlaceTrolleyInTB : FB_HmiBtn;
 //------------------------------------------//
 
+	{warning '#TODO: Het zou beter zijn om dit onder te brengen in de onderstaande control modules'}
+	s_bHmiForceOutputEnabled : BOOL;
+	s_bHmiForceOutputRGBEnabled : BOOL;
+	s_bHmiForceOutputWEnabled : BOOL;
+
 END_VAR
 
 VAR CONSTANT
@@ -218,8 +223,10 @@ ELSIF s_cmDoorLockCleanroomDoor.p_bStaAccessGranted THEN
 	s_cmCabinStateIndicator.m_White(c_bON);
 END_IF
 
-s_cmCabinStateIndicator();
-
+s_cmCabinStateIndicator(
+	i_ref_eCtrlMode := s_eCtrlMode,
+	i_ref_eCtrlState := s_eCtrlState);
+	
 //Cleanroom Door Lock
 s_cmDoorLockCleanroomDoor.i_bAllowUnlock :=
 	GVL_Modules.g_emLiftingTransport.p_bStaAtIdlePosition
@@ -232,6 +239,7 @@ s_cmDoorLockCleanroomDoor.i_bAllowUnlock :=
 s_cmDoorLockCleanroomDoor(
 	i_bReqEnable := TRUE,
 	i_eCtrlMode := s_eCtrlMode,
+	i_ref_eCtrlState := s_eCtrlState,
 	i_bCmdReset := p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn); //Add temp reset button
 //------------------------------------------//
 
@@ -1013,7 +1021,8 @@ s_bStaError :=
 	GVL_Modules.g_emUtilities.q_bStaError
 	OR GVL_Modules.g_emPalletConveyor.q_bStaError
 	OR GVL_Modules.g_emDockingInterface.q_bStaError
-	OR GVL_Modules.g_emLiftingTransport.q_bStaError;
+	OR GVL_Modules.g_emLiftingTransport.q_bStaError
+	OR s_cmDoorLockCleanroomDoor.p_bStaError;
 //++	OR GVL_Modules.g_emDoors.q_bStaError;
 //++OR GVL_Modules.g_emDockingCabin.q_bStaError
 
@@ -1021,7 +1030,8 @@ s_bStaWarning :=
 	GVL_Modules.g_emUtilities.q_bStaWarning
 	OR GVL_Modules.g_emPalletConveyor.q_bStaWarning
 	OR GVL_Modules.g_emDockingInterface.q_bStaWarning
-	OR GVL_Modules.g_emLiftingTransport.q_bStaWarning;
+	OR GVL_Modules.g_emLiftingTransport.q_bStaWarning
+	OR s_cmDoorLockCleanroomDoor.p_bStaWarning;
 //++	OR GVL_Modules.g_emDoors.q_bStaWarning;
 //++OR GVL_Modules.g_emDockingCabin.q_bStaWarning
 
@@ -1752,6 +1762,19 @@ s_fbHmiBtnOpenInnerTBDoor.p_bStaEnabled := s_bStaReady AND NOT(GVL_Modules.g_emD
 s_fbHmiBtnCloseInnerTBDoor.p_bStaEnabled := s_bStaReady AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosed);
 s_fbHmiBtnPickTrolleyFromTB.p_bStaEnabled := s_bStaReady AND GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpened;
 s_fbHmiBtnPlaceTrolleyInTB.p_bStaEnabled := s_bStaReady AND GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpened;
+
+
+//IO-mode /////////////////////////////////////////////////////////////////////////////////////////
+IF (s_eCtrlMode = E_CtrlMode.IO) AND (s_eCtrlState = E_CtrlState.RUNNING) THEN
+	s_bHmiForceOutputEnabled := TRUE;
+	s_bHmiForceOutputRGBEnabled := NOT(s_cmCabinStateIndicator.p_bStaColorWhite);
+	s_bHmiForceOutputWEnabled := NOT(s_cmCabinStateIndicator.p_bStaColorRed OR s_cmCabinStateIndicator.p_bStaColorGreen OR s_cmCabinStateIndicator.p_bStaColorBlue);
+ELSE
+	s_bHmiForceOutputEnabled := FALSE;
+	s_bHmiForceOutputRGBEnabled := FALSE;
+	s_bHmiForceOutputWEnabled := FALSE;
+	
+END_IF
 
 // Paul Schippers: just a test with the use of interfaces
 //??itfEmDoors.m_CloseOuterDoor();

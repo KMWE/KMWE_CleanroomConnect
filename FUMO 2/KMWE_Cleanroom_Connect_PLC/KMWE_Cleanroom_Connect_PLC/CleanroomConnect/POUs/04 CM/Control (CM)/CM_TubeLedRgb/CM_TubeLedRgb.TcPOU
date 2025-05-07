@@ -2,6 +2,12 @@
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
   <POU Name="CM_TubeLedRgb" Id="{595df5ed-8c43-4c64-84d2-9ba9d4b953e6}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK CM_TubeLedRgb IMPLEMENTS I_LedRgb
+
+VAR_INPUT
+	i_ref_eCtrlMode : REFERENCE TO E_CtrlMode;
+	i_ref_eCtrlState : REFERENCE TO E_CtrlState;
+END_VAR
+
 VAR
 	//Outputs
 	Q_bColorRed AT %Q* : BOOL;
@@ -9,12 +15,24 @@ VAR
 	Q_bColorBlue AT %Q* : BOOL;
 	Q_bColorWhite AT %Q* : BOOL;
 	
+	// Force outputs (IO-test functions)
+	s_fbForceLedTubeRed : FB_ForceOutput;
+	s_fbForceLedTubeGreen : FB_ForceOutput;
+	s_fbForceLedTubeBlue : FB_ForceOutput;
+	s_fbForceLedTubeWhite : FB_ForceOutput;
+	
 	//Variables
 	s_bColorRed : BOOL;
 	s_bColorGreen : BOOL;
 	s_bColorBlue : BOOL;
 	s_bColorWhite : BOOL;
 	s_nStaColor : BYTE; //Binairy code RGBW
+	
+	//Commands
+	s_bCmdColorRed : BOOL;
+	s_bCmdColorGreen : BOOL;
+	s_bCmdColorBlue : BOOL;
+	s_bCmdColorWhite : BOOL;
 	
 	s_bFlash : BOOL;
 	s_fbFlash : FB_Flash;
@@ -28,17 +46,55 @@ s_fbFlash(
 	t_tOffTime := T#750MS);
 	
 IF s_bFlash THEN
-	Q_bColorRed := s_bColorRed AND s_fbFlash.o_bQ;
-	Q_bColorGreen := s_bColorGreen AND s_fbFlash.o_bQ;
-	Q_bColorBlue := s_bColorBlue AND s_fbFlash.o_bQ;
-	Q_bColorWhite := s_bColorWhite AND s_fbFlash.o_bQ;
+	s_bCmdColorRed := s_bColorRed AND s_fbFlash.o_bQ;
+	s_bCmdColorGreen := s_bColorGreen AND s_fbFlash.o_bQ;
+	s_bCmdColorBlue := s_bColorBlue AND s_fbFlash.o_bQ;
+	s_bCmdColorWhite := s_bColorWhite AND s_fbFlash.o_bQ;
 ELSE
-	Q_bColorRed := s_bColorRed;
-	Q_bColorGreen := s_bColorGreen;
-	Q_bColorBlue := s_bColorBlue;
-	Q_bColorWhite := s_bColorWhite;
+	s_bCmdColorRed := s_bColorRed;
+	s_bCmdColorGreen := s_bColorGreen;
+	s_bCmdColorBlue := s_bColorBlue;
+	s_bCmdColorWhite := s_bColorWhite;
 END_IF
-]]></ST>
+
+{warning #TODO: Nog bepalen OF het beter is om onderstaande code te verwerken in FB_Force output}
+IF __ISVALIDREF(i_ref_eCtrlMode) AND __ISVALIDREF(i_ref_eCtrlState) THEN
+	IF (i_ref_eCtrlMode <> E_CtrlMode.IO) OR (i_ref_eCtrlState <> E_CtrlState.RUNNING) THEN
+		s_fbForceLedTubeRed.i_eForceValue := E_ForceValue.RELEASED;
+		s_fbForceLedTubeGreen.i_eForceValue := E_ForceValue.RELEASED;
+		s_fbForceLedTubeBlue.i_eForceValue := E_ForceValue.RELEASED;
+		s_fbForceLedTubeWhite.i_eForceValue := E_ForceValue.RELEASED;
+	END_IF
+END_IF 
+
+//Force RGB-outputs FALSE if W-output is TRUE
+IF Q_bColorWhite THEN
+	s_fbForceLedTubeRed.i_eForceValue := E_ForceValue.FORCE_OFF;
+	s_fbForceLedTubeGreen.i_eForceValue := E_ForceValue.FORCE_OFF;
+	s_fbForceLedTubeBlue.i_eForceValue := E_ForceValue.FORCE_OFF;
+END_IF
+
+//Force W-output FALSE if any RGB-output is TRUE
+IF Q_bColorRed OR Q_bColorGreen OR Q_bColorBlue THEN
+	s_fbForceLedTubeWhite.i_eForceValue := E_ForceValue.FORCE_OFF;
+END_IF
+
+s_fbForceLedTubeRed(
+	i_ref_bCmdInput := s_bCmdColorRed,
+	i_ref_bCmdOutput := Q_bColorRed);
+	
+s_fbForceLedTubeGreen(
+	i_ref_bCmdInput := s_bCmdColorGreen,
+	i_ref_bCmdOutput := Q_bColorGreen);
+	
+s_fbForceLedTubeBlue(
+	i_ref_bCmdInput := s_bCmdColorBlue,
+	i_ref_bCmdOutput := Q_bColorBlue);
+	
+s_fbForceLedTubeWhite(
+	i_ref_bCmdInput := s_bCmdColorWhite,
+	i_ref_bCmdOutput := Q_bColorWhite);
+	]]></ST>
     </Implementation>
     <Method Name="m_Blue" Id="{d57b0497-a91a-4eae-8ab3-33ff974915fa}">
       <Declaration><![CDATA[METHOD PUBLIC m_Blue : BOOL
@@ -184,6 +240,54 @@ s_bFlash := i_bFlash;
 ]]></ST>
       </Implementation>
     </Method>
+    <Property Name="p_bStaColorBlue" Id="{088d2652-fedb-418c-9294-37610dda26a0}">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bStaColorBlue : BOOL]]></Declaration>
+      <Get Name="Get" Id="{7bd8b468-a96f-43cf-a618-1b1ada3749d7}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaColorBlue := Q_bColorBlue;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaColorGreen" Id="{5eec6bb9-a994-4c2c-9e57-0a28e72f2f1f}">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bStaColorGreen : BOOL]]></Declaration>
+      <Get Name="Get" Id="{84208be1-5d3e-4a65-b236-f8c77fde461a}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaColorGreen := Q_bColorGreen;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaColorRed" Id="{2ff5d3e0-4676-4b93-890d-eb205211f9cc}">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bStaColorRed : BOOL]]></Declaration>
+      <Get Name="Get" Id="{87fafabc-0fa0-4802-be84-5a31e59deb5a}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaColorRed := Q_bColorRed;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="p_bStaColorWhite" Id="{1c67a4bc-70c9-4b89-a889-b5e68a56771a}">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bStaColorWhite : BOOL]]></Declaration>
+      <Get Name="Get" Id="{ba22e263-dca3-4b7a-990e-31799bde4927}">
+        <Declaration><![CDATA[]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+p_bStaColorWhite := Q_bColorWhite;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
     <Property Name="p_nStaColor" Id="{16cca93e-023e-4a33-82d3-73facd1cf405}">
       <Declaration><![CDATA[{attribute 'monitoring':='call'}
 PROPERTY PUBLIC p_nStaColor : BYTE //Binairy code RGBW]]></Declaration>

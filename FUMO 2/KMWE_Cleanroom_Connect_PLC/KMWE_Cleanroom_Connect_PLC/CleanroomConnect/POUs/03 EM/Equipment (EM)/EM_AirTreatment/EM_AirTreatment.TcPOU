@@ -21,7 +21,7 @@ VAR
 	
 	//Inputs
 	s_fbFanThermal : FB_DigInput;
-	s_fbDeltaP_CleanroomCabin : FB_AnaInput;
+	s_fbDeltaP_CleanroomAmbient : FB_AnaInput;
 	s_fbDeltaP_CabinAmbient : FB_AnaInput;
 	
 	//Outputs
@@ -42,8 +42,9 @@ VAR
 	
 	//States
 	s_bStaFanThemalOk : BOOL;
-	s_fActDeltaP_CleanroomCabin : LREAL; //[Pa]
+	s_fActDeltaP_CleanroomAmbient : LREAL; //[Pa]
 	s_fActDeltaP_CabinAmbient : LREAL; //[Pa]
+	s_fCalcDeltaP_CleanroomCabin : LREAL; //[Pa]
 	
 	//Properties
 	s_bStaPressurized : BOOL;
@@ -127,14 +128,14 @@ s_bStaError :=
 	s_bErrFanThermalError 
 	OR s_cmFanMotor.p_bStaError
 	OR s_fbFanSpeed.p_bStaError
-	OR s_fbDeltaP_CleanroomCabin.p_bStaError
+	OR s_fbDeltaP_CleanroomAmbient.p_bStaError
 	OR s_fbDeltaP_CabinAmbient.p_bStaError;
 	
 s_bStaWarning :=
 	s_fbFanSpeed.p_bStaOverRange
 	OR s_fbFanSpeed.p_bStaUnderRange
-	OR s_fbDeltaP_CleanroomCabin.p_bStaOverRange
-	OR s_fbDeltaP_CleanroomCabin.p_bStaUnderRange
+	OR s_fbDeltaP_CleanroomAmbient.p_bStaOverRange
+	OR s_fbDeltaP_CleanroomAmbient.p_bStaUnderRange
 	OR s_fbDeltaP_CabinAmbient.p_bStaOverRange
 	OR s_fbDeltaP_CabinAmbient.p_bStaUnderRange;
 	
@@ -154,9 +155,6 @@ _m_Sequence();
     </Method>
     <Method Name="_m_Devices" Id="{5634911e-9a37-47c7-962a-914403fd8d33}" FolderPath="Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Devices : BOOL
-VAR
-	fTaskTime : LREAL; //[s]
-END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
@@ -166,22 +164,20 @@ END_IF
 
 s_fbPIDPressCtrl(
 	fSetpointValue := s_fSetPressure, //[Pa]
-	fActualValue := s_fActDeltaP_CleanroomCabin, //[Pa]
+	fActualValue := s_fCalcDeltaP_CleanroomCabin, //[Pa]
 	fKp := i_ref_stSettings.fKp * -1.0, //P [factor]
 	fTn := i_ref_stSettings.fTn, //I [s]
 	fTv := i_ref_stSettings.fTv, //D [s]
-	fTd := i_ref_stSettings.fTd, //t [[s]
-);
-
+	fTd := i_ref_stSettings.fTd); //t [[s]
+	
 s_cmFanMotor(
 	i_bReqEnable:= i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
 	i_ref_eCtrlState := i_eCtrlState,
 	i_bCmdReset := i_bCmdReset,
 	i_bIclkOn := FALSE,
-	i_bIclkOff := FALSE
-);
-
+	i_bIclkOff := FALSE);
+	
 _m_Devices := TRUE;
 ]]></ST>
       </Implementation>
@@ -214,7 +210,7 @@ _m_Hmi := TRUE;
     <Method Name="_m_Init" Id="{d5bdcfa5-a106-4207-af78-e9a00adc354c}" FolderPath="Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Init : BOOL
 VAR
-	s_fbGetCurTaskIdx  	: GETCURTASKINDEX;
+	s_fbGetCurTaskIdx : GETCURTASKINDEX;
 END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[
@@ -237,22 +233,22 @@ s_fbFanSpeed.i_stSettings.fMinScaledOutput := 0; //[%]
 s_fbFanSpeed.i_stSettings.nMaxOutput := 32767; //[raw]
 s_fbFanSpeed.i_stSettings.nMinOutput := 0; //[raw]
 
-s_fbDeltaP_CleanroomCabin.i_bReqEnable := FALSE;
-s_fbDeltaP_CleanroomCabin.i_sName := 'DeltaP between Cleanroom-Cabin';
-s_fbDeltaP_CleanroomCabin.i_stSettings.bDisableOverRange := TRUE;
-s_fbDeltaP_CleanroomCabin.i_stSettings.bDisableUnderRange := TRUE;
-s_fbDeltaP_CleanroomCabin.i_stSettings.fMaxScaledInput := 100.0; //[Pa]
-s_fbDeltaP_CleanroomCabin.i_stSettings.fMinScaledInput := -100.0; //[Pa]
-s_fbDeltaP_CleanroomCabin.i_stSettings.nMaxInput := 32767; //[raw]
-s_fbDeltaP_CleanroomCabin.i_stSettings.nMinInput := 0; //[raw]
-s_fbDeltaP_CleanroomCabin.i_stSettings.tmFilterTime := T#3S;
+s_fbDeltaP_CleanroomAmbient.i_bReqEnable := FALSE;
+s_fbDeltaP_CleanroomAmbient.i_sName := 'DeltaP Cleanroom-Ambient';
+s_fbDeltaP_CleanroomAmbient.i_stSettings.bDisableOverRange := TRUE;
+s_fbDeltaP_CleanroomAmbient.i_stSettings.bDisableUnderRange := TRUE;
+s_fbDeltaP_CleanroomAmbient.i_stSettings.fMaxScaledInput := 100.0; //[Pa]
+s_fbDeltaP_CleanroomAmbient.i_stSettings.fMinScaledInput := 0.0; //[Pa]
+s_fbDeltaP_CleanroomAmbient.i_stSettings.nMaxInput := 32767; //[raw]
+s_fbDeltaP_CleanroomAmbient.i_stSettings.nMinInput := 0; //[raw]
+s_fbDeltaP_CleanroomAmbient.i_stSettings.tmFilterTime := T#3S;
 
 s_fbDeltaP_CabinAmbient.i_bReqEnable := FALSE;
-s_fbDeltaP_CabinAmbient.i_sName := 'DeltaP between Cabin-Ambient';
+s_fbDeltaP_CabinAmbient.i_sName := 'DeltaP Cabin-Ambient';
 s_fbDeltaP_CabinAmbient.i_stSettings.bDisableOverRange := TRUE;
 s_fbDeltaP_CabinAmbient.i_stSettings.bDisableUnderRange := TRUE;
 s_fbDeltaP_CabinAmbient.i_stSettings.fMaxScaledInput := 100.0; //[Pa]
-s_fbDeltaP_CabinAmbient.i_stSettings.fMinScaledInput := -100.0; //[Pa]
+s_fbDeltaP_CabinAmbient.i_stSettings.fMinScaledInput := 0.0; //[Pa]
 s_fbDeltaP_CabinAmbient.i_stSettings.nMaxInput := 32767; //[raw]
 s_fbDeltaP_CabinAmbient.i_stSettings.nMinInput := 0; //[raw]
 s_fbDeltaP_CabinAmbient.i_stSettings.tmFilterTime := T#3S;
@@ -268,7 +264,7 @@ s_fbAlarmHandlerFanThermalError.i_sAlarmText := CONCAT(i_sEmName, ': Fan Thermal
 //Interlock strings
 //<none>
 
-//Hmi 
+//Hmi
 	s_fbHmiBtnPressurize.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnPressurize.p_bStaVisible := FALSE;
 	s_fbHmiBtnPressurize.p_bStaEnabled := FALSE;
@@ -288,7 +284,7 @@ s_fbAlarmHandlerFanThermalError.i_sAlarmText := CONCAT(i_sEmName, ': Fan Thermal
 	s_fbHmiBtnStop.p_bStaVisible := FALSE;
 	s_fbHmiBtnStop.p_bStaEnabled := FALSE;
 	s_fbHmiBtnStop.p_sBtnText := 'Stop';
-
+	
 	s_fbHmiLedPressurized.p_bStaVisible := FALSE;
 	s_fbHmiLedPressurized.p_sToHmiDescriptionLed := 'Cabin Pressurized';
 	
@@ -315,12 +311,17 @@ IF NOT SUPER^._m_Inputs() THEN
 END_IF
 
 s_fbFanThermal();
-s_fbDeltaP_CleanroomCabin(i_bReqEnable := i_bReqEnable);
-s_fbDeltaP_CabinAmbient(i_bReqEnable := i_bReqEnable);
-
+s_fbDeltaP_CleanroomAmbient(
+	i_bReqEnable := i_bReqEnable);
+	
+s_fbDeltaP_CabinAmbient(
+	i_bReqEnable := i_bReqEnable);
+	
 s_bStaFanThemalOk := s_fbFanThermal.p_bStaInputDelayed;
-s_fActDeltaP_CleanroomCabin := s_fbDeltaP_CleanroomCabin.p_fValue;
-s_fActDeltaP_CabinAmbient := s_fbDeltaP_CleanroomCabin.p_fValue;
+
+s_fActDeltaP_CleanroomAmbient := s_fbDeltaP_CleanroomAmbient.p_fValue;
+s_fActDeltaP_CabinAmbient := s_fbDeltaP_CleanroomAmbient.p_fValue;
+s_fCalcDeltaP_CleanroomCabin := s_fActDeltaP_CleanroomAmbient - s_fActDeltaP_CabinAmbient; //[Pa]
 
 _m_Inputs := TRUE;
 ]]></ST>
@@ -462,7 +463,7 @@ CASE s_eSequence OF
 		
 		s_fSetFanSpeed := LIMIT(0.0, s_fbPIDPressCtrl.fCtrlOutput, 100.0);
 		
-		s_bStaPressurized := F_InRange(s_fSetPressure, s_fActDeltaP_CleanroomCabin, i_ref_stSettings.fRange);
+		s_bStaPressurized := F_InRange(s_fSetPressure, s_fActDeltaP_CleanroomAmbient, i_ref_stSettings.fRange);
 		
 		IF s_bReqFlush THEN
 			s_eSequence := E_SeqAirTreatment.FLUSHING;
@@ -483,7 +484,7 @@ CASE s_eSequence OF
 		s_fSetFanSpeed := LIMIT(0.0, s_fbPIDPressCtrl.fCtrlOutput, 100.0);
 		
 		s_bStaFlushed :=
-			F_InRange(s_fSetPressure, s_fActDeltaP_CleanroomCabin, i_ref_stSettings.fRange)
+			F_InRange(s_fSetPressure, s_fActDeltaP_CleanroomAmbient, i_ref_stSettings.fRange)
 			AND (s_fbSeqControl.q_tmStepTime > i_ref_stSettings.tFlushingTime);
 			
 		IF s_bReqPressureize THEN
@@ -504,7 +505,7 @@ CASE s_eSequence OF
 		
 		s_fSetFanSpeed := LIMIT(0.0, s_fbPIDPressCtrl.fCtrlOutput, 100.0);
 		
-		s_bStaFlushed := F_InRange(s_fSetPressure, s_fActDeltaP_CleanroomCabin, i_ref_stSettings.fRange);
+		s_bStaFlushed := F_InRange(s_fSetPressure, s_fActDeltaP_CleanroomAmbient, i_ref_stSettings.fRange);
 		
 		IF s_bReqPressureize THEN
 			s_eSequence := E_SeqAirTreatment.PRESSURIZE;
@@ -593,7 +594,7 @@ CASE i_eCtrlMode OF
 	E_CtrlMode.AUTOMATIC:
 		//Automatic commands are controlled by higher-layer unit
 		_m_AutomaticControl();
-
+		
 	E_CtrlMode.MANUAL:
 		//Execute manaual control (based on HMI buttons)
 		

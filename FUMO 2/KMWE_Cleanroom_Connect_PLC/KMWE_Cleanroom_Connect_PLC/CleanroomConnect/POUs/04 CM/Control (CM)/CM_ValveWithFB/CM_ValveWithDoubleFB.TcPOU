@@ -32,7 +32,8 @@ VAR_INST
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF NOT SUPER^._m_Alarms() THEN
+        <ST><![CDATA[
+IF NOT SUPER^._m_Alarms() THEN
 	RETURN;
 END_IF
 
@@ -48,7 +49,7 @@ s_tonFeedBackOffTimeout(
 s_tonFeedbackOnTimeout(
 	IN := i_bReqEnable AND s_bReqOn AND NOT(s_bStaValveIsOn)  AND NOT(s_bSimFeedBackIsOn) AND (i_eCtrlMode <> E_CtrlMode.IO),
 	PT := i_stSettings.tValveOnTimeout );
-
+	
 // Set error bits
 s_errFeedbackOffTimeout := (s_tonFeedBackOffTimeout.Q OR s_errFeedbackOffTimeout) AND NOT(i_bCmdReset);
 s_errFeedbackOnTimeout := (s_tonFeedbackOnTimeout.Q OR s_errFeedbackOnTimeout) AND NOT(i_bCmdReset);
@@ -58,17 +59,17 @@ IF s_bReqOn AND i_bIclkOn THEN
 	s_wrnOnInterlocked := TRUE;
 	s_bReqOn := FALSE;
 ELSIF NOT(i_bIclkOn) THEN
-	s_wrnOnInterlocked := FALSE;	
+	s_wrnOnInterlocked := FALSE;
 END_IF
 
 IF s_bReqOff AND i_bIclkOff THEN
 	s_wrnOffInterlocked := TRUE;
 	s_bReqOff := FALSE;
 ELSIF NOT(i_bIclkOff) THEN
-	s_wrnOffInterlocked := FALSE;	
+	s_wrnOffInterlocked := FALSE;
 END_IF
 
-IF s_errFeedbackOffTimeout THEN 
+IF s_errFeedbackOffTimeout THEN
 	IF NOT(s_bStaValveIsOff1) AND NOT(s_bStaValveIsOff2) THEN
 		s_sTempStringOff := CONCAT(s_sCfgFB1Name, CONCAT(' & ', s_sCfgFB2Name));
 	ELSIF NOT(s_bStaValveIsOff1) THEN
@@ -77,10 +78,10 @@ IF s_errFeedbackOffTimeout THEN
 		s_sTempStringOff := s_sCfgFB2Name;
 	END_IF
 ELSE
-	s_sTempStringOff := '-';		
+	s_sTempStringOff := '-';
 END_IF
 
-IF s_errFeedbackOnTimeout THEN 
+IF s_errFeedbackOnTimeout THEN
 	IF NOT(s_bStaValveIsOn1) AND NOT(s_bStaValveIsOn2) THEN
 		s_sTempStringOn := CONCAT(s_sCfgFB1Name, CONCAT(' & ', s_sCfgFB2Name));
 	ELSIF NOT(s_bStaValveIsOn1) THEN
@@ -89,7 +90,7 @@ IF s_errFeedbackOnTimeout THEN
 		s_sTempStringOn := s_sCfgFB2Name;
 	END_IF
 ELSE
-	s_sTempStringOn := '-';		
+	s_sTempStringOn := '-';
 END_IF
 
 s_fbAlarmHandlerFeedbackOffTimeout(
@@ -99,22 +100,22 @@ s_fbAlarmHandlerFeedbackOffTimeout(
 s_fbAlarmHandlerFeedbackOnTimeout(
 	i_bStaActive := i_bReqEnable AND s_errFeedbackOnTimeout, 
 	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Feedback ', CONCAT(s_sCfgOnName, CONCAT( ' timeout - ', s_sTempStringOn)))) );
-
+	
 s_fbAlarmHandlerOffInterlocked(
-	i_bStaActive := s_wrnOffInterlocked, 
-	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': ', CONCAT(s_sCfgOffName, CONCAT(' interlocked, Reason: ', CONCAT(s_sInterlockedReasonOn, '.'))))));
+	i_bStaActive := s_wrnOffInterlocked,
+	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': ', CONCAT(s_sCfgOffName, CONCAT(' interlocked, Reason: ', CONCAT(s_sInterlockedReasonOn, '.'))))) );
 	
 s_fbAlarmHandlerOnInterlocked(
-	i_bStaActive := s_wrnOnInterlocked, 
-	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': ', CONCAT(s_sCfgOnName, CONCAT(' interlocked, Reason: ', CONCAT(s_sInterlockedReasonOn, '.'))))));	
+	i_bStaActive := s_wrnOnInterlocked,
+	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': ', CONCAT(s_sCfgOnName, CONCAT(' interlocked, Reason: ', CONCAT(s_sInterlockedReasonOn, '.'))))) );
 	
-s_bStaError := 
+s_bStaError :=
 	s_fbAlarmHandlerFeedbackOffTimeout.q_bStaActive
 	OR s_fbAlarmHandlerFeedbackOnTimeout.q_bStaActive;
-
-s_bStaWarning := 
+	
+s_bStaWarning :=
 	s_fbAlarmHandlerOffInterlocked.q_bStaActive
-	OR s_fbAlarmHandlerOnInterlocked.q_bStaActive;	
+	OR s_fbAlarmHandlerOnInterlocked.q_bStaActive;
 	
 _m_Alarms := TRUE;
 ]]></ST>
@@ -129,12 +130,12 @@ IF NOT SUPER^._m_Inputs() THEN
 	RETURN;
 END_IF
 
-s_bStaValveIsOff1 := I_bStaValveIsOff OR (s_bSimFeedBackIsOff AND s_bReqOff);;
-s_bStaValveIsOff2 := I_bStaValveIsOff2 OR (s_bSimFeedBackIsOff AND s_bReqOff);;
+s_bStaValveIsOff1 := I_bStaValveIsOff OR (s_bSimFeedBackIsOff AND s_bReqOff);
+s_bStaValveIsOff2 := I_bStaValveIsOff2 OR (s_bSimFeedBackIsOff AND s_bReqOff);
 s_bStaValveIsOff := s_bStaValveIsOff1 AND s_bStaValveIsOff2;
 
-s_bStaValveIsOn1 := I_bStaValveIsOn OR (s_bSimFeedBackIsOff AND s_bReqOn);;
-s_bStaValveIsOn2 := I_bStaValveIsOn2 OR (s_bSimFeedBackIsOff AND s_bReqOn);; 
+s_bStaValveIsOn1 := I_bStaValveIsOn OR (s_bSimFeedBackIsOff AND s_bReqOn);
+s_bStaValveIsOn2 := I_bStaValveIsOn2 OR (s_bSimFeedBackIsOff AND s_bReqOn); 
 s_bStaValveIsOn := s_bStaValveIsOn1 AND s_bStaValveIsOn2;
 
 _m_Inputs := TRUE;

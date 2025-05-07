@@ -109,7 +109,7 @@ VAR
 	s_bStaAtIdlePosition : BOOL := FALSE;
 	s_bStaTrolleyPickedFromTB : BOOL := FALSE;
 	s_bStaTrolleyPlacedInTB : BOOL := FALSE;
-	s_bStaTrolleyOnSystem : BOOL := FALSE;	
+	s_bStaTrolleyOnSystem : BOOL := FALSE;
 	
 	//Interlockes
 	s_bIlckLiftUp : BOOL := TRUE;
@@ -134,7 +134,7 @@ VAR
 	s_bErrUnlockTRolleyFailed : BOOL;
 	s_bErrNoTrolleyPlaced : BOOL;
 	s_bErrCabinNotEmpty : BOOL;
-	s_bErrCmdNotAllowed : BOOL;	
+	s_bErrCmdNotAllowed : BOOL;
 	
 	//Warnings
 	s_fbAlarmHandlerSafetyDoorNotClosed : FB_AlarmHandler;
@@ -203,28 +203,28 @@ s_bErrTransportDrive S= s_cmTransport.p_bError;
 
 // Alarm Handlers
 s_fbAlarmHandlerLiftDrive(
-	i_bStaActive := s_bErrLiftDrive, 
+	i_bStaActive := s_bErrLiftDrive,
 	i_sAlarmText := CONCAT(i_sEmName, CONCAT( ': Scissor Lift Drive error: ', s_sReason)));
 	
 s_fbAlarmHandlerTransportDrive(
-	i_bStaActive := s_bErrTransportDrive, 
+	i_bStaActive := s_bErrTransportDrive,
 	i_sAlarmText := CONCAT(i_sEmName, CONCAT( ': Transport Unit Drive error: ', s_sReason)));
 	
 s_fbAlarmHandlerLockTrolleyFailed(
-	i_bStaActive := s_bErrLockTrolleyFailed, 
+	i_bStaActive := s_bErrLockTrolleyFailed,
 	i_sAlarmText := CONCAT(i_sEmName, ': Locking Trolley Failed.'));
 	
 s_fbAlarmHandlerUnlockTrolleyFailed(
-	i_bStaActive := s_bErrUnlockTrolleyFailed, 
+	i_bStaActive := s_bErrUnlockTrolleyFailed,
 	i_sAlarmText := CONCAT(i_sEmName, ': Unlocking Trolley Failed.'));
-
+	
 s_fbAlarmHandlerNoTrolleyPlaced(
-	i_bStaActive := s_bErrNoTrolleyPlaced, 
+	i_bStaActive := s_bErrNoTrolleyPlaced,
 	i_sAlarmText := CONCAT(i_sEmName, ': No Trolley Placed In Cabin.'));
-
+	
 s_fbAlarmHandlerCabinNotEmpty(
-	i_bStaActive := s_bErrCabinNotEmpty, 
-	i_sAlarmText := CONCAT(i_sEmName, ': Cabin Not Empty.'));	
+	i_bStaActive := s_bErrCabinNotEmpty,
+	i_sAlarmText := CONCAT(i_sEmName, ': Cabin Not Empty.'));
 	
 s_fbAlarmHandlerCmdNotAllowed(
 	i_bStaActive := s_bErrCmdNotAllowed,
@@ -240,7 +240,7 @@ IF i_bCmdReset THEN
 	s_bErrCmdNotAllowed := FALSE;
 END_IF
 
-s_bStaError := 
+s_bStaError :=
 	s_cmLift.p_bError
 	OR s_cmTransport.p_bError
 	OR s_fbAlarmHandlerLockTrolleyFailed.q_bStaActive
@@ -262,9 +262,10 @@ _m_Alarms := TRUE;
       <Declaration><![CDATA[METHOD PROTECTED _m_AutomaticControl : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[//Lifting Transport
+        <ST><![CDATA[
+//Lifting Transport
 _m_Sequence();
-		]]></ST>
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_CmdGoToIdle" Id="{5f07294c-c083-4786-a1a2-586c95e439f7}">
@@ -275,12 +276,12 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-	_m_CmdGoToIdle := FALSE;
-	s_bErrCmdNotAllowed := TRUE;
+_m_CmdGoToIdle := FALSE;
+s_bErrCmdNotAllowed := TRUE;
 
 IF s_bIlckLiftDown THEN
 	i_refReason := CONCAT('Cmd Go To Idle: Lift Interlocked - ', s_fbIlckHandlerLiftDown.p_sReason);
@@ -306,13 +307,13 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
 _m_CmdPickTrolleyFromTB := FALSE;
 s_bErrCmdNotAllowed := TRUE;
-	
+
 IF NOT(s_bStaCabinAreaFree) THEN
 	i_refReason := 'Cmd Pick Trolley From TB: Interlocked - Cabin Position Not Free';
 ELSIF NOT(s_bStaCollisionAvoidanceSensor) THEN
@@ -328,7 +329,7 @@ ELSIF s_bIlckTransportExtract THEN
 ELSE
 	i_refReason := '-';
 	_m_CmdPickTrolleyFromTB := TRUE;
-	s_bErrCmdNotAllowed := FALSE;	
+	s_bErrCmdNotAllowed := FALSE;
 END_IF
 ]]></ST>
       </Implementation>
@@ -341,7 +342,7 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -351,7 +352,7 @@ s_bErrCmdNotAllowed := TRUE;
 IF NOT(s_bStaTrolleyAtLiftPos) THEN
 	i_refReason := 'Cmd Place Trolley In TB: Interlocked - Trolley Not Place (correctly) At Cabin';
 ELSIF s_bStaCollisionAvoidanceSensor THEN
-	i_refReason := 'Cmd Place Trolley In TB: Interlocked - TB Not Free, or Entrance Blocked';	
+	i_refReason := 'Cmd Place Trolley In TB: Interlocked - TB Not Free, or Entrance Blocked';
 ELSIF s_bIlckLiftDown THEN
 	i_refReason := CONCAT('Cmd Place Trolley In TB: Lift Interlocked - ', s_fbIlckHandlerLiftDown.p_sReason);
 ELSIF s_bIlckLiftUp THEN
@@ -362,7 +363,7 @@ ELSIF s_bIlckLiftUp THEN
 //--	i_refReason := CONCAT('Cmd Place Trolley In TB: Transport Interlocked - ', fbIlckHandlerTransportExtract.p_sReason);
 ELSE
 	i_refReason := '-';
-	_m_CmdPlaceTrolleyInTB := TRUE;	
+	_m_CmdPlaceTrolleyInTB := TRUE;
 	s_bErrCmdNotAllowed := FALSE;
 END_IF
 ]]></ST>
@@ -457,7 +458,8 @@ VAR
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[// Calculate required motor position as function of desired transport unit position
+        <ST><![CDATA[
+// Calculate required motor position as function of desired transport unit position
 
 s_fConvFactor := 0.5;
 
@@ -491,7 +493,7 @@ s_cmLift(
 	i_refAxis := axisLift,
 	i_bIclkPos := s_bIlckLiftUp,
 	i_bIclkNeg := s_bIlckLiftDown);
-
+	
 s_bStaLiftDriveError := s_cmLift.p_bError;
 	
 s_cmTransport(
@@ -503,7 +505,7 @@ s_cmTransport(
 	i_refAxis := axisTransport,
 	i_bIclkPos := s_bIlckTransportExtract, 
 	i_bIclkNeg := s_bIlckTransportRetract);
-
+	
 s_bStaTransportDriveError := s_cmTransport.p_bError;
 
 s_diStaTrolleyOnPositionLeft();
@@ -516,11 +518,11 @@ s_bStaTrolleyOnPositionLeft := s_diStaTrolleyOnPositionLeft.p_bStaInputDelayed;
 s_bStaTrolleyOnPositionRight := s_diStaTrolleyOnPositionRight.p_bStaInputDelayed;
 s_bStaCabinAreaOccupied := s_diStaCabinAreaOccupied.p_bStaInputDelayed;
 
-s_bStaCabinAreaFree := 
+s_bStaCabinAreaFree :=
 	NOT(s_diStaCabinAreaOccupied.p_bStaInputDelayed
 	OR s_diStaTrolleyOnPositionLeft.p_bStaInputDelayed
 	OR s_diStaTrolleyOnPositionRight.p_bStaInputDelayed);
-
+	
 s_bStaTrolleyAtLiftPos :=
 	s_diStaCabinAreaOccupied.p_bStaInputDelayed
 	AND s_diStaTrolleyOnPositionLeft.p_bStaInputDelayed
@@ -572,7 +574,8 @@ _m_Hmi := TRUE;
       <Declaration><![CDATA[METHOD PROTECTED _m_Init : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF NOT SUPER^._m_Init() THEN
+        <ST><![CDATA[
+IF NOT SUPER^._m_Init() THEN
 	RETURN;
 END_IF
 
@@ -592,7 +595,7 @@ s_cmTransport.i_refAxis REF= axisTransport;
 s_cmTransport.i_mcHomingMode := Tc2_MC2.MC_HomingMode.MC_Direct; //Tc2_MC2.MC_HomingMode.MC_DefaultHoming;
 s_cmTransport.p_sCfgPosName := 'Extract';
 s_cmTransport.p_sCfgNegName := 'Retract';
- 
+
 s_diStaTrolleyOnPositionLeft.i_stSettings.tmInputDelay := T#100MS;
 s_diStaTrolleyOnPositionRight.i_stSettings.tmInputDelay := T#100MS;
 s_diStaCabinAreaOccupied.i_stSettings.tmInputDelay := T#100MS;
@@ -627,17 +630,17 @@ s_fbAlarmHandlerCmdNotAllowed.i_eAlarmLevel := E_AlarmLevel.Alarm;
 //Hmi
 s_fbHmiBtnGoToIdle.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 s_fbHmiBtnGoToIdle.p_bStaVisible := FALSE;
-s_fbHmiBtnGoToIdle.p_bStaEnabled := FALSE;		
+s_fbHmiBtnGoToIdle.p_bStaEnabled := FALSE;
 s_fbHmiBtnGoToIdle.p_sBtnText := 'Go To Idle';
 
 s_fbHmiBtnPickTrolleyFromTB.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 s_fbHmiBtnPickTrolleyFromTB.p_bStaVisible := FALSE;
-s_fbHmiBtnPickTrolleyFromTB.p_bStaEnabled := FALSE;		
+s_fbHmiBtnPickTrolleyFromTB.p_bStaEnabled := FALSE;
 s_fbHmiBtnPickTrolleyFromTB.p_sBtnText := 'Pick Trolley From TB';
 
 s_fbHmiBtnPlaceTrolleyInTB.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 s_fbHmiBtnPlaceTrolleyInTB.p_bStaVisible := FALSE;
-s_fbHmiBtnPlaceTrolleyInTB.p_bStaEnabled := FALSE;		
+s_fbHmiBtnPlaceTrolleyInTB.p_bStaEnabled := FALSE;
 s_fbHmiBtnPlaceTrolleyInTB.p_sBtnText := 'Place Trolley In TB';
 
 s_fbHmiLedTrolleyOnPositionLeft.p_bStaVisible := FALSE;
@@ -666,7 +669,7 @@ s_fbHmiLedTrolleyPickedFromTB.p_sToHmiDescriptionLed := 'Trolley Picked From TB'
 
 s_fbHmiLedTrolleyPlacedInTB.p_bStaVisible := FALSE;
 s_fbHmiLedTrolleyPlacedInTB.p_sToHmiDescriptionLed := 'Trolley Placed In TB';
-	
+
 _m_Init := TRUE;
 ]]></ST>
       </Implementation>
@@ -695,7 +698,7 @@ IF __ISVALIDREF(i_refTB) AND (i_refTB.p_nId > 0) THEN
 //++	s_bStaAtIdlePosition := i_refTB.p_b..;
 //++	s_bStaTrolleyInTB := i_refTB.p_b..;
 //++	s_bStaTrolleyInCabin := i_refTB.p_b..;
-	//..
+//..
  
 //--	s_bStaTB_CenteringDone := i_refTB.p_bCenteringDone;
 //--	s_bStaTB_AtInfeed := i_refTB.p_eActLocation = E_Location.INFEED;
@@ -814,9 +817,7 @@ END_IF
 
 //++i_ref_stSettings.stLiftSpeedProfileJogging :=
 //++i_ref_stSettings.stLiftSpeedProfilePositioning := 
-//++i_ref_stSettings. 
-
-
+//++i_ref_stSettings.
 
 _m_Params := TRUE;
 ]]></ST>
@@ -843,7 +844,7 @@ s_bDontWait := NOT(i_ref_stSettings.bWaitForNextStep);
 s_fbSeqControl(
 	i_nSeqStep := s_eSequence,
 	i_sStepName := TO_STRING(s_eSequence),
-	i_bCmdReset := 
+	i_bCmdReset :=
 		i_bCmdReset
 		AND i_bReqEnable
 		AND (s_eSequence = E_SeqLiftingTransport.ERROR) // Only reset/resume sequencer from ERROR state
@@ -853,7 +854,7 @@ s_fbSeqControl(
 	i_bStaError := s_bStaError OR NOT(i_bReqEnable));
 	
 	s_bActionDone R= s_fbSeqControl.q_bStaEntry;
-
+	
 //Force to stop
 IF (i_eCtrlState = E_CtrlState.STOPPING) THEN
 	s_eSequence := E_SeqLiftingTransport.STOP;
@@ -867,11 +868,10 @@ END_IF
 s_sResumeStep := TO_STRING(s_eResumeStep);
 
 CASE s_eSequence OF
-	
 	E_SeqLiftingTransport.IDLE:
 		s_eResumeStep := E_SeqLiftingTransport.READY;
 		s_eSequence := E_SeqLiftingTransport.START;
-	
+		
 	E_SeqLiftingTransport.START:  // Afhankelijk van de voorgaande stap, stappen programma hervatten. Wanneer actie voltooit
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_sMessage := 'start';
@@ -922,7 +922,7 @@ CASE s_eSequence OF
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
 			s_eSequence := E_SeqLiftingTransport.LIFT_TO_IDLE;
-		
+			
 		ELSIF s_bError THEN
 			s_eSequence := E_SeqLiftingTransport.ERROR;
 		END_IF
@@ -933,7 +933,7 @@ CASE s_eSequence OF
 		END_IF
 		
 		s_bActionDone S= s_cmLift.p_bMoveAbsDone;
-			
+		
 		IF s_bActionDone THEN
 			//s_bStaAtIdlePosition := TRUE;	will be set based on the actual position(s)						    /////////////////////
 			s_eSequence := E_SeqLiftingTransport.READY;
@@ -1005,9 +1005,9 @@ CASE s_eSequence OF
 		END_IF
 		
 	E_SeqLiftingTransport.CHECK_TROLLEY_UNLOCKED:
-		IF (s_fbSeqControl.q_tmStepTime > T#3S) 
+		IF (s_fbSeqControl.q_tmStepTime > T#3S)
 			AND NOT(s_bStaTrolleyLocked) AND (s_bNextStep OR s_bDontWait) THEN
-			s_bNextStep := FALSE; 
+			s_bNextStep := FALSE;
 			s_eSequence := E_SeqLiftingTransport.LIFT_RAISE_FROM_TB;
 			
 		ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN
@@ -1044,7 +1044,7 @@ CASE s_eSequence OF
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
 			s_eSequence := E_SeqLiftingTransport.TRANSPORT_PLACE_IN_CABIN;
-		
+			
 		ELSIF s_bError THEN
 			s_eSequence := E_SeqLiftingTransport.ERROR;
 		END_IF
@@ -1059,7 +1059,7 @@ CASE s_eSequence OF
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
 			s_eSequence := E_SeqLiftingTransport.LIFT_PRE_PLACE_IN_CABIN;
-		
+			
 		ELSIF s_bError THEN
 			s_eSequence := E_SeqLiftingTransport.ERROR;
 		END_IF
@@ -1074,7 +1074,7 @@ CASE s_eSequence OF
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
 			s_eSequence := E_SeqLiftingTransport.LIFT_PLACE_IN_CABIN;
-		
+			
 		ELSIF s_bError THEN
 			s_eSequence := E_SeqLiftingTransport.ERROR;
 		END_IF
@@ -1089,7 +1089,7 @@ CASE s_eSequence OF
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
 			s_eSequence := E_SeqLiftingTransport.CHECK_TROLLEY_PLACED;
-		
+			
 		ELSIF s_bError THEN
 			s_eSequence := E_SeqLiftingTransport.ERROR;
 		END_IF
@@ -1117,7 +1117,7 @@ CASE s_eSequence OF
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
 			s_eSequence := E_SeqLiftingTransport.LIFT_PICK_FROM_CABIN;
-		
+			
 		ELSIF s_bError THEN
 			s_eSequence := E_SeqLiftingTransport.ERROR;
 		END_IF
@@ -1132,7 +1132,7 @@ CASE s_eSequence OF
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
 			s_eSequence := E_SeqLiftingTransport.LIFT_RAISE_FROM_CABIN;
-		
+			
 		ELSIF s_bError THEN
 			s_eSequence := E_SeqLiftingTransport.ERROR;
 		END_IF
@@ -1147,7 +1147,7 @@ CASE s_eSequence OF
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
 			s_eSequence := E_SeqLiftingTransport.TRANSPORT_PRE_PLACE_IN_TB;
-		
+			
 		ELSIF s_bError THEN
 			s_eSequence := E_SeqLiftingTransport.ERROR;
 		END_IF
@@ -1162,7 +1162,7 @@ CASE s_eSequence OF
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
 			s_eSequence := E_SeqLiftingTransport.TRANSPORT_PLACE_IN_TB;
-		
+			
 		ELSIF s_bError THEN
 			s_eSequence := E_SeqLiftingTransport.ERROR;
 		END_IF
@@ -1177,7 +1177,7 @@ CASE s_eSequence OF
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
 			s_eSequence := E_SeqLiftingTransport.LIFT_PRE_PLACE_IN_TB;
-		
+			
 		ELSIF s_bError THEN
 			s_eSequence := E_SeqLiftingTransport.ERROR;
 		END_IF
@@ -1192,7 +1192,7 @@ CASE s_eSequence OF
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
 			s_eSequence := E_SeqLiftingTransport.LIFT_PLACE_IN_TB;
-		
+			
 		ELSIF s_bError THEN
 			s_eSequence := E_SeqLiftingTransport.ERROR;
 		END_IF
@@ -1207,7 +1207,7 @@ CASE s_eSequence OF
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
 			s_eSequence := E_SeqLiftingTransport.CHECK_TROLLEY_LOCKED;
-		
+			
 		ELSIF s_bError THEN
 			s_eSequence := E_SeqLiftingTransport.ERROR;
 		END_IF
@@ -1238,7 +1238,7 @@ CASE s_eSequence OF
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
 			s_eSequence := E_SeqLiftingTransport.TRANSPORT_TO_IDLE;
-		
+			
 		ELSIF s_bError THEN
 			s_eSequence := E_SeqLiftingTransport.ERROR;
 		END_IF
@@ -1262,7 +1262,7 @@ CASE s_eSequence OF
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmLift.m_MoveAbsolute(_m_ConvLiftToMotorPos(i_ref_stSettings.arr_stLiftPositioningProfile[0]));
 		END_IF
-		
+			
 		s_bActionDone S= s_cmLift.p_bMoveAbsDone;
 		
 		IF s_bActionDone AND (s_bNextStep OR s_bDontWait) THEN
@@ -1329,7 +1329,6 @@ IF NOT SUPER^.m_Main() THEN
 END_IF
 
 CASE i_eCtrlMode OF
-
 	E_CtrlMode.IDLE:
 		s_eSequence := E_SeqLiftingTransport.IDLE;
 		
@@ -1346,20 +1345,20 @@ CASE i_eCtrlMode OF
 			s_bReqPickTrolleyFromTB := s_fbHmiBtnPickTrolleyFromTB.p_osrBtnPress;
 			s_bReqPlaceTrolleyInTB := s_fbHmiBtnPlaceTrolleyInTB.p_osrBtnPress;
 		END_IF
-	
+		
 		_m_AutomaticControl();
 		
 	E_CtrlMode.MAINTENANCE:
 		//Execute maintenance control (HMI control module buttons)
 		//Reset automatic/manual sequencer
 		s_eSequence := E_SeqLiftingTransport.IDLE;
-	
+		
 		//--//Load setting for movements in Maintenance-mode
 		//--s_cmLift.i_ref_setting := i_ref_stSettings.stLiftPositioningProfileMaintenance;
 		//--s_cmTransport.i_ref_setting := i_ref_stSettings.stTransportPositioningProfileMaintenance;
 		
 		; 	//Maintenance control is implemented in lower-layer control modules
-	
+		
 	E_CtrlMode.IO:
 		//Execute IO-test control (HMI output force control)
 		; 	//IO-Test control is implemented in lower-layer control modules
@@ -1368,7 +1367,7 @@ CASE i_eCtrlMode OF
 	E_CtrlMode.CLEANING:
 		//Execute cleaning control (cleaning  specific functionalities)
 		;	//Cleaning control is not implemented, this could be a done in the future if neccesary
-				
+		
 END_CASE
 
 //AUTOMATIC-mode //////////////////////////////////////////////////////////////////////////////////
@@ -1388,7 +1387,7 @@ END_IF
 
 //Buttons enabling
 IF i_bReqEnable AND (i_eCtrlMode = E_CtrlMode.MANUAL) AND (i_eCtrlState = E_CtrlState.RUNNING) THEN
-
+	
 	//Lift/Transport
 	s_fbHmiBtnGoToIdle.p_bStaEnabled :=
 		//**NOT(s_bIlckLiftDown)
@@ -1397,7 +1396,7 @@ IF i_bReqEnable AND (i_eCtrlMode = E_CtrlMode.MANUAL) AND (i_eCtrlState = E_Ctrl
 		//--AND NOT(s_bIlckTransportExtract)
 		NOT(s_cmLift.p_bStaError)
 		AND NOT(s_cmTransport.p_bStaError);
-	
+		
 	s_fbHmiBtnPickTrolleyFromTB.p_bStaEnabled :=
 		//--NOT(s_bIlckLiftDown)
 		NOT(s_bIlckLiftUp)
@@ -1405,14 +1404,14 @@ IF i_bReqEnable AND (i_eCtrlMode = E_CtrlMode.MANUAL) AND (i_eCtrlState = E_Ctrl
 		AND NOT(s_bIlckTransportExtract)
 		AND NOT(s_cmLift.p_bStaError)
 		AND NOT(s_cmTransport.p_bStaError);
-
+		
 	s_fbHmiBtnPlaceTrolleyInTB.p_bStaEnabled :=
 		//--NOT(s_bIlckLiftDown)
 		NOT(s_bIlckLiftUp)
 		//--AND NOT(s_bIlckTransportRetract)
 		//--AND NOT(s_bIlckTransportExtract)
 		AND NOT(s_cmLift.p_bStaError)
-		AND NOT(s_cmTransport.p_bStaError);	
+		AND NOT(s_cmTransport.p_bStaError);
 		
 ELSE
 	s_fbHmiBtnGoToIdle.p_bStaEnabled := FALSE;
@@ -1438,7 +1437,7 @@ END_IF
 IF (i_eCtrlMode = E_CtrlMode.IO) AND (i_eCtrlState = E_CtrlState.RUNNING) THEN
 	s_bHmiForceOutputEnabled := TRUE;
 ELSE
-	s_bHmiForceOutputEnabled := FALSE;	
+	s_bHmiForceOutputEnabled := FALSE;
 END_IF
 
 m_Main := TRUE;
@@ -1450,7 +1449,7 @@ m_Main := TRUE;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -1465,7 +1464,7 @@ m_ReqGoToIdle := TRUE;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -1480,7 +1479,7 @@ m_ReqPickTrolleyFromTB := TRUE;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -1497,7 +1496,7 @@ PROPERTY PUBLIC p_bStaAtIdlePosition : BOOL]]></Declaration>
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaAtIdlePosition := s_bStaAtIdlePosition; 
+p_bStaAtIdlePosition := s_bStaAtIdlePosition;
 ]]></ST>
         </Implementation>
       </Get>
@@ -1514,26 +1513,26 @@ p_bStaReady := (s_eSequence = E_SeqLiftingTransport.READY);
         </Implementation>
       </Get>
     </Property>
-    <Property Name="p_bStaTrolleyPickedFromTB" Id="{630d4760-3c9e-490a-b1db-ceb84ce3b93d}">
+    <Property Name="p_bStaTrollPickedFromTB" Id="{630d4760-3c9e-490a-b1db-ceb84ce3b93d}">
       <Declaration><![CDATA[{attribute 'monitoring':='call'}
-PROPERTY PUBLIC p_bStaTrolleyPickedFromTB : BOOL]]></Declaration>
+PROPERTY PUBLIC p_bStaTrollPickedFromTB : BOOL]]></Declaration>
       <Get Name="Get" Id="{ac0f1cfe-6ddb-4648-8ead-590b388c0171}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaTrolleyPickedFromTB := s_bStaTrolleyPickedFromTB; 
+p_bStaTrollPickedFromTB := s_bStaTrolleyPickedFromTB;
 ]]></ST>
         </Implementation>
       </Get>
     </Property>
-    <Property Name="p_bStaTrolleyPlacedInTB" Id="{ccba55b7-671b-48a2-af2d-7bdd569222c9}">
+    <Property Name="p_bStaTrollPlacedInTB" Id="{ccba55b7-671b-48a2-af2d-7bdd569222c9}">
       <Declaration><![CDATA[{attribute 'monitoring':='call'}
-PROPERTY PUBLIC p_bStaTrolleyPlacedInTB : BOOL]]></Declaration>
+PROPERTY PUBLIC p_bStaTrollPlacedInTB : BOOL]]></Declaration>
       <Get Name="Get" Id="{c55ed7dc-3eae-49e0-bba0-c67b4ed5fb10}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaTrolleyPlacedInTB := s_bStaTrolleyPlacedInTB;
+p_bStaTrollPlacedInTB := s_bStaTrolleyPlacedInTB;
 ]]></ST>
         </Implementation>
       </Get>
@@ -1545,7 +1544,7 @@ PROPERTY PUBLIC p_fActLiftPosition : LREAL]]></Declaration>
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_fActLiftPosition := s_fActLiftPosition; 
+p_fActLiftPosition := s_fActLiftPosition;
 ]]></ST>
         </Implementation>
       </Get>
@@ -1557,7 +1556,7 @@ PROPERTY PUBLIC p_fActTransportPosition : LREAL]]></Declaration>
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_fActTransportPosition := s_fActTransportPosition; 
+p_fActTransportPosition := s_fActTransportPosition;
 ]]></ST>
         </Implementation>
       </Get>

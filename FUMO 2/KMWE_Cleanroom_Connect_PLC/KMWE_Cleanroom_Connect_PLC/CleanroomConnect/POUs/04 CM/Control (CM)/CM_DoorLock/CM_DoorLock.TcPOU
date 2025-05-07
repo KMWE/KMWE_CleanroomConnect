@@ -80,7 +80,8 @@ SUPER^();
       <Declaration><![CDATA[METHOD PROTECTED _m_Alarms : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF NOT SUPER^._m_Alarms() THEN
+        <ST><![CDATA[
+IF NOT SUPER^._m_Alarms() THEN
 	RETURN;
 END_IF
 
@@ -88,7 +89,7 @@ END_IF
 s_tonUnlockRequestTimeout(
 	IN := i_bReqEnable AND (s_eSequence = E_SeqDoorLock.ACCESS_REQUEST_PENDING),
 	PT := i_stSettings.tUnlockingRequestTimeout);
-
+	
 // Wrtie error bits
 s_wrnReqUnlockTimeout := (s_tonUnlockRequestTimeout.Q);	
 s_wrnDoorStatusUnknown := NOT(s_bStaDoorIsClosed) AND NOT(s_bStaDoorIsOpened);
@@ -96,13 +97,13 @@ s_wrnDoorStatusUnknown := NOT(s_bStaDoorIsClosed) AND NOT(s_bStaDoorIsOpened);
 // Alarm Handlers
 s_fbAlmHdlrDoorStatusUnknown(
 	i_bStaActive := s_wrnDoorStatusUnknown);
-
+	
 s_fbAlmHdlrReqUnlockTimeout(
 	i_bStaActive := s_wrnReqUnlockTimeout);
-
+	
 s_fbAlmHdlrDoorNotClosed(
 	i_bStaActive := s_wrnDoorNotClosed);
-
+	
 IF i_bCmdReset OR s_bStaDoorIsClosed THEN
 	s_wrnDoorNotClosed := FALSE;
 END_IF
@@ -110,12 +111,12 @@ END_IF
 // Alarm collector
 s_bStaError :=
 	FALSE;
-
+	
 s_bStaWarning := 
 	s_fbAlmHdlrDoorStatusUnknown.q_bStaActive
 	OR s_fbAlmHdlrReqUnlockTimeout.q_bStaActive
 	OR s_fbAlmHdlrDoorNotClosed.q_bStaActive;
-
+	
 _m_Alarms := TRUE;
 ]]></ST>
       </Implementation>
@@ -138,7 +139,7 @@ s_bOsrReqToggleLock := s_fbR_TrigReqToggleLock.Q;
 CASE s_eSequence OF
 	E_SeqDoorLock.INIT:
 		;//No actions
-	
+		
 		IF s_bStaDoorIsClosed THEN
 			IF i_stSettings.bAutoLockAtInit THEN
 				s_eSequence := E_SeqDoorLock.LOCKED;
@@ -147,24 +148,24 @@ CASE s_eSequence OF
 				s_bCmdLockStatus := TRUE; //Unlocked
 				s_bReqAccessRequest := FALSE;
 				
-				s_eSequence := E_SeqDoorLock.DOOR_CLOSED;	
+				s_eSequence := E_SeqDoorLock.DOOR_CLOSED;
 			END_IF
 			
 		ELSIF s_bStaDoorIsOpened THEN
-			s_eSequence := E_SeqDoorLock.DOOR_OPENED;	
+			s_eSequence := E_SeqDoorLock.DOOR_OPENED;
 		ELSE
 			;//nothing (warning will be generated)
 		END_IF
-	
+		
 	E_SeqDoorLock.LOCKED:
 		s_bCmdActivateLock := TRUE;
 		s_bCmdLockStatus := FALSE; //Locked
 		s_bReqAccessRequest := FALSE;
-	
+		
 		IF s_bOsrReqToggleLock OR s_bReqActivateUnlock THEN
 			s_eSequence := E_SeqDoorLock.ACCESS_REQUEST_PENDING;
 		END_IF
-	
+		
 	E_SeqDoorLock.ACCESS_REQUEST_PENDING:
 		s_bCmdActivateLock := TRUE;
 		s_bCmdLockStatus := s_fbFlash.o_bQ; //Pending...
@@ -175,37 +176,37 @@ CASE s_eSequence OF
 		ELSIF s_bOsrReqToggleLock OR s_bReqActivateLock THEN
 			s_eSequence := E_SeqDoorLock.LOCKED;
 		END_IF
-	
+		
 	E_SeqDoorLock.UNLOCKED:
 		s_bCmdActivateLock := FALSE;
 		s_bCmdLockStatus := TRUE; //Unlocked
 		s_bReqAccessRequest := FALSE;
-	
+		
 		s_eSequence := E_SeqDoorLock.DOOR_CLOSED;
 		
 	E_SeqDoorLock.DOOR_CLOSED:
 		;//No actions
-	
+		
 		IF s_bStaDoorIsOpened THEN
 			s_eSequence := E_SeqDoorLock.DOOR_OPENED;
 		ELSIF s_bOsrReqToggleLock OR s_bReqActivateLock THEN
 			s_eSequence := E_SeqDoorLock.LOCKED;
 		END_IF
-	
+		
 	E_SeqDoorLock.DOOR_OPENED:
 		;//No actions
-	
+		
 		IF s_bStaDoorIsClosed THEN
 			s_eSequence := E_SeqDoorLock.DOOR_CLOSED;
 		END_IF
-	
+		
 	E_SeqDoorLock.ERROR:
 		;//No actions
 		
 		IF i_bCmdReset THEN
 			s_eSequence := E_SeqDoorLock.INIT;
 		END_IF
-	
+		
 ELSE
 	s_eSequence := E_SeqDoorLock.INIT;
 END_CASE
@@ -333,7 +334,7 @@ IF NOT SUPER^._m_Outputs() THEN
 	RETURN;
 END_IF
 
-Q_bCmdLock := s_bCmdActivateLock; 
+Q_bCmdLock := s_bCmdActivateLock;
 Q_bSnReqStatus := s_bCmdLockStatus;
 
 _m_Outputs := TRUE;
@@ -346,7 +347,7 @@ METHOD PUBLIC m_Lock : BOOL
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -368,7 +369,7 @@ METHOD PUBLIC m_Unlock : BOOL
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 

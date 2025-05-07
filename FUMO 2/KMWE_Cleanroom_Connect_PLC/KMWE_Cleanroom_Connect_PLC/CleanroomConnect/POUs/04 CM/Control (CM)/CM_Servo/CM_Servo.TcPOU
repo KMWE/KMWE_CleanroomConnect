@@ -75,7 +75,7 @@ VAR
 	// Setpoints
 	s_fSetTargetPosition : LREAL;
 	
-	s_sCfgNegName : STRING(c_MAX_FB_NAME_LENGTH) := 'Neg.';	
+	s_sCfgNegName : STRING(c_MAX_FB_NAME_LENGTH) := 'Neg.';
 	s_sCfgPosName : STRING(c_MAX_FB_NAME_LENGTH) := 'Pos.';
 	
 	// Alarms
@@ -163,7 +163,7 @@ SUPER^();
     <Method Name="_m_Alarms" Id="{c522f959-6f84-4a96-b11e-07b34d6dcd1a}" FolderPath="Methods\Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Alarms : BOOL
 VAR
-	s_bPositiveDirection : BOOL; 
+	s_bPositiveDirection : BOOL;
 END_VAR
 ]]></Declaration>
       <Implementation>
@@ -178,13 +178,13 @@ s_errDriveError := (i_bReqEnable AND s_bStaDriveError) AND NOT(i_bCmdReset);
 // Interlock warnings
 s_bPositiveDirection := (i_refAxis.NcToPlc.ActVelo > 0);
 
-IF s_bIclkPos AND NOT(s_bStaStandstill) AND s_bPositiveDirection THEN	
+IF s_bIclkPos AND NOT(s_bStaStandstill) AND s_bPositiveDirection THEN
 	s_wrnMotorPosInterlocked := TRUE;
 	
 	m_Stop(
 		i_fDec := i_ref_setting.fStopDec,
 		i_fJrk := i_ref_setting.fStopJrk);
-	
+		
 ELSIF NOT(s_bIclkPos) OR i_bCmdReset THEN
 	s_wrnMotorPosInterlocked := FALSE;
 END_IF
@@ -212,7 +212,7 @@ s_fbAlarmHandlerMotorPosInterlocked(
 s_fbAlarmHandlerMotorNegInterlocked(
 	i_bStaActive := s_wrnMotorNegInterlocked,
 	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move backward, Reason: ',CONCAT(s_sInterlockedReasonNeg, '.'))));
-
+	
 s_fbAlarmHandlerNotEnabled(
 	i_bStaActive := NOT(s_bStaEnabled));
 	
@@ -220,14 +220,14 @@ s_fbAlarmHandlerLimitPositiveReached(
 	i_bStaActive := NOT(s_bStaLimitSwitchPos));
 	
 s_fbAlarmHandlerLimitNegativeReached(
-	i_bStaActive := NOT(s_bStaLimitSwitchNeg));	
+	i_bStaActive := NOT(s_bStaLimitSwitchNeg));
 	
-// Alarm collector	
-s_bStaError := 
+// Alarm collector
+s_bStaError :=
 	s_fbAlarmHandlerDriveError.q_bStaActive;
-
+	
 // Warning collector
-s_bStaWarning := 
+s_bStaWarning :=
 	s_fbAlarmHandlerMotorPosInterlocked.q_bStaActive
 	OR s_fbAlarmHandlerMotorNegInterlocked.q_bStaActive
 	OR s_fbAlarmHandlerNotEnabled.q_bStaActive
@@ -248,33 +248,32 @@ IF NOT SUPER^._m_Devices() THEN
 END_IF
 
 s_fbSeqControl(
-	i_nSeqStep := s_eSequence, 
-	i_sStepName := TO_STRING(s_eSequence), 
-	i_bCmdReset := FALSE, 
+	i_nSeqStep := s_eSequence,
+	i_sStepName := TO_STRING(s_eSequence),
+	i_bCmdReset := FALSE,
 	i_bStaError := FALSE);
-
+	
 //Exception stop
-IF (s_eSequence <> E_SeqServo.STOP) AND s_bReqNcStop THEN 
+IF (s_eSequence <> E_SeqServo.STOP) AND s_bReqNcStop THEN
 	s_eSequence := E_SeqServo.STOP;
-END_IF		
+END_IF
 
 //Exception error
-IF ((s_eSequence <> E_SeqServo.ERROR) OR (s_eSequence <> E_SeqServo.RESET)) AND s_bStaError THEN  
+IF ((s_eSequence <> E_SeqServo.ERROR) OR (s_eSequence <> E_SeqServo.RESET)) AND s_bStaError THEN
 	s_eSequence := E_SeqServo.ERROR;
 END_IF
 
 CASE s_eSequence OF
-
 	E_SeqServo.IDLE:
 		
-		IF s_bReqNcStop THEN 
+		IF s_bReqNcStop THEN
 			s_eSequence := E_SeqServo.STOP;
 		ELSIF s_bReqNcHome THEN
 			s_eSequence := E_SeqServo.HOME;
 		ELSIF s_bReqNcJog THEN
 			s_eSequence := E_SeqServo.JOG;
 		ELSIF s_bReqNcMoveAbs THEN
-			s_eSequence := E_SeqServo.MOVE_ABS;	
+			s_eSequence := E_SeqServo.MOVE_ABS;
 		END_IF
 		
 	E_SeqServo.STOP:
@@ -290,7 +289,7 @@ CASE s_eSequence OF
 		CommandAborted => s_bCommandAborted,
 		Error => s_bError,
 		ErrorID => s_nErrorID);
-*)
+*)		
 		IF s_fbMcStop.Done THEN
 			s_bReqNcStop := FALSE;
 			s_eSequence := E_SeqServo.IDLE;
@@ -298,16 +297,16 @@ CASE s_eSequence OF
 			s_bReqNcStop := FALSE;
 			s_eSequence := E_SeqServo.ERROR;
 		END_IF
-			
+		
 	E_SeqServo.RESET:
 		IF s_fbMcReset.Done THEN
 			s_bReqNcReset := FALSE;
 			s_eSequence := E_SeqServo.IDLE;
 		ELSIF s_fbMcReset.Error THEN
 			s_bReqNcReset := FALSE;
-			s_eSequence := E_SeqServo.ERROR;	
+			s_eSequence := E_SeqServo.ERROR;
 		END_IF
-
+	
 	E_SeqServo.HOME:
 (*		s_fbMcHome(
 			Axis := i_refAxis,
@@ -322,8 +321,8 @@ CASE s_eSequence OF
 			Active => s_bActive,
 			CommandAborted => s_bCommandAborted,
 			Error => s_bError,
-			ErrorID => s_nErrorID);	
-*)	
+			ErrorID => s_nErrorID);
+*)		
 		IF s_fbMcHome.Done THEN
 			s_bReqNcHome := FALSE;
 			s_eSequence := E_SeqServo.IDLE;
@@ -331,7 +330,7 @@ CASE s_eSequence OF
 			s_bReqNcHome := FALSE;
 			s_eSequence := E_SeqServo.ERROR;
 		END_IF
-	
+		
 	E_SeqServo.JOG:
 (*		s_fbMcJog(
 			Axis := i_refAxis,
@@ -349,15 +348,15 @@ CASE s_eSequence OF
 			CommandAborted => s_bCommandAborted,
 			Error => s_bError,
 			ErrorID => s_nErrorID);
-*)	
+*)			
 		IF (NOT(s_fbHmiBtnJogPos.p_bStaBtn OR s_fbHmiBtnJogNeg.p_bStaBtn) AND NOT(s_fbMcJog.Busy)) OR s_fbMcJog.CommandAborted THEN
 			s_bReqNcJog := FALSE;
 			s_eSequence := E_SeqServo.IDLE;
 		ELSIF s_fbMcJog.Error THEN
 			s_bReqNcJog := FALSE;
-			s_eSequence := E_SeqServo.ERROR;	
+			s_eSequence := E_SeqServo.ERROR;
 		END_IF
-			
+		
 	E_SeqServo.MOVE_ABS:
 (*		IF (i_eCtrlMode <> E_CtrlMode.AUTOMATIC) AND (i_eCtrlMode <> E_CtrlMode.MANUAL) THEN
 			s_fbMcMoveAbs.Position := s_fSetTargetPosition;
@@ -368,10 +367,10 @@ CASE s_eSequence OF
 		ELSE
 			; //positining settings are written from the sequence (this could be different in each case)
 		END_IF
-			
+		
 		s_fbMcMoveAbs(
 			Axis := i_refAxis,
-			Execute := s_bReqNcMoveAbs, 
+			Execute := s_bReqNcMoveAbs,
 			Position := ,
 			Velocity := ,
 			Acceleration := ,
@@ -385,7 +384,7 @@ CASE s_eSequence OF
 			CommandAborted => s_bCommandAborted,
 			Error => s_bError,
 			ErrorID => s_nErrorID);
-*)	
+*)			
 		IF s_fbMcMoveAbs.Done OR s_fbMcMoveAbs.CommandAborted THEN
 			s_bReqNcMoveAbs := FALSE;
 			s_eSequence := E_SeqServo.IDLE;
@@ -402,13 +401,12 @@ CASE s_eSequence OF
 			Busy => s_bBusy,
 			Error => s_bError,
 			ErrorID => s_nErrorID);
-*)	
+*)			
 		IF s_bReqNcReset THEN
 			s_eSequence := E_SeqServo.RESET;
 		END_IF
 		
 END_CASE
-
 
 s_fbMcStop(
 	Axis := i_refAxis,
@@ -436,7 +434,7 @@ s_fbMcHome(
 	Active => s_bActive,
 	CommandAborted => s_bCommandAborted,
 	Error => s_bError,
-	ErrorID => s_nErrorID);	
+	ErrorID => s_nErrorID);
 	
 s_fbMcJog(
 	Axis := i_refAxis,
@@ -467,7 +465,7 @@ END_IF
 	
 s_fbMcMoveAbs(
 	Axis := i_refAxis,
-	Execute := s_bReqNcMoveAbs, 
+	Execute := s_bReqNcMoveAbs,
 	Position := ,
 	Velocity := ,
 	Acceleration := ,
@@ -481,14 +479,14 @@ s_fbMcMoveAbs(
 	CommandAborted => s_bCommandAborted,
 	Error => s_bError,
 	ErrorID => s_nErrorID);
-
+	
 s_fbMcReset(
 	Axis := i_refAxis,
 	Execute := s_bReqNcReset,
 	Done => s_bDone,
 	Busy => s_bBusy,
 	Error => s_bError,
-	ErrorID => s_nErrorID);	
+	ErrorID => s_nErrorID);
 
 _m_Devices := TRUE;
 ]]></ST>
@@ -509,7 +507,7 @@ IF NOT(s_bHmiInit) THEN
 	s_stHmiData.sDescription := i_sCmName;
 	s_stHmiData.sNamePos := s_sCfgPosName;
 	s_stHmiData.sNameNeg := s_sCfgNegName;
-
+	
 	//Button names
 	s_stHmiData.sNameHome := s_fbHmiBtnHome.p_sBtnText;
 	s_stHmiData.sNameJogPos := s_fbHmiBtnJogPos.p_sBtnText;
@@ -554,37 +552,37 @@ s_stHmiData.s_sInterlockedReasonNeg := s_sInterlockedReasonNeg;
 IF s_stHmiData.bCmdHomePressed THEN
 	s_fbHmiBtnHome.m_On();
 ELSE
-	s_fbHmiBtnHome.m_Off();	
+	s_fbHmiBtnHome.m_Off();
 END_IF
 
 IF s_stHmiData.bCmdJogPosPressed THEN
 	s_fbHmiBtnJogPos.m_On();
 ELSE
-	s_fbHmiBtnJogPos.m_Off();	
+	s_fbHmiBtnJogPos.m_Off();
 END_IF
 
 IF s_stHmiData.bCmdJogNegPressed THEN
 	s_fbHmiBtnJogNeg.m_On();
 ELSE
-	s_fbHmiBtnJogNeg.m_Off();	
+	s_fbHmiBtnJogNeg.m_Off();
 END_IF
 
 IF s_stHmiData.bCmdMoveAbsPressed THEN
 	s_fbHmiBtnMoveAbs.m_On();
 ELSE
-	s_fbHmiBtnMoveAbs.m_Off();	
+	s_fbHmiBtnMoveAbs.m_Off();
 END_IF
 
 IF s_stHmiData.bCmdResetPressed THEN
 	s_fbHmiBtnReset.m_On();
 ELSE
-	s_fbHmiBtnReset.m_Off();	
+	s_fbHmiBtnReset.m_Off();
 END_IF
 
 IF s_stHmiData.bCmdStopPressed THEN
 	s_fbHmiBtnStop.m_On();
 ELSE
-	s_fbHmiBtnStop.m_Off();	
+	s_fbHmiBtnStop.m_Off();
 END_IF 
 
 //Buttons
@@ -610,14 +608,14 @@ IF __ISVALIDREF(i_ref_eCtrlState) THEN
 	//MAINTENANCE-mode is running
 	IF (i_eCtrlMode = E_CtrlMode.MAINTENANCE) AND (i_ref_eCtrlState = E_CtrlState.RUNNING) THEN
 		s_fbHmiBtnHome.p_bStaVisible := TRUE;
-		s_fbHmiBtnHome.p_bStaEnabled := i_bReqEnable AND s_bStaEnabledControl AND s_bStaStandstill;	
-
+		s_fbHmiBtnHome.p_bStaEnabled := i_bReqEnable AND s_bStaEnabledControl AND s_bStaStandstill;
+		
 		s_fbHmiBtnJogPos.p_bStaVisible := TRUE;
 		s_fbHmiBtnJogPos.p_bStaEnabled := i_bReqEnable AND s_bStaEnabledControl AND s_bStaEnabledPos AND NOT(i_bIclkPos) AND NOT(s_fbMcMoveAbs.Busy);
 		
 		s_fbHmiBtnJogNeg.p_bStaVisible := TRUE;
 		s_fbHmiBtnJogNeg.p_bStaEnabled := i_bReqEnable AND s_bStaEnabledControl AND s_bStaEnabledNeg AND NOT(i_bIclkNeg) AND NOT(s_fbMcMoveAbs.Busy);
-	
+		
 		s_fbHmiBtnMoveAbs.p_bStaVisible := TRUE;
 		s_fbHmiBtnMoveAbs.p_bStaEnabled := i_bReqEnable AND s_bStaEnabledControl AND s_bStaEnabledPos AND s_bStaEnabledNeg AND s_bStaStandstill AND s_bStaHomed AND NOT(i_bIclkPos) AND NOT(i_bIclkNeg);
 		
@@ -654,7 +652,7 @@ IF __ISVALIDREF(i_ref_eCtrlState) THEN
 			s_bReqNcMoveAbs := TRUE;
 		END_IF
 		
-	//other-mode	
+	//other-mode
 	ELSE
 		s_fbHmiBtnHome.p_bStaVisible := FALSE;
 		s_fbHmiBtnHome.p_bStaEnabled := FALSE;
@@ -675,7 +673,7 @@ IF __ISVALIDREF(i_ref_eCtrlState) THEN
 		s_fbHmiBtnStop.p_bStaEnabled := FALSE;
 	END_IF
 END_IF
-	
+
 _m_Hmi := TRUE;
 ]]></ST>
       </Implementation>
@@ -710,32 +708,32 @@ s_fbAlarmHandlerLimitNegativeReached.i_sAlarmText := CONCAT(i_sCmName, CONCAT(' 
 	//Buttons
 	s_fbHmiBtnHome.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnHome.p_bStaVisible := FALSE;
-	s_fbHmiBtnHome.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnHome.p_bStaEnabled := FALSE;
 	s_fbHmiBtnHome.p_sBtnText := 'Home';
 	
 	s_fbHmiBtnJogPos.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnJogPos.p_bStaVisible := FALSE;
-	s_fbHmiBtnJogPos.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnJogPos.p_bStaEnabled := FALSE;
 	s_fbHmiBtnJogPos.p_sBtnText := CONCAT('Jog ', s_sCfgPosName);
 	
 	s_fbHmiBtnJogNeg.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnJogNeg.p_bStaVisible := FALSE;
-	s_fbHmiBtnJogNeg.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnJogNeg.p_bStaEnabled := FALSE;
 	s_fbHmiBtnJogNeg.p_sBtnText := CONCAT('Jog ', s_sCfgNegName);
 	
 	s_fbHmiBtnMoveAbs.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnMoveAbs.p_bStaVisible := FALSE;
-	s_fbHmiBtnMoveAbs.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnMoveAbs.p_bStaEnabled := FALSE;
 	s_fbHmiBtnMoveAbs.p_sBtnText := 'Move Absolute';
 	
 	s_fbHmiBtnReset.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnReset.p_bStaVisible := FALSE;
-	s_fbHmiBtnReset.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnReset.p_bStaEnabled := FALSE;
 	s_fbHmiBtnReset.p_sBtnText := 'Reset';
 	
 	s_fbHmiBtnStop.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnStop.p_bStaVisible := FALSE;
-	s_fbHmiBtnStop.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnStop.p_bStaEnabled := FALSE;
 	s_fbHmiBtnStop.p_sBtnText := 'Stop';
 	
 	//Leds
@@ -759,7 +757,7 @@ s_fbAlarmHandlerLimitNegativeReached.i_sAlarmText := CONCAT(i_sCmName, CONCAT(' 
 	
 	s_fbHmiLedMoving.p_bStaVisible := FALSE;
 	s_fbHmiLedMoving.p_sToHmiDescriptionLed := 'Moving';
-
+	
 	s_fbHmiLedAtPosition.p_bStaVisible := FALSE;
 	s_fbHmiLedAtPosition.p_sToHmiDescriptionLed := 'At Position';
 	
@@ -779,7 +777,7 @@ IF NOT SUPER^._m_Inputs() THEN
 	RETURN;
 END_IF
 
-s_bReqNcReset := i_bCmdReset; 
+s_bReqNcReset := i_bCmdReset;
 
 s_bStaEnabled := I_bEnable;
 s_bStaReferenceSwitch := I_bDetReferenceSwitch;
@@ -808,7 +806,7 @@ s_bIclkNeg := i_bIclkNeg;
 
 {warning '#TODO: Not clear why this interlocks are configured here?'}
 //Local reasons, first
-IF NOT(s_bStaEnabled) AND (i_eCtrlMode = E_CtrlMode.MAINTENANCE) THEN  
+IF NOT(s_bStaEnabled) AND (i_eCtrlMode = E_CtrlMode.MAINTENANCE) THEN 
 	s_sInterlockedReasonPos := 'Not enabled';
 ELSIF NOT(s_bStaLimitSwitchPos) THEN  
 	s_sInterlockedReasonPos := CONCAT('Limit-switch ', s_sCfgPosName);
@@ -817,9 +815,9 @@ ELSE
 END_IF
 
 //Local reasons, first
-IF NOT(s_bStaEnabled) AND (i_eCtrlMode = E_CtrlMode.MAINTENANCE) THEN  
+IF NOT(s_bStaEnabled) AND (i_eCtrlMode = E_CtrlMode.MAINTENANCE) THEN 
 	s_sInterlockedReasonNeg := 'Not enabled';
-ELSIF NOT(s_bStaLimitSwitchNeg) THEN  
+ELSIF NOT(s_bStaLimitSwitchNeg) THEN
 	s_sInterlockedReasonNeg := CONCAT('Limit-switch ', s_sCfgNegName);
 ELSE
 	;// Else, allow external to write
@@ -869,7 +867,7 @@ s_fbMcMoveAbs.Jerk := i_stPositioningProfile.fJrk;
 o_Busy := s_fbMcMoveAbs.Busy;
 o_bDone := s_fbMcMoveAbs.Done;
 o_bError := s_fbMcMoveAbs.Error;
-	
+
 m_MoveAbsolute := s_bDone;
 ]]></ST>
       </Implementation>
@@ -891,7 +889,7 @@ s_bReqNcReset := TRUE;
 o_Busy := s_fbMcReset.Busy;
 o_bDone := s_fbMcReset.Done;
 o_bError := s_fbMcReset.Error;
-	
+
 m_Reset := s_bDone;
 ]]></ST>
       </Implementation>
@@ -900,7 +898,7 @@ m_Reset := s_bDone;
       <Declaration><![CDATA[//Returms TRUE if stop is done
 METHOD PUBLIC m_Stop : BOOL
 VAR_INPUT
-	i_fDec : LREAL; 
+	i_fDec : LREAL;
 	i_fJrk : LREAL;
 END_VAR
 VAR_OUTPUT
@@ -921,7 +919,7 @@ s_fbMcStop.Jerk := i_fJrk;
 o_Busy := s_fbMcStop.Busy;
 o_bDone := s_fbMcStop.Done;
 o_bError := s_fbMcStop.Error;
-	
+
 m_Stop := s_bDone;
 ]]></ST>
       </Implementation>
@@ -945,7 +943,8 @@ PROPERTY PUBLIC p_bAtPosition : BOOL]]></Declaration>
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bAtPosition := s_bStaAtPosition;]]></ST>
+p_bAtPosition := s_bStaAtPosition;
+]]></ST>
         </Implementation>
       </Get>
     </Property>
@@ -1030,7 +1029,8 @@ PROPERTY PUBLIC p_bStandstill : BOOL]]></Declaration>
         <Implementation>
           <ST><![CDATA[
 p_bStandstill := s_bStaStandstill;
-//--p_bStandstill := i_refAxis.Status.StandStill;]]></ST>
+//--p_bStandstill := i_refAxis.Status.StandStill;
+]]></ST>
         </Implementation>
       </Get>
     </Property>

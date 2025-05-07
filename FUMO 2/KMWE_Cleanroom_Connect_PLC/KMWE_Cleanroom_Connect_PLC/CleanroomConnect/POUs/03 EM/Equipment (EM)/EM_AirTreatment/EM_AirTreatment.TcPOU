@@ -128,8 +128,8 @@ s_bStaError :=
 	OR s_cmFanMotor.p_bStaError
 	OR s_fbFanSpeed.p_bStaError
 	OR s_fbDeltaP_CleanroomCabin.p_bStaError
-	OR s_fbDeltaP_CabinAmbient.p_bStaError;	
-
+	OR s_fbDeltaP_CabinAmbient.p_bStaError;
+	
 s_bStaWarning :=
 	s_fbFanSpeed.p_bStaOverRange
 	OR s_fbFanSpeed.p_bStaUnderRange
@@ -137,7 +137,7 @@ s_bStaWarning :=
 	OR s_fbDeltaP_CleanroomCabin.p_bStaUnderRange
 	OR s_fbDeltaP_CabinAmbient.p_bStaOverRange
 	OR s_fbDeltaP_CabinAmbient.p_bStaUnderRange;
-
+	
 _m_Alarms := TRUE;
 ]]></ST>
       </Implementation>
@@ -149,14 +149,15 @@ _m_Alarms := TRUE;
         <ST><![CDATA[
 //AirTreatment
 _m_Sequence();
-		]]></ST>
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_Devices" Id="{5634911e-9a37-47c7-962a-914403fd8d33}" FolderPath="Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Devices : BOOL
 VAR
 	fTaskTime : LREAL; //[s]
-END_VAR]]></Declaration>
+END_VAR
+]]></Declaration>
       <Implementation>
         <ST><![CDATA[
 IF NOT SUPER^._m_Devices() THEN
@@ -171,7 +172,7 @@ s_fbPIDPressCtrl(
 	fTv := i_ref_stSettings.fTv, //D [s]
 	fTd := i_ref_stSettings.fTd, //t [[s]
 );
-	
+
 s_cmFanMotor(
 	i_bReqEnable:= i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
@@ -180,7 +181,7 @@ s_cmFanMotor(
 	i_bIclkOn := FALSE,
 	i_bIclkOff := FALSE
 );
-	
+
 _m_Devices := TRUE;
 ]]></ST>
       </Implementation>
@@ -270,22 +271,22 @@ s_fbAlarmHandlerFanThermalError.i_sAlarmText := CONCAT(i_sEmName, ': Fan Thermal
 //Hmi 
 	s_fbHmiBtnPressurize.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnPressurize.p_bStaVisible := FALSE;
-	s_fbHmiBtnPressurize.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnPressurize.p_bStaEnabled := FALSE;
 	s_fbHmiBtnPressurize.p_sBtnText := 'Pressurize';
 	
 	s_fbHmiBtnFlushing.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnFlushing.p_bStaVisible := FALSE;
-	s_fbHmiBtnFlushing.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnFlushing.p_bStaEnabled := FALSE;
 	s_fbHmiBtnFlushing.p_sBtnText := 'Flushing';
 	
 	s_fbHmiBtnEqualizing.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnEqualizing.p_bStaVisible := FALSE;
-	s_fbHmiBtnEqualizing.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnEqualizing.p_bStaEnabled := FALSE;
 	s_fbHmiBtnEqualizing.p_sBtnText := 'Equalizing';
 	
 	s_fbHmiBtnStop.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnStop.p_bStaVisible := FALSE;
-	s_fbHmiBtnStop.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnStop.p_bStaEnabled := FALSE;
 	s_fbHmiBtnStop.p_sBtnText := 'Stop';
 
 	s_fbHmiLedPressurized.p_bStaVisible := FALSE;
@@ -317,11 +318,12 @@ s_fbFanThermal();
 s_fbDeltaP_CleanroomCabin(i_bReqEnable := i_bReqEnable);
 s_fbDeltaP_CabinAmbient(i_bReqEnable := i_bReqEnable);
 
-s_bStaFanThemalOk := s_fbFanThermal.p_bStaInputDelayed; 
-s_fActDeltaP_CleanroomCabin := s_fbDeltaP_CleanroomCabin.p_fValue; 
+s_bStaFanThemalOk := s_fbFanThermal.p_bStaInputDelayed;
+s_fActDeltaP_CleanroomCabin := s_fbDeltaP_CleanroomCabin.p_fValue;
 s_fActDeltaP_CabinAmbient := s_fbDeltaP_CleanroomCabin.p_fValue;
-	
-_m_Inputs := TRUE;]]></ST>
+
+_m_Inputs := TRUE;
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_Outputs" Id="{2e98bea2-16f9-4f60-a7e0-9054c21cce9c}" FolderPath="Base\">
@@ -550,7 +552,7 @@ s_bReqStop := FALSE;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -565,7 +567,7 @@ m_Equalize := TRUE;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -585,7 +587,6 @@ IF NOT SUPER^.m_Main() THEN
 END_IF
 
 CASE i_eCtrlMode OF
-
 	E_CtrlMode.IDLE:
 		s_eSequence := E_SeqAirTreatment.IDLE;
 		
@@ -602,7 +603,7 @@ CASE i_eCtrlMode OF
 			s_bReqFlush := s_fbHmiBtnFlushing.p_osrBtnPress;
 			s_bReqEqualize := s_fbHmiBtnEqualizing.p_osrBtnPress;
 			s_bReqStop := s_fbHmiBtnStop.p_osrBtnPress;
-		END_IF	
+		END_IF
 		
 		_m_AutomaticControl();
 		
@@ -619,7 +620,7 @@ CASE i_eCtrlMode OF
 	E_CtrlMode.CLEANING:
 		//Execute cleaning control (cleaning  specific functionalities)
 		;	//Cleaning control is not implemented, this could be a done in the future if neccesary
-			
+		
 END_CASE
 
 //AUTOMATIC-mode //////////////////////////////////////////////////////////////////////////////////
@@ -641,26 +642,26 @@ END_IF
 
 //Buttons enabling
 IF i_bReqEnable AND (i_eCtrlMode = E_CtrlMode.MANUAL) AND (i_eCtrlState = E_CtrlState.RUNNING) THEN
-
+	
 	//Air Treatment
 	s_fbHmiBtnPressurize.p_bStaEnabled :=
 		((s_eSequence = E_SeqAirTreatment.READY)
 		OR (s_eSequence = E_SeqAirTreatment.FLUSHING)
 		OR (s_eSequence = E_SeqAirTreatment.EQUALIZE))
 		AND NOT(s_bStaError);
-	
+		
 	s_fbHmiBtnFlushing.p_bStaEnabled :=
 		((s_eSequence = E_SeqAirTreatment.READY)
 		OR (s_eSequence = E_SeqAirTreatment.PRESSURIZE)
 		OR (s_eSequence = E_SeqAirTreatment.EQUALIZE))
 		AND NOT(s_bStaError);
-	
+		
 	s_fbHmiBtnEqualizing.p_bStaEnabled :=
 		((s_eSequence = E_SeqAirTreatment.READY)
 		OR (s_eSequence = E_SeqAirTreatment.PRESSURIZE)
 		OR (s_eSequence = E_SeqAirTreatment.FLUSHING))
 		AND NOT(s_bStaError);
-	
+		
 	s_fbHmiBtnStop.p_bStaEnabled :=
 		NOT(s_eSequence = E_SeqAirTreatment.STOP);
 		
@@ -674,7 +675,7 @@ END_IF
 //MAINTENANCE-mode ////////////////////////////////////////////////////////////////////////////////
 
 //Stopping control modules
-IF (i_eCtrlMode = E_CtrlMode.MAINTENANCE) AND (i_eCtrlState = E_CtrlState.STOPPING) THEN 
+IF (i_eCtrlMode = E_CtrlMode.MAINTENANCE) AND (i_eCtrlState = E_CtrlState.STOPPING) THEN
 	s_cmFanMotor.m_Off();
 	s_fSetFanSpeed := 0.0; //[%]
 	s_fbSeqControl.i_bCmdReset := TRUE;
@@ -686,7 +687,7 @@ IF (i_eCtrlMode = E_CtrlMode.IO) AND (i_eCtrlState = E_CtrlState.RUNNING) THEN
 	s_bHmiForceOutputStartEnabled := s_cmFanMotor.p_bStaOutput;
 ELSE
 	s_bHmiForceOutputEnabled := FALSE;
-	s_bHmiForceOutputStartEnabled := FALSE;	
+	s_bHmiForceOutputStartEnabled := FALSE;
 END_IF
 
 m_Main := TRUE;
@@ -698,7 +699,7 @@ m_Main := TRUE;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 

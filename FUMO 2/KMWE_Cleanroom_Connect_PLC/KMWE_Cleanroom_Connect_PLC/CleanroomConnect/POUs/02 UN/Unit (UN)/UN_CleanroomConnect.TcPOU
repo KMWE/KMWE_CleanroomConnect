@@ -73,7 +73,6 @@ VAR
 //Properties
 
 //------------------------------------------//
-
 	//Sequencers
 	s_eSequence : E_SeqCleanroomConnect;
 	s_fbSeqControl : FB_SeqControl;
@@ -125,11 +124,12 @@ IF NOT SUPER^._m_Alarms() THEN
 END_IF
 
 //overbruggen in automode tot en met place table blablabla
-s_errEmergencyBtn(i_bStaActive 			:= NOT s_DiEmergencyBtn.p_bStaInput AND NOT GVL.g_fbHmiBtnSimulation.p_bStaBtn AND GVL.g_bConnectTestEquipment ,
-				  i_eAlarmLevel 		:= E_AlarmLevel.Alarm,
-				  i_sAlarmText 			:= 'Emergency button pressed');
+s_errEmergencyBtn(
+	i_bStaActive := NOT s_DiEmergencyBtn.p_bStaInput AND NOT GVL.g_fbHmiBtnSimulation.p_bStaBtn AND GVL.g_bConnectTestEquipment,
+	i_eAlarmLevel := E_AlarmLevel.Alarm,
+	i_sAlarmText := 'Emergency button pressed');
 
-IF GVL_KMWEGenericLib.g_fbAlarmManager.p_bAlarmActive THEN 
+IF GVL_KMWEGenericLib.g_fbAlarmManager.p_bAlarmActive THEN
 	GVL.g_eStaLedColor := E_KmweLedColors.Red;
 END_IF
 
@@ -143,7 +143,8 @@ _m_Alarms := TRUE;
       <Declaration><![CDATA[METHOD PROTECTED _m_Devices : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF NOT SUPER^._m_Devices() THEN
+        <ST><![CDATA[
+IF NOT SUPER^._m_Devices() THEN
 	RETURN;
 END_IF
 
@@ -168,7 +169,7 @@ IF GVL_Modules.g_emAirTreatment.p_bStaStopped THEN
 	s_cmCabinStateIndicator.m_Red(c_bBLINK);
 ELSIF FALSE (*_spare_*) THEN
 	s_cmCabinStateIndicator.m_Red(c_bON);
-
+	
 //--ELSIF FALSE (*_docking_undocking_process_direct_contact_to_extarnal_air_*)
 ELSIF ((s_eCabinAirState = E_AirState.UNKNOWN) OR (s_eCabinAirState = E_AirState.DIRTY))
 	AND NOT(GVL_Modules.g_emDockingInterface.p_bStaDocked)
@@ -183,7 +184,7 @@ ELSIF FALSE (*_spare_*) THEN
 	s_cmCabinStateIndicator.m_Magenta(c_bBLINK);
 ELSIF FALSE (*_spare_*) THEN
 	s_cmCabinStateIndicator.m_Magenta(c_bON);
-
+	
 //Pressurize
 ELSIF FALSE (*_pressurizing_cabin_*) THEN
 	s_cmCabinStateIndicator.m_Blue(c_bBLINK);
@@ -195,13 +196,13 @@ ELSIF FALSE (*_flushing_cabin_*) THEN
 	s_cmCabinStateIndicator.m_Cyan(c_bBLINK);
 ELSIF FALSE (*_cabin_flushed_*) THEN
 	s_cmCabinStateIndicator.m_Cyan(c_bON);
-
+	
 //Equalize
 ELSIF FALSE (*_equalizing_cabin_*) THEN
 	s_cmCabinStateIndicator.m_Yellow(c_bBLINK);
 ELSIF FALSE (*_cabin_equalized_*) THEN
 	s_cmCabinStateIndicator.m_Yellow(c_bON);
-
+	
 //Clean air
 ELSIF GVL_Modules.g_emAirTreatment.p_bStaClean
 	AND NOT(s_cmDoorLockCleanroomDoor.p_bReqAccessRequest)
@@ -266,9 +267,9 @@ END_IF
 //Mode management
 IF GVL_KMWEGenericLib.g_fbHmiBtnReturnToStart.p_osfBtnPress THEN
 	s_eCtrlMode := E_CtrlMode.IDLE;
-
-	GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaVisible	:= TRUE;
-	GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaEnabled	:= TRUE;	
+	
+	GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaVisible := TRUE;
+	GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaEnabled := TRUE;
 END_IF
 
 //------------------------------------------//
@@ -276,21 +277,21 @@ END_IF
 //------------------------------------------//
 //Alarm Button can always be pressed
 IF s_fbHmiBtnAlarms.p_osrBtnPress AND GVL.g_sToHmiMiddleContent <> GVL.g_stHmiMiddle.AlarmManager THEN
-	s_sPrevPageAlarms			:= GVL.g_sToHmiMiddleContent;
-	s_sPrevBottom1Alarms		:= GvL.g_sToHmiBottomContent;
-	GVL.g_sToHmiMiddleContent 	:= GVL.g_stHmiMiddle.AlarmManager;
-	GVL.g_sToHmiBottomContent	:= GVL.g_stHmiBottomBar.Alarm;
+	s_sPrevPageAlarms := GVL.g_sToHmiMiddleContent;
+	s_sPrevBottom1Alarms := GvL.g_sToHmiBottomContent;
+	GVL.g_sToHmiMiddleContent := GVL.g_stHmiMiddle.AlarmManager;
+	GVL.g_sToHmiBottomContent := GVL.g_stHmiBottomBar.Alarm;
 	
-	GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible 			:= TRUE;
-	GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled 			:= TRUE;
+	GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible := TRUE;
+	GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled := TRUE;
 END_IF
 
 IF GVL.g_sToHmiMiddleContent = GVL.g_stHmiMiddle.AlarmManager AND GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_osfBtnPress THEN
-	GVL.g_sToHmiMiddleContent 	:=	s_sPrevPageAlarms;
-	GVL.g_sToHmiBottomContent	:=	s_sPrevBottom1Alarms;
+	GVL.g_sToHmiMiddleContent := s_sPrevPageAlarms;
+	GVL.g_sToHmiBottomContent := s_sPrevBottom1Alarms;
 	
-	GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible 			:= FALSE;
-	GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled 			:= FALSE;
+	GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible := FALSE;
+	GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled := FALSE;
 END_IF
 //------------------------------------------//
 
@@ -390,7 +391,7 @@ CASE s_eCtrlMode OF
 		IF GVL_KMWEGenericLib.g_fbAlarmManager.p_osrAlarmsResolved THEN
 			GVL.g_eStaLedColor := E_KmweLedColors.Green;
 		END_IF
-	
+		
 		GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaVisible	:= FALSE;
 		GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaEnabled	:= FALSE;
 		
@@ -614,85 +615,85 @@ s_stSettings.stSettingsLiftingTransport.stSettingsServoTransport.fAbsPosJrk := 1
 
 //Manual- and Automatic-mode, Positioning
 // [0] = Idle
-s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[0].fPos := 0.0; //[mm]	
-s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[0].fVel := 10.0; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[0].fPos := 0.0; //[mm]
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[0].fVel := 10.0; //[mm/s]
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[0].fAcc := 10.0;  //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[0].fDec := 10.0; //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[0].fJrk := 100.0; //[mm/s^3]
 
 // [1] = Pre Pick From TB
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[1].fPos := 306.01; //[mm]
-s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[1].fVel := 10.01; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[1].fVel := 10.01; //[mm/s]
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[1].fAcc := 10.0;  //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[1].fDec := 10.0; //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[1].fJrk := 100.0; //[mm/s^3]
 
 // [2] = Pick From TB
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[2].fPos := 331.02; //[mm]
-s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[2].fVel := 5.02; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[2].fVel := 5.02; //[mm/s]
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[2].fAcc := 5.0;  //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[2].fDec := 5.0; //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[2].fJrk := 50.0; //[mm/s^3]
 
 // [3] = Raise From TB
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[3].fPos := 404.03; //[mm]
-s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[3].fVel := 10.03; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[3].fVel := 10.03; //[mm/s]
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[3].fAcc := 10.0;  //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[3].fDec := 10.0; //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[3].fJrk := 100.0; //[mm/s^3]
 
 // [4] = Pre Place In Cabin
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[4].fPos := 45.04; //[mm]
-s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[4].fVel := 10.04; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[4].fVel := 10.04; //[mm/s]
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[4].fAcc := 10.0;  //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[4].fDec := 10.0; //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[4].fJrk := 100.0; //[mm/s^3]
 
 // [5] = Place In Cabin
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[5].fPos := 0.05; //[mm]
-s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[5].fVel := 5.05; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[5].fVel := 5.05; //[mm/s]
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[5].fAcc := 5.0;  //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[5].fDec := 5.0; //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[5].fJrk := 50.0; //[mm/s^3]
 
 // [6] = Pre Pick From Cabin
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[6].fPos := 10.06; //[mm]
-s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[6].fVel := 10.06; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[6].fVel := 10.06; //[mm/s]
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[6].fAcc := 10.0;  //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[6].fDec := 10.0; //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[6].fJrk := 10.0; //[mm/s^3]
 
 // [7] = Pick From Cabin
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[7].fPos := 45.07; //[mm]
-s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[7].fVel := 5.07; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[7].fVel := 5.07; //[mm/s]
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[7].fAcc := 5.0;  //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[7].fDec := 5.0; //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[7].fJrk := 50.0; //[mm/s^3]
 
 // [8] = Raise From Cabin
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[8].fPos := 404.08; //[mm]
-s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[8].fVel := 10.08; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[8].fVel := 10.08; //[mm/s]
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[8].fAcc := 10.0;  //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[8].fDec := 10.0; //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[8].fJrk := 100.0; //[mm/s^3]
 
 // [9] = Pre Place In TB
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[9].fPos := 374.09; //[mm]
-s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[9].fVel := 10.09; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[9].fVel := 10.09; //[mm/s]
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[9].fAcc := 10.0;  //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[9].fDec := 10.0; //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[9].fJrk := 100.0; //[mm/s^3]
 
 // [10] = Place In TB
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[10].fPos := 331.10; //[mm]
-s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[10].fVel := 10.10; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[10].fVel := 10.10; //[mm/s]
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[10].fAcc := 10.0;  //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[10].fDec := 10.0; //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[10].fJrk := 100.0; //[mm/s^3]
 
 //--// [11] = Return In Cabin
 //--s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[11].fPos := 0.11; //[mm]
-//--s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[11].fVel := 10.11; //[mm/s] 
+//--s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[11].fVel := 10.11; //[mm/s]
 //--s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[11].fAcc := 10.0;  //[mm/s^2]
 //--s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[11].fDec := 10.0; //[mm/s^2]
 //--s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[11].fJrk := 100.0; //[mm/s^3]
@@ -700,49 +701,49 @@ s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[10].fJrk :=
 //Automatic-Positioning Transport//////////////////////////////////////////////////////////////////
 // [0] = Idle
 s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[0].fPos := 0.0; //[mm]
-s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[0].fVel := 100.0; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[0].fVel := 100.0; //[mm/s]
 s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[0].fAcc := 100.0;  //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[0].fDec := 100.0; //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[0].fJrk := 1000.0; //[mm/s^3]
 
 // [1] = Pre Pick From TB
 s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[1].fPos := 1690.01; //[mm]
-s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[1].fVel := 200.02; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[1].fVel := 200.02; //[mm/s]
 s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[1].fAcc := 200.0;  //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[1].fDec := 200.0; //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[1].fJrk := 2000.0; //[mm/s^3]
 
 // [2] = Pick From TB
 s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[2].fPos := 1715.02; //[mm]
-s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[2].fVel := 20.04; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[2].fVel := 20.04; //[mm/s]
 s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[2].fAcc := 20.0;  //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[2].fDec := 20.0; //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[2].fJrk := 200.0; //[mm/s^3]
 
 // [3] = Place In Cabin
 s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[3].fPos := 0.03; //[mm]
-s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[3].fVel := 200.06; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[3].fVel := 200.06; //[mm/s]
 s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[3].fAcc := 200.0;  //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[3].fDec := 200.0; //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[3].fJrk := 2000.0; //[mm/s^3]
 
 // [4] = Pre Place In TB
 s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[4].fPos := 1690.04; //[mm]
-s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[4].fVel := 200.08; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[4].fVel := 200.08; //[mm/s]
 s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[4].fAcc := 200.0;  //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[4].fDec := 200.0; //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[4].fJrk := 2000.0; //[mm/s^3]
 
 // [5] = Place In TB
 s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[5].fPos := 1710.05; //[mm]
-s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[5].fVel := 20.10; //[mm/s] 
+s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[5].fVel := 20.10; //[mm/s]
 s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[5].fAcc := 20.0;  //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[5].fDec := 20.0; //[mm/s^2]
 s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[5].fJrk := 200.0; //[mm/s^3]
 
 //--// [6] = Return In Cabin
 //--s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[6].fPos := 0.06; //[mm]
-//--s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[6].fVel := 200.12; //[mm/s] 
+//--s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[6].fVel := 200.12; //[mm/s]
 //--s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[6].fAcc := 200.0;  //[mm/s^2]
 //--s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[6].fDec := 200.0; //[mm/s^2]
 //--s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[6].fJrk := 2000.0; //[mm/s^3]
@@ -806,9 +807,9 @@ s_stSettings.stSettingsAirTreatment.fTd := 0.0; //D-time [s]
 
 //------------------------------------------//
 //Hmi Startup
-GVL.g_sToHmiTopContent 		:= GVL.g_stHmiTopBar.GeneralTopbar;
-GVL.g_sToHmiMiddleContent 	:= GVL.g_stHmiMiddle.Start;
-GVL.g_sToHmiBottomContent	:= GVL.g_stHmiBottomBar.Start;
+GVL.g_sToHmiTopContent := GVL.g_stHmiTopBar.GeneralTopbar;
+GVL.g_sToHmiMiddleContent := GVL.g_stHmiMiddle.Start;
+GVL.g_sToHmiBottomContent := GVL.g_stHmiBottomBar.Start;
 //------------------------------------------//
 
 //------------------------------------------//
@@ -822,12 +823,12 @@ GVL.g_sToHmiBottomContent	:= GVL.g_stHmiBottomBar.Start;
 	s_fbHmiBtnReset.p_bStaEnabled := TRUE;
 	s_fbHmiBtnReset.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnReset.p_sBtnText := 'Reset';
-//
+	
 	s_fbHmiBtnInbound.p_bStaVisible := TRUE;
 	s_fbHmiBtnInbound.p_bStaEnabled := TRUE;
 	s_fbHmiBtnInbound.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnInbound.p_sBtnText := 'Inbound';
-		
+	
 	s_fbHmiBtnOutbound.p_bStaVisible := TRUE;
 	s_fbHmiBtnOutbound.p_bStaEnabled := TRUE;
 	s_fbHmiBtnOutbound.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
@@ -885,10 +886,9 @@ VAR
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[
-s_FbModeStateControl(
+        <ST><![CDATA[s_FbModeStateControl(
 	i_bReqStopAlarm := 
-		(	
+		(
 			GVL_Modules.g_emUtilities.p_bStaError
 			OR GVL_Modules.g_emPalletConveyor.p_bStaError 
 			OR GVL_Modules.g_emDockingInterface.p_bStaError
@@ -900,7 +900,7 @@ s_FbModeStateControl(
 s_eCtrlMode := s_FbModeStateControl.p_eCtrlMode;
 s_eCtrlState :=	s_FbModeStateControl.p_eCtrlState;
 
-// EM_Utilities ///////////////////////////////////////////////////////////////////////////////////	
+// EM_Utilities ///////////////////////////////////////////////////////////////////////////////////
 GVL_Modules.g_emUtilities.m_GetGeneralState(
 	i_bError := s_bStaError,
 	i_bWarning := s_bStaWarning,
@@ -918,15 +918,15 @@ bReqEnable :=
 	AND GVL_Modules.g_emUtilities.p_bStaAirPressureOk
 	AND NOT GVL_Modules.g_emUtilities.p_bStaError;
 
-// EM_PalletConveyor //////////////////////////////////////////////////////////////////////////////	
+// EM_PalletConveyor //////////////////////////////////////////////////////////////////////////////
 // Interlocks
 s_fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[0].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaClampsOpened) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking;
-s_fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[1].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaUnlockingPinsLocked) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking;
+s_fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[1].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaUnlockPinsLocked) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking;
 s_fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[2].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDoorOpenerClosed) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking;
 s_fbIlckHandlerConvBwd();
 
 s_fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[0].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaClampsOpened) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering;
-s_fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[1].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaUnlockingPinsLocked) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering;
+s_fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[1].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaUnlockPinsLocked) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering;
 s_fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[2].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDoorOpenerClosed) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering;
 s_fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[3].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaOuterDoorOpened) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering AND NOT(s_bTestDisableCabinDoors);
 s_fbIlckHandlerConvFwd();
@@ -938,7 +938,7 @@ GVL_Modules.g_emPalletConveyor(
 	i_bCmdReset := p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn, //Add temp reset button
 	i_stExtIlckConvFwd := s_fbIlckHandlerConvFwd.p_stInterlock,
 	i_stExtIlckConvBwd := s_fbIlckHandlerConvBwd.p_stInterlock);
-
+	
 // EM_DockingInterface ////////////////////////////////////////////////////////////////////////////
 // Interlocks
 s_fbIlckHandlerClampsToClose.i_stInterlockList.arr_Interlocks[0].bState := FALSE; //none
@@ -956,7 +956,7 @@ s_fbIlckHandlerInnerCabinDoorClose.i_stInterlockList.arr_Interlocks[0].bState :=
 s_fbIlckHandlerInnerCabinDoorClose();
 
 GVL_Modules.g_emDockingInterface(
-	i_bTestDisableCabinDoors := s_bTestDisableCabinDoors, 
+	i_bTestDisableCabinDoors := s_bTestDisableCabinDoors,
 	i_bReqEnable := bReqEnable,
 	i_eCtrlMode := s_eCtrlMode,
 	i_eCtrlState := s_eCtrlState,
@@ -967,8 +967,8 @@ GVL_Modules.g_emDockingInterface(
 	i_stExtIlckDockingClampsToClose := s_fbIlckHandlerClampsToClose.p_stInterlock,
 	i_stExtIlckOuterCabinDoorToClose := s_fbIlckHandlerOuterCabinDoorClose.p_stInterlock,
 	i_stExtIlckInnerCabinDoorToClose := s_fbIlckHandlerInnerCabinDoorClose.p_stInterlock);
-
-// EM_LiftingTransport ////////////////////////////////////////////////////////////////////////////	
+	
+// EM_LiftingTransport ////////////////////////////////////////////////////////////////////////////
 s_fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[0].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDoorOpenerOpened);
 s_fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[1].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDoorShutterOpened);
 s_fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[2].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaOuterDoorOpened);
@@ -982,7 +982,7 @@ GVL_Modules.g_emLiftingTransport(
 	i_bCmdReset := p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn, //Add temp reset button
 	i_stExtIlckTransportExtract := s_fbIlckHandlerTranportExtract.p_stInterlock);
 
-(*	
+(*
 // EM_Doors ///////////////////////////////////////////////////////////////////////////////////////
 	
 GVL_Modules.g_emDoors(
@@ -1010,16 +1010,15 @@ GVL_Modules.g_emAirTreatment(
 	i_bCmdReset:= p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn); //Add temp reset button
 
 s_bStaError :=
-	GVL_Modules.g_emUtilities.q_bStaError 
+	GVL_Modules.g_emUtilities.q_bStaError
 	OR GVL_Modules.g_emPalletConveyor.q_bStaError
 	OR GVL_Modules.g_emDockingInterface.q_bStaError
 	OR GVL_Modules.g_emLiftingTransport.q_bStaError;
 //++	OR GVL_Modules.g_emDoors.q_bStaError;
 //++OR GVL_Modules.g_emDockingCabin.q_bStaError
 
-
-s_bStaWarning := 
-	GVL_Modules.g_emUtilities.q_bStaWarning 
+s_bStaWarning :=
+	GVL_Modules.g_emUtilities.q_bStaWarning
 	OR GVL_Modules.g_emPalletConveyor.q_bStaWarning
 	OR GVL_Modules.g_emDockingInterface.q_bStaWarning
 	OR GVL_Modules.g_emLiftingTransport.q_bStaWarning;
@@ -1042,7 +1041,7 @@ IF s_eSequence <> s_ePreviousStep
 	s_ePreviousStep := s_eSequence;
 END_IF
 
-s_bStaEmError := 
+s_bStaEmError :=
 	GVL_Modules.g_emPalletConveyor.p_bStaError
 	OR GVL_Modules.g_emDockingInterface.p_bStaError
 	OR GVL_Modules.g_emLiftingTransport.p_bStaError;
@@ -1052,27 +1051,27 @@ s_fbSeqControl(
 	i_sStepName := TO_STRING(s_eSequence),
 	i_bCmdReset := s_fbHmiBtnReset.p_bStaBtn OR s_bCmdAbort,
 	i_bStaError := s_bStaEmError);
-
+	
 s_tonTimer(PT := T#3600S);
 
 //Force to stop	
 IF (s_eCtrlState = E_CtrlState.STOPPING) THEN
 	s_eSequence := E_SeqCleanroomConnect.STOP;
 END_IF
-	
-s_sResumeStep := TO_STRING(s_eResumeStep); 
+
+s_sResumeStep := TO_STRING(s_eResumeStep);
 
 CASE s_eSequence OF
 	E_SeqCleanroomConnect.IDLE:
 		s_eCabinAirState := E_AirState.UNKNOWN;
 		s_eResumeStep := E_SeqCleanroomConnect.READY;
 		s_eSequence := E_SeqCleanroomConnect.START;
-	
+		
 	E_SeqCleanroomConnect.START:
 		IF s_eCtrlState = E_CtrlState.RUNNING THEN
 			s_eSequence := s_eResumeStep;
 		END_IF
-
+	
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ////READY//////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqCleanroomConnect.READY:
@@ -1248,14 +1247,14 @@ CASE s_eSequence OF
 				s_eSequence := E_SeqCleanroomConnect.READY;
 			END_IF
 		END_IF
-	
-	//CLOSE INNER TB DOOR//////////////////////////////////////////////////////////////////////////	
+		
+	//CLOSE INNER TB DOOR//////////////////////////////////////////////////////////////////////////
 	E_SeqCleanroomConnect.CLOSE_INNER_TB_DOOR:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			GVL_Modules.g_emDockingInterface.m_ReqCloseInnerDoor();
 		END_IF
 		
-		IF GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosed 
+		IF GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosed
 			AND GVL_Modules.g_emDockingInterface.p_bStaReady THEN
 				s_bStaDockTbDone := FALSE;
 				s_bStaUnDockTbDone := FALSE;
@@ -1281,7 +1280,7 @@ CASE s_eSequence OF
 			GVL_Modules.g_emLiftingTransport.m_ReqPickTrolleyFromTB();
 		END_IF
 		
-		IF GVL_Modules.g_emLiftingTransport.p_bStaTrolleyPickedFromTB
+		IF GVL_Modules.g_emLiftingTransport.p_bStaTrollPickedFromTB
 			AND GVL_Modules.g_emLiftingTransport.p_bStaReady THEN
 			
 			IF (s_eReqAction = E_ReqAction.INBOUND) THEN
@@ -1297,17 +1296,17 @@ CASE s_eSequence OF
 				s_eSequence := E_SeqCleanroomConnect.READY;
 			END_IF
 		END_IF
-	
+		
 	//PLACE TROLLEY IN TB//////////////////////////////////////////////////////////////////////////
 	E_SeqCleanroomConnect.PLACE_TROLLEY_IN_TB:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			GVL_Modules.g_emLiftingTransport.m_ReqPlaceTrolleyInTB();
 		END_IF
 		
-		IF GVL_Modules.g_emLiftingTransport.p_bStaTrolleyPlacedInTB
+		IF GVL_Modules.g_emLiftingTransport.p_bStaTrollPlacedInTB
 			AND GVL_Modules.g_emLiftingTransport.p_bStaReady THEN
 			
-			IF (s_eReqAction = E_ReqAction.OUTBOUND) THEN 
+			IF (s_eReqAction = E_ReqAction.OUTBOUND) THEN
 				s_eSequence := E_SeqCleanroomConnect.CLOSE_CLEANROOM_DOOR;
 			ELSIF (s_eReqAction = E_ReqAction.PLACE_TROLLEY_IN_TB) THEN
 				s_eSequence := E_SeqCleanroomConnect.READY;
@@ -1317,7 +1316,7 @@ CASE s_eSequence OF
 				s_bStaOpenInnerTbDoorDone := FALSE;
 				s_bStaCloseInnerTbDoorDone := FALSE;
 				s_bStaPickTrolleyFromTbDone := FALSE;
-				s_bStaPlaceTrolleyInTbDone := TRUE;	
+				s_bStaPlaceTrolleyInTbDone := TRUE;
 				
 				s_eSequence := E_SeqCleanroomConnect.READY;
 			END_IF
@@ -1329,10 +1328,10 @@ CASE s_eSequence OF
 		{warning '#TODO: Add future/FUMO3 code'}
 		IF ( (s_eReqAction = E_ReqAction.INBOUND) (*OR (s_eReqAction = E_ReqAction.PICK_TROLLEY_FROM_TB)*) ) THEN
 			s_eSequence := E_SeqCleanroomConnect.CLOSE_CLEANROOM_DOOR;
-		ELSIF (s_eReqAction = E_ReqAction.OUTBOUND) THEN	
+		ELSIF (s_eReqAction = E_ReqAction.OUTBOUND) THEN
 			s_eSequence := E_SeqCleanroomConnect.PLACE_TROLLEY_IN_TB;
 		END_IF
-	
+		
 	//CLOSE CLEANROOM DOOR/////////////////////////////////////////////////////////////////////////
 	E_SeqCleanroomConnect.CLOSE_CLEANROOM_DOOR:
 		;
@@ -1375,7 +1374,6 @@ VAR_INPUT
 	i_objTB : REFERENCE TO OBJ_Carrier;
 END_VAR
 
-
 VAR_INST
 	osrTbToCenter : R_TRIG;
 	osrTbToDocking : R_TRIG;
@@ -1393,7 +1391,8 @@ VAR_INST
 	arr_bTestCmd : ARRAY[0..15] OF BOOL;
 END_VAR]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF NOT(__ISVALIDREF(i_objTB)) THEN
+        <ST><![CDATA[
+IF NOT(__ISVALIDREF(i_objTB)) THEN
 	RETURN;
 END_IF
 
@@ -1416,7 +1415,6 @@ IF arr_bTestCmd[8] THEN GVL_Modules.g_emLiftingTransport.m_ReqGoToIdle(); arr_bT
 IF arr_bTestCmd[9] THEN GVL_Modules.g_emLiftingTransport.m_ReqPickTrolleyFromTB(); arr_bTestCmd[9] := FALSE; END_IF
 IF arr_bTestCmd[10] THEN GVL_Modules.g_emLiftingTransport.m_ReqPlaceTrolleyInTB(); arr_bTestCmd[10] := FALSE; END_IF
 
-
 //Unit will control lower-layer control modules based on data in Object Carrier
 //By changing the data in this object the behanvior can be manipulated / controlled.
 
@@ -1428,45 +1426,45 @@ IF i_objTB.p_eDestination <> E_Location.UNKNOWN	THEN
 
 	//Transporting TB to Center
 	osrTbToCenter(
-		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING) 
+		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING)
 		AND i_objTB.p_eDestination > i_objTB.p_eActLocation
-		AND i_objTB.p_eActLocation < E_Location.CENTERING  
+		AND i_objTB.p_eActLocation < E_Location.CENTERING
 		AND i_objTB.p_bOuterDoorOpened
 		AND i_objTB.p_bApprovedAtInfeed);
-	
+		
 	IF osrTbToCenter.Q THEN
 		GVL_Modules.g_emPalletConveyor.m_ReqTB_ToCenter();
 	END_IF
-			
+	
 	//Transporting TB to Docking
 	osrTbToDocking(
 		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING)
 		AND i_objTB.p_eDestination > i_objTB.p_eActLocation
-		AND i_objTB.p_eActLocation < E_Location.DOCKING 
+		AND i_objTB.p_eActLocation < E_Location.DOCKING
 		AND GVL_Modules.g_emPalletConveyor.p_bStaTB_CenteringDone
 		AND GVL_Modules.g_emDockingInterface.p_bStaUndocked);
-	
+		
 	IF osrTbToDocking.Q THEN
 		GVL_Modules.g_emPalletConveyor.m_ReqTB_ToDocking();
-	END_IF	
-		
+	END_IF
+	
 	//Transporting TB to Infeed
 	osrTbToInfeed(
 		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING)
 		AND i_objTB.p_eDestination < i_objTB.p_eActLocation
 		AND i_objTB.p_eActLocation > E_Location.INFEED
 		AND GVL_Modules.g_emDockingInterface.p_bStaUndocked);
-	
+		
 	IF osrTbToInfeed.Q THEN
 		GVL_Modules.g_emPalletConveyor.m_ReqTB_ToInfeed();
 	END_IF
 	
 	//Centering TB
 	osrCenterTb(
-		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING) 
-		AND i_objTB.p_eActLocation = E_Location.CENTERING  
+		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING)
+		AND i_objTB.p_eActLocation = E_Location.CENTERING
 		AND NOT(GVL_Modules.g_emPalletConveyor.p_bStaTB_CenteringDone));
-	
+		
 	IF osrCenterTb.Q THEN
 		GVL_Modules.g_emPalletConveyor.m_ReqCenteringTB();
 	END_IF
@@ -1478,11 +1476,11 @@ IF i_objTB.p_eDestination <> E_Location.UNKNOWN	THEN
 	
 	//Docking TB
 	osrDockTb(
-		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING) 
+		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING)
 		AND i_objTB.p_eActLocation = E_Location.DOCKING
-		AND i_objTB.p_eDestination > E_Location.DOCKING 
+		AND i_objTB.p_eDestination > E_Location.DOCKING
 		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaDocked));
-
+	
 	IF osrDockTb.Q THEN
 		GVL_Modules.g_emDockingInterface.m_ReqDockTB();
 	END_IF
@@ -1490,11 +1488,11 @@ IF i_objTB.p_eDestination <> E_Location.UNKNOWN	THEN
 	//Undocking TB
 	osrUndockTb(
 		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING)
-		AND i_objTB.p_eActLocation = E_Location.DOCKING //Is this about the TB or Trolley location? 
+		AND i_objTB.p_eActLocation = E_Location.DOCKING //Is this about the TB or Trolley location?
 		AND i_objTB.p_eDestination < E_Location.DOCKING
 		AND GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosed
 		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaUndocked));
-	
+		
 	IF osrUndockTb.Q THEN
 		GVL_Modules.g_emDockingInterface.m_ReqUndockTB();
 	END_IF
@@ -1506,95 +1504,95 @@ IF i_objTB.p_eDestination <> E_Location.UNKNOWN	THEN
 		AND i_objTB.p_eDestination > E_Location.DOCKING
 		AND GVL_Modules.g_emDockingInterface.p_bStaDocked
 		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpened));
-	
+		
 	IF osrOpenInnerDoor.Q THEN
 		GVL_Modules.g_emDockingInterface.m_ReqOpenInnerDoor();
 	END_IF
-			
+	
 	//Closing Inner Door TB
 	osrCloseInnerDoor(
 		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING)
 		AND i_objTB.p_eActLocation = E_Location.DOCKING
 		AND i_objTB.p_eDestination < E_Location.DOCKING
 		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosed));
-	
+		
 	IF osrCloseInnerDoor.Q THEN
 		GVL_Modules.g_emDockingInterface.m_ReqCloseInnerDoor();
 	END_IF
 	
-END_IF	
+END_IF
 
 //EM_LiftingTransport
 IF i_objTB.p_eDestination <> E_Location.UNKNOWN	THEN
 
 	//Picking trolley from TB
 	osrPickTrolleyFromTb(
-		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING) 
+		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING)
 		AND i_objTB.p_eDestination > i_objTB.p_eActLocation
-		AND i_objTB.p_eActLocation < E_Location.CENTERING  
+		AND i_objTB.p_eActLocation < E_Location.CENTERING
 		AND i_objTB.p_bOuterDoorOpened
 		AND i_objTB.p_bApprovedAtInfeed);
-	
+		
 	IF osrPickTrolleyFromTb.Q THEN
 		GVL_Modules.g_emLiftingTransport.m_ReqPickTrolleyFromTB();
 	END_IF
 	
 	//Place trolley TB TB
 	osrPickTrolleyFromTb(
-		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING) 
+		CLK := (sFbModeStateControl.p_eCtrlState = E_CtrlState.RUNNING)
 		AND i_objTB.p_eDestination > i_objTB.p_eActLocation
-		AND i_objTB.p_eActLocation < E_Location.CENTERING  
+		AND i_objTB.p_eActLocation < E_Location.CENTERING 
 		AND i_objTB.p_bOuterDoorOpened
 		AND i_objTB.p_bApprovedAtInfeed);
-	
+		
 	IF osrPickTrolleyFromTb.Q THEN
 		GVL_Modules.g_emLiftingTransport.m_ReqPickTrolleyFromTB();
 	END_IF
 	
 END_IF
-	
-(* Lod Code 20241108	
+
+(* Lod Code 20241108
 //EM_PalletConveyor
 	
 	//Transporting TB to Center
 	IF i_objTB.p_eDestination <> E_Location.UNKNOWN
 		AND i_objTB.p_eDestination > i_objTB.p_eActLocation
-		AND i_objTB.p_eActLocation < E_Location.CENTERING  
+		AND i_objTB.p_eActLocation < E_Location.CENTERING
 		AND i_objTB.p_bOuterDoorOpened
 		AND i_objTB.p_bApprovedAtInfeed THEN
 			GVL_Modules.g_emPalletConveyor.m_ReqTB_ToCenter();
 			
-	//Transporting TB to Docking		
+	//Transporting TB to Docking
 	ELSIF i_objTB.p_eDestination <> E_Location.UNKNOWN
 		AND i_objTB.p_eDestination > i_objTB.p_eActLocation
-		AND i_objTB.p_eActLocation < E_Location.DOCKING 
+		AND i_objTB.p_eActLocation < E_Location.DOCKING
 		AND GVL_Modules.g_emPalletConveyor.p_bStaTB_CenteringDone
 		AND GVL_Modules.g_emDockingInterface.p_bStaUndocked THEN
 			GVL_Modules.g_emPalletConveyor.m_ReqTB_ToDocking();
-	
+		
 	//Transporting TB to Infeed
 	ELSIF i_objTB.p_eDestination <> E_Location.UNKNOWN
 		AND i_objTB.p_eDestination < i_objTB.p_eActLocation
 		AND i_objTB.p_eActLocation > E_Location.INFEED
-		AND GVL_Modules.g_emDockingInterface.p_bStaUndocked THEN 
+		AND GVL_Modules.g_emDockingInterface.p_bStaUndocked THEN
 			GVL_Modules.g_emPalletConveyor.m_ReqTB_ToInfeed();
-	
+		
 	END_IF
 	
 	//Centering TB
 	IF i_objTB.p_eDestination <> E_Location.UNKNOWN
-		AND i_objTB.p_eActLocation = E_Location.CENTERING  
+		AND i_objTB.p_eActLocation = E_Location.CENTERING
 		AND NOT(GVL_Modules.g_emPalletConveyor.p_bStaTB_CenteringDone) THEN
 		///AND NOT(i_objTB.p_bCenteringDone) AND NOT(bTest) THEN
-		; 
+		;
 		//	GVL_Modules.g_emPalletConveyor.m_ReqCenteringTB();
 	END_IF
 	
 	osrCenterTb(
 		CLK := i_objTB.p_eDestination <> E_Location.UNKNOWN
-		AND i_objTB.p_eActLocation = E_Location.CENTERING  
+		AND i_objTB.p_eActLocation = E_Location.CENTERING
 		AND NOT(GVL_Modules.g_emPalletConveyor.p_bStaTB_CenteringDone));
-	
+		
 	IF osrCenterTb.Q THEN
 		GVL_Modules.g_emPalletConveyor.m_ReqCenteringTB();
 	END_IF
@@ -1604,31 +1602,31 @@ END_IF
 	//Docking TB
 	IF i_objTB.p_eDestination <> E_Location.UNKNOWN
 		AND i_objTB.p_eActLocation = E_Location.DOCKING
-		AND i_objTB.p_eDestination > E_Location.DOCKING 
+		AND i_objTB.p_eDestination > E_Location.DOCKING
 		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaDocked) THEN
 			GVL_Modules.g_emDockingInterface.m_ReqDockTB();
 			
 	//Undocking TB
 	ELSIF i_objTB.p_eDestination <> E_Location.UNKNOWN
-		AND i_objTB.p_eActLocation = E_Location.DOCKING		//Is this about the TB or Trolley location? 
+		AND i_objTB.p_eActLocation = E_Location.DOCKING		//Is this about the TB or Trolley location?
 		AND i_objTB.p_eDestination < E_Location.DOCKING
 		AND GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosedAndLocked
-		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaUndocked) THEN  
+		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaUndocked) THEN 
 			GVL_Modules.g_emDockingInterface.m_ReqUndockTB();
-
+		
 	//Opening Inner Door TB
 	ELSIF i_objTB.p_eDestination <> E_Location.UNKNOWN
 		AND i_objTB.p_eActLocation = E_Location.DOCKING
 		AND i_objTB.p_eDestination > E_Location.DOCKING
 		AND GVL_Modules.g_emDockingInterface.p_bStaDocked
-		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpenedAndReleased) THEN  
+		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpenedAndReleased) THEN
 			GVL_Modules.g_emDockingInterface.m_ReqOpenInnerDoor();
 			
 	//Closing Inner Door TB
 	ELSIF i_objTB.p_eDestination <> E_Location.UNKNOWN
 		AND i_objTB.p_eActLocation = E_Location.DOCKING
 		AND i_objTB.p_eDestination < E_Location.DOCKING
-		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosedAndLocked) THEN  
+		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosedAndLocked) THEN
 			GVL_Modules.g_emDockingInterface.m_ReqCloseInnerDoor();
 			
 	END_IF
@@ -1636,7 +1634,7 @@ END_IF
 //EM_LiftingTransport
 	//Get Trolley from TB to Cabin
 	//Get Trolley from Cabin to TB
-	//..	
+	//..
 	
 //EM_Doors
 	//Open Cabin door Infeed
@@ -1646,7 +1644,7 @@ END_IF
 	//Lock Cleanroom Door
 	//..
 
-//EM_..	
+//EM_..
 	
 	
 //-- Old Code
@@ -1663,24 +1661,22 @@ VAR
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF NOT SUPER^.m_Main() THEN
+        <ST><![CDATA[
+IF NOT SUPER^.m_Main() THEN
 	RETURN;
 END_IF
 
 GVL.g_osrNotify();
-GVL.g_osrNotify.CLK := FALSE;	
-
-
+GVL.g_osrNotify.CLK := FALSE;
 
 m_Main := TRUE;
 
 CASE s_eCtrlMode OF
-
 	E_CtrlMode.IDLE:
-		s_eReqAction := E_ReqAction.NONE;	
-	
+		s_eReqAction := E_ReqAction.NONE;
+		
 	E_CtrlMode.AUTOMATIC:
-		//Wait for commands from 
+		//Wait for commands from
 		IF s_fbHmiBtnInbound.p_osrBtnPress THEN
 			//--s_bReqInbound := TRUE;
 			s_eReqAction := E_ReqAction.INBOUND;
@@ -1710,7 +1706,7 @@ CASE s_eCtrlMode OF
 			//--s_bReqUndockTB := TRUE;
 			s_eReqAction := E_ReqAction.CLOSE_INNER_TB_DOOR;
 		END_IF
-			
+		
 		IF s_fbHmiBtnPickTrolleyFromTB.p_osrBtnPress THEN
 			//--s_bReqPickTrolleyFromTB := TRUE;
 			s_eReqAction := E_ReqAction.PICK_TROLLEY_FROM_TB;
@@ -1745,17 +1741,16 @@ IF s_eCtrlMode <> E_CtrlMode.AUTOMATIC THEN
 //--	s_bReqUndockTB := FALSE;
 //--	s_bReqPickTrolleyFromTB := FALSE;
 //--	s_bReqPlaceTrolleyInTB := FALSE;
-	s_eReqAction := E_ReqAction.NONE;	
+	s_eReqAction := E_ReqAction.NONE;
 END_IF
 
 s_bStaReady := (s_eSequence = E_SeqCleanroomConnect.READY);
-
 
 s_fbHmiBtnDockTB.p_bStaEnabled := s_bStaReady AND NOT(GVL_Modules.g_emDockingInterface.p_bStaDocked);
 s_fbHmiBtnUndockTB.p_bStaEnabled := s_bStaReady AND NOT(GVL_Modules.g_emDockingInterface.p_bStaUnDocked) AND (GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosed);
 s_fbHmiBtnOpenInnerTBDoor.p_bStaEnabled := s_bStaReady AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpened) AND (GVL_Modules.g_emDockingInterface.p_bStaDocked);
 s_fbHmiBtnCloseInnerTBDoor.p_bStaEnabled := s_bStaReady AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosed);
-s_fbHmiBtnPickTrolleyFromTB.p_bStaEnabled := s_bStaReady AND GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpened;  
+s_fbHmiBtnPickTrolleyFromTB.p_bStaEnabled := s_bStaReady AND GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpened;
 s_fbHmiBtnPlaceTrolleyInTB.p_bStaEnabled := s_bStaReady AND GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpened;
 
 // Paul Schippers: just a test with the use of interfaces
@@ -1767,7 +1762,7 @@ s_fbHmiBtnPlaceTrolleyInTB.p_bStaEnabled := s_bStaReady AND GVL_Modules.g_emDock
 //	itfEmAirTreatment.m_Pressurize();
 //END_IF
 
-(*	
+(*
 	// Interlocks (doors must work as an airlock, only one door may be opened at all times)
 	s_bIlckCabinDoorOuterToOpen :=
 		s_cmDoorLockCleanroom.p_bStaError
@@ -1790,7 +1785,7 @@ s_fbHmiBtnPlaceTrolleyInTB.p_bStaEnabled := s_bStaReady AND GVL_Modules.g_emDock
 		OR s_cmCabinDoorOuter.p_bStaIsOpening
 		OR TRUE (*Air treathment unit must be running and ok*)
 		OR TRUE (*Add more..*);
-*)	]]></ST>
+*)]]></ST>
       </Implementation>
     </Method>
   </POU>

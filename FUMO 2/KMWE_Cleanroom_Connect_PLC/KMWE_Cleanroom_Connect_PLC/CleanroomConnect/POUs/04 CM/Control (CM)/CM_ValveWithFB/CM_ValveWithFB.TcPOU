@@ -113,7 +113,7 @@ s_tonFeedBackOffTimeout(
 s_tonFeedbackOnTimeout(
 	IN := i_bReqEnable AND s_bReqOn AND NOT(s_bStaValveIsOn) AND NOT(s_bSimFeedBackIsOn) AND (i_eCtrlMode <> E_CtrlMode.IO),
 	PT := i_stSettings.tValveOnTimeout );
-
+	
 // Set error bits
 s_errFeedbackOffTimeout := (s_tonFeedBackOffTimeout.Q OR s_errFeedbackOffTimeout) AND NOT(i_bCmdReset);
 s_errFeedbackOnTimeout := (s_tonFeedbackOnTimeout.Q OR s_errFeedbackOnTimeout) AND NOT(i_bCmdReset);
@@ -123,18 +123,18 @@ IF s_bReqOn AND i_bIclkOn THEN
 	s_wrnOnInterlocked := TRUE;
 	s_bReqOn := FALSE;
 ELSIF NOT(i_bIclkOn) OR i_bCmdReset THEN
-	s_wrnOnInterlocked := FALSE;	
+	s_wrnOnInterlocked := FALSE;
 END_IF
 
 IF s_bReqOff AND i_bIclkOff THEN
 	s_wrnOffInterlocked := TRUE;
 	s_bReqOff := FALSE;
 ELSIF NOT(i_bIclkOff) OR i_bCmdReset THEN
-	s_wrnOffInterlocked := FALSE;	
+	s_wrnOffInterlocked := FALSE;
 END_IF
 
 //--// Interlock warnings
-//--IF i_bIclkOn AND NOT(s_bStaValveIsOff) THEN	
+//--IF i_bIclkOn AND NOT(s_bStaValveIsOff) THEN
 //--	s_wrnOnInterlocked := TRUE;
 //--	m_Off();
 //--ELSIF NOT(i_bIclkOn) OR i_bCmdReset THEN
@@ -149,21 +149,21 @@ END_IF
 //--END_IF
 
 s_fbAlarmHandlerFeedbackOffTimeout(
-	i_bStaActive := i_bReqEnable AND s_errFeedbackOffTimeout, 
+	i_bStaActive := i_bReqEnable AND s_errFeedbackOffTimeout,
 	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Feedback ', CONCAT(s_sCfgOffName, ' timeout.'))) );
 	
 s_fbAlarmHandlerFeedbackOnTimeout(
 	i_bStaActive := i_bReqEnable AND s_errFeedbackOnTimeout, 
 	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Feedback ', CONCAT(s_sCfgOnName, ' timeout.'))) );
-
+	
 s_fbAlarmHandlerOffInterlocked(
-	i_bStaActive := s_wrnOffInterlocked, 
-	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': ', CONCAT(s_sCfgOffName, CONCAT(' interlocked, Reason: ', CONCAT(s_sInterlockedReasonOff, '.'))))));
+	i_bStaActive := s_wrnOffInterlocked,
+	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': ', CONCAT(s_sCfgOffName, CONCAT(' interlocked, Reason: ', CONCAT(s_sInterlockedReasonOff, '.'))))) );
 	
 s_fbAlarmHandlerOnInterlocked(
-	i_bStaActive := s_wrnOnInterlocked, 
-	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': ', CONCAT(s_sCfgOnName, CONCAT(' interlocked, Reason: ', CONCAT(s_sInterlockedReasonOn, '.'))))));
-
+	i_bStaActive := s_wrnOnInterlocked,
+	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': ', CONCAT(s_sCfgOnName, CONCAT(' interlocked, Reason: ', CONCAT(s_sInterlockedReasonOn, '.'))))) );
+	
 s_bStaError := 
 	s_fbAlarmHandlerFeedbackOffTimeout.q_bStaActive
 	OR s_fbAlarmHandlerFeedbackOnTimeout.q_bStaActive;
@@ -171,7 +171,7 @@ s_bStaError :=
 s_bStaWarning := 
 	s_fbAlarmHandlerOffInterlocked.q_bStaActive
 	OR s_fbAlarmHandlerOnInterlocked.q_bStaActive;
-
+	
 _m_Alarms := TRUE;
 ]]></ST>
       </Implementation>
@@ -192,7 +192,7 @@ IF s_bCfgBiStableValve THEN
 		s_bReqOn := FALSE;
 	END_IF
 ELSE
-	; //Keep request unchanged to avoid unexpected movements 
+	; //Keep request unchanged to avoid unexpected movements
 END_IF
 
 _m_Devices := TRUE;
@@ -216,10 +216,10 @@ IF NOT(s_bHmiInit) THEN
 	//Button names
 	s_stHmiData.sNameOff := s_fbHmiBtnManualOff.p_sBtnText;
 	s_stHmiData.sNameOn := s_fbHmiBtnManualOn.p_sBtnText;
-
+	
 	s_bHmiInit := TRUE;
 END_IF
-	
+
 s_stHmiData.bStaOff := s_bStaValveIsOff;
 s_stHmiData.bStaOn := s_bStaValveIsOn;
 s_stHmiData.bStaOffError := s_fbHmiLedErrorOff.p_bStaLed;
@@ -233,14 +233,14 @@ s_stHmiData.s_sInterlockedReasonOff := s_sInterlockedReasonOff;
 IF s_stHmiData.bCmdOffPressed THEN
 	s_fbHmiBtnManualOff.m_On();
 ELSE
-	s_fbHmiBtnManualOff.m_Off();	
+	s_fbHmiBtnManualOff.m_Off();
 END_IF
 
 IF s_stHmiData.bCmdOnPressed THEN
 	s_fbHmiBtnManualOn.m_On();
 ELSE
-	s_fbHmiBtnManualOn.m_Off();	
-END_IF 
+	s_fbHmiBtnManualOn.m_Off();
+END_IF
 
 //Buttons
 s_fbHmiBtnManualOff();
@@ -251,7 +251,7 @@ s_fbHmiLedIsOff(i_bStaLed := s_bStaValveIsOff);
 s_fbHmiLedIsOn(i_bStaLed := s_bStaValveIsOn);
 s_fbHmiLedErrorOff(i_bStaLed := s_errFeedbackOffTimeout);
 s_fbHmiLedErrorOn(i_bStaLed := s_errFeedbackOnTimeout);
-	
+
 IF __ISVALIDREF(i_ref_eCtrlState) THEN
 	//MAINTENANCE-mode is running
 	IF (i_eCtrlMode = E_CtrlMode.MAINTENANCE) AND (i_ref_eCtrlState = E_CtrlState.RUNNING) THEN
@@ -260,25 +260,25 @@ IF __ISVALIDREF(i_ref_eCtrlState) THEN
 		
 		s_fbHmiBtnManualOn.p_bStaVisible := TRUE;
 		s_fbHmiBtnManualOn.p_bStaEnabled := i_bReqEnable AND NOT(i_bIclkOn);
-			
+		
 		IF s_fbHmiBtnManualOff.p_osrBtnPress THEN
 			m_Off();
 		END_IF
-			
+		
 		IF s_fbHmiBtnManualOn.p_osrBtnPress THEN
 			m_On();
 		END_IF
 		
-	//other-mode	
+	//other-mode
 	ELSE
 		s_fbHmiBtnManualOff.p_bStaVisible := FALSE;
 		s_fbHmiBtnManualOff.p_bStaEnabled := FALSE;
-	
+		
 		s_fbHmiBtnManualOn.p_bStaVisible := FALSE;
 		s_fbHmiBtnManualOn.p_bStaEnabled := FALSE;
 	END_IF
 END_IF	
-	
+
 _m_Hmi := TRUE;
 ]]></ST>
       </Implementation>
@@ -298,15 +298,15 @@ s_fbAlarmHandlerFeedbackOnTimeout(i_eAlarmLevel := E_AlarmLevel.Alarm);
 s_fbAlarmHandlerOffInterlocked(i_eAlarmLevel := E_AlarmLevel.Warning);
 s_fbAlarmHandlerOnInterlocked(i_eAlarmLevel := E_AlarmLevel.Warning);
 
-//Hmi 
+//Hmi
 	s_fbHmiBtnManualOff.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnManualOff.p_bStaVisible := FALSE;
-	s_fbHmiBtnManualOff.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnManualOff.p_bStaEnabled := FALSE;
 	s_fbHmiBtnManualOff.p_sBtnText := s_sCfgOffName;
 	
 	s_fbHmiBtnManualOn.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnManualon.p_bStaVisible := FALSE;
-	s_fbHmiBtnManualOn.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnManualOn.p_bStaEnabled := FALSE;
 	s_fbHmiBtnManualon.p_sBtnText := s_sCfgOnName;
 	
 	s_fbHmiLedIsOff.p_bStaVisible := FALSE;
@@ -317,7 +317,7 @@ s_fbAlarmHandlerOnInterlocked(i_eAlarmLevel := E_AlarmLevel.Warning);
 	
 	s_fbHmiLedErrorOff.p_bStaVisible := FALSE;
 	s_fbHmiLedErrorOff.p_sToHmiDescriptionLed := 'Valve Has Error';
-
+	
 _m_Init := TRUE;
 ]]></ST>
       </Implementation>
@@ -360,7 +360,7 @@ CASE BOOL_TO_USINT(s_bCfgBiStableValve) OF
 			s_bCmdOn := TRUE;
 		ELSE
 			s_bCmdOff := FALSE;
-			s_bCmdOn := FALSE;	
+			s_bCmdOn := FALSE;
 		END_IF
 		
 		//Force output FALSE if interlocked
@@ -371,7 +371,7 @@ CASE BOOL_TO_USINT(s_bCfgBiStableValve) OF
 		IF i_bIclkOn THEN
 			s_bCmdOn := FALSE;
 		END_IF
-	
+		
 	1 : // BI-STABLE
 		s_bCmdOff := i_bReqEnable AND s_bReqOff AND NOT(s_bStaValveIsOff) AND NOT(i_bIclkOff);
 		s_bCmdOn := i_bReqEnable AND s_bReqOn AND NOT(s_bStaValveIsOn) AND NOT(i_bIclkOn);
@@ -383,7 +383,7 @@ IF __ISVALIDREF(i_ref_eCtrlState) THEN
 		s_fbForceCmdOn.i_eForceValue := E_ForceValue.RELEASED;
 		s_fbForceCmdOff.i_eForceValue := E_ForceValue.RELEASED;
 	END_IF
-END_IF 
+END_IF
 
 s_fbForceCmdOn(
 	i_ref_bCmdInput := s_bCmdOn,
@@ -392,7 +392,7 @@ s_fbForceCmdOn(
 s_fbForceCmdOff(
 	i_ref_bCmdInput := s_bCmdOff,
 	i_ref_bCmdOutput := Q_bCmdOff);
-
+	
 _m_Outputs := TRUE;
 ]]></ST>
       </Implementation>
@@ -402,7 +402,7 @@ _m_Outputs := TRUE;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -411,8 +411,8 @@ IF NOT(i_bIclkOff) THEN
 	s_bReqOn := FALSE XOR s_bCfgReverseValve;
 ELSE
 	s_wrnOffInterlocked := TRUE;
-END_IF	
-	
+END_IF
+
 m_off := s_bStaValveIsOff;
 ]]></ST>
       </Implementation>
@@ -422,7 +422,7 @@ m_off := s_bStaValveIsOff;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -432,7 +432,7 @@ IF NOT(i_bIclkOn) THEN
 ELSE
 	s_wrnOnInterlocked := TRUE;
 END_IF
-	
+
 m_On := s_bStaValveIsOn;
 ]]></ST>
       </Implementation>
@@ -442,7 +442,7 @@ m_On := s_bStaValveIsOn;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 

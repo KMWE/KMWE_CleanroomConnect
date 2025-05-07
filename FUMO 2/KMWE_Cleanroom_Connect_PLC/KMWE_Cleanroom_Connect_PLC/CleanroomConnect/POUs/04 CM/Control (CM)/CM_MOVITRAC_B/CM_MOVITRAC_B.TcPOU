@@ -71,7 +71,7 @@ VAR
 	// Setpoints
 	s_fTargetSpeed : LREAL; // Target speed [mm/s]
 	
-	s_sCfgBckName : STRING(c_MAX_FB_NAME_LENGTH) := 'Backward';	
+	s_sCfgBckName : STRING(c_MAX_FB_NAME_LENGTH) := 'Backward';
 	s_sCfgFwdName : STRING(c_MAX_FB_NAME_LENGTH) := 'Foreward';
 	
 	// Timers
@@ -143,7 +143,7 @@ s_errDriveError R= i_bCmdReset;
 s_errDriveError S= i_bReqEnable AND s_bStaDriveError;
 
 // Interlock warnings
-IF s_bIclkForward AND NOT(s_bStaMotorStopped) THEN	
+IF s_bIclkForward AND NOT(s_bStaMotorStopped) THEN
 	s_wrnMotorForwardInterlocked := TRUE;
 	m_Stop();
 ELSIF NOT(s_bIclkForward) OR i_bCmdReset THEN
@@ -162,10 +162,10 @@ s_fbAlarmHandlerDriveError(i_bStaActive := s_errDriveError);
 
 s_fbAlarmHandlerApplyingBrakeNotAllowed(i_bStaActive := s_wrnApplyingBrakeNotAllowed);
 s_wrnApplyingBrakeNotAllowed R= s_bStaMotorStopped;
-	
+
 s_fbAlarmHandlerStartMotorNotAllowed(i_bStaActive := s_wrnStartMotorNotAllowed);
 s_wrnStartMotorNotAllowed R= s_bStaBrakeReleased;
-	
+
 s_fbAlarmHandlerMotorForwardInterlocked(
 	i_bStaActive := s_wrnMotorForwardInterlocked,
 	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move forward, Reason: ',CONCAT(s_sInterlockedReasonForward, '.'))));
@@ -174,16 +174,16 @@ s_fbAlarmHandlerMotorBackwardInterlocked(
 	i_bStaActive := s_wrnMotorBackwardInterlocked,
 	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move backward, Reason: ',CONCAT(s_sInterlockedReasonBackward, '.'))));
 	
-// Alarm collector	
+// Alarm collector
 s_bStaError := 
 	s_fbAlarmHandlerDriveError.q_bStaActive;
-
+	
 // Warning collector
-s_bStaWarning := 
+s_bStaWarning :=
 	s_fbAlarmHandlerApplyingBrakeNotAllowed.q_bStaActive
 	OR s_fbAlarmHandlerStartMotorNotAllowed.q_bStaActive
 	OR s_fbAlarmHandlerMotorForwardInterlocked.q_bStaActive
-	OR s_fbAlarmHandlerMotorBackwardInterlocked.q_bStaActive;	
+	OR s_fbAlarmHandlerMotorBackwardInterlocked.q_bStaActive;
 	
 _m_Alarms := TRUE;
 ]]></ST>
@@ -202,26 +202,25 @@ END_IF
 IF (s_bStaError OR NOT(i_bReqEnable))
 	AND (eSeqMOVITRAC_B_WithBrake < E_SeqMOVITRAC_B_WithBrake.STOPPING) THEN
 		eSeqMOVITRAC_B_WithBrake := E_SeqMOVITRAC_B_WithBrake.STOPPING;
-END_IF 
+END_IF
 
 seqTimer(
 	IN := (eSeqMOVITRAC_B_WithBrake = seqPreStep),
 	PT := T#3600S);
 	
-s_tonMotorStoppedDelay(PT := i_stSettings.tBrakeReleasedDelay);	
-	
+s_tonMotorStoppedDelay(PT := i_stSettings.tBrakeReleasedDelay);
+
 seqPreStep := eSeqMOVITRAC_B_WithBrake;
 
 s_sActStep := TO_STRING(eSeqMOVITRAC_B_WithBrake);
-	
+
 CASE eSeqMOVITRAC_B_WithBrake OF
-	
 	E_SeqMOVITRAC_B_WithBrake.INIT:
 		_m_ResetAllRequests();
-	
+		
 		//Reset commands
 		s_bCmdForward := FALSE;
-		s_bCmdBackward := FALSE;	
+		s_bCmdBackward := FALSE;
 		s_bCmdReleaseBrake := FALSE;
 		s_bCmdEnable := FALSE;
 		s_fTargetSpeed := 0;
@@ -229,8 +228,8 @@ CASE eSeqMOVITRAC_B_WithBrake OF
 		//Reset states
 		s_bStaBrakeReleased := FALSE;
 		s_bStaDriveError := FALSE;
-	
-		eSeqMOVITRAC_B_WithBrake := E_SeqMOVITRAC_B_WithBrake.STOPPED; 
+		
+		eSeqMOVITRAC_B_WithBrake := E_SeqMOVITRAC_B_WithBrake.STOPPED;
 		
 	E_SeqMOVITRAC_B_WithBrake.STOPPED:
 		s_bStaBrakeReleased := FALSE;
@@ -240,7 +239,7 @@ CASE eSeqMOVITRAC_B_WithBrake OF
 		IF (s_bReqReleaseBrake OR s_bReqStartForward OR s_bReqStartBackward) THEN
 			eSeqMOVITRAC_B_WithBrake := E_SeqMOVITRAC_B_WithBrake.RELEASE_BRAKE;
 		END_IF
-
+		
 		IF s_bReqApplyBrake THEN
 			eSeqMOVITRAC_B_WithBrake := E_SeqMOVITRAC_B_WithBrake.APPLY_BRAKE;
 		END_IF
@@ -248,7 +247,7 @@ CASE eSeqMOVITRAC_B_WithBrake OF
 		IF seqTimer.PT >= T#10S THEN
 			s_bCmdEnable := FALSE;
 		END_IF
-			
+		
 	E_SeqMOVITRAC_B_WithBrake.RELEASE_BRAKE:
 		s_bCmdReleaseBrake := TRUE;
 		s_bReqReleaseBrake := FALSE;
@@ -268,12 +267,12 @@ CASE eSeqMOVITRAC_B_WithBrake OF
 		ELSIF s_bReqApplyBrake THEN
 			eSeqMOVITRAC_B_WithBrake := E_SeqMOVITRAC_B_WithBrake.APPLY_BRAKE;
 		END_IF
-	
+		
 	E_SeqMOVITRAC_B_WithBrake.MOVING_FORWARD:
 		s_bCmdForward := TRUE;
 		s_bReqStartForward := FALSE;
-		//s_fTargetSpeed is written by method 
-	
+		//s_fTargetSpeed is written by method
+		
 		IF s_bReqStop THEN
 			s_tonMotorStoppedDelay.IN := FALSE;
 			eSeqMOVITRAC_B_WithBrake := E_SeqMOVITRAC_B_WithBrake.STOPPING;
@@ -282,13 +281,13 @@ CASE eSeqMOVITRAC_B_WithBrake OF
 	E_SeqMOVITRAC_B_WithBrake.MOVING_BACKWARD:
 		s_bCmdBackward := TRUE;
 		s_bReqStartBackward := FALSE;
-		//s_fTargetSpeed is written by method 
-	
+		//s_fTargetSpeed is written by method
+		
 		IF s_bReqStop THEN
 			s_tonMotorStoppedDelay.IN := FALSE;
 			eSeqMOVITRAC_B_WithBrake := E_SeqMOVITRAC_B_WithBrake.STOPPING;
 		END_IF
-	
+		
 	E_SeqMOVITRAC_B_WithBrake.STOPPING:
 		s_bCmdForward := FALSE;
 		s_bCmdBackward := FALSE;
@@ -296,10 +295,10 @@ CASE eSeqMOVITRAC_B_WithBrake OF
 		
 		s_tonMotorStoppedDelay.IN := s_bStaMotorStopped;
 		
-		IF s_tonMotorStoppedDelay.Q THEN	
+		IF s_tonMotorStoppedDelay.Q THEN
 			eSeqMOVITRAC_B_WithBrake := E_SeqMOVITRAC_B_WithBrake.APPLY_BRAKE;
 		END_IF
-	
+		
 	E_SeqMOVITRAC_B_WithBrake.APPLY_BRAKE:
 		s_bCmdReleaseBrake := FALSE;
 		s_bReqApplyBrake := FALSE;
@@ -312,7 +311,7 @@ CASE eSeqMOVITRAC_B_WithBrake OF
 			ELSE
 				_m_ResetAllRequests();
 				eSeqMOVITRAC_B_WithBrake := E_SeqMOVITRAC_B_WithBrake.STOPPED;
-			END_IF	
+			END_IF
 		END_IF
 		
 	E_SeqMOVITRAC_B_WithBrake.ERROR:
@@ -341,7 +340,7 @@ IF NOT(s_bHmiInit) THEN
 	s_stHmiData.sDescription := i_sCmName;
 	s_stHmiData.sNameFwd := s_sCfgFwdName;
 	s_stHmiData.sNameBck := s_sCfgBckName;
-
+	
 	//Button names
 	s_stHmiData.sNameReleaseBrake := s_fbHmiBtnManualReleaseBrake.p_sBtnText;
 	s_stHmiData.sNameApplyBrake := s_fbHmiBtnManualApplyBrake.p_sBtnText;
@@ -378,37 +377,37 @@ s_stHmiData.s_sInterlockedReasonBwd := s_sInterlockedReasonBackward;
 IF s_stHmiData.bCmdReleaseBrakePressed THEN
 	s_fbHmiBtnManualReleaseBrake.m_On();
 ELSE
-	s_fbHmiBtnManualReleaseBrake.m_Off();	
+	s_fbHmiBtnManualReleaseBrake.m_Off();
 END_IF
 
 IF s_stHmiData.bCmdApplyBrakePressed THEN
 	s_fbHmiBtnManualApplyBrake.m_On();
 ELSE
-	s_fbHmiBtnManualApplyBrake.m_Off();	
+	s_fbHmiBtnManualApplyBrake.m_Off();
 END_IF
 
 IF s_stHmiData.bCmdJogFwdPressed THEN
 	s_fbHmiBtnManualForward.m_On();
 ELSE
-	s_fbHmiBtnManualForward.m_Off();	
+	s_fbHmiBtnManualForward.m_Off();
 END_IF
 
 IF s_stHmiData.bCmdJogBckPressed THEN
 	s_fbHmiBtnManualBackward.m_On();
 ELSE
-	s_fbHmiBtnManualBackward.m_Off();	
+	s_fbHmiBtnManualBackward.m_Off();
 END_IF
 
 IF s_stHmiData.bCmdStopPressed THEN
 	s_fbHmiBtnManualStop.m_On();
 ELSE
-	s_fbHmiBtnManualStop.m_Off();	
+	s_fbHmiBtnManualStop.m_Off();
 END_IF
 
 IF s_stHmiData.bCmdResetPressed THEN
 	s_fbHmiBtnManualReset.m_On();
 ELSE
-	s_fbHmiBtnManualReset.m_Off();	
+	s_fbHmiBtnManualReset.m_Off();
 END_IF
 
 //Buttons
@@ -451,24 +450,24 @@ IF __ISVALIDREF(i_ref_eCtrlState) THEN
 		IF s_fbHmiBtnManualReleaseBrake.p_osrBtnPress THEN
 			m_ReleaseBrake();
 		END_IF
-	
+		
 		IF s_fbHmiBtnManualApplyBrake.p_osrBtnPress THEN
 			m_ApplyBrake();
 		END_IF
-			
+		
 		IF s_fbHmiBtnManualStop.p_osrBtnPress THEN
-			m_Stop();	
+			m_Stop();
 		ELSIF s_fbHmiBtnManualForward.p_osrBtnPress THEN
 			m_StartForward(i_rTargetSpeed := s_fTargetSpeed);
 		ELSIF s_fbHmiBtnManualBackward.p_osrBtnPress THEN
 			m_StartBackward(i_rTargetSpeed := s_fTargetSpeed);
 		END_IF
-
+		
 		IF s_fbHmiBtnManualReset.p_osrBtnPress THEN
 			m_Reset();
 		END_IF
 		
-	//other-mode	
+	//other-mode
 	ELSE
 		s_fbHmiBtnManualReleaseBrake.p_bStaVisible := FALSE;
 		s_fbHmiBtnManualReleaseBrake.p_bStaEnabled := FALSE;
@@ -489,7 +488,7 @@ IF __ISVALIDREF(i_ref_eCtrlState) THEN
 		s_fbHmiBtnManualReset.p_bStaEnabled := FALSE;
 	END_IF
 END_IF
-	
+
 _m_Hmi := TRUE;
 ]]></ST>
       </Implementation>
@@ -506,47 +505,47 @@ END_IF
 //Alarm config
 s_fbAlarmHandlerDriveError.i_sAlarmText := CONCAT(i_sCmName, ': Drive - has error (check drive).');
 s_fbAlarmHandlerDriveError.i_eAlarmLevel := E_AlarmLevel.Alarm;
-	
+
 s_fbAlarmHandlerApplyingBrakeNotAllowed.i_sAlarmText := CONCAT(i_sCmName, ': Brake - not allowed to be applied (motor not stopped).');
 s_fbAlarmHandlerApplyingBrakeNotAllowed.i_eAlarmLevel := E_AlarmLevel.Warning;
-	
+
 s_fbAlarmHandlerStartMotorNotAllowed.i_sAlarmText := CONCAT(i_sCmName, ': Motor - not allowed to start (brake not released).');
 s_fbAlarmHandlerStartMotorNotAllowed.i_eAlarmLevel := E_AlarmLevel.Warning;
-	
+
 s_fbAlarmHandlerMotorForwardInterlocked.i_eAlarmLevel := E_AlarmLevel.Warning;
-	
+
 s_fbAlarmHandlerMotorBackwardInterlocked.i_eAlarmLevel := E_AlarmLevel.Warning;
 
-//Hmi 
+//Hmi
 	//Buttons
 	s_fbHmiBtnManualReleaseBrake.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnManualReleaseBrake.p_bStaVisible := FALSE;
-	s_fbHmiBtnManualReleaseBrake.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnManualReleaseBrake.p_bStaEnabled := FALSE;
 	s_fbHmiBtnManualReleaseBrake.p_sBtnText := 'Release Brake';
 	
 	s_fbHmiBtnManualApplyBrake.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnManualApplyBrake.p_bStaVisible := FALSE;
-	s_fbHmiBtnManualApplyBrake.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnManualApplyBrake.p_bStaEnabled := FALSE;
 	s_fbHmiBtnManualApplyBrake.p_sBtnText := 'Apply Brake';
 	
 	s_fbHmiBtnManualForward.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnManualForward.p_bStaVisible := FALSE;
-	s_fbHmiBtnManualForward.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnManualForward.p_bStaEnabled := FALSE;
 	s_fbHmiBtnManualForward.p_sBtnText := 'Move Forward';
 	
 	s_fbHmiBtnManualBackward.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnManualBackward.p_bStaVisible := FALSE;
-	s_fbHmiBtnManualBackward.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnManualBackward.p_bStaEnabled := FALSE;
 	s_fbHmiBtnManualBackward.p_sBtnText := 'Move Backward';
 	
 	s_fbHmiBtnManualStop.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnManualStop.p_bStaVisible := FALSE;
-	s_fbHmiBtnManualStop.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnManualStop.p_bStaEnabled := FALSE;
 	s_fbHmiBtnManualStop.p_sBtnText := 'Stop';
-
+	
 	s_fbHmiBtnManualReset.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnManualReset.p_bStaVisible := FALSE;
-	s_fbHmiBtnManualReset.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnManualReset.p_bStaEnabled := FALSE;
 	s_fbHmiBtnManualReset.p_sBtnText := 'Reset';
 	
 	//Leds
@@ -617,7 +616,7 @@ IF NOT(Q_bCmdReleaseBrake) THEN
 	s_fbForceCmdStartCW.i_eForceValue := E_ForceValue.RELEASED;
 	s_fbForceCmdStartCCW.i_eForceValue := E_ForceValue.RELEASED;
 END_IF
-	
+
 s_tofResetPulse(PT := T#1S, IN := i_bCmdReset OR s_bReqReset);
 s_bCmdReset := s_tofResetPulse.Q;
 s_bReqReset := FALSE;
@@ -641,13 +640,13 @@ s_fbForceCmdStartCCW(
 s_fbForceCmdReleaseBrake(
 	i_ref_bCmdInput := s_bCmdReleaseBrake,
 	i_ref_bCmdOutput := Q_bCmdReleaseBrake);
-
+	
 IF s_fForceValueTargetSpeed = 0.0 THEN
 	Q_nSetTargetSpeed := LREAL_TO_INT(s_fTargetSpeed / i_stSettings.rMaxTargetSpeed * cMAX_INT_VALUE); // [mm/s]
-ELSE	
+ELSE
 	Q_nSetTargetSpeed := LREAL_TO_INT(s_fForceValueTargetSpeed / 100.0  * cMAX_INT_VALUE); // [%]
-END_IF 
-	
+END_IF
+
 _m_Outputs := TRUE;
 ]]></ST>
       </Implementation>
@@ -671,7 +670,7 @@ s_bReqReset := FALSE;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -687,7 +686,7 @@ METHOD PUBLIC m_ReleaseBrake : BOOL
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -702,7 +701,7 @@ m_ReleaseBrake := s_bStaBrakeReleased;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -720,7 +719,7 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -731,9 +730,9 @@ IF NOT(s_bIclkBackward) THEN
 	
 	IF i_rTargetSpeed < 0 THEN
 		s_fTargetSpeed := 0;
-	ELSIF i_rTargetSpeed > cMAX_INT_VALUE THEN	
+	ELSIF i_rTargetSpeed > cMAX_INT_VALUE THEN
 		i_rTargetSpeed := cMAX_INT_VALUE;
-	ELSE 
+	ELSE
 		s_fTargetSpeed := i_rTargetSpeed;
 	END_IF
 	
@@ -742,7 +741,7 @@ ELSE
 END_IF
 
 m_StartBackward := s_bCmdBackward;
-	]]></ST>
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="m_StartForward" Id="{39ee694a-3d82-40c1-89dd-29f4a0ed3ffe}" FolderPath="Methods\">
@@ -768,7 +767,7 @@ IF NOT(s_bIclkForward) THEN
 		s_fTargetSpeed := i_rTargetSpeed;
 	END_IF
 	
-ELSE	
+ELSE
 	s_wrnMotorForwardInterlocked := TRUE;
 END_IF
 
@@ -781,7 +780,7 @@ m_StartForward := s_bCmdForward;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 

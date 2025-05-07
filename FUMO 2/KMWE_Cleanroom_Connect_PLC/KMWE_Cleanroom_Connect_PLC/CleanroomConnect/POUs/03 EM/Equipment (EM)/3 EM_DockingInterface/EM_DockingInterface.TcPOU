@@ -29,7 +29,7 @@ VAR_INPUT
 	i_stExtIlckInnerCabinDoorToClose : ST_Interlock;
 	i_stExtIlckInnerCabinDoorToOpen : ST_Interlock;		//-- NOT_USED
 	
-	i_eCtrlState		: E_CtrlState;
+	i_eCtrlState : E_CtrlState;
 END_VAR
 
 VAR_OUTPUT
@@ -252,7 +252,7 @@ END_VAR
 VAR PERSISTENT //Variables below will be returned during: Power Cycle, Active Configuration, Download, Cold Restart
 	s_eLastStepPersistent : E_SeqDockingInterface := E_SeqDockingInterface.READY;
 END_VAR
-	]]></Declaration>
+]]></Declaration>
     <Implementation>
       <ST><![CDATA[
 SUPER^();
@@ -267,16 +267,17 @@ SUPER^();
 IF s_cmClampsUpperHighPressure.p_bStaOutput THEN
 	s_fbHmiBtnManualClampsUpperHighPressure.m_On();
 ELSE
-	s_fbHmiBtnManualClampsUpperHighPressure.m_Off();	
+	s_fbHmiBtnManualClampsUpperHighPressure.m_Off();
 END_IF
-	
+
 IF s_cmClampsLowerHighPressure.p_bStaOutput THEN
 	s_fbHmiBtnManualClampsLowerHighPressure.m_On();
 ELSE
-	s_fbHmiBtnManualClampsLowerHighPressure.m_Off();	
+	s_fbHmiBtnManualClampsLowerHighPressure.m_Off();
 END_IF
-	
-_m_AdoptPressureSelection := TRUE;]]></ST>
+
+_m_AdoptPressureSelection := TRUE;
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_Alarms" Id="{c0cf83f3-e704-4016-bd6f-2d30156087ff}" FolderPath="Base\">
@@ -305,8 +306,8 @@ IF i_bCmdReset THEN
 	s_bWrnNoBoxPresentAtDockedPosition := FALSE;
 	s_bErrClosingDoorFailed := FALSE;
 	s_bErrCmdNotAllowed := FALSE;
-END_IF	
-	
+END_IF
+
 s_bStaError := 
 	s_cmDockingClampsUpper.p_bStaError
 	OR s_cmDockingClampsLower.p_bStaError
@@ -319,7 +320,7 @@ s_bStaError :=
 	OR s_fbAlarmHandlerClosingDoorFailed.q_bStaActive
 	OR s_fbAlarmHandlerCmdNotAllowed.q_bStaActive;
 
-s_bStaWarning := 
+s_bStaWarning :=
 	s_fbAlarmHandlerNoBoxPresentAtPreDockingPosition.q_bStaActive
 	OR s_fbAlarmHandlerNoBoxPresentAtDockedPosition.q_bStaActive
 	OR s_cmDockingClampsUpper.p_bStaWarning
@@ -329,7 +330,7 @@ s_bStaWarning :=
 	OR s_cmDoorOpener.p_bStaWarning
 	OR s_cmDoorShutter.p_bStaWarning
 	OR s_cmOuterCabinDoor.p_bStaWarning
-	OR s_cmInnerCabinDoor.p_bStaWarning;	
+	OR s_cmInnerCabinDoor.p_bStaWarning;
 	
 _m_Alarms := TRUE;
 ]]></ST>
@@ -339,7 +340,8 @@ _m_Alarms := TRUE;
       <Declaration><![CDATA[METHOD PROTECTED _m_AutomaticControl : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[//Docking Interface
+        <ST><![CDATA[
+//Docking Interface
 _m_Sequence();
 ]]></ST>
       </Implementation>
@@ -352,7 +354,7 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -376,7 +378,7 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -399,7 +401,7 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -423,7 +425,7 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -452,7 +454,7 @@ s_cmDockingClampsUpper(
 	i_eCtrlMode := i_eCtrlMode,
 	i_ref_eCtrlState := i_eCtrlState,
 	i_bCmdReset := i_bCmdReset,
-	i_bIclkOn := s_bIlckDockingClampsToClose AND NOT(s_bOverruleInterlocks), 
+	i_bIclkOn := s_bIlckDockingClampsToClose AND NOT(s_bOverruleInterlocks),
 	i_bIclkOff := s_bIlckDockingClampsToOpen AND NOT(s_bOverruleInterlocks));
 	
 s_cmClampsUpperHighPressure(
@@ -460,24 +462,24 @@ s_cmClampsUpperHighPressure(
 	i_eCtrlMode := i_eCtrlMode,
 	i_ref_eCtrlState := i_eCtrlState,
 	i_bCmdReset := i_bCmdReset,
-	i_bIclkOn := FALSE, 
-	i_bIclkOff := FALSE);	
-		
+	i_bIclkOn := FALSE,
+	i_bIclkOff := FALSE);
+	
 s_cmDockingClampsLower(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
 	i_ref_eCtrlState := i_eCtrlState,
 	i_bCmdReset := i_bCmdReset,
-	i_bIclkOn := s_bIlckDockingClampsToClose AND NOT(s_bOverruleInterlocks), 
+	i_bIclkOn := s_bIlckDockingClampsToClose AND NOT(s_bOverruleInterlocks),
 	i_bIclkOff := s_bIlckDockingClampsToOpen AND NOT(s_bOverruleInterlocks));
-
+	
 s_cmClampsLowerHighPressure(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
 	i_ref_eCtrlState := i_eCtrlState,
 	i_bCmdReset := i_bCmdReset,
-	i_bIclkOn := FALSE, 
-	i_bIclkOff := FALSE);	
+	i_bIclkOn := FALSE,
+	i_bIclkOff := FALSE);
 	
 s_bStaDockingClampsUpperHighPressure := s_cmClampsUpperHighPressure.p_bStaOutput;
 s_bStaDockingClampsLowerHighPressure := s_cmClampsLowerHighPressure.p_bStaOutput;
@@ -503,23 +505,23 @@ s_cmUnlockingPinLower(
 	i_eCtrlMode := i_eCtrlMode,
 	i_ref_eCtrlState := i_eCtrlState,
 	i_bCmdReset := i_bCmdReset,
-	i_bIclkOn := s_bIlckUnlockingPinsToRelease AND NOT(s_bOverruleInterlocks), 
+	i_bIclkOn := s_bIlckUnlockingPinsToRelease AND NOT(s_bOverruleInterlocks),
 	i_bIclkOff := s_bIlckUnlockingPinsToRelease AND NOT(s_bOverruleInterlocks));
 	
 s_bStaLockingPinUpperReleased := s_cmUnlockingPinUpper.p_bStaIsOn;
 s_bStaLockingPinUpperLocked := s_cmUnlockingPinUpper.p_bStaIsOff;
 s_bStaLockingPinLowerReleased := s_cmUnlockingPinLower.p_bStaIsOn;
-s_bStaLockingPinLowerLocked := s_cmUnlockingPinLower.p_bStaIsOff;	
+s_bStaLockingPinLowerLocked := s_cmUnlockingPinLower.p_bStaIsOff;
 
 s_bStaUnlockingPinsLocked := s_bStaLockingPinUpperLocked AND s_bStaLockingPinLowerLocked;
 s_bStaUnlockingPinsReleased := s_bStaLockingPinUpperReleased AND s_bStaLockingPinLowerReleased;
-	
+
 s_cmDoorOpener(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
 	i_ref_eCtrlState := i_eCtrlState,
 	i_bCmdReset := i_bCmdReset,
-	i_bIclkOn := s_bIlckDoorOpenerToOpen AND NOT(s_bOverruleInterlocks), 
+	i_bIclkOn := s_bIlckDoorOpenerToOpen AND NOT(s_bOverruleInterlocks),
 	i_bIclkOff := s_bIlckDoorOpenerToClose AND NOT(s_bOverruleInterlocks));
 
 s_bStaDoorOpenerOpened := s_cmDoorOpener.p_bStaIsOn;
@@ -530,7 +532,7 @@ s_cmDoorShutter(
 	i_eCtrlMode := i_eCtrlMode,
 	i_ref_eCtrlState := i_eCtrlState,
 	i_bCmdReset := i_bCmdReset,
-	i_bIclkOn := s_bIlckDoorShutterToClose AND NOT(s_bOverruleInterlocks), 
+	i_bIclkOn := s_bIlckDoorShutterToClose AND NOT(s_bOverruleInterlocks),
 	i_bIclkOff := s_bIlckDoorShutterToOpen AND NOT(s_bOverruleInterlocks));
 	
 s_bStaDoorShutterOpened := s_cmDoorShutter.p_bStaIsOff;
@@ -598,11 +600,11 @@ s_fbHmiLedPinUpperLocked(i_bStaLed := s_bStaLockingPinUpperLocked);
 
 s_fbHmiLedPinLowerReleased(i_bStaLed := s_bStaLockingPinLowerReleased);
 s_fbHmiLedPinLowerLocked(i_bStaLed := s_bStaLockingPinLowerLocked);
-	
+
 s_fbHmiLedOpenerOpened(i_bStaLed := s_bStaDoorOpenerOpened);
 s_fbHmiLedOpenerClosed(i_bStaLed := s_bStaDoorOpenerClosed);
 s_fbHmiLedOpenerAlmostClosed(i_bStaLed := s_bStaDoorOpenerAlmostClosed);
-	
+
 s_fbHmiLedShutterOpened(i_bStaLed := s_bStaDoorShutterOpened);
 s_fbHmiLedShutterClosed(i_bStaLed := s_bStaDoorShutterClosed);
 
@@ -612,7 +614,8 @@ s_fbHmiLedOuterDoorClosed(i_bStaLed := s_bStaOuterCabinDoorClosed);
 s_fbHmiLedInnerDoorOpened(i_bStaLed := s_bStaInnerCabinDoorOpened);
 s_fbHmiLedInnerDoorClosed(i_bStaLed := s_bStaInnerCabinDoorClosed);
 
-_m_Hmi := TRUE;]]></ST>
+_m_Hmi := TRUE;
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_Init" Id="{f248bb7d-4543-4fa5-93e5-377095a1130a}" FolderPath="Base\">
@@ -726,7 +729,7 @@ s_cmInnerCabinDoor.i_stSettings.tDoorOpeningTimeout := T#10S;
 s_cmInnerCabinDoor.i_stSettings.tResetPulseDuration := T#1S;
 s_cmInnerCabinDoor.p_sCfgOpenName := 'Open';
 s_cmInnerCabinDoor.p_sCfgCloseName := 'Close';
-	
+
 //Interlocks
 //Clamps upper/lower pressure selection
 //i_stInterlockList.arr_Interlocks[0].sReason --> External, dynamical will be written in m_input
@@ -796,31 +799,31 @@ s_fbAlarmHandlerNoBoxPresentAtDockedPosition.i_sAlarmText := CONCAT(i_sEmName, '
 s_fbAlarmHandlerNoBoxPresentAtDockedPosition.i_eAlarmLevel := E_AlarmLevel.Warning;
 
 s_fbAlarmHandlerCmdNotAllowed.i_eAlarmLevel := E_AlarmLevel.Alarm;
-//---------------------------------//	
-	
-//----------------------------------//	
+//---------------------------------//
+
+//----------------------------------//
 //Hmi
 //Manual-mode
 s_fbHmiBtnDockTB.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 s_fbHmiBtnDockTB.p_bStaVisible := FALSE;
-s_fbHmiBtnDockTB.p_bStaEnabled := FALSE;		
+s_fbHmiBtnDockTB.p_bStaEnabled := FALSE;
 s_fbHmiBtnDockTB.p_sBtnText := 'Dock TB';
 
 s_fbHmiBtnUndockTB.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 s_fbHmiBtnUndockTB.p_bStaVisible := FALSE;
-s_fbHmiBtnUndockTB.p_bStaEnabled := FALSE;		
+s_fbHmiBtnUndockTB.p_bStaEnabled := FALSE;
 s_fbHmiBtnUndockTB.p_sBtnText := 'Undock TB';
 
 s_fbHmiBtnOpenInnerDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 s_fbHmiBtnOpenInnerDoor.p_bStaVisible := FALSE;
-s_fbHmiBtnOpenInnerDoor.p_bStaEnabled := FALSE;		
+s_fbHmiBtnOpenInnerDoor.p_bStaEnabled := FALSE;
 s_fbHmiBtnOpenInnerDoor.p_sBtnText := 'Open Inner TB Door';
 
 s_fbHmiBtnCloseInnerDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 s_fbHmiBtnCloseInnerDoor.p_bStaVisible := FALSE;
-s_fbHmiBtnCloseInnerDoor.p_bStaEnabled := FALSE;		
+s_fbHmiBtnCloseInnerDoor.p_bStaEnabled := FALSE;
 s_fbHmiBtnCloseInnerDoor.p_sBtnText := 'Close Inner TB Door';
-	
+
 //Leds
 //Manual-mode
 s_fbHmiLedDockTbDone.p_bStaVisible := FALSE;
@@ -843,11 +846,10 @@ s_fbHmiLedClampsLowerPressureSelect.p_sToHmiDescriptionLed := 'Pressure Select L
 
 s_fbHmiLedClampsOpened.p_bStaVisible := FALSE;
 s_fbHmiLedClampsOpened.p_sToHmiDescriptionLed := 'Clamps Opened';
-	
+
 s_fbHmiLedClampsClosed.p_bStaVisible := FALSE;
 s_fbHmiLedClampsClosed.p_sToHmiDescriptionLed := 'Clamps Closed';
 
-//==
 s_fbHmiLedClampsUpperOpened.p_bStaVisible := FALSE;
 s_fbHmiLedClampsUpperOpened.p_sToHmiDescriptionLed := 'Clamps Upper Left Opened';
 
@@ -866,7 +868,6 @@ s_fbHmiLedPinsLocked.p_sToHmiDescriptionLed := 'Pins Locked';
 s_fbHmiLedPinsReleased.p_bStaVisible := FALSE;
 s_fbHmiLedPinsReleased.p_sToHmiDescriptionLed := 'Pins Unlocked';
 
-//==	
 s_fbHmiLedPinUpperReleased.p_bStaVisible := FALSE;
 s_fbHmiLedPinUpperReleased.p_sToHmiDescriptionLed := 'Unlocking Pin Upper Released';
 s_fbHmiLedPinUpperLocked.p_bStaVisible := FALSE;
@@ -898,9 +899,9 @@ s_fbHmiLedInnerDoorOpened.p_bStaVisible := FALSE;
 s_fbHmiLedInnerDoorOpened.p_sToHmiDescriptionLed := 'Inner Cabin Door Opened';
 s_fbHmiLedInnerDoorClosed.p_bStaVisible := FALSE;
 s_fbHmiLedInnerDoorClosed.p_sToHmiDescriptionLed := 'Inner Cabin Door Closed';
-	
-	
-_m_Init := TRUE;]]></ST>
+
+_m_Init := TRUE;
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_Inputs" Id="{15e5d91e-088b-4383-82aa-ad9257b81a9b}" FolderPath="Base\">
@@ -1179,8 +1180,6 @@ END_IF
 IF s_cmDoorOpener.p_bStaError THEN
 	s_cmDoorOpener.m_Stop();
 END_IF
-
-
 ]]></ST>
       </Implementation>
     </Method>
@@ -1195,7 +1194,7 @@ END_IF
 
 s_cmClampsUpperHighPressure(i_eCtrlMode := i_eCtrlMode, i_ref_eCtrlState := i_eCtrlState);
 s_cmClampsLowerHighPressure(i_eCtrlMode := i_eCtrlMode, i_ref_eCtrlState := i_eCtrlState);
-	
+
 s_bStaDocked :=
 		s_bStaHighPressureSelected
 	AND s_bStaDockingClampsClosed
@@ -1204,7 +1203,7 @@ s_bStaDocked :=
 //--	AND s_bStaDoorShutterClosed
 	AND (s_bStaOuterCabinDoorOpened OR i_bTestDisableCabinDoors)
 	AND s_bStaTbAtDockingPosition;
-  
+ 	
 s_bStaUndocked :=
 		s_bStaDockingClampsClosed
 	AND s_bStaUnlockingPinsLocked
@@ -1213,13 +1212,13 @@ s_bStaUndocked :=
 	AND (s_bStaOuterCabinDoorClosed OR i_bTestDisableCabinDoors)
 	AND NOT(s_bStaTbAtDockingPosition);
 	
-s_bStaInnerDoorClosedAndLocked := 
+s_bStaInnerDoorClosedAndLocked :=
 		s_bStaUnlockingPinsLocked
 	AND s_bStaDoorOpenerClosed
 	AND s_bStaDoorShutterClosed
 	AND (s_bStaInnerCabinDoorClosed OR i_bTestDisableCabinDoors);
-
-s_bStaInnerDoorOpenedAndReleased := 
+	
+s_bStaInnerDoorOpenedAndReleased :=
 		s_bStaUnlockingPinsReleased
 	AND s_bStaDoorOpenerOpened
 	AND s_bStaDoorShutterOpened
@@ -1231,10 +1230,11 @@ s_bStsReadyToReceiveTB :=
 	
 s_bStsReadyToSendTB := (s_eSequence = E_SeqDockingInterface.WAIT_FOR_TB_REMOVED)
 	AND (i_eCtrlState = E_CtrlState.RUNNING);
-
+	
 q_bStaWarning := s_bStaWarning;
 
-_m_Outputs := TRUE;]]></ST>
+_m_Outputs := TRUE;
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_Params" Id="{78648659-4a86-4875-84af-aa8b2b68e067}" FolderPath="Base\">
@@ -1324,14 +1324,14 @@ s_fbParamCloseClampsAfterEachOther(
 	i_sName := CONCAT(i_sEmName, ': Close Clamps After Each Other'),
 	i_nArrayFolderIndex := 1,
 	i_bIsNumber := TRUE);
-
-//Write to settings	
+	
+//Write to settings
 
 i_ref_stSettings.tTimeoutDockingClamps := LREAL_TO_TIME(s_fbParamTimeoutDockingClamps.p_fValue);
 i_ref_stSettings.tTimeoutUnlockingPins := LREAL_TO_TIME(s_fbParamTimeoutUnlockingPins.p_fValue);
 i_ref_stSettings.tTimeoutDoorOpener := LREAL_TO_TIME(s_fbParamTimeoutDoorOpener.p_fValue);
 i_ref_stSettings.tTimeoutDoorShutter := LREAL_TO_TIME(s_fbParamTimeoutDoorShutter.p_fValue);
-	
+
 i_ref_stSettings.tDelayCompressSeal := LREAL_TO_TIME(s_fbParamCompressSealDuration.p_fValue);
 i_ref_stSettings.tCompressSealDuration := LREAL_TO_TIME(s_fbParamCompressSealDuration.p_fValue);
 i_ref_stSettings.tDelayCloseDoorShutterReleasingPins := LREAL_TO_TIME(s_fbParamDelayCloseDoorShutterReleasingPins.p_fValue);
@@ -1340,10 +1340,10 @@ i_ref_stSettings.tDelayOpenDoorShutter := LREAL_TO_TIME(s_fbParamDelayOpenDoorSh
 i_ref_stSettings.tDelayOpenDoorOpener := LREAL_TO_TIME(s_fbParamDelayOpenDoorOpener.p_fValue);
 i_ref_stSettings.tDelayCloseDoorShutter := LREAL_TO_TIME(s_fbParamDelayCloseDoorShutter.p_fValue);
 i_ref_stSettings.tDelayLockUnlockingPins := LREAL_TO_TIME(s_fbParamDelayLockUnlockingPins.p_fValue);
-	
+
 i_ref_stSettings.bOpenClampsAfterClosingTimeout := LREAL_TO_BOOL(s_fbParamOpenClampsAfterClosingTimeout.p_fValue);
 i_ref_stSettings.bCloseClampsAfterEachOther := LREAL_TO_BOOL(s_fbParamCloseClampsAfterEachOther.p_fValue);
-	
+
 _m_Params := TRUE;
 ]]></ST>
       </Implementation>
@@ -1363,7 +1363,7 @@ IF s_cmDoorOpener.m_Off() AND s_bStaDoorOpenerAlmostClosed THEN //Close Door Ope
 			IF s_cmDockingClampsUpper.m_Off() AND s_cmDockingClampsLower.m_Off() THEN // Open Docking Clamps
 				_m_SeqStartup := TRUE;
 			END_IF
-		END_IF						
+		END_IF
 	END_IF
 END_IF
 ]]></ST>
@@ -1384,7 +1384,7 @@ END_IF
 s_fbSeqControl(
 	i_nSeqStep := s_eSequence,
 	i_sStepName := TO_STRING(s_eSequence),
-	i_bCmdReset := 
+	i_bCmdReset :=
 		i_bCmdReset
 		AND i_bReqEnable
 		AND (s_eSequence = E_SeqDockingInterface.ERROR) // Only reset/resume sequencer from ERROR state
@@ -1401,7 +1401,7 @@ END_IF
 //Load last step from persistent memory
 IF (s_eSequence > E_SeqDockingInterface.START) AND (s_eSequence < E_SeqDockingInterface.STOP) THEN
 	s_eLastStepPersistent := s_eSequence;
-END_IF 
+END_IF
 
 s_sResumeStep := TO_STRING(s_eResumeStep);
 
@@ -1476,7 +1476,7 @@ CASE s_eSequence OF
 		
 		//Command Dock TB//////////////////////////////////////////////////////////////////////////
 		IF s_bReqDockTB THEN
-			IF _m_CmdDockTB(i_refReason := s_sMessage) THEN	
+			IF _m_CmdDockTB(i_refReason := s_sMessage) THEN
 				
 				{warning #DELETE: "Disabled Doors" option can be deleted, IF FUMO3 is build}
 				IF i_bTestDisableCabinDoors THEN
@@ -1543,7 +1543,7 @@ CASE s_eSequence OF
 //--				END_IF
 //--			END_IF
 		END_IF
-	
+		
 	E_SeqDockingInterface.OPEN_OUTER_CABIN_DOOR:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmOuterCabinDoor.m_Open();
@@ -1582,7 +1582,7 @@ CASE s_eSequence OF
 			ELSE
 				s_bErrCmdNotAllowed := TRUE;
 			END_IF
-		END_IF 
+		END_IF
 		
 	//(option 1)
 	E_SeqDockingInterface.DOCK_CLOSE_DOCKING_CLAMPS:
@@ -1600,7 +1600,7 @@ CASE s_eSequence OF
 		//ELSE
 		//  In case of error all docking clamps will be openeed (this is implemented in error-step)
 		END_IF
-	
+		
 	E_SeqDockingInterface.COMPRESS_ALL_SEAL:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmClampsUpperHighPressure.m_On();
@@ -1613,7 +1613,7 @@ CASE s_eSequence OF
 //??			i_refTB.p_bDockingDone := TRUE;
 			s_eSequence := E_SeqDockingInterface.DOCK_TB_DONE;
 		END_IF
-	
+		
 	//(option 2)
 	E_SeqDockingInterface.CLOSE_LOWER_DOCKING_CLAMPS:
 		IF s_fbSeqControl.q_bStaEntry THEN
@@ -1720,7 +1720,7 @@ CASE s_eSequence OF
 		END_IF
 		
 		IF s_cmDockingClampsUpper.p_bStaIsOn AND s_cmDockingClampsLower.p_bStaIsOn THEN
-		
+			
 			{warning '#DELETE: "Disabled Doors" option can be deleted, IF FUMO3 is build'}
 			IF i_bTestDisableCabinDoors THEN
 				s_eSequence := E_SeqDockingInterface.UNDOCK_TB_DONE;
@@ -1729,7 +1729,7 @@ CASE s_eSequence OF
 			END_IF
 			
 		END_IF
-	
+		
 	E_SeqDockingInterface.CLOSE_OUTER_CABIN_DOOR:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmOuterCabinDoor.m_Close();
@@ -1764,7 +1764,7 @@ CASE s_eSequence OF
 		{warning '#DELETE AFTER TESTING: Functionality to skip the control of unlocking pins can be removed if it is no longer needed'}
 		// Set value to TRUE to skip the release movemnt of the locking pins, if testing with test box.
 		IF NOT(s_bTmpDisableUnlockingPinsRelease) THEN
-		
+			
 			IF s_fbSeqControl.q_bStaEntry THEN
 				s_cmUnlockingPinUpper.m_On();
 				s_cmUnlockingPinLower.m_On();
@@ -1951,17 +1951,16 @@ IF NOT SUPER^.m_Main() THEN
 END_IF
 
 CASE i_eCtrlMode OF
-
 	E_CtrlMode.IDLE:
 		;
 		
 	E_CtrlMode.AUTOMATIC:
 		//Let pressure selection toggle follow automatic state
 //??		_m_AdoptPressureSelection();
-	
+		
 		//Execute automatic control
 		_m_AutomaticControl();
-	
+		
 	E_CtrlMode.MANUAL:
 		//Execute manaual control (based on HMI buttons)
 		
@@ -1981,15 +1980,15 @@ CASE i_eCtrlMode OF
 		//Reset automatic/manual sequencer
 		IF i_eCtrlState = E_CtrlState.RUNNING THEN
 			s_eSequence := E_SeqDockingInterface.IDLE;
-		
+			
 		ELSIF i_eCtrlState = E_CtrlState.IDLE THEN	
 			{warning '#TODO: Added stop() for DoorOpener and DoorShutter'}
 			s_cmDoorOpener.m_Stop();
 			//??s_cmDoorShutter.m_Stop();
 			
 		END_IF
-		; 	//Maintenance control is implemented in lower-layer control modules	
-	
+		; 	//Maintenance control is implemented in lower-layer control modules
+		
 	E_CtrlMode.IO:
 		//Execute IO-test control (HMI output force control)
 		; 	//IO-Test control is implemented in lower-layer control modules
@@ -2010,7 +2009,7 @@ IF (i_eCtrlMode = E_CtrlMode.MANUAL) THEN
 	s_fbHmiBtnDockTB.p_bStaVisible := TRUE;
 	s_fbHmiBtnUndockTB.p_bStaVisible := TRUE;
 	s_fbHmiBtnOpenInnerDoor.p_bStaVisible := TRUE;
-	s_fbHmiBtnCloseInnerDoor.p_bStaVisible := TRUE;	
+	s_fbHmiBtnCloseInnerDoor.p_bStaVisible := TRUE;
 ELSE
 	s_fbHmiBtnDockTB.p_bStaVisible := FALSE;
 	s_fbHmiBtnUndockTB.p_bStaVisible := FALSE;
@@ -2020,15 +2019,15 @@ END_IF
 
 //Buttons enabling
 IF i_bReqEnable AND (i_eCtrlMode = E_CtrlMode.MANUAL) AND (i_eCtrlState = E_CtrlState.RUNNING) THEN
-
+	
 	s_fbHmiBtnDockTB.p_bStaEnabled :=
 		NOT(s_bIlckDockingClampsToClose)
 		AND NOT(s_cmDockingClampsUpper.p_bStaError)
 		AND NOT(s_cmDockingClampsLower.p_bStaError)
 		AND NOT(s_cmOuterCabinDoor.p_bStaError)
 		//++
-		AND ( (s_eSequence = E_SeqDockingInterface.READY) OR (s_eSequence =E_SeqDockingInterface.WAIT_FOR_TB_REMOVED) );		
-	
+		AND ( (s_eSequence = E_SeqDockingInterface.READY) OR (s_eSequence =E_SeqDockingInterface.WAIT_FOR_TB_REMOVED) );
+		
 	s_fbHmiBtnUnDockTB.p_bStaEnabled :=
 		NOT(s_bIlckDockingClampsToOpen)
 		AND NOT(s_cmDockingClampsUpper.p_bStaError)
@@ -2036,7 +2035,7 @@ IF i_bReqEnable AND (i_eCtrlMode = E_CtrlMode.MANUAL) AND (i_eCtrlState = E_Ctrl
 		AND NOT(s_cmOuterCabinDoor.p_bStaError)
 		//++
 		AND ( (s_eSequence = E_SeqDockingInterface.READY) OR (s_eSequence =E_SeqDockingInterface.WAIT_FOR_TB_PLACED) );
-	
+		
 	s_fbHmiBtnOpenInnerDoor.p_bStaEnabled :=
 		NOT(s_bIlckUnlockingPinsToRelease)
 //++		AND NOT(s_bIlckDoorShutterToOpen)
@@ -2048,7 +2047,7 @@ IF i_bReqEnable AND (i_eCtrlMode = E_CtrlMode.MANUAL) AND (i_eCtrlState = E_Ctrl
 		AND NOT(s_cmInnerCabinDoor.p_bStaError)
 		//++
 		AND (s_eSequence = E_SeqDockingInterface.READY);
-	
+		
 	s_fbHmiBtnCloseInnerDoor.p_bStaEnabled :=
 		NOT(s_bIlckUnlockingPinsToLock)
 		//--AND NOT(s_bIlckDoorShutterToClose) //excluded to prevent interlock by sequence
@@ -2071,7 +2070,7 @@ END_IF
 IF (i_eCtrlMode = E_CtrlMode.IO) AND (i_eCtrlState = E_CtrlState.RUNNING) THEN
 	s_bHmiForceOutputEnabled := TRUE;
 ELSE
-	s_bHmiForceOutputEnabled := FALSE;	
+	s_bHmiForceOutputEnabled := FALSE;
 END_IF
 ]]></ST>
       </Implementation>
@@ -2081,7 +2080,7 @@ END_IF
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -2096,7 +2095,7 @@ m_ReqCloseInnerDoor := TRUE;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -2111,7 +2110,7 @@ m_ReqDockTB := TRUE;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -2126,7 +2125,7 @@ m_ReqOpenInnerDoor := TRUE;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -2143,7 +2142,7 @@ PROPERTY PUBLIC p_bStaClampsClosed : BOOL]]></Declaration>
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaClampsClosed := s_bStaDockingClampsClosed; 
+p_bStaClampsClosed := s_bStaDockingClampsClosed;
 ]]></ST>
         </Implementation>
       </Get>
@@ -2172,14 +2171,14 @@ p_bStaDocked := s_bStaDocked;
         </Implementation>
       </Get>
     </Property>
-    <Property Name="p_bStaDockingPositionFree" Id="{1c1bcc1f-d42b-48d2-9743-d0c845e1b595}">
+    <Property Name="p_bStaDockPosFree" Id="{1c1bcc1f-d42b-48d2-9743-d0c845e1b595}">
       <Declaration><![CDATA[{attribute 'monitoring':='call'}
-PROPERTY PUBLIC p_bStaDockingPositionFree : BOOL]]></Declaration>
+PROPERTY PUBLIC p_bStaDockPosFree : BOOL]]></Declaration>
       <Get Name="Get" Id="{8f44ecfc-2d8a-4e22-a3b9-d3876337bbab}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaDockingPositionFree := s_bStaDockingPositionFree;
+p_bStaDockPosFree := s_bStaDockingPositionFree;
 ]]></ST>
         </Implementation>
       </Get>
@@ -2191,7 +2190,7 @@ PROPERTY PUBLIC p_bStaDoorOpenerClosed : BOOL]]></Declaration>
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaDoorOpenerClosed := s_bStaDoorOpenerClosed; 
+p_bStaDoorOpenerClosed := s_bStaDoorOpenerClosed;
 ]]></ST>
         </Implementation>
       </Get>
@@ -2203,7 +2202,7 @@ PROPERTY PUBLIC p_bStaDoorOpenerOpened : BOOL]]></Declaration>
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaDoorOpenerOpened := s_bStaDoorOpenerOpened; 
+p_bStaDoorOpenerOpened := s_bStaDoorOpenerOpened;
 ]]></ST>
         </Implementation>
       </Get>
@@ -2215,7 +2214,7 @@ PROPERTY PUBLIC p_bStaDoorShutterClosed : BOOL]]></Declaration>
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaDoorShutterClosed := s_bStaDoorShutterClosed; 
+p_bStaDoorShutterClosed := s_bStaDoorShutterClosed;
 ]]></ST>
         </Implementation>
       </Get>
@@ -2227,7 +2226,7 @@ PROPERTY PUBLIC p_bStaDoorShutterOpened : BOOL]]></Declaration>
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaDoorShutterOpened := s_bStaDoorShutterOpened; 
+p_bStaDoorShutterOpened := s_bStaDoorShutterOpened;
 ]]></ST>
         </Implementation>
       </Get>
@@ -2331,26 +2330,26 @@ p_bStaUndocked := s_bStaUndocked;
         </Implementation>
       </Get>
     </Property>
-    <Property Name="p_bStaUnlockingPinsLocked" Id="{381598b9-274a-4acf-a463-9515a8485594}">
+    <Property Name="p_bStaUnlockPinsLocked" Id="{381598b9-274a-4acf-a463-9515a8485594}">
       <Declaration><![CDATA[{attribute 'monitoring':='call'}
-PROPERTY PUBLIC p_bStaUnlockingPinsLocked : BOOL]]></Declaration>
+PROPERTY PUBLIC p_bStaUnlockPinsLocked : BOOL]]></Declaration>
       <Get Name="Get" Id="{96038b2d-5ca7-4911-abb6-0bbc33b7db24}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaUnlockingPinsLocked := s_bStaUnlockingPinsLocked; 
+p_bStaUnlockPinsLocked := s_bStaUnlockingPinsLocked;
 ]]></ST>
         </Implementation>
       </Get>
     </Property>
-    <Property Name="p_bStaUnlockingPinsReleased" Id="{1ee245ec-6be0-491b-81fe-2557cdf23641}">
+    <Property Name="p_bStaUnlockPinsRelease" Id="{1ee245ec-6be0-491b-81fe-2557cdf23641}">
       <Declaration><![CDATA[{attribute 'monitoring':='call'}
-PROPERTY PUBLIC p_bStaUnlockingPinsReleased : BOOL]]></Declaration>
+PROPERTY PUBLIC p_bStaUnlockPinsRelease : BOOL]]></Declaration>
       <Get Name="Get" Id="{67bd3638-8daf-4342-96aa-831b81b68027}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaUnlockingPinsReleased := s_bStaUnlockingPinsReleased; 
+p_bStaUnlockPinsRelease := s_bStaUnlockingPinsReleased;
 ]]></ST>
         </Implementation>
       </Get>

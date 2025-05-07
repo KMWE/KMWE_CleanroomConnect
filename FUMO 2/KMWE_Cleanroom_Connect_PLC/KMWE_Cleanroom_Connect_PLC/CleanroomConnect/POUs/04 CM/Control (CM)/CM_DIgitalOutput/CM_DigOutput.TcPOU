@@ -58,7 +58,6 @@ VAR
 	
 	s_fbHmiLedIsOff : FB_HmiLed;
 	s_fbHmiLedIsOn : FB_HmiLed;
-
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -72,7 +71,8 @@ m_Main();
       <Declaration><![CDATA[METHOD PROTECTED _m_Hmi : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF NOT SUPER^._m_Hmi() THEN
+        <ST><![CDATA[
+IF NOT SUPER^._m_Hmi() THEN
 	RETURN;
 END_IF
 
@@ -83,8 +83,8 @@ IF NOT(s_bHmiInit) THEN
 	
 	//Button names
 	s_stHmiData.sNameOff := s_fbHmiBtnManualOff.p_sBtnText;
-	s_stHmiData.sNameOn := s_fbHmiBtnManualOn.p_sBtnText;	
-
+	s_stHmiData.sNameOn := s_fbHmiBtnManualOn.p_sBtnText;
+	
 	s_bHmiInit := TRUE;
 END_IF
 
@@ -99,14 +99,14 @@ s_stHmiData.sInterlockedReasonOff := s_sInterlockedReasonOff;
 IF s_stHmiData.bCmdOffPressed THEN
 	s_fbHmiBtnManualOff.m_On();
 ELSE
-	s_fbHmiBtnManualOff.m_Off();	
+	s_fbHmiBtnManualOff.m_Off();
 END_IF
 
 IF s_stHmiData.bCmdOnPressed THEN
 	s_fbHmiBtnManualOn.m_On();
 ELSE
-	s_fbHmiBtnManualOn.m_Off();	
-END_IF 
+	s_fbHmiBtnManualOn.m_Off();
+END_IF
 
 //Buttons
 s_fbHmiBtnManualOff();
@@ -115,7 +115,7 @@ s_fbHmiBtnManualOn();
 //Led
 s_fbHmiLedIsOff(i_bStaLed := NOT(s_bStaOutput));
 s_fbHmiLedIsOn(i_bStaLed := s_bStaOutput);
-		
+
 IF __ISVALIDREF(i_ref_eCtrlState) THEN
 	//MAINTENANCE-mode is running
 	IF (i_eCtrlMode = E_CtrlMode.MAINTENANCE) AND (i_ref_eCtrlState = E_CtrlState.RUNNING) THEN
@@ -124,28 +124,28 @@ IF __ISVALIDREF(i_ref_eCtrlState) THEN
 		
 		s_fbHmiBtnManualOn.p_bStaVisible := TRUE;
 		s_fbHmiBtnManualOn.p_bStaEnabled := i_bReqEnable AND NOT(i_bIclkOn);
-			
+		
 		IF s_fbHmiBtnManualOff.p_osrBtnPress THEN
 			m_Off();
 		END_IF
-			
+		
 		IF s_fbHmiBtnManualOn.p_osrBtnPress THEN
 			m_On();
 		END_IF
 		
-	//other-mode	
+	//other-mode
 	ELSE
 		s_fbHmiBtnManualOff.p_bStaVisible := FALSE;
 		s_fbHmiBtnManualOff.p_bStaEnabled := FALSE;
-	
+		
 		s_fbHmiBtnManualOn.p_bStaVisible := FALSE;
 		s_fbHmiBtnManualOn.p_bStaEnabled := FALSE;
-
+		
 		s_fbHmiBtnManualOn.p_bStaVisible := FALSE;
 		s_fbHmiBtnManualOn.p_bStaEnabled := FALSE;
 	END_IF
-END_IF	
-	
+END_IF
+
 _m_Hmi := TRUE;
 ]]></ST>
       </Implementation>
@@ -159,15 +159,15 @@ IF NOT SUPER^._m_Init() THEN
 	RETURN;
 END_IF
 
-//Hmi 
+//Hmi
 	s_fbHmiBtnManualOff.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnManualOff.p_bStaVisible := FALSE;
-	s_fbHmiBtnManualOff.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnManualOff.p_bStaEnabled := FALSE;
 	s_fbHmiBtnManualOff.p_sBtnText := s_sCfgOffName;
 	
 	s_fbHmiBtnManualOn.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnManualon.p_bStaVisible := FALSE;
-	s_fbHmiBtnManualOn.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnManualOn.p_bStaEnabled := FALSE;
 	s_fbHmiBtnManualon.p_sBtnText := s_sCfgOnName;
 	
 	s_fbHmiLedIsOff.p_bStaVisible := FALSE;
@@ -175,7 +175,7 @@ END_IF
 	
 	s_fbHmiLedIsOn.p_bStaVisible := FALSE;
 	s_fbHmiLedIsOn.p_sToHmiDescriptionLed := CONCAT('Is at: ', s_sCfgOnName);
-
+	
 _m_Init := TRUE;
 ]]></ST>
       </Implementation>
@@ -198,20 +198,20 @@ IF i_bReqEnable AND s_bReqOff AND NOT(i_bIclkOff) THEN
 			s_bCmdOutput := TRUE;
 		ELSE
 			;
-			//--s_bCmdOutput := FALSE;	
+			//--s_bCmdOutput := FALSE;
 		END_IF
-
+		
 IF __ISVALIDREF(i_ref_eCtrlState) THEN
 	IF (i_eCtrlMode <> E_CtrlMode.IO) OR (i_ref_eCtrlState <> E_CtrlState.RUNNING) THEN
-		s_fbForceCmdOutput.i_eForceValue := E_ForceValue.RELEASED; 	
+		s_fbForceCmdOutput.i_eForceValue := E_ForceValue.RELEASED;
 	END_IF
 END_IF
-	
+
 s_fbForceCmdOutput(
 	i_ref_bCmdInput := s_bCmdOutput,
 	i_ref_bCmdOutput := Q_bStaOutput);
-
-s_bStaOutput := Q_bStaOutput;	
+	
+s_bStaOutput := Q_bStaOutput;
 	
 _m_Outputs := TRUE;
 ]]></ST>
@@ -222,7 +222,7 @@ _m_Outputs := TRUE;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -231,8 +231,8 @@ IF NOT(i_bIclkOff) THEN
 	s_bReqOn := FALSE XOR s_bCfgReverseOutput;
 ELSE
 	s_wrnOffInterlocked := TRUE;
-END_IF	
-	
+END_IF
+
 m_off := s_bStaOutputIsOff;
 ]]></ST>
       </Implementation>
@@ -242,7 +242,7 @@ m_off := s_bStaOutputIsOff;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -252,7 +252,7 @@ IF NOT(i_bIclkOn) THEN
 ELSE
 	s_wrnOnInterlocked := TRUE;
 END_IF
-	
+
 m_On := s_bStaOutputIsOn;
 ]]></ST>
       </Implementation>
@@ -305,11 +305,11 @@ p_bStaIsOn := s_bStaOutputIsOn;
       <Declaration><![CDATA[{attribute 'monitoring':='call'}
 PROPERTY PUBLIC p_bStaOutput : BOOL]]></Declaration>
       <Get Name="Get" Id="{42e85b44-18f0-412a-9346-64d13e29ff2a}">
-        <Declaration><![CDATA[VAR
-END_VAR
-]]></Declaration>
+        <Declaration><![CDATA[]]></Declaration>
         <Implementation>
-          <ST><![CDATA[p_bStaOutput := s_bStaOutput;]]></ST>
+          <ST><![CDATA[
+p_bStaOutput := s_bStaOutput;
+]]></ST>
         </Implementation>
       </Get>
     </Property>

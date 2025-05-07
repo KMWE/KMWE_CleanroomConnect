@@ -252,9 +252,10 @@ _m_Alarms := TRUE;
       <Declaration><![CDATA[METHOD PROTECTED _m_AutomaticControl : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[//Pallet Conveyor
+        <ST><![CDATA[
+//Pallet Conveyor
 _m_Sequence();
-		
+
 //Pallet Centering
 //--centering functionality is build into the transport sequencer
 //--_m_SeqCentering();
@@ -269,7 +270,7 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -279,7 +280,7 @@ IF s_bIlckCenteringToCenter THEN
 	s_bErrCmdNotAllowed := TRUE;
 ELSE
 	i_refReason := '-';
-	_m_CmdCenteringTB := TRUE;	
+	_m_CmdCenteringTB := TRUE;
 END_IF
 ]]></ST>
       </Implementation>
@@ -289,10 +290,10 @@ END_IF
 VAR_INPUT
 	i_refReason : REFERENCE TO STRING;
 END_VAR
-	]]></Declaration>
+]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -302,7 +303,7 @@ IF s_bIlckConveyorForward THEN
 	s_bErrCmdNotAllowed := TRUE;
 ELSE
 	i_refReason := '-';
-	_m_CmdTB_ToCenter := TRUE;	
+	_m_CmdTB_ToCenter := TRUE;
 END_IF
 ]]></ST>
       </Implementation>
@@ -315,7 +316,7 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -325,7 +326,7 @@ IF s_bIlckConveyorForward THEN
 	s_bErrCmdNotAllowed := TRUE;
 ELSE
 	i_refReason := '-';
-	_m_CmdTB_ToDocking := TRUE;	
+	_m_CmdTB_ToDocking := TRUE;
 END_IF
 ]]></ST>
       </Implementation>
@@ -338,7 +339,7 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -348,8 +349,9 @@ IF s_bIlckConveyorBackward THEN
 	s_bErrCmdNotAllowed := TRUE;
 ELSE
 	i_refReason := '-';
-	_m_CmdTB_ToInfeed := TRUE;	
-END_IF]]></ST>
+	_m_CmdTB_ToInfeed := TRUE;
+END_IF
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_Devices" Id="{a5afe549-ba9e-46b9-b9ab-569cdd3f8cbd}" FolderPath="Base\">
@@ -360,7 +362,7 @@ END_IF]]></ST>
 IF NOT SUPER^._m_Devices() THEN
 	RETURN;
 END_IF
-	
+
 s_cmPalletConveyor(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
@@ -371,7 +373,7 @@ s_cmPalletConveyor(
 
 s_bStaBrakeReleased := s_cmPalletConveyor.p_bStaBrakeReleased;
 s_bStaDriveError := s_cmPalletConveyor.p_bStaError; 
-	
+
 s_cmCenteringUnit(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
@@ -380,21 +382,21 @@ s_cmCenteringUnit(
 	i_bIclkOn := s_bIlckCenteringToCenter AND (i_eCtrlMode <> E_CtrlMode.IO),
 	i_bIclkOff := FALSE);
 	
-s_bStaCenteringCenter := s_cmCenteringUnit.p_bStaIsOn; 
+s_bStaCenteringCenter := s_cmCenteringUnit.p_bStaIsOn;
 s_bStaCenteringIdle := s_cmCenteringUnit.p_bStaIsOff;
-	
+
 s_diStaAtInfeedPositionRear();
 s_diStaAtInfeedPositionFront();
 s_diStaAtCenteringPosition();
 s_diStaAtDockingPosition();
-s_diStaDoorOpened();	
+s_diStaDoorOpened();
 
 s_bStaAtInfeedRearPosition := s_diStaAtInfeedPositionRear.p_bStaInputDelayed;
 s_bStaAtInfeedFrontPosition := s_diStaAtInfeedPositionFront.p_bStaInputDelayed;
 s_bStaAtCenteringPosition := s_diStaAtCenteringPosition.p_bStaInputDelayed;
 s_bStaAtDockingPosition := s_diStaAtDockingPosition.p_bStaInputDelayed;
 s_bStaDoorOpened := s_diStaDoorOpened.p_bStaInputDelayed;
-	
+
 _m_Devices := TRUE;
 ]]></ST>
       </Implementation>
@@ -495,25 +497,25 @@ s_fbAlarmHandlerOuterDoorNotOpened.i_eAlarmLevel := E_AlarmLevel.Warning;
 
 s_fbAlarmHandlerCmdNotAllowed.i_eAlarmLevel := E_AlarmLevel.Alarm;
 
-//Hmi 
+//Hmi
 	s_fbHmiBtnTB_ToInfeed.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnTB_ToInfeed.p_bStaVisible := FALSE;
-	s_fbHmiBtnTB_ToInfeed.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnTB_ToInfeed.p_bStaEnabled := FALSE;
 	s_fbHmiBtnTB_ToInfeed.p_sBtnText := 'TB To Infeed Position';
 	
 	s_fbHmiBtnTB_ToCentering.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnTB_ToCentering.p_bStaVisible := FALSE;
-	s_fbHmiBtnTB_ToCentering.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnTB_ToCentering.p_bStaEnabled := FALSE;
 	s_fbHmiBtnTB_ToCentering.p_sBtnText := 'TB To Centering Position';
 	
 	s_fbHmiBtnTB_ToDocking.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnTB_ToDocking.p_bStaVisible := FALSE;
-	s_fbHmiBtnTB_ToDocking.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnTB_ToDocking.p_bStaEnabled := FALSE;
 	s_fbHmiBtnTB_ToDocking.p_sBtnText := 'TB To Docking Position';
 	
 	s_fbHmiBtnTB_Centering.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnTB_Centering.p_bStaVisible := FALSE;
-	s_fbHmiBtnTB_Centering.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnTB_Centering.p_bStaEnabled := FALSE;
 	s_fbHmiBtnTB_Centering.p_sBtnText := 'Centering TB';
 
 	s_fbHmiLedInfeedRearPosition.p_bStaVisible := FALSE;
@@ -566,10 +568,11 @@ ELSE
 	s_bStaTB_CenteringDone := s_eTmpCenteringDone;
 	s_bStaTB_AtInfeed := s_bStaAtInfeedRearPosition OR s_bStaAtInfeedFrontPosition;
 	s_bStaTB_AtCentering := s_bStaAtCenteringPosition;
-	s_bStaTB_AtDocking := s_bStaAtDockingPosition;	
+	s_bStaTB_AtDocking := s_bStaAtDockingPosition;
 //??END_IF
-	
-_m_Inputs := TRUE;]]></ST>
+
+_m_Inputs := TRUE;
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_Interlocks" Id="{5d680404-6254-4d7f-ba59-60012ab8115d}" FolderPath="Base\">
@@ -600,7 +603,7 @@ IF s_bIlckConveyorBackward THEN
 ELSE
 	s_cmPalletConveyor.p_sInterlockedReasonBackward := '-';
 END_IF
-	
+
 IF s_bIlckConveyorForward THEN
 	s_cmPalletConveyor.p_sInterlockedReasonForward := s_fbIlckHandlerConveyorForward.p_sReason;
 ELSE
@@ -617,8 +620,8 @@ s_fbIlckHandlerCenteringCenter();
 
 s_bIlckCenteringToIdle := s_fbIlckHandlerCenteringIdle.p_bInterlocked;
 s_bIlckCenteringToCenter := s_fbIlckHandlerCenteringCenter.p_bInterlocked;
-  
-//Centring	
+ 
+//Centring
 IF s_bIlckCenteringToIdle THEN
 	s_cmCenteringUnit.p_sInterlockedReasonOff := s_fbIlckHandlerCenteringIdle.p_sReason;
 ELSE
@@ -630,7 +633,7 @@ IF s_bIlckCenteringToCenter THEN
 ELSE
 	s_cmCenteringUnit.p_sInterlockedReasonOn := '-';
 END_IF
-	]]></ST>
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_Outputs" Id="{dde91033-d57b-467b-929e-41cce55dae6e}" FolderPath="Base\">
@@ -663,13 +666,13 @@ s_fbParamSpeedManual(
 	i_sName := CONCAT(i_sEmName, ': Speed Manual'),
 	i_nArrayFolderIndex := 1,
 	i_bIsNumber := TRUE);
-
+	
 s_fbParamSpeedGoToInfeed(
 	i_fDefaultValue := ,
 	i_sName := CONCAT(i_sEmName, ': Speed Go To Infeed'),
 	i_nArrayFolderIndex := 1,
 	i_bIsNumber := TRUE);
-
+	
 s_fbParamSpeedGoToCentering(
 	i_fDefaultValue := ,
 	i_sName := CONCAT(i_sEmName, ': Speed Go To Centering'),
@@ -681,7 +684,7 @@ s_fbParamSpeedGoToDocking(
 	i_sName := CONCAT(i_sEmName, ': Speed Go To Docking'),
 	i_nArrayFolderIndex := 1,
 	i_bIsNumber := TRUE);
-
+	
 s_fbParamDistanceToInfeed(
 	i_fDefaultValue := ,
 	i_sName := CONCAT(i_sEmName, ': Distance To Infeed'),
@@ -699,7 +702,7 @@ s_fbParamDistanceToDocking(
 	i_sName := CONCAT(i_sEmName, ': Distance To Docking'),
 	i_nArrayFolderIndex := 1,
 	i_bIsNumber := TRUE);
-
+	
 s_fbParamDistanceOuterDoorCheck(
 	i_fDefaultValue := ,
 	i_sName := CONCAT(i_sEmName, ': Distance Outer Door Check'),
@@ -729,8 +732,8 @@ s_fbParamTimeoutCenteringToIdle(
 	i_sName := CONCAT(i_sEmName, ': Timeout Centering To Idle'),
 	i_nArrayFolderIndex := 1,
 	i_bIsNumber := TRUE);
-		
-//Write to settings	
+	
+//Write to settings
 i_ref_stSettings.fSpeedManual := s_fbParamSpeedManual.p_fValue;
 
 i_ref_stSettings.fSpeedGoToInfeed := s_fbParamSpeedGoToInfeed.p_fValue;
@@ -765,21 +768,21 @@ _m_Params := TRUE;
       <Implementation>
         <ST><![CDATA[
 s_fbSeqCenteringControl(
-	i_nSeqStep := s_eSeqCentering, 
-	i_sStepName := TO_STRING(s_eSeqCentering), 
+	i_nSeqStep := s_eSeqCentering,
+	i_sStepName := TO_STRING(s_eSeqCentering),
 	i_bCmdReset := i_bCmdReset
 					AND (s_eSeqCentering = E_SeqCentering.ERROR) // Only reset/resume sequencer from ERROR state
 					AND NOT(s_cmCenteringUnit.p_bStaError)
 					AND NOT(s_cmPalletConveyor.p_bStaError)
-					AND i_bReqEnable, 
+					AND i_bReqEnable,
 	i_bStaError := s_bStaError OR NOT(i_bReqEnable));
 
 //Abbort operation (go to stop)
 IF (i_eCtrlState = E_CtrlState.STOPPING) THEN
 	s_eSeqTransport := E_SeqTransport.STOP;
 //--s_eSeqCentering := E_SeqCentering.MOVE_TO_IDLE;
-END_IF	
-	
+END_IF
+
 CASE s_eSeqCentering OF
 	
 	E_SeqCentering.IDLE:
@@ -788,7 +791,7 @@ CASE s_eSeqCentering OF
 		IF (i_eCtrlState = E_CtrlState.IDLE) THEN
 			s_eSeqCentering := E_SeqCentering.START;
 		END_IF
-	
+		
 	E_SeqCentering.START:
 //--		IF s_fbSeqCenteringControl.q_tmStepTime > T#1S THEN
 //--			s_eSeqCentering := E_SeqCentering.MOVE_TO_IDLE;
@@ -803,26 +806,26 @@ CASE s_eSeqCentering OF
 			s_eSeqCentering := E_SeqCentering.AT_IDLE;
 		END_IF
 		
-		//??IF i_bSta2HC_Active THEN	
+		//??IF i_bSta2HC_Active THEN
 		//??	IF s_cmCenteringUnit.m_Off() THEN
 		//??	s_eSeqCentering := E_SeqCentering.AT_IDLE;
 		//??END_IF
 		//??ELSE
 		//??	s_cmCenteringUnit.m_Stop();
 		//??END_IF
-	
+		
 	E_SeqCentering.AT_IDLE:
 //--		IF s_fbSeqCenteringControl.q_tmStepTime > T#1S THEN
 		//??IF s_fbSeqCenteringControl.q_tmStepTime > T#1S AND NOT(i_bSta2HC_Active) THEN
 			s_eSeqCentering := E_SeqCentering.READY;
 //--		END_IF
-	
+		
 	E_SeqCentering.READY:
 		IF s_fbSeqCenteringControl.q_bStaEntry THEN
 			i_refTB.p_bCenteringDone S= s_eTmpCenteringDone; //Explicity SET value
 			s_eTmpCenteringDone := FALSE;
 		END_IF
-	
+		
 		IF i_eCtrlState <> E_CtrlState.RUNNING THEN
 			s_eSeqCentering := E_SeqCentering.START;
 		END_IF
@@ -830,19 +833,19 @@ CASE s_eSeqCentering OF
 		IF s_bReqCenteringTB THEN
 			IF _m_CmdCenteringTB(i_refReason := s_sMessage) THEN
 				s_eSeqCentering := E_SeqCentering.MOVE_TO_CENTER;
-			//ELSE	If failed (command not allowed): the message will be written with the interlock reason	
+			//ELSE	If failed (command not allowed): the message will be written with the interlock reason
 			END_IF
 			
 			s_bReqCenteringTB := FALSE;
-		END_IF	
+		END_IF
 		
 	E_SeqCentering.MOVE_TO_CENTER:
 		//++IF s_cmCenteringUnit.m_On() THEN // Temp. added time delay as extra condition to skip reed contacts (end position not reachable with test box)
 		IF s_cmCenteringUnit.m_On() OR (s_fbSeqCenteringControl.q_tmStepTime >= T#1S) THEN
 			s_eSeqCentering := E_SeqCentering.AT_CENTER;
 		END_IF
-	
-		//??IF i_bSta2HC_Active THEN	
+		
+		//??IF i_bSta2HC_Active THEN
 		//??	IF s_cmCenteringUnit.m_On() THEN
 		//??		s_eSeqCentering := E_SeqCentering.AT_CENTER;
 		//??	END_IF
@@ -855,7 +858,7 @@ CASE s_eSeqCentering OF
 			s_eTmpCenteringDone := TRUE;
 			s_eSeqCentering := E_SeqCentering.MOVE_TO_IDLE;
 		END_IF
-
+	
 	E_SeqCentering.STOP:
 		s_cmCenteringUnit.m_Off();
 		
@@ -878,7 +881,7 @@ END_CASE
 s_fbSeqControl(
 	i_nSeqStep := s_eSequence,
 	i_sStepName := TO_STRING(s_eSequence),
-	i_bCmdReset := 
+	i_bCmdReset :=
 		i_bCmdReset
 		AND i_bReqEnable
 		AND (s_eSequence = E_SeqTransport.ERROR) // Only reset/resume sequencer from ERROR state
@@ -886,7 +889,7 @@ s_fbSeqControl(
 //--					AND NOT(s_cmCenteringUnit.p_bStaError)
 //--					AND NOT(s_cmPalletConveyor.p_bStaError)
 	i_bStaError := s_bStaError OR NOT(i_bReqEnable));
-
+	
 s_sResumeStep := TO_STRING(s_eResumeStep);
 
 //Force to stop
@@ -902,8 +905,8 @@ CASE s_eSequence OF
 		IF (i_eCtrlState = E_CtrlState.IDLE) THEN
 			s_eSequence := E_SeqTransport.START;
 		END_IF
-	
-//START////////////////////////////////////////////////////////////////////////////////////////////			
+		
+//START////////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqTransport.START:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmPalletConveyor.m_Stop();
@@ -915,12 +918,12 @@ CASE s_eSequence OF
 		IF s_cmPalletConveyor.p_bStaMotorStopped AND_THEN NOT(s_cmPalletConveyor.p_bStaBrakeReleased) AND s_fbSeqControl.q_tmStepTime > T#1S THEN
 		//??IF s_cmPalletConveyor.p_bStaMotorStopped AND_THEN NOT(s_cmPalletConveyor.p_bStaBrakeReleased) AND s_fbSeqTransportControl.q_tmStepTime > T#1S
 		//??	AND NOT(i_bSta2HC_Active) THEN
-		
+			
 			IF i_eCtrlState = E_CtrlState.RUNNING THEN
 				s_eSequence := E_SeqTransport.READY;
 			END_IF
 		END_IF
-	
+		
 //READY////////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqTransport.READY:
 		IF s_fbSeqControl.q_bStaEntry THEN
@@ -990,7 +993,7 @@ CASE s_eSequence OF
 					i_TargetSpeed := i_ref_stSettings.fSpeedGoToInfeed,
 					i_TargetDistance := i_ref_stSettings.fDistanceToInfeed,
 					i_Tollerance := i_ref_stSettings.fTravelTollerance);
-						
+					
 			s_cmPalletConveyor.m_StartBackward(i_rTargetSpeed := i_ref_stSettings.fSpeedGoToInfeed);
 		END_IF
 		
@@ -1044,7 +1047,7 @@ CASE s_eSequence OF
 			s_bDoorCheckTimeDisabled := FALSE;
 			s_eTmpLocation := E_Location.CENTERING;
 			s_eSequence := E_SeqTransport.MOVE_TO_CENTERING_STOP;
-		
+			
 		ELSIF s_fbSeqControl.q_tmStepTime < s_tDoorCheckTime
 			AND NOT(s_bStaDoorOpened)
 			AND s_bStaAtInfeedRearPosition THEN
@@ -1056,7 +1059,7 @@ CASE s_eSequence OF
 			s_bErrTravelTimeOut := TRUE;
 			s_sReason := 'Moving to Centering - timeout';
 			s_eSequence := E_SeqTransport.ERROR;
-		
+			
 		END_IF
 		
 	E_SeqTransport.MOVE_TO_CENTERING_STOP:
@@ -1168,7 +1171,7 @@ CASE i_eCtrlMode OF
 	E_CtrlMode.AUTOMATIC:
 		//Automatic commands are controlled by higher-layer unit
 		_m_AutomaticControl();
-
+		
 	E_CtrlMode.MANUAL:
 		//Execute manaual control (based on HMI buttons)
 		
@@ -1176,7 +1179,7 @@ CASE i_eCtrlMode OF
 		{warning '#TODO: Could be omitted if 2HCtrl is not used'}
 		IF s_fbHmiBtnTB_ToInfeed.p_osrBtnPress THEN
 			s_eActionSelection := E_ActionSelection.MOVE_TO_INFEED;
-		ELSIF s_fbHmiBtnTB_ToCentering.p_osrBtnPress THEN	
+		ELSIF s_fbHmiBtnTB_ToCentering.p_osrBtnPress THEN
 			s_eActionSelection := E_ActionSelection.MOVE_TO_CENTER;
 		ELSIF s_fbHmiBtnTB_ToDocking.p_osrBtnPress THEN
 			s_eActionSelection := E_ActionSelection.MOVE_TO_DOCKING;
@@ -1195,7 +1198,7 @@ CASE i_eCtrlMode OF
 		//??	s_bReqTB_ToCenter := (eActionSelection = E_ActionSelection.MOVE_TO_CENTER) AND i_bSta2HC_Active;
 		//??	s_bReqTB_ToDocking := (eActionSelection = E_ActionSelection.MOVE_TO_DOCKING) AND i_bSta2HC_Active;
 		//??	s_bReqCenteringTB := (eActionSelection = E_ActionSelection.CENTER_TB) AND i_bSta2HC_Active;
-		END_IF	
+		END_IF
 		
 		_m_AutomaticControl();
 		
@@ -1204,17 +1207,16 @@ CASE i_eCtrlMode OF
 		s_eSequence := E_SeqTransport.IDLE;
 //--		s_eSeqCentering := E_SeqCentering.IDLE;
 		; 	//Maintenance control is implemented in lower-layer control modules
-							
 		
 	E_CtrlMode.IO:
 		//Execute IO-test control (HMI output force control)
 		; 	//IO-Test control is implemented in lower-layer control modules
 			//Enabling control is done direcly under this case instruction
-			
+		
 	E_CtrlMode.CLEANING:
 		//Execute cleaning control (cleaning  specific functionalities)
 		;	//Cleaning control is not implemented, this could be a done in the future if neccesary
-			
+		
 END_CASE
 
 //AUTOMATIC-mode //////////////////////////////////////////////////////////////////////////////////
@@ -1236,7 +1238,7 @@ END_IF
 
 //Buttons enabling
 IF i_bReqEnable AND (i_eCtrlMode = E_CtrlMode.MANUAL) AND (i_eCtrlState = E_CtrlState.RUNNING) THEN
-
+	
 	//Transport
 	s_fbHmiBtnTB_ToInfeed.p_bStaEnabled :=
 		NOT(s_bIlckConveyorBackward)
@@ -1244,21 +1246,21 @@ IF i_bReqEnable AND (i_eCtrlMode = E_CtrlMode.MANUAL) AND (i_eCtrlState = E_Ctrl
 		AND NOT(s_cmPalletConveyor.p_bStaError)
 		AND (s_cmPalletConveyor.p_bStaMotorStopped) AND TRUE
 		AND NOT(s_bReqCenteringTB);
-	
+		
 	s_fbHmiBtnTB_ToCentering.p_bStaEnabled :=
 		NOT(s_bIlckConveyorForward)
 		AND NOT(s_bStaAtCenteringPosition) //Added extra condition here instead of interlock only
 		AND NOT(s_cmPalletConveyor.p_bStaError)
 		AND (s_cmPalletConveyor.p_bStaMotorStopped)
 		AND NOT(s_bReqCenteringTB);
-	
+		
 	s_fbHmiBtnTB_ToDocking.p_bStaEnabled :=
 		NOT(s_bIlckConveyorForward)
 		AND NOT(s_bStaAtDockingPosition) //Added extra condition here instead of interlock only
 		AND NOT(s_cmPalletConveyor.p_bStaError)
 		AND (s_cmPalletConveyor.p_bStaMotorStopped)
 		AND NOT(s_bReqCenteringTB);
-	
+		
 	//Centering
 	s_fbHmiBtnTB_Centering.p_bStaEnabled :=
 		NOT(s_bIlckCenteringToCenter)
@@ -1274,7 +1276,7 @@ END_IF
 //MAINTENANCE-mode ////////////////////////////////////////////////////////////////////////////////
 
 //Stopping control modules
-IF (i_eCtrlMode = E_CtrlMode.MAINTENANCE) AND (i_eCtrlState = E_CtrlState.STOPPING) THEN 
+IF (i_eCtrlMode = E_CtrlMode.MAINTENANCE) AND (i_eCtrlState = E_CtrlState.STOPPING) THEN
 	s_cmPalletConveyor.m_Stop();
 END_IF
 
@@ -1284,7 +1286,7 @@ IF (i_eCtrlMode = E_CtrlMode.IO) AND (i_eCtrlState = E_CtrlState.RUNNING) THEN
 	s_bHmiForceOutputStartEnabled := s_cmPalletConveyor.p_bStaBrakeReleasedQ;
 ELSE
 	s_bHmiForceOutputEnabled := FALSE;
-	s_bHmiForceOutputStartEnabled := FALSE;	
+	s_bHmiForceOutputStartEnabled := FALSE;
 END_IF
 
 m_Main := TRUE;
@@ -1296,13 +1298,14 @@ m_Main := TRUE;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
 s_bReqCenteringTB := TRUE;
 
-m_ReqCenteringTB := TRUE;]]></ST>
+m_ReqCenteringTB := TRUE;
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="m_ReqTB_ToCenter" Id="{b0d9aff3-a553-4249-a74b-927274e40abb}">
@@ -1310,7 +1313,7 @@ m_ReqCenteringTB := TRUE;]]></ST>
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -1325,7 +1328,7 @@ m_ReqTB_ToCenter := TRUE;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -1340,7 +1343,7 @@ m_ReqTB_ToDocking := TRUE;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -1369,7 +1372,7 @@ PROPERTY PUBLIC p_bStaTB_AtCentering : BOOL]]></Declaration>
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaTB_AtCentering := s_bStaTB_AtCentering; 
+p_bStaTB_AtCentering := s_bStaTB_AtCentering;
 ]]></ST>
         </Implementation>
       </Get>
@@ -1381,7 +1384,7 @@ PROPERTY PUBLIC p_bStaTB_AtDocking : BOOL]]></Declaration>
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaTB_AtDocking := s_bStaTB_AtDocking; 
+p_bStaTB_AtDocking := s_bStaTB_AtDocking;
 ]]></ST>
         </Implementation>
       </Get>
@@ -1417,7 +1420,7 @@ PROPERTY PUBLIC p_bStaTB_DockPosFree : BOOL]]></Declaration>
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaTB_DockPosFree := NOT(s_bStaTB_AtDocking) AND NOT(s_bStaTB_AtCentering); 
+p_bStaTB_DockPosFree := NOT(s_bStaTB_AtDocking) AND NOT(s_bStaTB_AtCentering);
 ]]></ST>
         </Implementation>
       </Get>
@@ -1429,7 +1432,7 @@ PROPERTY PUBLIC p_bStaTB_ReadyForDocking : BOOL]]></Declaration>
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaTB_ReadyForDocking := s_bStaTB_AtDocking AND s_cmPalletConveyor.p_bStaMotorStopped; 
+p_bStaTB_ReadyForDocking := s_bStaTB_AtDocking AND s_cmPalletConveyor.p_bStaMotorStopped;
 ]]></ST>
         </Implementation>
       </Get>

@@ -121,7 +121,7 @@ s_tonOpeningTimeout(
 s_tonClosingTimeout(
 	IN := i_bReqEnable AND s_bReqClose AND NOT(s_bStaDoorIsClosing),
 	PT := i_stSettings.tDoorClosingTimeout );
-
+	
 // Set error bits
 s_errDoorController := i_bReqEnable AND (s_bStaDoorControllerError OR s_errDoorController) AND NOT(i_bCmdReset);
 s_errOpeningTimeout := (s_tonOpeningTimeout.Q OR s_errOpeningTimeout) AND NOT(i_bCmdReset);
@@ -129,20 +129,20 @@ s_errClosingTimeout := (s_tonClosingTimeout.Q OR s_errClosingTimeout) AND NOT(i_
 
 // Alarm Handlers
 s_fbAlarmHandlerDoorController(
-	i_bStaActive := s_errDoorController); 
-
+	i_bStaActive := s_errDoorController);
+	
 s_fbAlarmHandlerOpeningTimeout(
 	i_bStaActive := s_errOpeningTimeout);
 	
 s_fbAlarmHandlerClosingTimeout(
 	i_bStaActive := s_errClosingTimeout);
 	
-// Alarm collector	
-s_bStaError := 
+// Alarm collector
+s_bStaError :=
 	s_fbAlarmHandlerDoorController.q_bStaActive
 	OR s_fbAlarmHandlerOpeningTimeout.q_bStaActive
 	OR s_fbAlarmHandlerClosingTimeout.q_bStaActive;
-
+	
 _m_Alarms := TRUE;
 ]]></ST>
       </Implementation>
@@ -160,7 +160,7 @@ END_IF
 IF s_bStaDoorIsOpened THEN
 	s_bReqOpen := FALSE;
 ELSIF s_bStaDoorIsClosed THEN
-	s_bReqClose := FALSE;	
+	s_bReqClose := FALSE;
 ELSIF s_bStaError THEN
 	s_bReqOpen := FALSE;
 	s_bReqClose := FALSE;
@@ -192,7 +192,7 @@ IF NOT(s_bHmiInit) THEN
 	s_stHmiData.sNameClose := s_fbHmiBtnManualClose.p_sBtnText;
 	s_stHmiData.sNameOpen := s_fbHmiBtnManualOpen.p_sBtnText;
 	s_stHmiData.sNameReset := s_fbHmiBtnManualReset.p_sBtnText;
-
+	
 	s_bHmiInit := TRUE;
 END_IF
 
@@ -214,19 +214,19 @@ s_stHmiData.s_sInterlockedReasonOpen := s_sInterlockedReasonOpen;
 IF s_stHmiData.bCmdClosePressed THEN
 	s_fbHmiBtnManualClose.m_On();
 ELSE
-	s_fbHmiBtnManualClose.m_Off();	
+	s_fbHmiBtnManualClose.m_Off();
 END_IF
 
 IF s_stHmiData.bCmdOpenPressed THEN
 	s_fbHmiBtnManualOpen.m_On();
 ELSE
-	s_fbHmiBtnManualOpen.m_Off();	
+	s_fbHmiBtnManualOpen.m_Off();
 END_IF
 
 IF s_stHmiData.bCmdResetPressed THEN
 	s_fbHmiBtnManualReset.m_On();
 ELSE
-	s_fbHmiBtnManualReset.m_Off();	
+	s_fbHmiBtnManualReset.m_Off();
 END_IF 
 
 //Buttons
@@ -241,7 +241,7 @@ s_fbHmiLedErrorClose(i_bStaLed := s_errClosingTimeout);
 s_fbHmiLedErrorOpen(i_bStaLed := s_errOpeningTimeout);
 s_fbHmiLedErrorController(i_bStaLed := s_errDoorController);
 s_fbHmiLedReset(i_bStaLed := s_bStaDoorReset);
-	
+
 IF __ISVALIDREF(i_ref_eCtrlState) THEN
 	//MAINTENANCE-mode is running
 	IF (i_eCtrlMode = E_CtrlMode.MAINTENANCE) AND (i_ref_eCtrlState = E_CtrlState.RUNNING) THEN
@@ -253,11 +253,11 @@ IF __ISVALIDREF(i_ref_eCtrlState) THEN
 		
 		s_fbHmiBtnManualReset.p_bStaVisible := TRUE;
 		s_fbHmiBtnManualReset.p_bStaEnabled := i_bReqEnable;
-			
+		
 		IF s_fbHmiBtnManualClose.p_osrBtnPress THEN
 			m_Close();
 		END_IF
-			
+		
 		IF s_fbHmiBtnManualOpen.p_osrBtnPress THEN
 			m_Open();
 		END_IF
@@ -266,14 +266,14 @@ IF __ISVALIDREF(i_ref_eCtrlState) THEN
 			m_Reset();
 		END_IF
 		
-	//other-mode	
+	//other-mode
 	ELSE
 		s_fbHmiBtnManualClose.p_bStaVisible := FALSE;
 		s_fbHmiBtnManualClose.p_bStaEnabled := FALSE;
-	
+		
 		s_fbHmiBtnManualOpen.p_bStaVisible := FALSE;
 		s_fbHmiBtnManualOpen.p_bStaEnabled := FALSE;
-
+		
 		s_fbHmiBtnManualReset.p_bStaVisible := FALSE;
 		s_fbHmiBtnManualReset.p_bStaEnabled := FALSE;
 	END_IF
@@ -306,20 +306,20 @@ s_fbAlarmHandlerClosingTimeout.i_sAlarmText := CONCAT(i_sCmName , ': Door - clos
 s_fbAlarmHandlerCloseInterlocked.i_eAlarmLevel := E_AlarmLevel.Warning;
 s_fbAlarmHandlerOpenInterlocked.i_eAlarmLevel := E_AlarmLevel.Warning;
 
-//Hmi 
+//Hmi
 	s_fbHmiBtnManualClose.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnManualClose.p_bStaVisible := FALSE;
-	s_fbHmiBtnManualClose.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnManualClose.p_bStaEnabled := FALSE;
 	s_fbHmiBtnManualClose.p_sBtnText := s_sCfgCloseName;
 	
 	s_fbHmiBtnManualOpen.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnManualOpen.p_bStaVisible := FALSE;
-	s_fbHmiBtnManualOpen.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnManualOpen.p_bStaEnabled := FALSE;
 	s_fbHmiBtnManualOpen.p_sBtnText := s_sCfgOpenName;
 	
 	s_fbHmiBtnManualReset.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 	s_fbHmiBtnManualReset.p_bStaVisible := FALSE;
-	s_fbHmiBtnManualReset.p_bStaEnabled := FALSE;		
+	s_fbHmiBtnManualReset.p_bStaEnabled := FALSE;
 	s_fbHmiBtnManualReset.p_sBtnText := 'Reset';
 	
 	s_fbHmiLedIsClose.p_bStaVisible := FALSE;
@@ -386,12 +386,12 @@ END_IF
 s_tofResetPulse(
 	IN := (i_bCmdReset AND s_bStaDoorControllerError) OR s_bReqReset,
 	PT := i_stSettings.tResetPulseDuration);
- 
+ 	
 s_bReqReset := FALSE;
 
 s_bCmdReset := s_tofResetPulse.Q;
 s_bCmdOpen := i_bReqEnable AND s_bReqOpen AND NOT(s_bStaDoorIsOpened);
-s_bCmdClose := i_bReqEnable AND s_bReqClose AND NOT(s_bStaDoorIsClosed);  
+s_bCmdClose := i_bReqEnable AND s_bReqClose AND NOT(s_bStaDoorIsClosed);
 
 s_fbForceCmdReset(
 	i_ref_bCmdInput := s_bCmdReset,
@@ -408,7 +408,7 @@ s_fbForceCmdClose(
 //--Q_bCmdReset := s_tofResetPulse.Q;
 //--Q_bCmdOpen := i_bReqEnable AND s_bReqOpen AND NOT(s_bStaDoorIsOpened);
 //--Q_bCmdClose := i_bReqEnable AND s_bReqClose AND NOT(s_bStaDoorIsClosed);
-
+	
 s_bStaDoorReset := Q_bCmdReset;
 	
 _m_Outputs := TRUE;
@@ -420,13 +420,13 @@ _m_Outputs := TRUE;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
 s_bReqClose := TRUE;
 s_bReqOpen := FALSE;
-	
+
 m_Close := TRUE;
 ]]></ST>
       </Implementation>
@@ -436,13 +436,13 @@ m_Close := TRUE;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
 s_bReqClose := FALSE;
 s_bReqOpen := TRUE;
-	
+
 m_Open := TRUE;
 ]]></ST>
       </Implementation>
@@ -452,12 +452,12 @@ m_Open := TRUE;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
 s_bReqReset := TRUE;
-	
+
 m_Reset := TRUE;
 ]]></ST>
       </Implementation>
@@ -469,9 +469,9 @@ m_Reset := TRUE;
         <ST><![CDATA[
 s_bReqClose := FALSE;
 s_bReqOpen := FALSE;
-	
+
 m_Stop := TRUE;
-	]]></ST>
+]]></ST>
       </Implementation>
     </Method>
     <Property Name="p_bStaIsClosed" Id="{ef1dc088-110b-467e-86be-7f52cc54884f}" FolderPath="Properties\">

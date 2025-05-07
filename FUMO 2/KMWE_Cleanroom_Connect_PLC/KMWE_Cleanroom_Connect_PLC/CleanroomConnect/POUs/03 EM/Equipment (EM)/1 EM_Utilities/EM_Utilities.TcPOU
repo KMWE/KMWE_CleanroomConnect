@@ -174,7 +174,7 @@ s_fbAlarmHandlerPower48VdcNotOk(i_bStaActive := s_bErrPower48VdcOk);
 s_fbAlarmHandlerPowerPotentialGroup24VdcNotOk(i_bStaActive := s_bErrPowerPotentialGroup24VdcOk);
 s_fbAlarmHandlerAirPressureNotOk(i_bStaActive := s_bErrAirPressureNotOk);
 s_fbAlarmHandlerCabinetTemperatureNotOk(i_bStaActive := s_bErrCabinetTemperatureNotOk);
-	
+
 // Reset Errors
 s_bErrSafetyNotOk R= i_bCmdReset AND s_bStaSafetyOk;
 s_bErrSafetyFbErr R= i_bCmdReset AND NOT(s_bSafetyFbErr);
@@ -239,11 +239,11 @@ s_doBeaconLedRed();
 s_doSnRestartSafety();
 
 IF NOT(s_bStaSafetyOk) THEN
-	IF s_bSafetyFbErr THEN 
+	IF s_bSafetyFbErr THEN
 		s_tp1HzPulse(i_bExcecute := TRUE, t_tOnTime := T#500MS, t_tOffTime := T#500MS);
 		s_bRestartSafetyState := s_tp1HzPulse.o_bQ;
 	ELSE
-		s_bRestartSafetyState := TRUE;	
+		s_bRestartSafetyState := TRUE;
 	END_IF
 ELSE
 	s_bRestartSafetyState := FALSE;
@@ -252,10 +252,10 @@ END_IF
 //TwinSAFE --> PLC
 
 //PLC --> TwinSAFE
-Q_bCmdRun := i_bReqEnable; 
+Q_bCmdRun := i_bReqEnable;
 Q_bCmdErrAck := i_bCmdReset;
-Q_bCmdRestartSafety := s_bRestartSafety; 
- 
+Q_bCmdRestartSafety := s_bRestartSafety;
+
 _m_Devices := TRUE;
 ]]></ST>
       </Implementation>
@@ -291,7 +291,8 @@ s_fbHmiLedBeaconGreen(i_bStaLed := s_bExtRunning);
 s_fbHmiLedBeaconYellow(i_bStaLed := s_bExtWarning);
 s_fbHmiLedBeaconRed(i_bStaLed := s_bExtError);
 
-_m_Hmi := TRUE;]]></ST>
+_m_Hmi := TRUE;
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_Init" Id="{7f1871a0-83c4-4557-ac15-5a15f84be50f}" FolderPath="Base\">
@@ -327,9 +328,9 @@ s_doBeaconLedRed.i_stSettings.tmOutputDelay := T#0S;
 s_doSnRestartSafety.i_stSettings.bCfgDelay := FALSE;
 s_doSnRestartSafety.i_stSettings.tmOutputDelay := T#0S;
 
-//---------------------------------//	
-	
-//----------------------------------//	
+//---------------------------------//
+
+//----------------------------------//
 
 //Alarm config
 s_fbAlarmHandlerSafetyCrc.i_sAlarmText := CONCAT(i_sEmName, ' - TwinSAFE Crc not equal to verified');
@@ -371,7 +372,7 @@ s_fbAlarmHandlerAirPressureNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
 s_fbAlarmHandlerCabinetTemperatureNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Cabinet temperature not OK');
 s_fbAlarmHandlerCabinetTemperatureNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
 
-//Hmi 
+//Hmi
 s_fbHmiLedSafetyOk.p_bStaVisible := FALSE;
 s_fbHmiLedSafetyOk.p_sToHmiDescriptionLed := 'Safety Ok';
 
@@ -419,7 +420,7 @@ s_fbHmiLedBeaconYellow.p_sToHmiDescriptionLed := 'Beacon yellow led';
 
 s_fbHmiLedBeaconRed.p_bStaVisible := FALSE;
 s_fbHmiLedBeaconRed.p_sToHmiDescriptionLed := 'Beacon red led';
-	
+
 _m_Init := TRUE;
 ]]></ST>
       </Implementation>
@@ -438,7 +439,7 @@ s_bSafetyFbErr := s_diSafetyFbErr.p_bStaInput;
 s_bEstopInfeedOk := I_bStaTwinSAFE_Estop1ChA AND I_bStaTwinSAFE_Estop1ChB;
 s_bEstopCleanroomOk := I_bStaTwinSAFE_Estop2ChA AND I_bStaTwinSAFE_Estop2ChB;
 s_bDoorGuardCleanroomOk := I_bStaTwinSAFE_DoorGuardCleanroomChA AND I_bStaTwinSAFE_DoorGuardCleanroomChB;
-s_bRestartSafety := s_diRestartSafety.p_bStaInput;  
+s_bRestartSafety := s_diRestartSafety.p_bStaInput;
 s_bStsPower400VacOk := s_diPower400VacOk.p_bStaInputDelayed AND s_diPower400VacOk.p_bStaInput; //on-delay only
 s_bStsPower230VacOk := s_diPower230VacOk.p_bStaInputDelayed AND s_diPower230VacOk.p_bStaInput; //on-delay only
 s_bStsPower230VacSocketsOk := s_diPower230VacSocketsOk.p_bStaInputDelayed AND s_diPower230VacSocketsOk.p_bStaInput; //on-delay only
@@ -462,19 +463,19 @@ END_IF
 
 //Reset to released if IO-Test Running is not active anymore
 IF (i_eCtrlMode <> E_CtrlMode.IO) OR (i_eCtrlState <> E_CtrlState.RUNNING) THEN
-	s_FbForceOutputLedGreen.i_eForceValue := E_ForceValue.RELEASED; 	
+	s_FbForceOutputLedGreen.i_eForceValue := E_ForceValue.RELEASED;
 END_IF
 
 IF (i_eCtrlMode <> E_CtrlMode.IO) OR (i_eCtrlState <> E_CtrlState.RUNNING) THEN
-	s_FbForceOutputLedYellow.i_eForceValue := E_ForceValue.RELEASED; 	
-END_IF 
-
-IF (i_eCtrlMode <> E_CtrlMode.IO) OR (i_eCtrlState <> E_CtrlState.RUNNING) THEN
-	s_FbForceOutputLedRed.i_eForceValue := E_ForceValue.RELEASED; 	
+	s_FbForceOutputLedYellow.i_eForceValue := E_ForceValue.RELEASED;
 END_IF
 
 IF (i_eCtrlMode <> E_CtrlMode.IO) OR (i_eCtrlState <> E_CtrlState.RUNNING) THEN
-	s_FbForceOutputSnRestartSafety.i_eForceValue := E_ForceValue.RELEASED; 	
+	s_FbForceOutputLedRed.i_eForceValue := E_ForceValue.RELEASED;
+END_IF
+
+IF (i_eCtrlMode <> E_CtrlMode.IO) OR (i_eCtrlState <> E_CtrlState.RUNNING) THEN
+	s_FbForceOutputSnRestartSafety.i_eForceValue := E_ForceValue.RELEASED;
 END_IF
 
 //Force outputs
@@ -495,7 +496,7 @@ IF s_FbForceOutputLedRed.i_eForceValue = E_ForceValue.RELEASED THEN
 ELSE
 	s_doBeaconLedRed.i_bStaOutput := s_FbForceOutputLedRed.i_eForceValue = E_ForceValue.FORCE_ON;
 END_IF
-   
+
 IF s_FbForceOutputSnRestartSafety.i_eForceValue = E_ForceValue.RELEASED THEN
 	s_doSnRestartSafety.i_bStaOutput := s_bRestartSafetyState;
 ELSE
@@ -532,8 +533,6 @@ s_bExtRunning := i_bRunning;
 IF NOT SUPER^.m_Main() THEN
 	RETURN;
 END_IF
-
-
 
 CASE i_eCtrlMode OF
 	E_CtrlMode.IDLE:
@@ -573,7 +572,7 @@ END_CASE
 IF (i_eCtrlMode = E_CtrlMode.IO) AND (i_eCtrlState = E_CtrlState.RUNNING) THEN
 	s_bHmiForceOutputEnabled := TRUE;
 ELSE
-	s_bHmiForceOutputEnabled := FALSE;	
+	s_bHmiForceOutputEnabled := FALSE;
 END_IF
 ]]></ST>
       </Implementation>

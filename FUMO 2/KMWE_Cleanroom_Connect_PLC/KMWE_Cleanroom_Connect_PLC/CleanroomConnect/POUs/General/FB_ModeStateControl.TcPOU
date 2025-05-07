@@ -6,11 +6,9 @@ VAR_INPUT
 	i_bReqStopAlarm	: BOOL;
 	i_bStaAllStopped : BOOL;
 END_VAR
-VAR_OUTPUT
-END_VAR
 VAR
-	s_bInitDone : BOOL := FALSE;	
-
+	s_bInitDone : BOOL := FALSE;
+	
 	s_eCtrlMode : E_CtrlMode := E_CtrlMode.IDLE;
 	s_eCtrlState : E_CtrlState := E_CtrlState.STOPPED;
 	
@@ -54,20 +52,20 @@ CASE s_eCtrlMode OF
 		s_fbHmiBtnModeMaintenance.p_bStaVisible := TRUE;
 		s_fbHmiBtnModeIO.p_bStaVisible := TRUE;
 		s_fbHmiBtnModeCleaning.p_bStaVisible := TRUE;
-	
+		
 		s_fbHmiBtnStateStart.p_bStaVisible := TRUE;
 		s_fbHmiBtnStateStop.p_bStaVisible := TRUE;
 		s_fbHmiBtnStateReset.p_bStaVisible := TRUE;
-	
+		
 	E_CtrlMode.AUTOMATIC:
 		;
-	
+		
 	E_CtrlMode.MANUAL:
 		;
-	
+		
 	E_CtrlMode.MAINTENANCE:
 		;
-	
+		
 	E_CtrlMode.IO:
 		;
 		
@@ -80,16 +78,16 @@ END_CASE
 IF (s_eCtrlState = E_CtrlState.STOPPED) (*OR (s_eCtrlState = E_CtrlState.IDLE)*) THEN
 		IF s_fbHmiBtnModeAutomatic.p_osrBtnPress THEN
 			s_eCtrlMode := E_CtrlMode.AUTOMATIC;
-
-		ELSIF s_fbHmiBtnModeManual.p_osrBtnPress THEN			
+			
+		ELSIF s_fbHmiBtnModeManual.p_osrBtnPress THEN
 			s_eCtrlMode := E_CtrlMode.MANUAL;
-		
+			
 		ELSIF s_fbHmiBtnModeMaintenance.p_osrBtnPress THEN
 			s_eCtrlMode := E_CtrlMode.MAINTENANCE;
-		
+			
 		ELSIF s_fbHmiBtnModeIO.p_osrBtnPress THEN
 			s_eCtrlMode := E_CtrlMode.IO;
-		
+			
 		ELSIF s_fbHmiBtnModeCleaning.p_osrBtnPress THEN
 			s_eCtrlMode := E_CtrlMode.CLEANING;
 			
@@ -99,27 +97,27 @@ IF (s_eCtrlState = E_CtrlState.STOPPED) (*OR (s_eCtrlState = E_CtrlState.IDLE)*)
 CASE s_eCtrlState OF
 	
 	E_CtrlState.STOPPED:
-	
+		
 		IF s_fbHmiBtnStateReset.p_osrBtnPress THEN
 			s_eCtrlState := E_CtrlState.IDLE;
 		END_IF 
-	
+		
 	E_CtrlState.IDLE:
-	
+		
 		IF s_fbHmiBtnStateStop.p_osrBtnPress THEN
 			s_eCtrlState := E_CtrlState.STOPPING;
 		ELSIF s_fbHmiBtnStateStart.p_osrBtnPress THEN
 			s_eCtrlState := E_CtrlState.RUNNING;
 		END_IF
-			
+		
 	E_CtrlState.RUNNING:
-	
+		
 		IF s_fbHmiBtnStateStop.p_osrBtnPress OR i_bReqStopAlarm THEN
 			s_eCtrlState := E_CtrlState.STOPPING;
 		END_IF
-	
+		
 	E_CtrlState.STOPPING:
-	
+		
 		IF i_bStaAllStopped THEN
 			s_eCtrlState := E_CtrlState.STOPPED;
 		END_IF
@@ -203,7 +201,8 @@ s_fbHmiBtnStateReset.p_bStaVisible := FALSE;
 s_fbHmiBtnStateReset.p_bStaEnabled := FALSE;
 s_fbHmiBtnStateReset.p_sBtnText := 'Reset';
 
-_m_Init := TRUE;]]></ST>
+_m_Init := TRUE;
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="m_Main" Id="{c6911376-dd10-4516-ac22-b723cd116f6a}">
@@ -245,84 +244,5 @@ p_eCtrlState := s_eCtrlState;
         </Implementation>
       </Get>
     </Property>
-    <LineIds Name="FB_ModeStateControl">
-      <LineId Id="762" Count="0" />
-      <LineId Id="715" Count="0" />
-      <LineId Id="703" Count="0" />
-    </LineIds>
-    <LineIds Name="FB_ModeStateControl._m_Devices">
-      <LineId Id="41" Count="0" />
-      <LineId Id="68" Count="9" />
-      <LineId Id="67" Count="0" />
-      <LineId Id="78" Count="0" />
-      <LineId Id="80" Count="58" />
-      <LineId Id="186" Count="1" />
-      <LineId Id="185" Count="0" />
-      <LineId Id="140" Count="19" />
-      <LineId Id="162" Count="20" />
-      <LineId Id="79" Count="0" />
-      <LineId Id="9" Count="0" />
-      <LineId Id="40" Count="0" />
-      <LineId Id="5" Count="0" />
-    </LineIds>
-    <LineIds Name="FB_ModeStateControl._m_Init">
-      <LineId Id="203" Count="0" />
-      <LineId Id="505" Count="0" />
-      <LineId Id="547" Count="1" />
-      <LineId Id="506" Count="0" />
-      <LineId Id="509" Count="1" />
-      <LineId Id="549" Count="1" />
-      <LineId Id="511" Count="0" />
-      <LineId Id="514" Count="0" />
-      <LineId Id="551" Count="0" />
-      <LineId Id="515" Count="0" />
-      <LineId Id="552" Count="0" />
-      <LineId Id="516" Count="0" />
-      <LineId Id="519" Count="0" />
-      <LineId Id="553" Count="0" />
-      <LineId Id="520" Count="0" />
-      <LineId Id="554" Count="0" />
-      <LineId Id="521" Count="0" />
-      <LineId Id="524" Count="0" />
-      <LineId Id="555" Count="0" />
-      <LineId Id="525" Count="0" />
-      <LineId Id="556" Count="0" />
-      <LineId Id="526" Count="0" />
-      <LineId Id="529" Count="1" />
-      <LineId Id="532" Count="0" />
-      <LineId Id="557" Count="1" />
-      <LineId Id="533" Count="0" />
-      <LineId Id="536" Count="0" />
-      <LineId Id="559" Count="0" />
-      <LineId Id="537" Count="0" />
-      <LineId Id="560" Count="0" />
-      <LineId Id="538" Count="0" />
-      <LineId Id="541" Count="0" />
-      <LineId Id="561" Count="0" />
-      <LineId Id="542" Count="0" />
-      <LineId Id="562" Count="0" />
-      <LineId Id="543" Count="0" />
-      <LineId Id="546" Count="0" />
-      <LineId Id="500" Count="0" />
-      <LineId Id="4" Count="0" />
-    </LineIds>
-    <LineIds Name="FB_ModeStateControl.m_Main">
-      <LineId Id="2921" Count="0" />
-      <LineId Id="2933" Count="3" />
-      <LineId Id="2932" Count="0" />
-      <LineId Id="2929" Count="1" />
-      <LineId Id="2938" Count="0" />
-      <LineId Id="2889" Count="0" />
-      <LineId Id="179" Count="0" />
-    </LineIds>
-    <LineIds Name="FB_ModeStateControl.p_eCtrlMode.Get">
-      <LineId Id="5" Count="1" />
-      <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="FB_ModeStateControl.p_eCtrlState.Get">
-      <LineId Id="3" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="4" Count="0" />
-    </LineIds>
   </POU>
 </TcPlcObject>

@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
   <POU Name="CM_DoorLock" Id="{ea68c333-cb10-44e9-998f-ee97a6acb23c}" SpecialFunc="None">
-    <Declaration><![CDATA[FUNCTION_BLOCK CM_DoorLock EXTENDS CM_Base //--IMPLEMENTS I_Door
+    <Declaration><![CDATA[FUNCTION_BLOCK CM_DoorLock EXTENDS CM_Base
 VAR_INPUT
 	i_stSettings : ST_SettingsDoorLock;
 	i_bAllowUnlock : BOOL; //TRUE = Allowed to unlock
@@ -57,10 +57,10 @@ VAR
 	
 	s_fbR_TrigReqToggleLock : R_TRIG;
 	
-	//Sequence
+	// Sequence
 	s_eSequence : E_SeqDoorLock;
 	
-	//Hmi
+	// Hmi
 	s_stHmiData : ST_DoorLock_HMI;
 	s_bHmiInit : BOOL := FALSE;
 	
@@ -263,7 +263,7 @@ s_fbHmiLedLockIsActivated(i_bStaLed := s_bStaLockIsActivated);
 s_fbHmiLedDoorIsOpened(i_bStaLed := s_bStaDoorIsOpened);
 s_fbHmiLedDoorIsClosed(i_bStaLed := s_bStaDoorIsClosed);
 
-//Set visible is set one in _m_Init()
+//Set visible is set ones in _m_Init()
 
 //State Machine
 s_sDoorLockStateMachine := TO_STRING(s_eSequence);
@@ -281,7 +281,7 @@ IF NOT SUPER^._m_Init() THEN
 	RETURN;
 END_IF
 
-//Alarm config
+// Alarm config
 s_fbAlmHdlrDoorStatusUnknown.i_eAlarmLevel := E_AlarmLevel.Warning;
 s_fbAlmHdlrDoorStatusUnknown.i_sAlarmText := CONCAT(i_sCmName , ': Door Status Unknown');
 
@@ -291,7 +291,7 @@ s_fbAlmHdlrReqUnlockTimeout.i_sAlarmText := CONCAT(i_sCmName , ': Request Unlock
 s_fbAlmHdlrDoorNotClosed.i_eAlarmLevel := E_AlarmLevel.Warning;
 s_fbAlmHdlrDoorNotClosed.i_sAlarmText := CONCAT(i_sCmName , ': Door Not Closed');
 
-//Hmi
+// Hmi
 s_fbHmiLedRequestButton.p_bStaVisible := TRUE;
 s_fbHmiLedRequestButton.p_sToHmiDescriptionLed := 'Request Button Is Pressed';
 
@@ -361,8 +361,7 @@ _m_Outputs := TRUE;
       </Implementation>
     </Method>
     <Method Name="m_Lock" Id="{1802c1c5-3d52-4491-b19a-2db94b292512}" FolderPath="Methods\">
-      <Declaration><![CDATA[// Request to Lock
-METHOD PUBLIC m_Lock : BOOL
+      <Declaration><![CDATA[METHOD PUBLIC m_Lock : BOOL
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
@@ -383,8 +382,7 @@ m_Lock := TRUE;
       </Implementation>
     </Method>
     <Method Name="m_Unlock" Id="{4b2987be-5b37-448a-ae60-0d85428f41cd}" FolderPath="Methods\">
-      <Declaration><![CDATA[// Request to Unlock
-METHOD PUBLIC m_Unlock : BOOL
+      <Declaration><![CDATA[METHOD PUBLIC m_Unlock : BOOL
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[

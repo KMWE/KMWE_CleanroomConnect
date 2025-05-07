@@ -112,7 +112,7 @@ VAR
 	I_bStaTwinSAFE_Estop2ChB AT %I* : BOOL;
 	I_bStaTwinSAFE_FbPalletConveyorSTO AT %I* : BOOL;
 	I_bStaTwinSAFE_FbPotGrpValvesOFF AT %I* : BOOL;
-//--	I_bStaTwinSAFE_FbTransportUnitSTO AT %I* : BOOL;
+//?	I_bStaTwinSAFE_FbTransportUnitSTO AT %I* : BOOL;
 	I_bStaTwinSAFE_DoorGuardCleanroomChA AT %I* : BOOL;
 	I_bStaTwinSAFE_DoorGuardCleanroomChB AT %I* : BOOL;
 	
@@ -250,6 +250,7 @@ ELSE
 END_IF
 
 //TwinSAFE --> PLC
+//<none>
 
 //PLC --> TwinSAFE
 Q_bCmdRun := i_bReqEnable;
@@ -270,7 +271,7 @@ IF NOT SUPER^._m_Hmi() THEN
 END_IF
 
 //Buttons
-//..
+//<none>
 
 //Hmi Leds
 s_fbHmiLedSafetyOk(i_bStaLed := s_bStaSafetyOk);
@@ -327,10 +328,6 @@ s_doBeaconLedRed.i_stSettings.bCfgDelay := FALSE;
 s_doBeaconLedRed.i_stSettings.tmOutputDelay := T#0S;
 s_doSnRestartSafety.i_stSettings.bCfgDelay := FALSE;
 s_doSnRestartSafety.i_stSettings.tmOutputDelay := T#0S;
-
-//---------------------------------//
-
-//----------------------------------//
 
 //Alarm config
 s_fbAlarmHandlerSafetyCrc.i_sAlarmText := CONCAT(i_sEmName, ' - TwinSAFE Crc not equal to verified');

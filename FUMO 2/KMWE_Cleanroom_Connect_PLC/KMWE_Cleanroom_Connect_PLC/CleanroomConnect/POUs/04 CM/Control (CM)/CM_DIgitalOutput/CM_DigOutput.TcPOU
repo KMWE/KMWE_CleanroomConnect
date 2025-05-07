@@ -193,14 +193,11 @@ IF NOT SUPER^._m_Outputs() THEN
 END_IF
 
 IF i_bReqEnable AND s_bReqOff AND NOT(i_bIclkOff) THEN
-			s_bCmdOutput := FALSE;
-		ELSIF i_bReqEnable AND s_bReqOn AND NOT(i_bIclkOn) THEN
-			s_bCmdOutput := TRUE;
-		ELSE
-			;
-			//--s_bCmdOutput := FALSE;
-		END_IF
-		
+	s_bCmdOutput := FALSE;
+ELSIF i_bReqEnable AND s_bReqOn AND NOT(i_bIclkOn) THEN
+	s_bCmdOutput := TRUE;
+END_IF
+
 IF __ISVALIDREF(i_ref_eCtrlState) THEN
 	IF (i_eCtrlMode <> E_CtrlMode.IO) OR (i_ref_eCtrlState <> E_CtrlState.RUNNING) THEN
 		s_fbForceCmdOutput.i_eForceValue := E_ForceValue.RELEASED;

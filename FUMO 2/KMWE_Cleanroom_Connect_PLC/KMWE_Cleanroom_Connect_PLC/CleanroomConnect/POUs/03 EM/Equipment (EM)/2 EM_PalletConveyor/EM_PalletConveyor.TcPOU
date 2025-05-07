@@ -56,9 +56,6 @@ VAR
 	s_bReqTB_ToDocking : BOOL := FALSE;
 	s_bReqCenteringTB : BOOL := FALSE;
 	
-	//Commands
-	//--s_bCmdHold : BOOL;
-	
 	//States
 	s_bStaBrakeReleased : BOOL := FALSE;
 	s_bStaDriveError : BOOL := FALSE;
@@ -161,7 +158,7 @@ VAR
 END_VAR
 
 VAR PERSISTENT //Variables below will be returned during: Power Cycle, Active Configuration, Download, Cold Restart
-	s_eLastStepCenteringPersistent : E_SeqCentering := E_SeqCentering.READY;
+//--	s_eLastStepCenteringPersistent : E_SeqCentering := E_SeqCentering.READY;
 	s_eLastStepTransportPersistent : E_SeqTransport := E_SeqTransport.READY;
 END_VAR
 ]]></Declaration>
@@ -253,10 +250,8 @@ _m_Alarms := TRUE;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-//Pallet Conveyor
 _m_Sequence();
 
-//Pallet Centering
 //--centering functionality is build into the transport sequencer
 //--_m_SeqCentering();
 ]]></ST>
@@ -471,12 +466,12 @@ s_diStaDoorOpened.i_stSettings.tmInputDelay := T#0MS;
 
 //Interlock strings
 //Conveyor
-//i_stInterlockList.arr_Interlocks[0].sReason --> External, dynamical will be written in m_input
+//[0].sReason --> External, dynamical will be written in m_input
 s_fbIlckHandlerConveyorBackward.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
 s_fbIlckHandlerConveyorBackward.i_stInterlockList.arr_Interlocks[2].sReason := 'Centering not at idle-position';
 s_fbIlckHandlerConveyorBackward.i_stInterlockList.arr_Interlocks[3].sReason := 'Already at infeed position';
 
-//i_stInterlockList.arr_Interlocks[0].sReason --> External, dynamical will be written in m_input
+//[0].sReason --> External, dynamical will be written in m_input
 s_fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[1].sReason := 'Utilities not OK';
 s_fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[2].sReason := 'Centering not at idle-position';
 s_fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[3].sReason := 'Outer TB door not detected';
@@ -735,27 +730,16 @@ s_fbParamTimeoutCenteringToIdle(
 	
 //Write to settings
 i_ref_stSettings.fSpeedManual := s_fbParamSpeedManual.p_fValue;
-
 i_ref_stSettings.fSpeedGoToInfeed := s_fbParamSpeedGoToInfeed.p_fValue;
-
 i_ref_stSettings.fSpeedGoToCentering := s_fbParamSpeedGoToCentering.p_fValue;
-
 i_ref_stSettings.fSpeedGoToDocking := s_fbParamSpeedGoToDocking.p_fValue;
-
 i_ref_stSettings.fDistanceToInfeed := s_fbParamDistanceToInfeed.p_fValue;
-
 i_ref_stSettings.fDistanceToCentering := s_fbParamDistanceToCentering.p_fValue;
-
 i_ref_stSettings.fDistanceToDocking := s_fbParamDistanceToDocking.p_fValue;
-
 i_ref_stSettings.fDistanceOuterDoorCheck := s_fbParamDistanceOuterDoorCheck.p_fValue;
-
 i_ref_stSettings.fTravelTollerance := s_fbParamTravelTollerance.p_fValue;
-
 i_ref_stSettings.tCenteringDuration := LREAL_TO_TIME(s_fbParamCenteringDuration.p_fValue);
-
 i_ref_stSettings.tTimeoutCenteringToCenter := LREAL_TO_TIME(s_fbParamTimeoutCenteringToCenter.p_fValue);
-
 i_ref_stSettings.tTimeoutCenteringToIdle := LREAL_TO_TIME(s_fbParamTimeoutCenteringToIdle.p_fValue);
 
 _m_Params := TRUE;
@@ -886,8 +870,6 @@ s_fbSeqControl(
 		AND i_bReqEnable
 		AND (s_eSequence = E_SeqTransport.ERROR) // Only reset/resume sequencer from ERROR state
 		AND NOT(s_bStaError),
-//--					AND NOT(s_cmCenteringUnit.p_bStaError)
-//--					AND NOT(s_cmPalletConveyor.p_bStaError)
 	i_bStaError := s_bStaError OR NOT(i_bReqEnable));
 	
 s_sResumeStep := TO_STRING(s_eResumeStep);
@@ -898,10 +880,9 @@ IF (i_eCtrlState = E_CtrlState.STOPPING) THEN
 END_IF
 
 CASE s_eSequence OF
-	
 	E_SeqTransport.IDLE:
 		s_eTmpLocation := E_Location.UNKNOWN;
-	
+		
 		IF (i_eCtrlState = E_CtrlState.IDLE) THEN
 			s_eSequence := E_SeqTransport.START;
 		END_IF
@@ -911,12 +892,10 @@ CASE s_eSequence OF
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmPalletConveyor.m_Stop();
 			s_cmCenteringUnit.m_Off();
-			//--s_bCmdHold := FALSE;
 			s_sMessage := 'start';
 		END_IF
 		
 		IF s_cmPalletConveyor.p_bStaMotorStopped AND_THEN NOT(s_cmPalletConveyor.p_bStaBrakeReleased) AND s_fbSeqControl.q_tmStepTime > T#1S THEN
-		//??IF s_cmPalletConveyor.p_bStaMotorStopped AND_THEN NOT(s_cmPalletConveyor.p_bStaBrakeReleased) AND s_fbSeqTransportControl.q_tmStepTime > T#1S
 		//??	AND NOT(i_bSta2HC_Active) THEN
 			
 			IF i_eCtrlState = E_CtrlState.RUNNING THEN
@@ -943,7 +922,6 @@ CASE s_eSequence OF
 			IF _m_CmdTB_ToInfeed(i_refReason := s_sMessage) THEN
 				s_eSequence := E_SeqTransport.MOVE_TO_INFEED;
 			ELSE //If failed (command not allowed): the message will be written with the interlock reason
-				//--s_bCmdHold := TRUE;
 				;
 			END_IF
 			
@@ -954,7 +932,6 @@ CASE s_eSequence OF
 			IF _m_CmdTB_ToCenter(i_refReason := s_sMessage) THEN
 				s_eSequence := E_SeqTransport.MOVE_TO_CENTERING;
 			ELSE //If failed (command not allowed): the message will be written with the interlock reason
-				//--s_bCmdHold := TRUE;
 				;
 			END_IF
 			
@@ -965,7 +942,6 @@ CASE s_eSequence OF
 			IF _m_CmdTB_ToDocking(i_refReason := s_sMessage) THEN
 				s_eSequence := E_SeqTransport.MOVE_TO_DOCKING;
 			ELSE //If failed (command not allowed): the message will be written with the interlock reason
-				//--s_bCmdHold := TRUE;
 				;
 			END_IF
 			
@@ -1007,7 +983,6 @@ CASE s_eSequence OF
 		//??	//--s_cmPalletConveyor.m_Stop();
 		//??END_IF
 		
-		//--IF s_bStaAtInfeedRearPosition THEN //added condigion InfeedFrontPosition, then pallet will be transported al little but further to correct postition.
 		IF s_bStaAtInfeedRearPosition AND s_bStaAtInfeedFrontPosition THEN
 			s_eTmpLocation := E_Location.INFEED;
 			s_eSequence := E_SeqTransport.STOP;

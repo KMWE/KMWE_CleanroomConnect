@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
   <POU Name="CM_MoviTrac_B" Id="{fa9a3c02-fb9e-4f0d-9f6f-ce091f3d4d49}" SpecialFunc="None">
-    <Declaration><![CDATA[FUNCTION_BLOCK CM_MoviTrac_B EXTENDS CM_Base //IMPLEMENTS I_Motor_base
+    <Declaration><![CDATA[FUNCTION_BLOCK CM_MoviTrac_B EXTENDS CM_Base //??IMPLEMENTS I_Motor_base
 
 VAR CONSTANT
 	c_MAX_FB_NAME_LENGTH : USINT := 8; //Maximum feedback-name length
@@ -91,7 +91,7 @@ VAR
 	s_wrnMotorForwardInterlocked : BOOL;
 	s_wrnMotorBackwardInterlocked : BOOL;
 	
-	//Hmi
+	// Hmi
 	s_stHmiData : ST_MoviTrac_B_HMI;
 	s_bHmiInit : BOOL := FALSE;
 	
@@ -168,11 +168,11 @@ s_wrnStartMotorNotAllowed R= s_bStaBrakeReleased;
 
 s_fbAlarmHandlerMotorForwardInterlocked(
 	i_bStaActive := s_wrnMotorForwardInterlocked,
-	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move forward, Reason: ',CONCAT(s_sInterlockedReasonForward, '.'))));
+	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move forward, Reason: ',CONCAT(s_sInterlockedReasonForward, '.')))) ;
 	
 s_fbAlarmHandlerMotorBackwardInterlocked(
 	i_bStaActive := s_wrnMotorBackwardInterlocked,
-	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move backward, Reason: ',CONCAT(s_sInterlockedReasonBackward, '.'))));
+	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move backward, Reason: ',CONCAT(s_sInterlockedReasonBackward, '.'))) );
 	
 // Alarm collector
 s_bStaError := 
@@ -681,8 +681,7 @@ m_ApplyBrake := NOT(s_bStaBrakeReleased);
       </Implementation>
     </Method>
     <Method Name="m_ReleaseBrake" Id="{e96b1d6a-c145-4ed0-b15b-db24c9d0f5cd}" FolderPath="Methods\">
-      <Declaration><![CDATA[/// Release brake
-METHOD PUBLIC m_ReleaseBrake : BOOL
+      <Declaration><![CDATA[METHOD PUBLIC m_ReleaseBrake : BOOL
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
@@ -723,8 +722,6 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-//--IF NOT(i_bIclkBackward) THEN
-//--IF NOT(i_fbInterlockConvBwd.p_bInterlocked) THEN
 IF NOT(s_bIclkBackward) THEN
 	s_bReqStartBackward := TRUE;
 	
@@ -833,8 +830,6 @@ PROPERTY PUBLIC p_bStaMotorStopped : BOOL]]></Declaration>
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-//--p_bStaMotorStopped := s_bStaMotorStopped;
-
 p_bStaMotorStopped :=
 	(eSeqMOVITRAC_B_WithBrake = E_SeqMOVITRAC_B_WithBrake.STOPPED)
 	OR (eSeqMOVITRAC_B_WithBrake = E_SeqMOVITRAC_B_WithBrake.ERROR);

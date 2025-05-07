@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
   <POU Name="CM_Servo" Id="{29dfdbae-f16d-497a-b262-2baea4701d77}" SpecialFunc="None">
-    <Declaration><![CDATA[FUNCTION_BLOCK CM_Servo EXTENDS CM_Base //IMPLEMENTS I_Servo
+    <Declaration><![CDATA[FUNCTION_BLOCK CM_Servo EXTENDS CM_Base //??IMPLEMENTS I_Servo
 
 VAR CONSTANT
 	c_MAX_FB_NAME_LENGTH : USINT := 8; //Maximum feedback-name length
@@ -29,13 +29,13 @@ VAR
 	
 	// Outputs
 	
-	//Interlocks
+	// Interlocks
 	s_bIclkPos : BOOL;
 	s_bIclkNeg : BOOL;
 	s_sInterlockedReasonPos : STRING; //External interlocked reason for clarifying reason
 	s_sInterlockedReasonNeg : STRING; //External interlocked reason for clarifying reason
 	
-	//Requests
+	// Requests
 	s_bReqNcStop : BOOL;
 	s_bReqNcReset : BOOL;
 	s_bReqNcHome : BOOL;
@@ -101,7 +101,7 @@ VAR
 	s_fbMcStop : Tc2_MC2.MC_Stop;
 	s_fOverride : LREAL := 100.0;
 	
-	//Hmi
+	// Hmi
 	s_stHmiData : ST_Servo_HMI;
 	s_bHmiInit : BOOL := FALSE;
 	
@@ -122,21 +122,14 @@ VAR
 	s_fbHmiLedAtPosition : FB_HmiLed;
 	s_fbHmiLedDriveError : FB_HmiLed;
 	
-	//Sequence
+	// Sequence
 	s_eSequence : E_SeqServo;
 	s_fbSeqControl : FB_SeqControl;
 	s_mcDirection : Tc2_MC2.MC_Direction;
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[//--CASE LREAL_TO_USINT(s_fOverride) OF
-//--	0..12 : s_fOverride := 0.0;
-//--	13..37 : s_fOverride := 25.0;
-//--	38..62 : s_fOverride := 50.0;
-//--	63..87 : s_fOverride := 75.0;
-//--	88..100 : s_fOverride := 100.0;
-//--END_CASE
-
+      <ST><![CDATA[
 s_fbMcPower(
 	Axis := i_refAxis,
 	Enable := I_bEnable,
@@ -150,8 +143,6 @@ s_fbMcPower(
 	Active => s_bActive,
 	Error => s_bError,
 	ErrorID => s_nErrorID);
-
-
 	
 SUPER^();
 ]]></ST>
@@ -203,15 +194,15 @@ END_IF
 // Alarm Handlers
 s_fbAlarmHandlerDriveError(
 	i_bStaActive := s_errDriveError,
-	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Drive - has error: ', UDINT_TO_STRING(i_refAxis.NcToPlc.ErrorCode))));
+	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Drive - has error: ', UDINT_TO_STRING(i_refAxis.NcToPlc.ErrorCode))) );
 	
 s_fbAlarmHandlerMotorPosInterlocked(
 	i_bStaActive := s_wrnMotorPosInterlocked,
-	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move forward, Reason: ',CONCAT(s_sInterlockedReasonPos, '.'))));
+	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move forward, Reason: ',CONCAT(s_sInterlockedReasonPos, '.'))) );
 	
 s_fbAlarmHandlerMotorNegInterlocked(
 	i_bStaActive := s_wrnMotorNegInterlocked,
-	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move backward, Reason: ',CONCAT(s_sInterlockedReasonNeg, '.'))));
+	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move backward, Reason: ',CONCAT(s_sInterlockedReasonNeg, '.'))) );
 	
 s_fbAlarmHandlerNotEnabled(
 	i_bStaActive := NOT(s_bStaEnabled));
@@ -277,19 +268,6 @@ CASE s_eSequence OF
 		END_IF
 		
 	E_SeqServo.STOP:
-(*	s_fbMcStop(
-		Axis := i_refAxis,
-		Execute := s_bReqNcStop,
-		Deceleration := i_ref_setting.fStopDec,
-		Jerk := i_ref_setting.fStopJrk,
-		Options := ,
-		Done => s_bDone,
-		Busy => s_bBusy,
-		Active => s_bActive,
-		CommandAborted => s_bCommandAborted,
-		Error => s_bError,
-		ErrorID => s_nErrorID);
-*)		
 		IF s_fbMcStop.Done THEN
 			s_bReqNcStop := FALSE;
 			s_eSequence := E_SeqServo.IDLE;
@@ -306,23 +284,8 @@ CASE s_eSequence OF
 			s_bReqNcReset := FALSE;
 			s_eSequence := E_SeqServo.ERROR;
 		END_IF
-	
+		
 	E_SeqServo.HOME:
-(*		s_fbMcHome(
-			Axis := i_refAxis,
-			Execute := s_bReqNcHome,
-			Position := i_ref_setting.fHomeOffset,
-			HomingMode := i_mcHomingMode,
-			BufferMode := i_mcBufferMode,
-			Options := ,
-			bCalibrationCam := I_bDetReferenceSwitch,
-			Done => s_bDone,
-			Busy => s_bBusy,
-			Active => s_bActive,
-			CommandAborted => s_bCommandAborted,
-			Error => s_bError,
-			ErrorID => s_nErrorID);
-*)		
 		IF s_fbMcHome.Done THEN
 			s_bReqNcHome := FALSE;
 			s_eSequence := E_SeqServo.IDLE;
@@ -332,23 +295,6 @@ CASE s_eSequence OF
 		END_IF
 		
 	E_SeqServo.JOG:
-(*		s_fbMcJog(
-			Axis := i_refAxis,
-			JogForward := s_fbHmiBtnJogPos.p_bStaBtn,
-			JogBackwards := s_fbHmiBtnJogNeg.p_bStaBtn,
-			Mode := MC_JOGMODE_STANDARD_SLOW,
-			Position := ,
-			Velocity := i_ref_setting.fJogVel,
-			Acceleration := i_ref_setting.fJogAcc,
-			Deceleration := i_ref_setting.fJogDec,
-			Jerk := i_ref_setting.fJogJrk,
-			Done => s_bDone,
-			Busy => s_bBusy,
-			Active => s_bActive,
-			CommandAborted => s_bCommandAborted,
-			Error => s_bError,
-			ErrorID => s_nErrorID);
-*)			
 		IF (NOT(s_fbHmiBtnJogPos.p_bStaBtn OR s_fbHmiBtnJogNeg.p_bStaBtn) AND NOT(s_fbMcJog.Busy)) OR s_fbMcJog.CommandAborted THEN
 			s_bReqNcJog := FALSE;
 			s_eSequence := E_SeqServo.IDLE;
@@ -358,33 +304,6 @@ CASE s_eSequence OF
 		END_IF
 		
 	E_SeqServo.MOVE_ABS:
-(*		IF (i_eCtrlMode <> E_CtrlMode.AUTOMATIC) AND (i_eCtrlMode <> E_CtrlMode.MANUAL) THEN
-			s_fbMcMoveAbs.Position := s_fSetTargetPosition;
-			s_fbMcMoveAbs.Velocity := i_ref_setting.fAbsPosVel;
-			s_fbMcMoveAbs.Acceleration := i_ref_setting.fAbsPosAcc;
-			s_fbMcMoveAbs.Deceleration := i_ref_setting.fAbsPosDec;
-			s_fbMcMoveAbs.Jerk := i_ref_setting.fAbsPosJrk;
-		ELSE
-			; //positining settings are written from the sequence (this could be different in each case)
-		END_IF
-		
-		s_fbMcMoveAbs(
-			Axis := i_refAxis,
-			Execute := s_bReqNcMoveAbs,
-			Position := ,
-			Velocity := ,
-			Acceleration := ,
-			Deceleration := ,
-			Jerk := ,
-			BufferMode := i_mcBufferMode,
-			Options := ,
-			Done => s_bDone,
-			Busy => s_bBusy,
-			Active => s_bActive,
-			CommandAborted => s_bCommandAborted,
-			Error => s_bError,
-			ErrorID => s_nErrorID);
-*)			
 		IF s_fbMcMoveAbs.Done OR s_fbMcMoveAbs.CommandAborted THEN
 			s_bReqNcMoveAbs := FALSE;
 			s_eSequence := E_SeqServo.IDLE;
@@ -394,14 +313,6 @@ CASE s_eSequence OF
 		END_IF
 		
 	E_SeqServo.ERROR:
-(*		s_fbMcReset(
-			Axis := i_refAxis,
-			Execute := s_bReqNcReset,
-			Done => s_bDone,
-			Busy => s_bBusy,
-			Error => s_bError,
-			ErrorID => s_nErrorID);
-*)			
 		IF s_bReqNcReset THEN
 			s_eSequence := E_SeqServo.RESET;
 		END_IF
@@ -420,7 +331,7 @@ s_fbMcStop(
 	CommandAborted => s_bCommandAborted,
 	Error => s_bError,
 	ErrorID => s_nErrorID);
-
+	
 s_fbMcHome(
 	Axis := i_refAxis,
 	Execute := s_bReqNcHome,
@@ -785,7 +696,7 @@ s_bStaLimitSwitchPos := I_bDetLimitSwitchPos;
 s_bStaLimitSwitchNeg := I_bDetLimitSwitchNeg;
 
 //Drive/NC-task status
-s_bStaEnabledControl := s_bStaEnabled; //-- AND s_fbMcPower.Status;
+s_bStaEnabledControl := s_bStaEnabled;
 s_bStaEnabledPos := s_bStaLimitSwitchPos;
 s_bStaEnabledNeg := s_bStaLimitSwitchNeg;
 
@@ -806,7 +717,7 @@ s_bIclkNeg := i_bIclkNeg;
 
 {warning '#TODO: Not clear why this interlocks are configured here?'}
 //Local reasons, first
-IF NOT(s_bStaEnabled) AND (i_eCtrlMode = E_CtrlMode.MAINTENANCE) THEN 
+IF NOT(s_bStaEnabled) AND (i_eCtrlMode = E_CtrlMode.MAINTENANCE) THEN
 	s_sInterlockedReasonPos := 'Not enabled';
 ELSIF NOT(s_bStaLimitSwitchPos) THEN  
 	s_sInterlockedReasonPos := CONCAT('Limit-switch ', s_sCfgPosName);
@@ -815,7 +726,7 @@ ELSE
 END_IF
 
 //Local reasons, first
-IF NOT(s_bStaEnabled) AND (i_eCtrlMode = E_CtrlMode.MAINTENANCE) THEN 
+IF NOT(s_bStaEnabled) AND (i_eCtrlMode = E_CtrlMode.MAINTENANCE) THEN
 	s_sInterlockedReasonNeg := 'Not enabled';
 ELSIF NOT(s_bStaLimitSwitchNeg) THEN
 	s_sInterlockedReasonNeg := CONCAT('Limit-switch ', s_sCfgNegName);
@@ -1003,7 +914,6 @@ PROPERTY PUBLIC p_bHomed : BOOL]]></Declaration>
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-//--p_bHomed := i_refAxis.Status.Homed;
 p_bHomed := s_bStaHomed;
 ]]></ST>
         </Implementation>
@@ -1029,7 +939,6 @@ PROPERTY PUBLIC p_bStandstill : BOOL]]></Declaration>
         <Implementation>
           <ST><![CDATA[
 p_bStandstill := s_bStaStandstill;
-//--p_bStandstill := i_refAxis.Status.StandStill;
 ]]></ST>
         </Implementation>
       </Get>

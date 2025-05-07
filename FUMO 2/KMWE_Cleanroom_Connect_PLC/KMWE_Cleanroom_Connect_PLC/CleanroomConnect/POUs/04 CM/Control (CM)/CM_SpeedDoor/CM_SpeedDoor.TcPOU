@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
   <POU Name="CM_SpeedDoor" Id="{e2ac819d-166f-472e-93dd-5b172f53ac70}" SpecialFunc="None">
-    <Declaration><![CDATA[FUNCTION_BLOCK CM_SpeedDoor EXTENDS CM_Base //??IMPLEMENTS I_Door
+    <Declaration><![CDATA[FUNCTION_BLOCK CM_SpeedDoor EXTENDS CM_Base IMPLEMENTS I_Door
 
 VAR CONSTANT
 	c_MAX_FB_NAME_LENGTH : USINT := 8; //Maximum feedback-name length
@@ -227,7 +227,7 @@ IF s_stHmiData.bCmdResetPressed THEN
 	s_fbHmiBtnManualReset.m_On();
 ELSE
 	s_fbHmiBtnManualReset.m_Off();
-END_IF 
+END_IF
 
 //Buttons
 s_fbHmiBtnManualClose();
@@ -339,7 +339,7 @@ s_fbAlarmHandlerOpenInterlocked.i_eAlarmLevel := E_AlarmLevel.Warning;
 	
 	s_fbHmiLedReset.p_bStaVisible := FALSE;
 	s_fbHmiLedReset.p_sToHmiDescriptionLed := 'Door Controller Reset';
-
+	
 _m_Init := TRUE;
 ]]></ST>
       </Implementation>
@@ -404,10 +404,6 @@ s_fbForceCmdOpen(
 s_fbForceCmdClose(
 	i_ref_bCmdInput := s_bCmdClose,
 	i_ref_bCmdOutput := Q_bCmdClose);
-	
-//--Q_bCmdReset := s_tofResetPulse.Q;
-//--Q_bCmdOpen := i_bReqEnable AND s_bReqOpen AND NOT(s_bStaDoorIsOpened);
-//--Q_bCmdClose := i_bReqEnable AND s_bReqClose AND NOT(s_bStaDoorIsClosed);
 	
 s_bStaDoorReset := Q_bCmdReset;
 	
@@ -493,7 +489,7 @@ PROPERTY PUBLIC p_bStaIsClosing : BOOL]]></Declaration>
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaIsClosing := s_bReqClose AND NOT s_bStaDoorIsClosed;
+p_bStaIsClosing := s_bReqClose AND NOT(s_bStaDoorIsClosed);
 ]]></ST>
         </Implementation>
       </Get>
@@ -517,7 +513,7 @@ PROPERTY PUBLIC p_bStaIsOpening : BOOL]]></Declaration>
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaIsOpening := s_bReqOpen AND NOT s_bStaDoorIsOpened;
+p_bStaIsOpening := s_bReqOpen AND NOT(s_bStaDoorIsOpened);
 ]]></ST>
         </Implementation>
       </Get>

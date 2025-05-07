@@ -204,31 +204,31 @@ s_bErrTransportDrive S= s_cmTransport.p_bError;
 // Alarm Handlers
 s_fbAlarmHandlerLiftDrive(
 	i_bStaActive := s_bErrLiftDrive,
-	i_sAlarmText := CONCAT(i_sEmName, CONCAT( ': Scissor Lift Drive error: ', s_sReason)));
+	i_sAlarmText := CONCAT(i_sEmName, CONCAT( ': Scissor Lift Drive error: ', s_sReason)) );
 	
 s_fbAlarmHandlerTransportDrive(
 	i_bStaActive := s_bErrTransportDrive,
-	i_sAlarmText := CONCAT(i_sEmName, CONCAT( ': Transport Unit Drive error: ', s_sReason)));
+	i_sAlarmText := CONCAT(i_sEmName, CONCAT( ': Transport Unit Drive error: ', s_sReason)) );
 	
 s_fbAlarmHandlerLockTrolleyFailed(
 	i_bStaActive := s_bErrLockTrolleyFailed,
-	i_sAlarmText := CONCAT(i_sEmName, ': Locking Trolley Failed.'));
+	i_sAlarmText := CONCAT(i_sEmName, ': Locking Trolley Failed.') );
 	
 s_fbAlarmHandlerUnlockTrolleyFailed(
 	i_bStaActive := s_bErrUnlockTrolleyFailed,
-	i_sAlarmText := CONCAT(i_sEmName, ': Unlocking Trolley Failed.'));
+	i_sAlarmText := CONCAT(i_sEmName, ': Unlocking Trolley Failed.') );
 	
 s_fbAlarmHandlerNoTrolleyPlaced(
 	i_bStaActive := s_bErrNoTrolleyPlaced,
-	i_sAlarmText := CONCAT(i_sEmName, ': No Trolley Placed In Cabin.'));
+	i_sAlarmText := CONCAT(i_sEmName, ': No Trolley Placed In Cabin.') );
 	
 s_fbAlarmHandlerCabinNotEmpty(
 	i_bStaActive := s_bErrCabinNotEmpty,
-	i_sAlarmText := CONCAT(i_sEmName, ': Cabin Not Empty.'));
+	i_sAlarmText := CONCAT(i_sEmName, ': Cabin Not Empty.') );
 	
 s_fbAlarmHandlerCmdNotAllowed(
 	i_bStaActive := s_bErrCmdNotAllowed,
-	i_sAlarmText := CONCAT(i_sEmName, CONCAT(': ', s_sMessage)));
+	i_sAlarmText := CONCAT(i_sEmName, CONCAT(': ', s_sMessage)) );
 	
 // Reset warnings
 IF i_bCmdReset THEN
@@ -263,7 +263,6 @@ _m_Alarms := TRUE;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-//Lifting Transport
 _m_Sequence();
 ]]></ST>
       </Implementation>
@@ -408,10 +407,6 @@ END_VAR
 
 _m_ConvLiftToMotorPos := i_stPosProf;
 _m_ConvLiftToMotorPos.fPos := _m_ConvLiftHeightToSpindPos(i_stPosProf.fPos);
-//--_m_ConvLiftToMotorPos.fVelocity := i_stPosProf.fVelocity;
-//--_m_ConvLiftToMotorPos.fAcceleration := i_stPosProf.fAcceleration;
-//--_m_ConvLiftToMotorPos.fDeceleration := i_stPosProf.fDeceleration;
-//--_m_ConvLiftToMotorPos.fJerk := i_stPosProf.fJerk;
 ]]></ST>
       </Implementation>
     </Method>
@@ -460,7 +455,6 @@ END_VAR
       <Implementation>
         <ST><![CDATA[
 // Calculate required motor position as function of desired transport unit position
-
 s_fConvFactor := 0.5;
 
 _m_ConvTranspToMotorPos.fPos := i_stPosProf.fPos * s_fConvFactor;
@@ -495,7 +489,7 @@ s_cmLift(
 	i_bIclkNeg := s_bIlckLiftDown);
 	
 s_bStaLiftDriveError := s_cmLift.p_bError;
-	
+
 s_cmTransport(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
@@ -503,7 +497,7 @@ s_cmTransport(
 	i_ref_setting := i_ref_stSettings.stSettingsServoTransport,
 	i_bCmdReset := i_bCmdReset,
 	i_refAxis := axisTransport,
-	i_bIclkPos := s_bIlckTransportExtract, 
+	i_bIclkPos := s_bIlckTransportExtract,
 	i_bIclkNeg := s_bIlckTransportRetract);
 	
 s_bStaTransportDriveError := s_cmTransport.p_bError;
@@ -584,7 +578,8 @@ s_cmLift.i_bReqEnable := FALSE;
 s_cmLift.i_eCtrlMode := E_CtrlMode.IDLE;
 s_cmLift.i_sCmName := 'CM Lift';
 s_cmLift.i_refAxis REF= axisLift;
-s_cmLift.i_mcHomingMode := Tc2_MC2.MC_HomingMode.MC_Direct; //Tc2_MC2.MC_HomingMode.MC_DefaultHoming;
+{warning '#TODO: Replace homing, during test om real machine'}
+s_cmLift.i_mcHomingMode := Tc2_MC2.MC_HomingMode.MC_Direct; //++Tc2_MC2.MC_HomingMode.MC_DefaultHoming;
 s_cmLift.p_sCfgPosName := 'Up';
 s_cmLift.p_sCfgNegName := 'Down';
 
@@ -592,7 +587,8 @@ s_cmTransport.i_bReqEnable := FALSE;
 s_cmTransport.i_eCtrlMode := E_CtrlMode.IDLE;
 s_cmTransport.i_sCmName := 'CM Transport Unit';
 s_cmTransport.i_refAxis REF= axisTransport;
-s_cmTransport.i_mcHomingMode := Tc2_MC2.MC_HomingMode.MC_Direct; //Tc2_MC2.MC_HomingMode.MC_DefaultHoming;
+{warning '#TODO: Replace homing, during test om real machine'}
+s_cmTransport.i_mcHomingMode := Tc2_MC2.MC_HomingMode.MC_Direct; //++Tc2_MC2.MC_HomingMode.MC_DefaultHoming;
 s_cmTransport.p_sCfgPosName := 'Extract';
 s_cmTransport.p_sCfgNegName := 'Retract';
 
@@ -604,17 +600,17 @@ s_diStaTrolleyLocked.i_stSettings.tmInputDelay := T#100MS;
 
 //Interlock strings
 //Lift
-//i_stInterlockList.arr_Interlocks[0].sReason --> External, dynamical will be written in m_input
+//[0].sReason --> External, dynamical will be written in m_input
 s_fbIlckHandlerLiftDown.i_stInterlockList.arr_Interlocks[1].sReason := 'Transport not at retracted position';
 
-//i_stInterlockList.arr_Interlocks[0].sReason --> External, dynamical will be written in m_input
+//[0].sReason --> External, dynamical will be written in m_input
 s_fbIlckHandlerLiftUp.i_stInterlockList.arr_Interlocks[1].sReason := 'Trolley not at correct position';
 
 //Transport
-//i_stInterlockList.arr_Interlocks[0].sReason --> External, dynamical will be written in m_input
+//[0].sReason --> External, dynamical will be written in m_input
 s_fbIlckHandlerTransportRetract.i_stInterlockList.arr_Interlocks[1].sReason := 'None';
 
-//i_stInterlockList.arr_Interlocks[0].sReason --> External, dynamical will be written in m_input
+//[0].sReason --> External, dynamical will be written in m_input
 s_fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[1].sReason := 'Lift not at correct position';
 s_fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[2].sReason := 'Collision Avoidance Active';
 
@@ -689,28 +685,6 @@ s_cmTransport.p_fSetTargetPosition := s_fSetTransportPosition * 0.5;
 
 //Interlocks
 _m_Interlocks();
-
-//??
-(*
-{warning '#TODO: Something similar needs to be added for lifting transport'} //Probebly not, module will be controlled by overall sequnecer
-//TB States (only use data if a valid ID is pressent else use sensor states)
-IF __ISVALIDREF(i_refTB) AND (i_refTB.p_nId > 0) THEN
-//++	s_bStaAtIdlePosition := i_refTB.p_b..;
-//++	s_bStaTrolleyInTB := i_refTB.p_b..;
-//++	s_bStaTrolleyInCabin := i_refTB.p_b..;
-//..
- 
-//--	s_bStaTB_CenteringDone := i_refTB.p_bCenteringDone;
-//--	s_bStaTB_AtInfeed := i_refTB.p_eActLocation = E_Location.INFEED;
-//--	s_bStaTB_AtCentering := i_refTB.p_eActLocation = E_Location.CENTERING;
-//--	s_bStaTB_AtDocking := i_refTB.p_eActLocation = E_Location.DOCKING;
-ELSE
-//--	s_bStaTB_CenteringDone := s_eTmpCenteringDone;
-//--	s_bStaTB_AtInfeed := s_bStaAtInfeedRearPosition OR s_bStaAtInfeedFrontPosition;
-//--	s_bStaTB_AtCentering := s_bStaAtCenteringPosition;
-//--	s_bStaTB_AtDocking := s_bStaAtDockingPosition;	
-END_IF
-*)
 
 _m_Inputs := TRUE;
 ]]></ST>
@@ -849,8 +823,6 @@ s_fbSeqControl(
 		AND i_bReqEnable
 		AND (s_eSequence = E_SeqLiftingTransport.ERROR) // Only reset/resume sequencer from ERROR state
 		AND NOT(s_bStaError),
-//--		AND NOT(s_cmLift.p_bStaError)
-//--		AND NOT(s_cmTransport.p_bStaError)
 	i_bStaError := s_bStaError OR NOT(i_bReqEnable));
 	
 	s_bActionDone R= s_fbSeqControl.q_bStaEntry;
@@ -1216,7 +1188,7 @@ CASE s_eSequence OF
 		IF (s_fbSeqControl.q_tmStepTime > T#3S)
 			AND s_bStaTrolleyLocked AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
-			s_bStaTrolleyPlacedInTB := TRUE; //Note can be resetted 
+			s_bStaTrolleyPlacedInTB := TRUE; //Note can be resetted
 			s_eSequence := E_SeqLiftingTransport.TRANSPORT_RETURN_IN_CABIN;
 			
 		ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN
@@ -1352,10 +1324,6 @@ CASE i_eCtrlMode OF
 		//Execute maintenance control (HMI control module buttons)
 		//Reset automatic/manual sequencer
 		s_eSequence := E_SeqLiftingTransport.IDLE;
-		
-		//--//Load setting for movements in Maintenance-mode
-		//--s_cmLift.i_ref_setting := i_ref_stSettings.stLiftPositioningProfileMaintenance;
-		//--s_cmTransport.i_ref_setting := i_ref_stSettings.stTransportPositioningProfileMaintenance;
 		
 		; 	//Maintenance control is implemented in lower-layer control modules
 		

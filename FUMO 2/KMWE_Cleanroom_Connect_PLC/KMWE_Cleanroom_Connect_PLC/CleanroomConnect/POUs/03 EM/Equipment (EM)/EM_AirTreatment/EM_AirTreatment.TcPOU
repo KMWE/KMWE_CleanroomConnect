@@ -66,9 +66,11 @@ VAR
 	
 	//Params
 	s_fbParamPressurizingPress : FB_HmiParamHandler;
+	s_fbParamDockingPress : FB_HmiParamHandler;
 	s_fbParamFlushingPress : FB_HmiParamHandler;
 	s_fbParamFlushingTime : FB_HmiParamHandler;
 	s_fbParamEqualizingPress : FB_HmiParamHandler;
+	s_fbParamPressureRange : FB_HmiParamHandler;
 	
 	//Sequencers
 	s_eSequence : E_SeqAirTreatment;
@@ -164,7 +166,7 @@ END_IF
 s_fbPIDPressCtrl(
 	fSetpointValue := s_fSetPressure, //[Pa]
 	fActualValue := s_fCalcDeltaP_CleanroomCabin, //[Pa]
-	fKp := i_ref_stSettings.fKp * -1.0, //P [factor]
+	fKp := i_ref_stSettings.fKp, //P [factor]
 	fTn := i_ref_stSettings.fTn, //I [s]
 	fTv := i_ref_stSettings.fTv, //D [s]
 	fTd := i_ref_stSettings.fTd); //t [[s]
@@ -226,7 +228,7 @@ s_cmFanMotor.i_stSettings.bCfgDelay := FALSE;
 s_cmFanMotor.i_stSettings.tmOutputDelay := T#0S;
 
 s_fbFanThermal.i_stSettings.tmInputDelay := T#0S;
-	
+
 s_fbFanSpeed.i_stSettings.fMaxScaledOutput := 100; //[%]
 s_fbFanSpeed.i_stSettings.fMinScaledOutput := 0; //[%]
 s_fbFanSpeed.i_stSettings.nMaxOutput := 32767; //[raw]
@@ -259,6 +261,10 @@ s_fbParamPressurizingPress.i_sName := CONCAT(i_sEmName, ': Pressurizing Pressure
 s_fbParamPressurizingPress.i_nArrayFolderIndex := 1;
 s_fbParamPressurizingPress.i_bIsNumber := TRUE;
 
+s_fbParamDockingPress.i_sName := CONCAT(i_sEmName, ': Docking Pressure');
+s_fbParamDockingPress.i_nArrayFolderIndex := 1;
+s_fbParamDockingPress.i_bIsNumber := TRUE;
+
 s_fbParamFlushingPress.i_sName := CONCAT(i_sEmName, ': Flushing Pressure');
 s_fbParamFlushingPress.i_nArrayFolderIndex := 1;
 s_fbParamFlushingPress.i_bIsNumber := TRUE;
@@ -270,6 +276,10 @@ s_fbParamFlushingTime.i_bIsNumber := TRUE;
 s_fbParamEqualizingPress.i_sName := CONCAT(i_sEmName, ': Equalizing Pressure');
 s_fbParamEqualizingPress.i_nArrayFolderIndex := 1;
 s_fbParamEqualizingPress.i_bIsNumber := TRUE;
+
+s_fbParamPressureRange.i_sName := CONCAT(i_sEmName, ': Pressure Range');
+s_fbParamPressureRange.i_nArrayFolderIndex := 1;
+s_fbParamPressureRange.i_bIsNumber := TRUE;
 
 //Alarms
 s_fbAlarmHandlerFanThermalError.i_eAlarmLevel := E_AlarmLevel.Alarm;
@@ -371,44 +381,21 @@ IF NOT SUPER^._m_Params() THEN
 	RETURN;
 END_IF
 
-//Paramaters
+//Parameters
 s_fbParamPressurizingPress();
+s_fbParamDockingPress();
 s_fbParamFlushingPress();
 s_fbParamFlushingTime();
 s_fbParamEqualizingPress();
+s_fbParamPressureRange();
 
-//--
-(*
-s_fbParamPressurizingPress(
-	i_fDefaultValue := ,
-	i_sName := CONCAT(i_sEmName, ': Pressurizing Pressure'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-
-s_fbParamFlushingPress(
-	i_fDefaultValue := ,
-	i_sName := CONCAT(i_sEmName, ': Flushing Pressure'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-	
-s_fbParamFlushingTime(
-	i_fDefaultValue := ,
-	i_sName := CONCAT(i_sEmName, ': Flushing Time'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-
-s_fbParamEqualizingPress(
-	i_fDefaultValue := ,
-	i_sName := CONCAT(i_sEmName, ': Equalizing Pressure'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-*)
-		
-//Write to settings	
+//Write to settings
 i_ref_stSettings.fPressurizingPress := s_fbParamPressurizingPress.p_fValue;
+i_ref_stSettings.fDockingPress := s_fbParamDockingPress.p_fValue;
 i_ref_stSettings.fFlushingPress := s_fbParamFlushingPress.p_fValue;
 i_ref_stSettings.tFlushingTime := LREAL_TO_TIME(s_fbParamFlushingTime.p_fValue);
 i_ref_stSettings.fEqualizingPress := s_fbParamEqualizingPress.p_fValue;
+i_ref_stSettings.fPressureRange := s_fbParamPressureRange.p_fValue;
 
 _m_Params := TRUE;
 ]]></ST>
@@ -485,7 +472,7 @@ CASE s_eSequence OF
 		
 		s_fSetFanSpeed := LIMIT(0.0, s_fbPIDPressCtrl.fCtrlOutput, 100.0);
 		
-		s_bStaPressurized := F_InRange(s_fSetPressure, s_fActDeltaP_CleanroomAmbient, i_ref_stSettings.fRange);
+		s_bStaPressurized := F_InRange(s_fSetPressure, s_fActDeltaP_CleanroomAmbient, i_ref_stSettings.fPressureRange);
 		
 		IF s_bReqFlush THEN
 			s_eSequence := E_SeqAirTreatment.FLUSHING;
@@ -506,7 +493,7 @@ CASE s_eSequence OF
 		s_fSetFanSpeed := LIMIT(0.0, s_fbPIDPressCtrl.fCtrlOutput, 100.0);
 		
 		s_bStaFlushed :=
-			F_InRange(s_fSetPressure, s_fActDeltaP_CleanroomAmbient, i_ref_stSettings.fRange)
+			F_InRange(s_fSetPressure, s_fActDeltaP_CleanroomAmbient, i_ref_stSettings.fPressureRange)
 			AND (s_fbSeqControl.q_tmStepTime > i_ref_stSettings.tFlushingTime);
 			
 		IF s_bReqPressureize THEN
@@ -527,7 +514,7 @@ CASE s_eSequence OF
 		
 		s_fSetFanSpeed := LIMIT(0.0, s_fbPIDPressCtrl.fCtrlOutput, 100.0);
 		
-		s_bStaFlushed := F_InRange(s_fSetPressure, s_fActDeltaP_CleanroomAmbient, i_ref_stSettings.fRange);
+		s_bStaFlushed := F_InRange(s_fSetPressure, s_fActDeltaP_CleanroomAmbient, i_ref_stSettings.fPressureRange);
 		
 		IF s_bReqPressureize THEN
 			s_eSequence := E_SeqAirTreatment.PRESSURIZE;

@@ -425,8 +425,7 @@ GVL.g_fbHmiBtnSimulation();
       <Declaration><![CDATA[METHOD PROTECTED _m_Init : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[
-IF NOT SUPER^._m_Init() THEN
+        <ST><![CDATA[IF NOT SUPER^._m_Init() THEN
 	RETURN;
 END_IF
 
@@ -737,46 +736,24 @@ GVL_Modules.g_emDockingCabin.i_sEmName  := 'EM State Machine';
 GVL_Modules.g_emDockingCabin.i_stSettings.stSettingsDoors.tOuterDoorTimeout := T#15S;
 GVL_Modules.g_emDockingCabin.i_stSettings.stSettingsDoors.tCleanroomDoorTimeout := T#3S;
 GVL_Modules.g_emDockingCabin.i_stSettings.stSettingsDoors.tResetPulseDuration := T#1S;
-
-//Settings Docking Interface
-GVL_Modules.g_emDockingCabin.i_stSettings.stSettingsDockingInterface.tClampsTimeout := T#5S;
-GVL_Modules.g_emDockingCabin.i_stSettings.stSettingsDockingInterface.tReleasePinsTimeout := T#5S;
 *)
-//Settings AirTreatment
-//..GVL_Modules.g_emDockingCabin.i_stSettings.stSettingsAirTrearment.. := TODO;
 
+//Settings AirTreatment
 //EM Air Treatment/////////////////////////////////////////////////////////////////////////////////
 GVL_Modules.g_emAirTreatment.i_ref_stSettings REF= s_stSettings.stAirTreatment;
 
-//Pressure setpoints
-s_stSettings.stAirTreatment.fPressurizingPress := 25.1; //[Pa]
-s_stSettings.stAirTreatment.fFlushingPress := 25.2; //[Pa]
-s_stSettings.stAirTreatment.tFlushingTime := T#603S; //[s]
-s_stSettings.stAirTreatment.fEqualizingPress := 0.4; //[Pa]
-s_stSettings.stAirTreatment.fRange := 2.5; //[Pa]
-
 //Pressure controller 
-s_stSettings.stAirTreatment.fKp := 1.0; //P [factor]
+s_stSettings.stAirTreatment.fKp := -1.0; //P [factor]
 s_stSettings.stAirTreatment.fTn := 10.0; //I [s]
 s_stSettings.stAirTreatment.fTv := 0.0; //D [s]
 s_stSettings.stAirTreatment.fTd := 0.0; //D-time [s]
 
-
-//Settings CM Pallet Conveyor (via parameter file)
-//--20240924 s_stSettings.stSettingsPalletConveyor.fSpeedManual := 50.0; //mm/s
-//--20240924 s_stSettings.stSettingsPalletConveyor.fSpeedGoToInfeed := 100.0; //mm/s
-//--20240924 s_stSettings.stSettingsPalletConveyor.fSpeedGoToCentering := 100.0; //mm/s
-//--20240924 s_stSettings.stSettingsPalletConveyor.fSpeedGoToDocking := 50.0; //mm/s
-
-
-//------------------------------------------//
-//Hmi Startup
+//Hmi//////////////////////////////////////////////////////////////////////////////////////////////
+//Startup
 GVL.g_sToHmiTopContent := GVL.g_stHmiTopBar.GeneralTopbar;
 GVL.g_sToHmiMiddleContent := GVL.g_stHmiMiddle.Start;
 GVL.g_sToHmiBottomContent := GVL.g_stHmiBottomBar.Start;
-//------------------------------------------//
 
-//------------------------------------------//
 //Buttons
 s_fbHmiBtnAlarms.p_bStaVisible := TRUE;
 s_fbHmiBtnAlarms.p_bStaEnabled := TRUE;

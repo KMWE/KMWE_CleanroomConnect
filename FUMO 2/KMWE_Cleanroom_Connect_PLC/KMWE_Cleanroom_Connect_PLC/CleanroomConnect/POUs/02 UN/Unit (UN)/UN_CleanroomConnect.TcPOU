@@ -32,8 +32,6 @@ VAR
 	//..
 	
 //------------------------------------------//
-
-//------------------------------------------//
 //Inputs
 //??	s_diTwoHandControl : FB_DigInput;
 
@@ -55,7 +53,6 @@ VAR
 	
 	s_bStaAllEmReady : BOOL;
 	s_bStaEmError : BOOL;
-	s_bCmdAbort : BOOL;
 	
 	s_bStaDockTbDone: BOOL;
 	s_bStaUnDockTbDone : BOOL;
@@ -280,9 +277,6 @@ IF GVL_KMWEGenericLib.g_fbHmiBtnReturnToStart.p_osfBtnPress THEN
 	GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaEnabled := TRUE;
 END_IF
 
-//------------------------------------------//
-
-//------------------------------------------//
 //Alarm Button can always be pressed
 IF s_fbHmiBtnAlarms.p_osrBtnPress AND GVL.g_sToHmiMiddleContent <> GVL.g_stHmiMiddle.AlarmManager THEN
 	s_sPrevPageAlarms := GVL.g_sToHmiMiddleContent;
@@ -301,12 +295,12 @@ IF GVL.g_sToHmiMiddleContent = GVL.g_stHmiMiddle.AlarmManager AND GVL_KMWEGeneri
 	GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible := FALSE;
 	GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled := FALSE;
 END_IF
-//------------------------------------------//
 
-//------------------------------------------//
 //Hmi view management (General, Em can set module specific pages)
 CASE s_eCtrlMode OF
 	E_CtrlMode.IDLE:
+	
+//--
 (*		GVL.g_bConnectTestEquipment		:= TRUE;
 
 		IF NOT GVL_KMWEGenericLib.g_fbAlarmManager.p_bAlarmActive THEN
@@ -409,9 +403,7 @@ CASE s_eCtrlMode OF
 //		END_IF
 		;
 END_CASE
-//------------------------------------------//
 
-//------------------------------------------//
 //Hmi Buttons
 s_fbHmiBtnAlarms();
 s_fbHmiBtnReset();
@@ -426,7 +418,6 @@ s_fbHmiBtnPickTrolleyFromTB();
 s_fbHmiBtnPlaceTrolleyInTB();
 
 GVL.g_fbHmiBtnSimulation();
-//------------------------------------------//
 ]]></ST>
       </Implementation>
     </Method>
@@ -894,11 +885,12 @@ VAR
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[s_FbModeStateControl(
-	i_bReqStopAlarm := 
+        <ST><![CDATA[
+s_FbModeStateControl(
+	i_bReqStopAlarm :=
 		(
 			GVL_Modules.g_emUtilities.p_bStaError
-			OR GVL_Modules.g_emPalletConveyor.p_bStaError 
+			OR GVL_Modules.g_emPalletConveyor.p_bStaError
 			OR GVL_Modules.g_emDockingInterface.p_bStaError
 			OR GVL_Modules.g_emLiftingTransport.p_bStaError
 		)
@@ -1045,7 +1037,8 @@ VAR
 	sReason : STRING;
 END_VAR]]></Declaration>
       <Implementation>
-        <ST><![CDATA[//Register previous step
+        <ST><![CDATA[
+//Register previous step
 IF s_eSequence <> s_ePreviousStep
 	AND s_eSequence <> E_SeqCleanroomConnect.ERROR THEN
 	s_ePreviousStep := s_eSequence;
@@ -1059,12 +1052,12 @@ s_bStaEmError :=
 s_fbSeqControl(
 	i_nSeqStep := s_eSequence,
 	i_sStepName := TO_STRING(s_eSequence),
-	i_bCmdReset := s_fbHmiBtnReset.p_bStaBtn OR s_bCmdAbort,
+	i_bCmdReset := s_fbHmiBtnReset.p_bStaBtn,
 	i_bStaError := s_bStaEmError);
 	
 s_tonTimer(PT := T#3600S);
 
-//Force to stop	
+//Force to stop
 IF (s_eCtrlState = E_CtrlState.STOPPING) THEN
 	s_eSequence := E_SeqCleanroomConnect.STOP;
 END_IF
@@ -1081,7 +1074,7 @@ CASE s_eSequence OF
 		IF s_eCtrlState = E_CtrlState.RUNNING THEN
 			s_eSequence := s_eResumeStep;
 		END_IF
-	
+		
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ////READY//////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqCleanroomConnect.READY:
@@ -1098,7 +1091,7 @@ CASE s_eSequence OF
 		;
 		
 		//Check if all equipment is ready (available for operation)
-		s_bStaAllEmReady := 
+		s_bStaAllEmReady :=
 			GVL_Modules.g_emPalletConveyor.p_bStaReady AND
 			GVL_Modules.g_emDockingInterface.p_bStaReady AND
 			GVL_Modules.g_emLiftingTransport.p_bStaReady;
@@ -1114,7 +1107,7 @@ CASE s_eSequence OF
 		ELSIF s_bStaAllEmReady
 			AND (s_eReqAction = E_ReqAction.UNDOCK_TB) THEN
 				s_eSequence := E_SeqCleanroomConnect.UNDOCK_TB;
-			
+				
 		//REQUEST OPEN INNER TB DOOR///////////////////////////////////////////////////////////////
 		ELSIF s_bStaAllEmReady
 			AND (s_eReqAction = E_ReqAction.OPEN_INNER_TB_DOOR) THEN
@@ -1274,7 +1267,7 @@ CASE s_eSequence OF
 				s_bStaPlaceTrolleyInTbDone := FALSE;
 				
 				IF GVL_Modules.g_emDockingInterface.p_bStaReady THEN
-				
+					
 					IF ( (s_eReqAction = E_ReqAction.INBOUND) OR (s_eReqAction = E_ReqAction.OUTBOUND) ) THEN
 						s_eSequence := E_SeqCleanroomConnect.UNDOCK_TB;
 					ELSE
@@ -1353,8 +1346,6 @@ CASE s_eSequence OF
 		//Do not use .qEnrty forced stop doesn't make use of fbSeqControl
 		
 		s_eReqAction := E_ReqAction.NONE;
-		
-//--		s_eSeqCleanroomConnect := E_SeqCleanroomConnect.READY;
 		
 		IF (s_eCtrlState = E_CtrlState.IDLE) THEN
 			s_eSequence := E_SeqCleanroomConnect.START;
@@ -1688,42 +1679,34 @@ CASE s_eCtrlMode OF
 	E_CtrlMode.AUTOMATIC:
 		//Wait for commands from
 		IF s_fbHmiBtnInbound.p_osrBtnPress THEN
-			//--s_bReqInbound := TRUE;
 			s_eReqAction := E_ReqAction.INBOUND;
 		END_IF
 		
 		IF s_fbHmiBtnOutbound.p_osrBtnPress THEN
-			//--s_bReqOutbound := TRUE;
 			s_eReqAction := E_ReqAction.OUTBOUND;
 		END_IF
 		
 		IF s_fbHmiBtnDockTB.p_osrBtnPress THEN
-			//--s_bReqDockTB := TRUE;
 			s_eReqAction := E_ReqAction.DOCK_TB;
 		END_IF
 		
 		IF s_fbHmiBtnUndockTB.p_osrBtnPress THEN
-			//--s_bReqUndockTB := TRUE;
 			s_eReqAction := E_ReqAction.UNDOCK_TB;
 		END_IF
 		
 		IF s_fbHmiBtnOpenInnerTBDoor.p_osrBtnPress THEN
-			//--s_bReqUndockTB := TRUE;
 			s_eReqAction := E_ReqAction.OPEN_INNER_TB_DOOR;
 		END_IF
 		
 		IF s_fbHmiBtnCloseInnerTBDoor.p_osrBtnPress THEN
-			//--s_bReqUndockTB := TRUE;
 			s_eReqAction := E_ReqAction.CLOSE_INNER_TB_DOOR;
 		END_IF
 		
 		IF s_fbHmiBtnPickTrolleyFromTB.p_osrBtnPress THEN
-			//--s_bReqPickTrolleyFromTB := TRUE;
 			s_eReqAction := E_ReqAction.PICK_TROLLEY_FROM_TB;
 		END_IF
 		
 		IF s_fbHmiBtnPlaceTrolleyInTB.p_osrBtnPress THEN
-			//--s_bReqPlaceTrolleyInTB := TRUE;
 			s_eReqAction := E_ReqAction.PLACE_TROLLEY_IN_TB;
 		END_IF
 		
@@ -1744,13 +1727,6 @@ CASE s_eCtrlMode OF
 END_CASE
 
 IF s_eCtrlMode <> E_CtrlMode.AUTOMATIC THEN
-	//Reset all commands
-//--	s_bReqInbound := FALSE;
-//--	s_bReqOutbound := FALSE;
-//--	s_bReqDockTB := FALSE;
-//--	s_bReqUndockTB := FALSE;
-//--	s_bReqPickTrolleyFromTB := FALSE;
-//--	s_bReqPlaceTrolleyInTB := FALSE;
 	s_eReqAction := E_ReqAction.NONE;
 END_IF
 
@@ -1763,7 +1739,6 @@ s_fbHmiBtnCloseInnerTBDoor.p_bStaEnabled := s_bStaReady AND NOT(GVL_Modules.g_em
 s_fbHmiBtnPickTrolleyFromTB.p_bStaEnabled := s_bStaReady AND GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpened;
 s_fbHmiBtnPlaceTrolleyInTB.p_bStaEnabled := s_bStaReady AND GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpened;
 
-
 //IO-mode /////////////////////////////////////////////////////////////////////////////////////////
 IF (s_eCtrlMode = E_CtrlMode.IO) AND (s_eCtrlState = E_CtrlState.RUNNING) THEN
 	s_bHmiForceOutputEnabled := TRUE;
@@ -1775,40 +1750,7 @@ ELSE
 	s_bHmiForceOutputWEnabled := FALSE;
 	
 END_IF
-
-// Paul Schippers: just a test with the use of interfaces
-//??itfEmDoors.m_CloseOuterDoor();
-
-//??itfEmDockingInterface.m_OpenDockingClamps();
-
-//IF NOT(itfEmAirTreatment.p_bStaPressurizingOK) THEN 
-//	itfEmAirTreatment.m_Pressurize();
-//END_IF
-
-(*
-	// Interlocks (doors must work as an airlock, only one door may be opened at all times)
-	s_bIlckCabinDoorOuterToOpen :=
-		s_cmDoorLockCleanroom.p_bStaError
-		OR NOT(s_cmDoorLockCleanroom.p_bStaEnabled)
-		NOT(s_cmDoorLockCleanroom.p_bStaDoorIsClosed)
-		OR NOT (s_cmDoorLockCleanroom.p_bStaLockIsApplied)
-		OR s_cmDoorLockCleanroom.p_bStaLockIsReleased
-		OR TRUE (*Air treathment unit must be running and ok*)
-		OR TRUE (*Add more..*);
-	s_bIlckCabinDoorOuterToClose :=
-		TRUE (*Opening must be free*)
-		OR TRUE (*Add more..*);
-	
-	s_bIlckDoorLockCleanroomToOpen :=
-		s_cmCabinDoorOuter.p_bStaError
-		OR NOT(s_cmCabinDoorOuter.p_bStaEnabled)
-		OR NOT(s_cmCabinDoorOuter.p_bStaIsClosed)
-		OR s_cmCabinDoorOuter.p_bStaIsClosing
-		OR s_cmCabinDoorOuter.p_bStaIsOpened
-		OR s_cmCabinDoorOuter.p_bStaIsOpening
-		OR TRUE (*Air treathment unit must be running and ok*)
-		OR TRUE (*Add more..*);
-*)]]></ST>
+]]></ST>
       </Implementation>
     </Method>
   </POU>

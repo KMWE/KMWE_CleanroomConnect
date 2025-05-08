@@ -98,22 +98,10 @@ VAR
 	s_bStaWarning : BOOL;
 	
 	//Params
-	s_fbParamSpeedManual : FB_HmiParamHandler;
 	s_fbParamSpeedGoToInfeed : FB_HmiParamHandler;
 	s_fbParamSpeedGoToCentering : FB_HmiParamHandler;
 	s_fbParamSpeedGoToDocking : FB_HmiParamHandler;
-	
-	s_fbParamDistanceToInfeed : FB_HmiParamHandler;
-	s_fbParamDistanceToCentering : FB_HmiParamHandler;
-	s_fbParamDistanceToDocking : FB_HmiParamHandler;
-	
-	s_fbParamDistanceOuterDoorCheck : FB_HmiParamHandler;
-	
-	s_fbParamTravelTollerance : FB_HmiParamHandler;
-	
 	s_fbParamCenteringDuration : FB_HmiParamHandler;
-	s_fbParamTimeoutCenteringToCenter : FB_HmiParamHandler;
-	s_fbParamTimeoutCenteringToIdle : FB_HmiParamHandler;
 	
 	//Sequencers
 	s_eSequence : E_SeqTransport;
@@ -465,10 +453,6 @@ s_diStaAtDockingPosition.i_stSettings.tmInputDelay := T#1000MS;
 s_diStaDoorOpened.i_stSettings.tmInputDelay := T#0MS;
 
 //Parameters (default values read from file)
-s_fbParamSpeedManual.i_sName := CONCAT(i_sEmName, ': Speed Manual');
-s_fbParamSpeedManual.i_nArrayFolderIndex := 1;
-s_fbParamSpeedManual.i_bIsNumber := TRUE;
-
 s_fbParamSpeedGoToInfeed.i_sName := CONCAT(i_sEmName, ': Speed Go To Infeed');
 s_fbParamSpeedGoToInfeed.i_nArrayFolderIndex := 1;
 s_fbParamSpeedGoToInfeed.i_bIsNumber := TRUE;
@@ -481,37 +465,9 @@ s_fbParamSpeedGoToDocking.i_sName := CONCAT(i_sEmName, ': Speed Go To Docking');
 s_fbParamSpeedGoToDocking.i_nArrayFolderIndex := 1;
 s_fbParamSpeedGoToDocking.i_bIsNumber := TRUE;
 
-s_fbParamDistanceToInfeed.i_sName := CONCAT(i_sEmName, ': Distance To Infeed');
-s_fbParamDistanceToInfeed.i_nArrayFolderIndex := 1;
-s_fbParamDistanceToInfeed.i_bIsNumber := TRUE;
-
-s_fbParamDistanceToCentering.i_sName := CONCAT(i_sEmName, ': Distance To Centering');
-s_fbParamDistanceToCentering.i_nArrayFolderIndex := 1;
-s_fbParamDistanceToCentering.i_bIsNumber := TRUE;;
-
-s_fbParamDistanceToDocking.i_sName := CONCAT(i_sEmName, ': Distance To Docking');
-s_fbParamDistanceToDocking.i_nArrayFolderIndex := 1;
-s_fbParamDistanceToDocking.i_bIsNumber := TRUE;
-
-s_fbParamDistanceOuterDoorCheck.i_sName := CONCAT(i_sEmName, ': Distance Outer Door Check');
-s_fbParamDistanceOuterDoorCheck.i_nArrayFolderIndex := 1;
-s_fbParamDistanceOuterDoorCheck.i_bIsNumber := TRUE;
-
-s_fbParamTravelTollerance.i_sName := CONCAT(i_sEmName, ': Travel Tollerance');
-s_fbParamTravelTollerance.i_nArrayFolderIndex := 1;
-s_fbParamTravelTollerance.i_bIsNumber := TRUE;
-
 s_fbParamCenteringDuration.i_sName := CONCAT(i_sEmName, ': Centering Duration');
 s_fbParamCenteringDuration.i_nArrayFolderIndex := 1;
 s_fbParamCenteringDuration.i_bIsNumber := TRUE;
-
-s_fbParamTimeoutCenteringToCenter.i_sName := CONCAT(i_sEmName, ': Timeout Centering To Center');
-s_fbParamTimeoutCenteringToCenter.i_nArrayFolderIndex := 1;
-s_fbParamTimeoutCenteringToCenter.i_bIsNumber := TRUE;
-
-s_fbParamTimeoutCenteringToIdle.i_sName := CONCAT(i_sEmName, ': Timeout Centering To Idle');
-s_fbParamTimeoutCenteringToIdle.i_nArrayFolderIndex := 1;
-s_fbParamTimeoutCenteringToIdle.i_bIsNumber := TRUE;
 
 //Interlock strings
 //Conveyor
@@ -582,7 +538,7 @@ s_fbHmiLedCenteringIdle.p_sToHmiDescriptionLed := 'Centering Idle';
 
 s_fbHmiLedCenteringCenter.p_bStaVisible := FALSE;
 s_fbHmiLedCenteringCenter.p_sToHmiDescriptionLed := 'Centering Center';
-	
+
 _m_Init := TRUE;
 ]]></ST>
       </Implementation>
@@ -705,110 +661,18 @@ IF NOT SUPER^._m_Params() THEN
 END_IF
 
 //Paramaters
-s_fbParamSpeedManual();
 s_fbParamSpeedGoToInfeed();
 s_fbParamSpeedGoToCentering();
 s_fbParamSpeedGoToDocking();
-s_fbParamDistanceToInfeed();
-s_fbParamDistanceToCentering();
-s_fbParamDistanceToDocking();
-s_fbParamDistanceOuterDoorCheck();
-s_fbParamTravelTollerance();
 s_fbParamCenteringDuration();
-s_fbParamTimeoutCenteringToCenter();
-s_fbParamTimeoutCenteringToIdle();
-
-//--
-(*
-s_fbParamSpeedManual(
-	i_fDefaultValue :=,
-	i_sName := CONCAT(i_sEmName, ': Speed Manual'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-	
-s_fbParamSpeedGoToInfeed(
-	i_fDefaultValue :=,
-	i_sName := CONCAT(i_sEmName, ': Speed Go To Infeed'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-	
-s_fbParamSpeedGoToCentering(
-	i_fDefaultValue :=,
-	i_sName := CONCAT(i_sEmName, ': Speed Go To Centering'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-	
-s_fbParamSpeedGoToDocking(
-	i_fDefaultValue :=,
-	i_sName := CONCAT(i_sEmName, ': Speed Go To Docking'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-	
-s_fbParamDistanceToInfeed(
-	i_fDefaultValue :=,
-	i_sName := CONCAT(i_sEmName, ': Distance To Infeed'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-	
-s_fbParamDistanceToCentering(
-	i_fDefaultValue :=,
-	i_sName := CONCAT(i_sEmName, ': Distance To Centering'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-	
-s_fbParamDistanceToDocking(
-	i_fDefaultValue :=,
-	i_sName := CONCAT(i_sEmName, ': Distance To Docking'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-	
-s_fbParamDistanceOuterDoorCheck(
-	i_fDefaultValue :=,
-	i_sName := CONCAT(i_sEmName, ': Distance Outer Door Check'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-	
-s_fbParamTravelTollerance(
-	i_fDefaultValue :=,
-	i_sName := CONCAT(i_sEmName, ': Travel Tollerance'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-	
-s_fbParamCenteringDuration(
-	i_fDefaultValue :=,
-	i_sName := CONCAT(i_sEmName, ': Centering Duration'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-	
-s_fbParamTimeoutCenteringToCenter(
-	i_fDefaultValue :=,
-	i_sName := CONCAT(i_sEmName, ': Timeout Centering To Center'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-	
-s_fbParamTimeoutCenteringToIdle(
-	i_fDefaultValue :=,
-	i_sName := CONCAT(i_sEmName, ': Timeout Centering To Idle'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-*)
 
 //Write to settings
-i_ref_stSettings.fSpeedManual := s_fbParamSpeedManual.p_fValue;
 i_ref_stSettings.fSpeedGoToInfeed := s_fbParamSpeedGoToInfeed.p_fValue;
 i_ref_stSettings.fSpeedGoToCentering := s_fbParamSpeedGoToCentering.p_fValue;
 i_ref_stSettings.fSpeedGoToDocking := s_fbParamSpeedGoToDocking.p_fValue;
-i_ref_stSettings.fDistanceToInfeed := s_fbParamDistanceToInfeed.p_fValue;
-i_ref_stSettings.fDistanceToCentering := s_fbParamDistanceToCentering.p_fValue;
-i_ref_stSettings.fDistanceToDocking := s_fbParamDistanceToDocking.p_fValue;
-i_ref_stSettings.fDistanceOuterDoorCheck := s_fbParamDistanceOuterDoorCheck.p_fValue;
-i_ref_stSettings.fTravelTollerance := s_fbParamTravelTollerance.p_fValue;
 i_ref_stSettings.tCenteringDuration := LREAL_TO_TIME(s_fbParamCenteringDuration.p_fValue);
-i_ref_stSettings.tTimeoutCenteringToCenter := LREAL_TO_TIME(s_fbParamTimeoutCenteringToCenter.p_fValue);
-i_ref_stSettings.tTimeoutCenteringToIdle := LREAL_TO_TIME(s_fbParamTimeoutCenteringToIdle.p_fValue);
 
 _m_Params := TRUE;
-
 ]]></ST>
       </Implementation>
     </Method>

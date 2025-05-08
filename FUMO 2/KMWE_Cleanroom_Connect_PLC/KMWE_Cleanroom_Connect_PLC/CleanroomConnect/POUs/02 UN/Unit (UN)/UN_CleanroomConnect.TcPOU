@@ -541,24 +541,20 @@ s_fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[3].sReason := 'I
 GVL_Modules.g_emPalletConveyor.i_ref_stSettings REF= s_stSettings.stPalletConveyor;
 
 //Transporting
-s_stSettings.stPalletConveyor.fDistanceToInfeed := 1150.0; //mm
-s_stSettings.stPalletConveyor.fDistanceToCentering := 980.0; //mm
-s_stSettings.stPalletConveyor.fDistanceToDocking := 250.0; //mm
-s_stSettings.stPalletConveyor.fDistanceOuterDoorCheck := 500.0; //mm
-s_stSettings.stPalletConveyor.fTravelTollerance := 1.2; //% (1.20 = +20%)
+s_stSettings.stPalletConveyor.fDistanceToInfeed := 1150.0; // mm
+s_stSettings.stPalletConveyor.fDistanceToCentering := 980.0; // mm
+s_stSettings.stPalletConveyor.fDistanceToDocking := 250.0; // mm
+s_stSettings.stPalletConveyor.fDistanceOuterDoorCheck := 500.0; // mm
+s_stSettings.stPalletConveyor.fTravelTollerance := 1.2; // % (1.20 = +20%)
 
 //EM Docking Interface/////////////////////////////////////////////////////////////////////////////
 GVL_Modules.g_emDockingInterface.i_ref_stSettings REF= s_stSettings.stDockingInterface;
 
 //Docking
-s_stSettings.stDockingInterface.tDelayNextStep := T#3S; //s
+s_stSettings.stDockingInterface.tDelayNextStep := T#3S; // s
 
 //EM Lifting Transport/////////////////////////////////////////////////////////////////////////////
 GVL_Modules.g_emLiftingTransport.i_ref_stSettings REF= s_stSettings.stLiftingTransport;
-
-//General behavioir
-s_stSettings.stLiftingTransport.bWaitForNextStep := FALSE;
-s_stSettings.stLiftingTransport.bAutoRecoveryToIdle := FALSE;
 
 //Homing
 s_stSettings.stLiftingTransport.stSettingsServoLift.fHomeOffset := 5.00; // mm
@@ -567,7 +563,6 @@ s_stSettings.stLiftingTransport.stSettingsServoTransport.fHomeOffset := 0.00; //
 //Stopping
 s_stSettings.stLiftingTransport.stSettingsServoLift.fStopDec := 100.0; // mm/s^2
 s_stSettings.stLiftingTransport.stSettingsServoLift.fStopJrk := 1000.0; // mm/s^3
-
 s_stSettings.stLiftingTransport.stSettingsServoTransport.fStopDec := 100.0; // mm/s^2
 s_stSettings.stLiftingTransport.stSettingsServoTransport.fStopJrk := 1000.0; // mm/s^3
 
@@ -674,13 +669,6 @@ s_stSettings.stLiftingTransport.arr_stLiftPositioningProfile[10].fAcc := 10.0;  
 s_stSettings.stLiftingTransport.arr_stLiftPositioningProfile[10].fDec := 10.0; //[mm/s^2]
 s_stSettings.stLiftingTransport.arr_stLiftPositioningProfile[10].fJrk := 100.0; //[mm/s^3]
 
-//--// [11] = Return In Cabin
-//--s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[11].fPos := 0.11; //[mm]
-//--s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[11].fVel := 10.11; //[mm/s]
-//--s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[11].fAcc := 10.0;  //[mm/s^2]
-//--s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[11].fDec := 10.0; //[mm/s^2]
-//--s_stSettings.stSettingsLiftingTransport.arr_stLiftPositioningProfile[11].fJrk := 100.0; //[mm/s^3]
-
 //Automatic-Positioning Transport//////////////////////////////////////////////////////////////////
 // [0] = Idle
 s_stSettings.stLiftingTransport.arr_stTransportPositioningProfile[0].fPos := 0.0; //[mm]
@@ -723,13 +711,6 @@ s_stSettings.stLiftingTransport.arr_stTransportPositioningProfile[5].fVel := 20.
 s_stSettings.stLiftingTransport.arr_stTransportPositioningProfile[5].fAcc := 20.0;  //[mm/s^2]
 s_stSettings.stLiftingTransport.arr_stTransportPositioningProfile[5].fDec := 20.0; //[mm/s^2]
 s_stSettings.stLiftingTransport.arr_stTransportPositioningProfile[5].fJrk := 200.0; //[mm/s^3]
-
-//--// [6] = Return In Cabin
-//--s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[6].fPos := 0.06; //[mm]
-//--s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[6].fVel := 200.12; //[mm/s]
-//--s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[6].fAcc := 200.0;  //[mm/s^2]
-//--s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[6].fDec := 200.0; //[mm/s^2]
-//--s_stSettings.stSettingsLiftingTransport.arr_stTransportPositioningProfile[6].fJrk := 2000.0; //[mm/s^3]
 
 //EM Doors
 //Settings Doors
@@ -797,64 +778,63 @@ GVL.g_sToHmiBottomContent := GVL.g_stHmiBottomBar.Start;
 
 //------------------------------------------//
 //Buttons
-	s_fbHmiBtnAlarms.p_bStaVisible := TRUE;
-	s_fbHmiBtnAlarms.p_bStaEnabled := TRUE;
-	s_fbHmiBtnAlarms.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnAlarms.p_sBtnText := 'Alarms';
-	
-	s_fbHmiBtnReset.p_bStaVisible := TRUE;
-	s_fbHmiBtnReset.p_bStaEnabled := TRUE;
-	s_fbHmiBtnReset.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnReset.p_sBtnText := 'Reset';
-	
-	s_fbHmiBtnInbound.p_bStaVisible := TRUE;
-	s_fbHmiBtnInbound.p_bStaEnabled := TRUE;
-	s_fbHmiBtnInbound.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnInbound.p_sBtnText := 'Inbound';
-	
-	s_fbHmiBtnOutbound.p_bStaVisible := TRUE;
-	s_fbHmiBtnOutbound.p_bStaEnabled := TRUE;
-	s_fbHmiBtnOutbound.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnOutbound.p_sBtnText := 'Outbound';
-	
-	s_fbHmiBtnDockTB.p_bStaVisible := TRUE;
-	s_fbHmiBtnDockTB.p_bStaEnabled := TRUE;
-	s_fbHmiBtnDockTB.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnDockTB.p_sBtnText := 'Dock TB';
-	
-	s_fbHmiBtnUndockTB.p_bStaVisible := TRUE;
-	s_fbHmiBtnUndockTB.p_bStaEnabled := TRUE;
-	s_fbHmiBtnUndockTB.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnUndockTB.p_sBtnText := 'Undock TB';
-	
-	s_fbHmiBtnOpenInnerTBDoor.p_bStaVisible := TRUE;
-	s_fbHmiBtnOpenInnerTBDoor.p_bStaEnabled := TRUE;
-	s_fbHmiBtnOpenInnerTBDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnOpenInnerTBDoor.p_sBtnText := 'Open Inner TB Door';
-	
-	s_fbHmiBtnCloseInnerTBDoor.p_bStaVisible := TRUE;
-	s_fbHmiBtnCloseInnerTBDoor.p_bStaEnabled := TRUE;
-	s_fbHmiBtnCloseInnerTBDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnCloseInnerTBDoor.p_sBtnText := 'Close Inner TB Door';
-	
-	s_fbHmiBtnPickTrolleyFromTB.p_bStaVisible := TRUE;
-	s_fbHmiBtnPickTrolleyFromTB.p_bStaEnabled := TRUE;
-	s_fbHmiBtnPickTrolleyFromTB.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnPickTrolleyFromTB.p_sBtnText := 'Pick Trolley From TB';
-	
-	s_fbHmiBtnPlaceTrolleyInTB.p_bStaVisible := TRUE;
-	s_fbHmiBtnPlaceTrolleyInTB.p_bStaEnabled := TRUE;
-	s_fbHmiBtnPlaceTrolleyInTB.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnPlaceTrolleyInTB.p_sBtnText := 'Place Trolley In TB';
-	
-	GVL.g_fbHmiBtnSimulation.p_bStaVisible 	:= TRUE;
-	GVL.g_fbHmiBtnSimulation.p_bStaEnabled	:= TRUE;
-	GVL.g_fbHmiBtnSimulation.p_eButtontype 	:= E_HmiButtonType.TOGGLEBUTTON;
-	GVL.g_fbHmiBtnSimulation.p_sBtnText		:= 'Simulation';
-	
-	GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible 	:= FALSE;
-	GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled 	:= FALSE;
-//------------------------------------------//
+s_fbHmiBtnAlarms.p_bStaVisible := TRUE;
+s_fbHmiBtnAlarms.p_bStaEnabled := TRUE;
+s_fbHmiBtnAlarms.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnAlarms.p_sBtnText := 'Alarms';
+
+s_fbHmiBtnReset.p_bStaVisible := TRUE;
+s_fbHmiBtnReset.p_bStaEnabled := TRUE;
+s_fbHmiBtnReset.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnReset.p_sBtnText := 'Reset';
+
+s_fbHmiBtnInbound.p_bStaVisible := TRUE;
+s_fbHmiBtnInbound.p_bStaEnabled := TRUE;
+s_fbHmiBtnInbound.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnInbound.p_sBtnText := 'Inbound';
+
+s_fbHmiBtnOutbound.p_bStaVisible := TRUE;
+s_fbHmiBtnOutbound.p_bStaEnabled := TRUE;
+s_fbHmiBtnOutbound.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnOutbound.p_sBtnText := 'Outbound';
+
+s_fbHmiBtnDockTB.p_bStaVisible := TRUE;
+s_fbHmiBtnDockTB.p_bStaEnabled := TRUE;
+s_fbHmiBtnDockTB.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnDockTB.p_sBtnText := 'Dock TB';
+
+s_fbHmiBtnUndockTB.p_bStaVisible := TRUE;
+s_fbHmiBtnUndockTB.p_bStaEnabled := TRUE;
+s_fbHmiBtnUndockTB.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnUndockTB.p_sBtnText := 'Undock TB';
+
+s_fbHmiBtnOpenInnerTBDoor.p_bStaVisible := TRUE;
+s_fbHmiBtnOpenInnerTBDoor.p_bStaEnabled := TRUE;
+s_fbHmiBtnOpenInnerTBDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnOpenInnerTBDoor.p_sBtnText := 'Open Inner TB Door';
+
+s_fbHmiBtnCloseInnerTBDoor.p_bStaVisible := TRUE;
+s_fbHmiBtnCloseInnerTBDoor.p_bStaEnabled := TRUE;
+s_fbHmiBtnCloseInnerTBDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnCloseInnerTBDoor.p_sBtnText := 'Close Inner TB Door';
+
+s_fbHmiBtnPickTrolleyFromTB.p_bStaVisible := TRUE;
+s_fbHmiBtnPickTrolleyFromTB.p_bStaEnabled := TRUE;
+s_fbHmiBtnPickTrolleyFromTB.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnPickTrolleyFromTB.p_sBtnText := 'Pick Trolley From TB';
+
+s_fbHmiBtnPlaceTrolleyInTB.p_bStaVisible := TRUE;
+s_fbHmiBtnPlaceTrolleyInTB.p_bStaEnabled := TRUE;
+s_fbHmiBtnPlaceTrolleyInTB.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnPlaceTrolleyInTB.p_sBtnText := 'Place Trolley In TB';
+
+GVL.g_fbHmiBtnSimulation.p_bStaVisible := TRUE;
+GVL.g_fbHmiBtnSimulation.p_bStaEnabled := TRUE;
+GVL.g_fbHmiBtnSimulation.p_eButtontype := E_HmiButtonType.TOGGLEBUTTON;
+GVL.g_fbHmiBtnSimulation.p_sBtnText := 'Simulation';
+
+GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible := FALSE;
+GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled := FALSE;
 
 //??s_diTwoHandControl.i_stSettings.tmInputDelay := T#2S;
 

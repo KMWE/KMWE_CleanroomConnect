@@ -3,16 +3,20 @@
   <DUT Name="ST_SettingsLiftingTransport" Id="{cad671c8-daf9-4539-9908-38693c7e494e}">
     <Declaration><![CDATA[TYPE ST_SettingsLiftingTransport :
 STRUCT
-	//Lift
+	//Param file
+	bAutoRecoveryToIdle : BOOL;	//Auto recovery to Idle-position in case of failure e.g.: (un)locking trolley failed
+	tTrolleyUnLockCheckMinTime : TIME; //Trolley (Un)Locked check minimal time
+	tTrolleyUnLockCheckMaxTime : TIME; //Trolley (Un)Locked check maximal time (time out)
+	tTrolleyAtCabinCheckMinTime : TIME; //Trolley at cabin position check minimal time
+	tTrolleyAtCabinCheckMaxTime : TIME; //Trolley at cabin position check maximal time (time out)
+	bWaitForNextStep : BOOL; //Wait for next button to be pressed before starting new positioning step
+	
+	//Init Config
 	stSettingsServoLift : ST_SettingsServo;
 	arr_stLiftPositioningProfile : ARRAY[0..10] OF ST_PositioningProfile;
 	
-	//Transport
 	stSettingsServoTransport : ST_SettingsServo;
 	arr_stTransportPositioningProfile : ARRAY[0..5] OF ST_PositioningProfile;
-	
-	bAutoRecoveryToIdle : BOOL;	//Auto recovery to Idle-position in case of failure e.g.: (un)locking trolley failed
-	bWaitForNextStep : BOOL; //Wait for next button to be pressed before starting new positioning step
 	
 	END_STRUCT
 END_TYPE

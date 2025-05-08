@@ -144,6 +144,14 @@ VAR
 	
 	s_sMessage : STRING(128);
 	
+	//Params
+	s_fbParamAutoRecoveryToIdle : FB_HmiParamHandler;
+	s_fbParamTrolleyUnLockCheckMin : FB_HmiParamHandler;
+	s_fbParamTrolleyUnLockCheckMax : FB_HmiParamHandler;
+	s_fbParamTrolleyAtCabinCheckMinTime : FB_HmiParamHandler;
+	s_fbParamTrolleyAtCabinCheckMaxTime : FB_HmiParamHandler;
+	s_fbParamWaitForNextStep : FB_HmiParamHandler;
+	
 	//Sequencers
 	s_eSequence : E_SeqLiftingTransport;
 	s_fbSeqControl : FB_SeqControl;
@@ -599,6 +607,30 @@ s_diStaCollisionAvoidanceSensor.i_stSettings.tmInputDelay := T#100MS;
 s_diStaTrolleyLocked.i_stSettings.tmInputDelay := T#100MS;
 
 //Parameters (default values read from file)
+s_fbParamAutoRecoveryToIdle.i_sName := CONCAT(i_sEmName, ': Auto Recovery To Idle');
+s_fbParamAutoRecoveryToIdle.i_nArrayFolderIndex := 1;
+s_fbParamAutoRecoveryToIdle.i_bIsNumber := TRUE;
+
+s_fbParamTrolleyUnLockCheckMin.i_sName := CONCAT(i_sEmName, ': Trolley (Un)Lock-Check min. time');
+s_fbParamTrolleyUnLockCheckMin.i_nArrayFolderIndex := 1;
+s_fbParamTrolleyUnLockCheckMin.i_bIsNumber := TRUE;
+
+s_fbParamTrolleyUnLockCheckMax.i_sName := CONCAT(i_sEmName, ': Trolley (Un)Lock-Check max. time (timeout)');
+s_fbParamTrolleyUnLockCheckMax.i_nArrayFolderIndex := 1;
+s_fbParamTrolleyUnLockCheckMax.i_bIsNumber := TRUE;
+
+s_fbParamTrolleyAtCabinCheckMinTime.i_sName := CONCAT(i_sEmName, ': Trolley At-Cabin-Check min. time');
+s_fbParamTrolleyAtCabinCheckMinTime.i_nArrayFolderIndex := 1;
+s_fbParamTrolleyAtCabinCheckMinTime.i_bIsNumber := TRUE;
+
+s_fbParamTrolleyAtCabinCheckMaxTime.i_sName := CONCAT(i_sEmName, ': Trolley At-Cabin-Check max. time (timeout)');
+s_fbParamTrolleyAtCabinCheckMaxTime.i_nArrayFolderIndex := 1;
+s_fbParamTrolleyAtCabinCheckMaxTime.i_bIsNumber := TRUE;
+
+{warning }
+s_fbParamWaitForNextStep.i_sName := CONCAT(i_sEmName, ': Wait For Next Step');
+s_fbParamWaitForNextStep.i_nArrayFolderIndex := 1;
+s_fbParamWaitForNextStep.i_bIsNumber := TRUE;
 
 //Interlock strings
 //Lift
@@ -786,14 +818,21 @@ IF NOT SUPER^._m_Params() THEN
 	RETURN;
 END_IF
 
+//Paramaters
+s_fbParamAutoRecoveryToIdle();
+s_fbParamTrolleyUnLockCheckMin();
+s_fbParamTrolleyUnLockCheckMax();
+s_fbParamTrolleyAtCabinCheckMinTime();
+s_fbParamTrolleyAtCabinCheckMaxTime();
+s_fbParamWaitForNextStep();
+
 //Write to settings
-{warning '#TODO: Check what nees to be added here, is it nessecary add a fbParam for each parameter?'}
-
-//++i_ref_stSettings.fSpeedManual := s_fbParamSpeedManual.p_fValue;
-
-//++i_ref_stSettings.stLiftSpeedProfileJogging :=
-//++i_ref_stSettings.stLiftSpeedProfilePositioning := 
-//++i_ref_stSettings.
+i_ref_stSettings.bAutoRecoveryToIdle := LREAL_TO_BOOL(s_fbParamAutoRecoveryToIdle.p_fValue);
+i_ref_stSettings.tTrolleyUnLockCheckMinTime := LREAL_TO_TIME(s_fbParamTrolleyUnLockCheckMin.p_fValue);
+i_ref_stSettings.tTrolleyUnLockCheckMaxTime := LREAL_TO_TIME(s_fbParamTrolleyUnLockCheckMax.p_fValue);
+i_ref_stSettings.tTrolleyAtCabinCheckMinTime := LREAL_TO_TIME(s_fbParamTrolleyAtCabinCheckMinTime.p_fValue);
+i_ref_stSettings.tTrolleyAtCabinCheckMaxTime := LREAL_TO_TIME(s_fbParamTrolleyAtCabinCheckMaxTime.p_fValue);
+i_ref_stSettings.bWaitForNextStep := LREAL_TO_BOOL(s_fbParamWaitForNextStep.p_fValue);
 
 _m_Params := TRUE;
 ]]></ST>
@@ -846,7 +885,7 @@ CASE s_eSequence OF
 		s_eResumeStep := E_SeqLiftingTransport.READY;
 		s_eSequence := E_SeqLiftingTransport.START;
 		
-	E_SeqLiftingTransport.START:  // Afhankelijk van de voorgaande stap, stappen programma hervatten. Wanneer actie voltooit
+	E_SeqLiftingTransport.START: // Afhankelijk van de voorgaande stap, stappen programma hervatten. Wanneer actie voltooit
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_sMessage := 'start';
 		END_IF
@@ -979,12 +1018,12 @@ CASE s_eSequence OF
 		END_IF
 		
 	E_SeqLiftingTransport.CHECK_TROLLEY_UNLOCKED:
-		IF (s_fbSeqControl.q_tmStepTime > T#3S)
+		IF (s_fbSeqControl.q_tmStepTime > i_ref_stSettings.tTrolleyUnLockCheckMinTime)
 			AND NOT(s_bStaTrolleyLocked) AND (s_bNextStep OR s_bDontWait) THEN
 			s_bNextStep := FALSE;
 			s_eSequence := E_SeqLiftingTransport.LIFT_RAISE_FROM_TB;
 			
-		ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN
+		ELSIF s_fbSeqControl.q_tmStepTime > i_ref_stSettings.tTrolleyUnLockCheckMaxTime THEN
 			IF i_ref_stSettings.bAutoRecoveryToIdle THEN
 				s_eSequence := E_SeqLiftingTransport.RECOVERY_UNLOCKED_FAILED;
 			ELSE
@@ -1069,10 +1108,10 @@ CASE s_eSequence OF
 		END_IF
 		
 	E_SeqLiftingTransport.CHECK_TROLLEY_PLACED:
-		IF s_bStaTrolleyAtLiftPos THEN
+		IF s_bStaTrolleyAtLiftPos AND (s_fbSeqControl.q_tmStepTime > i_ref_stSettings.tTrolleyAtCabinCheckMinTime) THEN
 			s_bStaTrolleyPickedFromTB := TRUE;												/////////////////////
 			s_eSequence := E_SeqLiftingTransport.READY;
-		ELSIF (s_fbSeqControl.q_tmStepTime > T#3S) THEN
+		ELSIF (s_fbSeqControl.q_tmStepTime > i_ref_stSettings.tTrolleyAtCabinCheckMaxTime) THEN
 			s_bStaTrolleyPickedFromTB := FALSE;
 			s_bErrNoTrolleyPlaced := TRUE;
 			s_eSequence := E_SeqLiftingTransport.ERROR;

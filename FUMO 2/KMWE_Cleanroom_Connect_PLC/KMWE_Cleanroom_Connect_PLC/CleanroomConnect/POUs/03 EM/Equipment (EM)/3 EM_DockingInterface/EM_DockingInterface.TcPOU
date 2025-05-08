@@ -177,24 +177,9 @@ VAR
 	s_bStaWarning : BOOL;
 	
 	//Params
-	s_fbParamTimeoutDockingClamps : FB_HmiParamHandler;
-	s_fbParamTimeoutUnlockingPins : FB_HmiParamHandler;
-	s_fbParamTimeoutDoorOpener : FB_HmiParamHandler;
-	s_fbParamTimeoutDoorShutter : FB_HmiParamHandler;
-	
-	s_fbParamDelaySeal : FB_HmiParamHandler;
-	s_fbParamCompressSealDuration : FB_HmiParamHandler;
-	
-	{warning '#TODO: Consider using 1 time value for all steps instead of seperate times'}
-	s_fbParamDelayCloseDoorShutterReleasingPins : FB_HmiParamHandler;
-	s_fbParamDelayReleaseUnlockingPins : FB_HmiParamHandler;
-	s_fbParamDelayOpenDoorShutter : FB_HmiParamHandler;
-	s_fbParamDelayOpenDoorOpener : FB_HmiParamHandler;
-	s_fbParamDelayCloseDoorShutter : FB_HmiParamHandler;
-	s_fbParamDelayLockUnlockingPins : FB_HmiParamHandler;
-	
 	s_fbParamOpenClampsAfterClosingTimeout : FB_HmiParamHandler;
 	s_fbParamCloseClampsAfterEachOther : FB_HmiParamHandler;
+	s_fbParamCompressSealDuration : FB_HmiParamHandler;
 	
 	//Hmi
 	//Buttons
@@ -730,50 +715,6 @@ s_cmInnerCabinDoor.p_sCfgOpenName := 'Open';
 s_cmInnerCabinDoor.p_sCfgCloseName := 'Close';
 
 //Parameters (default values read from file)
-s_fbParamTimeoutDockingClamps.i_sName := CONCAT(i_sEmName, ': Timeout Docking Clamps');
-s_fbParamTimeoutDockingClamps.i_nArrayFolderIndex := 1;
-s_fbParamTimeoutDockingClamps.i_bIsNumber := TRUE;
-
-s_fbParamTimeoutUnlockingPins.i_sName := CONCAT(i_sEmName, ': Timeout Unlocking Pins');
-s_fbParamTimeoutUnlockingPins.i_nArrayFolderIndex := 1;
-s_fbParamTimeoutUnlockingPins.i_bIsNumber := TRUE;
-
-s_fbParamTimeoutDoorOpener.i_sName := CONCAT(i_sEmName, ': Timeout Door Opener');
-s_fbParamTimeoutDoorOpener.i_nArrayFolderIndex := 1;
-s_fbParamTimeoutDoorOpener.i_bIsNumber := TRUE;
-
-s_fbParamTimeoutDoorShutter.i_sName := CONCAT(i_sEmName, ': Timeout Door Shutter');
-s_fbParamTimeoutDoorShutter.i_nArrayFolderIndex := 1;
-s_fbParamTimeoutDoorShutter.i_bIsNumber := TRUE;
-
-s_fbParamCompressSealDuration.i_sName := CONCAT(i_sEmName, ': Compress Seal Duration');
-s_fbParamCompressSealDuration.i_nArrayFolderIndex := 1;
-s_fbParamCompressSealDuration.i_bIsNumber := TRUE;
-
-s_fbParamDelayCloseDoorShutterReleasingPins.i_sName := CONCAT(i_sEmName, ': Delay Close Door Shutter Releasing Pins');
-s_fbParamDelayCloseDoorShutterReleasingPins.i_nArrayFolderIndex := 1;
-s_fbParamDelayCloseDoorShutterReleasingPins.i_bIsNumber := TRUE;
-
-s_fbParamDelayReleaseUnlockingPins.i_sName := CONCAT(i_sEmName, ': Delay Release Unlocking Pins');
-s_fbParamDelayReleaseUnlockingPins.i_nArrayFolderIndex := 1;
-s_fbParamDelayReleaseUnlockingPins.i_bIsNumber := TRUE;
-
-s_fbParamDelayOpenDoorShutter.i_sName := CONCAT(i_sEmName, ': Delay Open Door Shutter');
-s_fbParamDelayOpenDoorShutter.i_nArrayFolderIndex := 1;
-s_fbParamDelayOpenDoorShutter.i_bIsNumber := TRUE;
-
-s_fbParamDelayOpenDoorOpener.i_sName := CONCAT(i_sEmName, ': Delay Open Door Opener');
-s_fbParamDelayOpenDoorOpener.i_nArrayFolderIndex := 1;
-s_fbParamDelayOpenDoorOpener.i_bIsNumber := TRUE;
-
-s_fbParamDelayCloseDoorShutter.i_sName := CONCAT(i_sEmName, ': Delay Close Door Shutter');
-s_fbParamDelayCloseDoorShutter.i_nArrayFolderIndex := 1;
-s_fbParamDelayCloseDoorShutter.i_bIsNumber := TRUE;
-
-s_fbParamDelayLockUnlockingPins.i_sName := CONCAT(i_sEmName, ': Delay Lock Unlocking Pins');
-s_fbParamDelayLockUnlockingPins.i_nArrayFolderIndex := 1;
-s_fbParamDelayLockUnlockingPins.i_bIsNumber := TRUE;
-
 s_fbParamOpenClampsAfterClosingTimeout.i_sName := CONCAT(i_sEmName, ': Open Clamps After Closing Timeout');
 s_fbParamOpenClampsAfterClosingTimeout.i_nArrayFolderIndex := 1;
 s_fbParamOpenClampsAfterClosingTimeout.i_bIsNumber := TRUE;
@@ -781,6 +722,10 @@ s_fbParamOpenClampsAfterClosingTimeout.i_bIsNumber := TRUE;
 s_fbParamCloseClampsAfterEachOther.i_sName := CONCAT(i_sEmName, ': Close Clamps After Each Other');
 s_fbParamCloseClampsAfterEachOther.i_nArrayFolderIndex := 1;
 s_fbParamCloseClampsAfterEachOther.i_bIsNumber := TRUE;
+
+s_fbParamCompressSealDuration.i_sName := CONCAT(i_sEmName, ': Compress Seal Duration');
+s_fbParamCompressSealDuration.i_nArrayFolderIndex := 1;
+s_fbParamCompressSealDuration.i_bIsNumber := TRUE;
 
 //Interlocks
 //Clamps upper/lower pressure selection
@@ -1257,118 +1202,14 @@ IF NOT SUPER^._m_Params() THEN
 END_IF
 
 //Paramaters
-s_fbParamTimeoutDockingClamps();
-s_fbParamTimeoutUnlockingPins();
-s_fbParamTimeoutDoorOpener();
-s_fbParamTimeoutDoorShutter();
-s_fbParamCompressSealDuration();
-s_fbParamDelayCloseDoorShutterReleasingPins();
-s_fbParamDelayReleaseUnlockingPins();
-s_fbParamDelayOpenDoorShutter();
-s_fbParamDelayOpenDoorOpener();
-s_fbParamDelayCloseDoorShutter();
-s_fbParamDelayLockUnlockingPins();
 s_fbParamOpenClampsAfterClosingTimeout();
 s_fbParamCloseClampsAfterEachOther();
-
-//--
-(*
-s_fbParamTimeoutDockingClamps(
-	i_fDefaultValue := ,
-	i_sName := CONCAT(i_sEmName, ': Timeout Docking Clamps'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-	
-s_fbParamTimeoutUnlockingPins(
-	i_fDefaultValue := ,
-	i_sName := CONCAT(i_sEmName, ': Timeout Unlocking Pins'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-	
-s_fbParamTimeoutDoorOpener(
-	i_fDefaultValue := ,
-	i_sName := CONCAT(i_sEmName, ': Timeout Door Opener'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-	
-s_fbParamTimeoutDoorShutter(
-	i_fDefaultValue := ,
-	i_sName := CONCAT(i_sEmName, ': Timeout Door Shutter'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-	
-s_fbParamCompressSealDuration(
-	i_fDefaultValue := ,
-	i_sName := CONCAT(i_sEmName, ': Compress Seal Duration'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-	
-s_fbParamDelayCloseDoorShutterReleasingPins(
-	i_fDefaultValue := ,
-	i_sName := CONCAT(i_sEmName, ': Delay Close Door Shutter Releasing Pins'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-	
-s_fbParamDelayReleaseUnlockingPins(
-	i_fDefaultValue := ,
-	i_sName := CONCAT(i_sEmName, ': Delay Release Unlocking Pins'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-	
-s_fbParamDelayOpenDoorShutter(
-	i_fDefaultValue := ,
-	i_sName := CONCAT(i_sEmName, ': Delay Open Door Shutter'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-	
-s_fbParamDelayOpenDoorOpener(
-	i_fDefaultValue := ,
-	i_sName := CONCAT(i_sEmName, ': Delay Open Door Opener'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-	
-s_fbParamDelayCloseDoorShutter(
-	i_fDefaultValue := ,
-	i_sName := CONCAT(i_sEmName, ': Delay Close Door Shutter'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-	
-s_fbParamDelayLockUnlockingPins(
-	i_fDefaultValue := ,
-	i_sName := CONCAT(i_sEmName, ': Delay Lock Unlocking Pins'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-	
-s_fbParamOpenClampsAfterClosingTimeout(
-	i_fDefaultValue := ,
-	i_sName := CONCAT(i_sEmName, ': Open Clamps After Closing Timeout'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-	
-s_fbParamCloseClampsAfterEachOther(
-	i_fDefaultValue := ,
-	i_sName := CONCAT(i_sEmName, ': Close Clamps After Each Other'),
-	i_nArrayFolderIndex := 1,
-	i_bIsNumber := TRUE);
-*)
+s_fbParamCompressSealDuration();
 
 //Write to settings
-i_ref_stSettings.tTimeoutDockingClamps := LREAL_TO_TIME(s_fbParamTimeoutDockingClamps.p_fValue);
-i_ref_stSettings.tTimeoutUnlockingPins := LREAL_TO_TIME(s_fbParamTimeoutUnlockingPins.p_fValue);
-i_ref_stSettings.tTimeoutDoorOpener := LREAL_TO_TIME(s_fbParamTimeoutDoorOpener.p_fValue);
-i_ref_stSettings.tTimeoutDoorShutter := LREAL_TO_TIME(s_fbParamTimeoutDoorShutter.p_fValue);
-
-i_ref_stSettings.tDelayCompressSeal := LREAL_TO_TIME(s_fbParamCompressSealDuration.p_fValue);
-i_ref_stSettings.tCompressSealDuration := LREAL_TO_TIME(s_fbParamCompressSealDuration.p_fValue);
-i_ref_stSettings.tDelayCloseDoorShutterReleasingPins := LREAL_TO_TIME(s_fbParamDelayCloseDoorShutterReleasingPins.p_fValue);
-i_ref_stSettings.tDelayReleaseUnlockingPins := LREAL_TO_TIME(s_fbParamDelayReleaseUnlockingPins.p_fValue);
-i_ref_stSettings.tDelayOpenDoorShutter := LREAL_TO_TIME(s_fbParamDelayOpenDoorShutter.p_fValue);
-i_ref_stSettings.tDelayOpenDoorOpener := LREAL_TO_TIME(s_fbParamDelayOpenDoorOpener.p_fValue);
-i_ref_stSettings.tDelayCloseDoorShutter := LREAL_TO_TIME(s_fbParamDelayCloseDoorShutter.p_fValue);
-i_ref_stSettings.tDelayLockUnlockingPins := LREAL_TO_TIME(s_fbParamDelayLockUnlockingPins.p_fValue);
-
 i_ref_stSettings.bOpenClampsAfterClosingTimeout := LREAL_TO_BOOL(s_fbParamOpenClampsAfterClosingTimeout.p_fValue);
 i_ref_stSettings.bCloseClampsAfterEachOther := LREAL_TO_BOOL(s_fbParamCloseClampsAfterEachOther.p_fValue);
+i_ref_stSettings.tCompressSealDuration := LREAL_TO_TIME(s_fbParamCompressSealDuration.p_fValue);
 
 _m_Params := TRUE;
 ]]></ST>
@@ -1599,7 +1440,7 @@ CASE s_eSequence OF
 		//If docking clamps doesn't reach reed contact then continue after fixed time
 		s_tonTimer.IN := (s_cmDockingClampsUpper.m_On() AND s_cmDockingClampsLower.m_On()) OR (s_fbSeqControl.q_tmStepTime >= T#2S);
 		
-		IF s_tonTimer.ET >= i_ref_stSettings.tDelayCompressSeal THEN
+		IF s_tonTimer.ET >= i_ref_stSettings.tDelayNextStep THEN
 			s_tonTimer.IN := FALSE;
 			s_eSequence := E_SeqDockingInterface.COMPRESS_ALL_SEAL;
 		//ELSE
@@ -1628,7 +1469,7 @@ CASE s_eSequence OF
 		//If docking clamps doesn't reach reed contact then continu after fixed time
 		s_tonTimer.IN := (s_cmDockingClampsLower.m_On()) OR (s_fbSeqControl.q_tmStepTime >= T#2S);
 		
-		IF s_tonTimer.ET >= i_ref_stSettings.tDelayCompressSeal THEN
+		IF s_tonTimer.ET >= i_ref_stSettings.tDelayNextStep THEN
 			s_tonTimer.IN := FALSE;
 			s_eSequence := E_SeqDockingInterface.COMPRESS_LOWER_SEAL;
 		//ELSE
@@ -1655,7 +1496,7 @@ CASE s_eSequence OF
 		//If docking clamps doesn't reach reed contact then continu after fixed time
 		s_tonTimer.IN := (s_cmDockingClampsUpper.m_On()) OR (s_fbSeqControl.q_tmStepTime >= T#2S);
 		
-		IF s_tonTimer.ET >= i_ref_stSettings.tDelayCompressSeal THEN
+		IF s_tonTimer.ET >= i_ref_stSettings.tDelayNextStep THEN
 			s_tonTimer.IN := FALSE;
 			s_eSequence := E_SeqDockingInterface.COMPRESS_UPPER_SEAL;
 		//ELSE
@@ -1779,7 +1620,7 @@ CASE s_eSequence OF
 			{warning #TODO: Nog beslissen wat te doen, trigger met entry OF METHOD RETURN?}
 //--			s_tonTimer.IN := s_cmUnlockingPinUpper.m_On() AND s_cmUnlockingPinLower.m_On();
 			
-			IF s_tonTimer.ET > i_ref_stSettings.tDelayOpenDoorShutter THEN
+			IF s_tonTimer.ET > i_ref_stSettings.tDelayNextStep THEN
 				s_tonTimer.IN := FALSE;
 				s_eSequence := E_SeqDockingInterface.OPEN_DOOR_SHUTTER;
 			END_IF
@@ -1791,7 +1632,7 @@ CASE s_eSequence OF
 	E_SeqDockingInterface.OPEN_DOOR_SHUTTER:
 		s_tonTimer.IN := s_cmDoorShutter.m_Off();
 		
-		IF s_tonTimer.ET > i_ref_stSettings.tDelayOpenDoorOpener THEN
+		IF s_tonTimer.ET > i_ref_stSettings.tDelayNextStep THEN
 			s_tonTimer.IN := FALSE;
 			s_eSequence := E_SeqDockingInterface.OPEN_DOOR_OPENER;
 		END_IF
@@ -1817,7 +1658,7 @@ CASE s_eSequence OF
 	E_SeqDockingInterface.CLOSE_DOOR_OPENER:
 		s_tonTimer.IN := s_cmDoorOpener.m_Off();
 		
-		IF s_tonTimer.ET > i_ref_stSettings.tDelayCloseDoorShutter
+		IF s_tonTimer.ET > i_ref_stSettings.tDelayNextStep
 			AND (s_bStaDoorOpenerClosed OR s_bStaDoorOpenerAlmostClosed)
 			THEN
 			s_tonTimer.IN := FALSE;
@@ -1830,7 +1671,7 @@ CASE s_eSequence OF
 	E_SeqDockingInterface.CLOSE_DOOR_SHUTTER:
 		s_tonTimer.IN := s_cmDoorShutter.m_On();
 		
-		IF s_tonTimer.ET > i_ref_stSettings.tDelayLockUnlockingPins THEN
+		IF s_tonTimer.ET > i_ref_stSettings.tDelayNextStep THEN
 			s_tonTimer.IN := FALSE;
 			s_eSequence := E_SeqDockingInterface.LOCK_UNLOCKING_PINS;
 		END_IF
@@ -1838,7 +1679,7 @@ CASE s_eSequence OF
 	E_SeqDockingInterface.LOCK_UNLOCKING_PINS:
 		s_tonTimer.IN := (s_cmUnlockingPinUpper.m_Off() AND s_cmUnlockingPinLower.m_Off());
 		
-		IF s_tonTimer.ET > i_ref_stSettings.tDelayOpenDoorShutter THEN
+		IF s_tonTimer.ET > i_ref_stSettings.tDelayNextStep THEN
 			s_tonTimer.IN := FALSE;
 //??			i_refTB.p_bCloseInnerDoorDone := TRUE;
 			

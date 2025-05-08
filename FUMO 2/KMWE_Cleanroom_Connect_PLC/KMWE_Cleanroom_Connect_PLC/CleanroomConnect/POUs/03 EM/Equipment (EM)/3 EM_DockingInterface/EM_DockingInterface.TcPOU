@@ -321,15 +321,6 @@ _m_Alarms := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_AutomaticControl" Id="{ee0253ab-2fda-4db0-933c-ed048e84d0ed}">
-      <Declaration><![CDATA[METHOD PROTECTED _m_AutomaticControl : BOOL
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[
-_m_Sequence();
-]]></ST>
-      </Implementation>
-    </Method>
     <Method Name="_m_CmdCloseInnerDoor" Id="{410bcb72-5351-4d55-ac55-5d0e27ce8155}">
       <Declaration><![CDATA[METHOD PROTECTED _m_CmdCloseInnerDoor : BOOL
 VAR_INPUT
@@ -1805,7 +1796,7 @@ CASE i_eCtrlMode OF
 //??		_m_AdoptPressureSelection();
 		
 		//Execute automatic control
-		_m_AutomaticControl();
+		_m_Sequence();
 		
 	E_CtrlMode.MANUAL:
 		//Execute manaual control (based on HMI buttons)
@@ -1819,7 +1810,7 @@ CASE i_eCtrlMode OF
 		s_bReqOpenInnerDoor := s_fbHmiBtnOpenInnerDoor.p_osrBtnPress;
 		s_bReqCloseInnerDoor := s_fbHmiBtnCloseInnerDoor.p_osrBtnPress;
 		
-		_m_AutomaticControl();
+		_m_Sequence();
 		
 	E_CtrlMode.MAINTENANCE:
 		//Execute maintenance control (HMI control module buttons)

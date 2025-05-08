@@ -233,18 +233,6 @@ _m_Alarms := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_AutomaticControl" Id="{bf60d7a3-961e-4fdb-af02-f325c49fcd52}">
-      <Declaration><![CDATA[METHOD PROTECTED _m_AutomaticControl : BOOL
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[
-_m_Sequence();
-
-//--centering functionality is build into the transport sequencer
-//--_m_SeqCentering();
-]]></ST>
-      </Implementation>
-    </Method>
     <Method Name="_m_CmdCenteringTB" Id="{ff42404a-08cf-4a4b-a12c-748d8f3fd351}">
       <Declaration><![CDATA[METHOD PROTECTED _m_CmdCenteringTB : BOOL
 VAR_INPUT
@@ -1075,7 +1063,7 @@ CASE i_eCtrlMode OF
 		
 	E_CtrlMode.AUTOMATIC:
 		//Automatic commands are controlled by higher-layer unit
-		_m_AutomaticControl();
+		_m_Sequence();
 		
 	E_CtrlMode.MANUAL:
 		//Execute manaual control (based on HMI buttons)
@@ -1105,7 +1093,7 @@ CASE i_eCtrlMode OF
 		//??	s_bReqCenteringTB := (eActionSelection = E_ActionSelection.CENTER_TB) AND i_bSta2HC_Active;
 		END_IF
 		
-		_m_AutomaticControl();
+		_m_Sequence();
 		
 	E_CtrlMode.MAINTENANCE:
 		//Execute maintenance control (HMI control module buttons)

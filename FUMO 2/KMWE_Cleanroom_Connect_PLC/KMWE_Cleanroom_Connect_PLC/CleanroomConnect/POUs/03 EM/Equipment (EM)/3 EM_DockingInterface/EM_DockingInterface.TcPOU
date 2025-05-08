@@ -729,6 +729,59 @@ s_cmInnerCabinDoor.i_stSettings.tResetPulseDuration := T#1S;
 s_cmInnerCabinDoor.p_sCfgOpenName := 'Open';
 s_cmInnerCabinDoor.p_sCfgCloseName := 'Close';
 
+//Parameters (default values read from file)
+s_fbParamTimeoutDockingClamps.i_sName := CONCAT(i_sEmName, ': Timeout Docking Clamps');
+s_fbParamTimeoutDockingClamps.i_nArrayFolderIndex := 1;
+s_fbParamTimeoutDockingClamps.i_bIsNumber := TRUE;
+
+s_fbParamTimeoutUnlockingPins.i_sName := CONCAT(i_sEmName, ': Timeout Unlocking Pins');
+s_fbParamTimeoutUnlockingPins.i_nArrayFolderIndex := 1;
+s_fbParamTimeoutUnlockingPins.i_bIsNumber := TRUE;
+
+s_fbParamTimeoutDoorOpener.i_sName := CONCAT(i_sEmName, ': Timeout Door Opener');
+s_fbParamTimeoutDoorOpener.i_nArrayFolderIndex := 1;
+s_fbParamTimeoutDoorOpener.i_bIsNumber := TRUE;
+
+s_fbParamTimeoutDoorShutter.i_sName := CONCAT(i_sEmName, ': Timeout Door Shutter');
+s_fbParamTimeoutDoorShutter.i_nArrayFolderIndex := 1;
+s_fbParamTimeoutDoorShutter.i_bIsNumber := TRUE;
+
+s_fbParamCompressSealDuration.i_sName := CONCAT(i_sEmName, ': Compress Seal Duration');
+s_fbParamCompressSealDuration.i_nArrayFolderIndex := 1;
+s_fbParamCompressSealDuration.i_bIsNumber := TRUE;
+
+s_fbParamDelayCloseDoorShutterReleasingPins.i_sName := CONCAT(i_sEmName, ': Delay Close Door Shutter Releasing Pins');
+s_fbParamDelayCloseDoorShutterReleasingPins.i_nArrayFolderIndex := 1;
+s_fbParamDelayCloseDoorShutterReleasingPins.i_bIsNumber := TRUE;
+
+s_fbParamDelayReleaseUnlockingPins.i_sName := CONCAT(i_sEmName, ': Delay Release Unlocking Pins');
+s_fbParamDelayReleaseUnlockingPins.i_nArrayFolderIndex := 1;
+s_fbParamDelayReleaseUnlockingPins.i_bIsNumber := TRUE;
+
+s_fbParamDelayOpenDoorShutter.i_sName := CONCAT(i_sEmName, ': Delay Open Door Shutter');
+s_fbParamDelayOpenDoorShutter.i_nArrayFolderIndex := 1;
+s_fbParamDelayOpenDoorShutter.i_bIsNumber := TRUE;
+
+s_fbParamDelayOpenDoorOpener.i_sName := CONCAT(i_sEmName, ': Delay Open Door Opener');
+s_fbParamDelayOpenDoorOpener.i_nArrayFolderIndex := 1;
+s_fbParamDelayOpenDoorOpener.i_bIsNumber := TRUE;
+
+s_fbParamDelayCloseDoorShutter.i_sName := CONCAT(i_sEmName, ': Delay Close Door Shutter');
+s_fbParamDelayCloseDoorShutter.i_nArrayFolderIndex := 1;
+s_fbParamDelayCloseDoorShutter.i_bIsNumber := TRUE;
+
+s_fbParamDelayLockUnlockingPins.i_sName := CONCAT(i_sEmName, ': Delay Lock Unlocking Pins');
+s_fbParamDelayLockUnlockingPins.i_nArrayFolderIndex := 1;
+s_fbParamDelayLockUnlockingPins.i_bIsNumber := TRUE;
+
+s_fbParamOpenClampsAfterClosingTimeout.i_sName := CONCAT(i_sEmName, ': Open Clamps After Closing Timeout');
+s_fbParamOpenClampsAfterClosingTimeout.i_nArrayFolderIndex := 1;
+s_fbParamOpenClampsAfterClosingTimeout.i_bIsNumber := TRUE;
+
+s_fbParamCloseClampsAfterEachOther.i_sName := CONCAT(i_sEmName, ': Close Clamps After Each Other');
+s_fbParamCloseClampsAfterEachOther.i_nArrayFolderIndex := 1;
+s_fbParamCloseClampsAfterEachOther.i_bIsNumber := TRUE;
+
 //Interlocks
 //Clamps upper/lower pressure selection
 //[0].sReason --> External, dynamical will be written in m_input
@@ -1204,6 +1257,22 @@ IF NOT SUPER^._m_Params() THEN
 END_IF
 
 //Paramaters
+s_fbParamTimeoutDockingClamps();
+s_fbParamTimeoutUnlockingPins();
+s_fbParamTimeoutDoorOpener();
+s_fbParamTimeoutDoorShutter();
+s_fbParamCompressSealDuration();
+s_fbParamDelayCloseDoorShutterReleasingPins();
+s_fbParamDelayReleaseUnlockingPins();
+s_fbParamDelayOpenDoorShutter();
+s_fbParamDelayOpenDoorOpener();
+s_fbParamDelayCloseDoorShutter();
+s_fbParamDelayLockUnlockingPins();
+s_fbParamOpenClampsAfterClosingTimeout();
+s_fbParamCloseClampsAfterEachOther();
+
+//--
+(*
 s_fbParamTimeoutDockingClamps(
 	i_fDefaultValue := ,
 	i_sName := CONCAT(i_sEmName, ': Timeout Docking Clamps'),
@@ -1281,7 +1350,8 @@ s_fbParamCloseClampsAfterEachOther(
 	i_sName := CONCAT(i_sEmName, ': Close Clamps After Each Other'),
 	i_nArrayFolderIndex := 1,
 	i_bIsNumber := TRUE);
-	
+*)
+
 //Write to settings
 i_ref_stSettings.tTimeoutDockingClamps := LREAL_TO_TIME(s_fbParamTimeoutDockingClamps.p_fValue);
 i_ref_stSettings.tTimeoutUnlockingPins := LREAL_TO_TIME(s_fbParamTimeoutUnlockingPins.p_fValue);

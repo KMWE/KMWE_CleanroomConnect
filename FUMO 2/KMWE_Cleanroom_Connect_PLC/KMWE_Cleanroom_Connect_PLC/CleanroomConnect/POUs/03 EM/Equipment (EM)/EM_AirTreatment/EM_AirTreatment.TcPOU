@@ -254,6 +254,23 @@ s_fbDeltaP_CabinAmbient.i_stSettings.tmFilterTime := T#3S;
 
 s_fbPIDPressCtrl.fCtrlCycleTime := s_fTaskCycleTime;
 
+//Parameters (default values read from file)
+s_fbParamPressurizingPress.i_sName := CONCAT(i_sEmName, ': Pressurizing Pressure');
+s_fbParamPressurizingPress.i_nArrayFolderIndex := 1;
+s_fbParamPressurizingPress.i_bIsNumber := TRUE;
+
+s_fbParamFlushingPress.i_sName := CONCAT(i_sEmName, ': Flushing Pressure');
+s_fbParamFlushingPress.i_nArrayFolderIndex := 1;
+s_fbParamFlushingPress.i_bIsNumber := TRUE;
+
+s_fbParamFlushingTime.i_sName := CONCAT(i_sEmName, ': Flushing Time');
+s_fbParamFlushingTime.i_nArrayFolderIndex := 1;
+s_fbParamFlushingTime.i_bIsNumber := TRUE;
+
+s_fbParamEqualizingPress.i_sName := CONCAT(i_sEmName, ': Equalizing Pressure');
+s_fbParamEqualizingPress.i_nArrayFolderIndex := 1;
+s_fbParamEqualizingPress.i_bIsNumber := TRUE;
+
 //Alarms
 s_fbAlarmHandlerFanThermalError.i_eAlarmLevel := E_AlarmLevel.Alarm;
 s_fbAlarmHandlerFanThermalError.i_sAlarmText := CONCAT(i_sEmName, ': Fan Thermal  Error');
@@ -355,6 +372,12 @@ IF NOT SUPER^._m_Params() THEN
 END_IF
 
 //Paramaters
+s_fbParamPressurizingPress();
+s_fbParamFlushingPress();
+s_fbParamFlushingTime();
+s_fbParamEqualizingPress();
+
+//--
 (*
 s_fbParamPressurizingPress(
 	i_fDefaultValue := ,
@@ -379,13 +402,13 @@ s_fbParamEqualizingPress(
 	i_sName := CONCAT(i_sEmName, ': Equalizing Pressure'),
 	i_nArrayFolderIndex := 1,
 	i_bIsNumber := TRUE);
+*)
 		
 //Write to settings	
 i_ref_stSettings.fPressurizingPress := s_fbParamPressurizingPress.p_fValue;
 i_ref_stSettings.fFlushingPress := s_fbParamFlushingPress.p_fValue;
 i_ref_stSettings.tFlushingTime := LREAL_TO_TIME(s_fbParamFlushingTime.p_fValue);
 i_ref_stSettings.fEqualizingPress := s_fbParamEqualizingPress.p_fValue;
-*)
 
 _m_Params := TRUE;
 ]]></ST>

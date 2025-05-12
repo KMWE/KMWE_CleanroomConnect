@@ -119,7 +119,7 @@ s_tonOpeningTimeout(
 	PT := i_stSettings.tDoorOpeningTimeout );
 	
 s_tonClosingTimeout(
-	IN := i_bReqEnable AND s_bReqClose AND NOT(s_bStaDoorIsClosing),
+	IN := i_bReqEnable AND s_bReqClose AND NOT(s_bStaDoorIsClosed),
 	PT := i_stSettings.tDoorClosingTimeout );
 	
 // Set error bits
@@ -142,6 +142,9 @@ s_bStaError :=
 	s_fbAlarmHandlerDoorController.q_bStaActive
 	OR s_fbAlarmHandlerOpeningTimeout.q_bStaActive
 	OR s_fbAlarmHandlerClosingTimeout.q_bStaActive;
+	
+s_bStaWarning :=
+	FALSE;
 	
 _m_Alarms := TRUE;
 ]]></ST>

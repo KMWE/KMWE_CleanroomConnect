@@ -22,6 +22,8 @@ END_VAR
 ]]></Declaration>
     <Implementation>
       <ST><![CDATA[
+IF I_bCmdEnable THEN ; END_IF
+
 s_tonEnabled(IN := (*I_bCmdEnable AND*) NOT(s_bError), PT := T#2S);
 s_tonRunning(IN := s_tonEnabled.Q AND (I_bCmdStartCW OR I_bCmdStartCCW) , PT := T#2S);
 s_tonStopped(IN := NOT(s_tonRunning.Q), PT := T#2S);
@@ -34,17 +36,5 @@ IF I_bCmdReset THEN
 END_IF
 ]]></ST>
     </Implementation>
-    <LineIds Name="SIM_MOVITRAC_B">
-      <LineId Id="168" Count="0" />
-      <LineId Id="144" Count="1" />
-      <LineId Id="173" Count="0" />
-      <LineId Id="146" Count="0" />
-      <LineId Id="169" Count="0" />
-      <LineId Id="171" Count="0" />
-      <LineId Id="177" Count="0" />
-      <LineId Id="176" Count="0" />
-      <LineId Id="29" Count="0" />
-      <LineId Id="178" Count="1" />
-    </LineIds>
   </POU>
 </TcPlcObject>

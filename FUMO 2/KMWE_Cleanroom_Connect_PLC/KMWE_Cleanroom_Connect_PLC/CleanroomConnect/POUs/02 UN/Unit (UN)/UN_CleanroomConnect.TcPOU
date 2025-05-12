@@ -3,17 +3,12 @@
   <POU Name="UN_CleanroomConnect" Id="{8b93890b-f796-4713-9491-f75e01fbeba7}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK UN_CleanroomConnect EXTENDS Un_Base
 VAR
-	s_stSettings : ST_UN_CleanroomConnectSettings;
-	
-	s_bTestDisableCabinDoors : BOOL := FALSE;
-	
-//Control Modules
+	//Control Modules
 	s_cmCabinStateIndicator : CM_TubeLedRgb;
 	s_cmDoorLockCleanroomDoor : CM_DoorLock;
 	
-//------------------------------------------//
-//Function Blocks
-	s_FbModeStateControl : FB_ModeStateControl;
+	//Function Blocks
+	s_fbModeStateControl : FB_ModeStateControl;
 	
 	//EM Pallet Conveyor
 	s_fbIlckHandlerConvBwd : FB_InterlockHandler;
@@ -28,26 +23,15 @@ VAR
 	//EM Lifting Transport
 	s_fbIlckHandlerTranportExtract : FB_InterlockHandler;
 	
-	//EM Doors
-	//..
-	
-//------------------------------------------//
-//Inputs
+	//Inputs
 //??	s_diTwoHandControl : FB_DigInput;
 
-//------------------------------------------//
+	//Alarms
 
-//------------------------------------------//
-//Alarms
-//------------------------------------------//
-
-//------------------------------------------//
-//Params
-
-//------------------------------------------//
-
-//------------------------------------------//
-//Variables
+	//Params
+	s_stSettings : ST_UN_CleanroomConnectSettings;
+	
+	//Variables
 	s_bStaWarning : BOOL;
 	s_bStaRunning : BOOL;
 	
@@ -64,12 +48,11 @@ VAR
 	s_eCtrlState : E_CtrlState;
 	
 	s_eCabinAirState : E_AirState := E_AirState.UNKNOWN;
-//------------------------------------------//
-
-//------------------------------------------//
-//Properties
-
-//------------------------------------------//
+	
+	s_bTestDisableCabinDoors : BOOL := FALSE;
+	
+	//Properties
+	
 	//Sequencers
 	s_eSequence : E_SeqCleanroomConnect;
 	s_fbSeqControl : FB_SeqControl;
@@ -84,8 +67,7 @@ VAR
 	
 	s_tonTimer : TON;
 	
-//------------------------------------------//
-//Hmi
+	//Hmi
 	{hide}
 	s_fbHmiBtnAlarms : FB_HmiBtn;
 	s_fbHmiBtnReset : FB_HmiBtn;
@@ -98,12 +80,11 @@ VAR
 	s_fbHmiBtnCloseInnerTBDoor : FB_HmiBtn;
 	s_fbHmiBtnPickTrolleyFromTB : FB_HmiBtn;
 	s_fbHmiBtnPlaceTrolleyInTB : FB_HmiBtn;
-//------------------------------------------//
-
+	
 	s_bHmiForceOutputEnabled : BOOL;
 	s_bHmiForceOutputRGBEnabled : BOOL;
 	s_bHmiForceOutputWEnabled : BOOL;
-
+	
 END_VAR
 
 VAR CONSTANT
@@ -165,18 +146,16 @@ END_IF
 //Docking / Undocking
 
 //Error, not opertinal
-//--IF FALSE (*_spare_*) THEN
 IF GVL_Modules.g_emAirTreatment.p_bStaStopped THEN
 	s_cmCabinStateIndicator.m_Red(c_bBLINK);
 ELSIF FALSE (*_spare_*) THEN
 	s_cmCabinStateIndicator.m_Red(c_bON);
 	
-//--ELSIF FALSE (*_docking_undocking_process_direct_contact_to_extarnal_air_*)
 ELSIF ((s_eCabinAirState = E_AirState.UNKNOWN) OR (s_eCabinAirState = E_AirState.DIRTY))
 	AND NOT(GVL_Modules.g_emDockingInterface.p_bStaDocked)
 	AND NOT(GVL_Modules.g_emDockingInterface.p_bStaOuterDoorClosed) THEN
 	s_cmCabinStateIndicator.m_Magenta(c_bBLINK);
-//--ELSIF FALSE (*_cabin_closed_afer_docking_undocking_*) THEN
+	
 ELSIF (s_eCabinAirState = E_AirState.DIRTY) THEN
 	s_cmCabinStateIndicator.m_Magenta(c_bON);
 	
@@ -239,16 +218,6 @@ s_cmDoorLockCleanroomDoor(
 	i_eCtrlMode := s_eCtrlMode,
 	i_ref_eCtrlState := s_eCtrlState,
 	i_bCmdReset := p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn); //Add temp reset button
-//------------------------------------------//
-
-//------------------------------------------//
-//Outputs
-//------------------------------------------//
-
-//------------------------------------------//
-//Inputs
-//??	s_diTwoHandControl();
-//------------------------------------------//
 
 _m_Devices := TRUE;
 ]]></ST>
@@ -269,7 +238,8 @@ IF NOT SUPER^._m_Hmi() THEN
 	RETURN;
 END_IF
 
-//------------------------------------------//
+//--
+(*
 //Mode management
 IF GVL_KMWEGenericLib.g_fbHmiBtnReturnToStart.p_osfBtnPress THEN
 	s_eCtrlMode := E_CtrlMode.IDLE;
@@ -277,6 +247,7 @@ IF GVL_KMWEGenericLib.g_fbHmiBtnReturnToStart.p_osfBtnPress THEN
 	GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaVisible := TRUE;
 	GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaEnabled := TRUE;
 END_IF
+*)
 
 //Alarm Button can always be pressed
 IF s_fbHmiBtnAlarms.p_osrBtnPress AND GVL.g_sToHmiMiddleContent <> GVL.g_stHmiMiddle.AlarmManager THEN
@@ -298,110 +269,19 @@ IF GVL.g_sToHmiMiddleContent = GVL.g_stHmiMiddle.AlarmManager AND GVL_KMWEGeneri
 END_IF
 
 //Hmi view management (General, Em can set module specific pages)
+{warning #TODO: Check IF THIS can be used TO automatically open tab corresponding TO the selected mode}
 CASE s_eCtrlMode OF
 	E_CtrlMode.IDLE:
-	
-//--
-(*		GVL.g_bConnectTestEquipment		:= TRUE;
-
-		IF NOT GVL_KMWEGenericLib.g_fbAlarmManager.p_bAlarmActive THEN
-			GVL.g_bLedFlashFast	:= FALSE;
-			GVL.g_bLedFlashSlow	:= FALSE;
-			GVL.g_eStaLedColor := E_KmweLedColors.Idle;
-		END_IF
-	
-		s_fbHmiBtnTesterConfig.p_sBtnText		:= 'Tester Configuration';	
-	
-		IF GVL_KMWEGenericLib.g_fbHmiBtnReturnToStart.p_osfBtnPress THEN
-			GVL_KMWEGenericLib.g_fbParamManager.p_bShowHmiParam := FALSE;
-
-			GVL.g_sToHmiMiddleContent 	:= GVL.g_stHmiMiddle.Start;
-			GVL.g_sToHmiBottomContent	:= GVL.g_stHmiBottomBar.Start;
-		END_IF
-		
-		IF s_fbHmiBtnTesterConfig.p_osrBtnPress THEN
-			GVL_KMWEGenericLib.g_fbParamManager.p_nFolderIndex 	:= 1;
-			GVL_KMWEGenericLib.g_fbParamManager.p_bShowHmiParam := TRUE;
-
-			GVL.g_sToHmiMiddleContent 	:= GVL.g_stHmiMiddle.TesterConfig;
-			GVL.g_sToHmiBottomContent	:= GVL.g_stHmiBottomBar.General_ReturnToStart;
-		END_IF
-		
-		IF s_fbHmiBtnAutomatic.p_osrBtnPress THEN
-			s_eCtrlMode 					:= E_CtrlMode.AUTOMATIC;
-			GVL.g_bConnectTestEquipment		:= FALSE;
-			
-			GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_sBtnText		:= 'Acknowledge';
-			
-			GVL_KMWEGenericLib.g_fbParamManager.p_nFolderIndex 		:= 2;
-			
-			GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaVisible	:= FALSE;
-			GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaEnabled	:= FALSE;
-	
-			GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible		:= TRUE;
-			GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled		:= TRUE;
-			
-			GVL.g_sToHmiMiddleContent 	:= GVL.g_stHmiMiddle.OperatorInputData;
-			GVL.g_sToHmiBottomContent	:= GVL.g_stHmiBottomBar.Procedure;
-		END_IF
-		
-		IF s_fbHmiBtnManual.p_osrBtnPress THEN
-			s_eCtrlMode := E_CtrlMode.MANUAL;
-			
-			GVL.g_sToHmiMiddleContent 	:= GVL.g_stHmiMiddle.Manual;
-			GVL.g_sToHmiBottomContent	:= GVL.g_stHmiBottomBar.General_ReturnToStart;
-		END_IF
-*)
+		;
 	E_CtrlMode.AUTOMATIC:
-(*		s_fbHmiBtnTesterConfig.p_sBtnText		:= 'Procedure Configuration';
-		
-		IF GVL.g_sToHmiMiddleContent = GVL.g_stHmiMiddle.OperatorInputData 
-			AND GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_osrBtnPress 
-		THEN
-			GVL_KMWEGenericLib.g_fbParamManager.p_bShowHmiParam := FALSE;
-
-			GVL.g_sToHmiMiddleContent 							:= GVL.g_stHmiMiddle.Start;
-			GVL.g_sToHmiBottomContent							:= GVL.g_stHmiBottomBar.Start;
-			
-			s_eCtrlMode 										:= E_CtrlMode.IDLE;	
-		END_IF
-		
-		IF s_fbHmiBtnTesterConfig.p_osrBtnPress THEN
-			GVL_KMWEGenericLib.g_fbParamManager.p_nFolderIndex 	:= 2;
-			GVL_KMWEGenericLib.g_fbParamManager.p_bShowHmiParam := TRUE;
-
-			GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaVisible	:= FALSE;
-			GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaEnabled	:= FALSE;
-			
-			GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible		:= TRUE;
-			GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled		:= TRUE;
-
-			GVL.g_sToHmiMiddleContent 	:= GVL.g_stHmiMiddle.TesterConfig;
-			GVL.g_sToHmiBottomContent	:= GVL.g_stHmiBottomBar.General_Return;
-		END_IF
-		
-		IF GVL.g_sToHmiMiddleContent = GVL.g_stHmiMiddle.TesterConfig THEN
-			IF GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_osrBtnPress THEN
-				GVL.g_sToHmiMiddleContent 	:= GVL.g_stHmiMiddle.OperatorInputData;
-				GVL.g_sToHmiBottomContent	:= GVL.g_stHmiBottomBar.Procedure;
-				
-				GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible		:= FALSE;
-				GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled		:= FALSE;
-			END_IF
-		END_IF
-*)		
+		;
 	E_CtrlMode.MANUAL:
-		IF GVL_KMWEGenericLib.g_fbAlarmManager.p_osrAlarmsResolved THEN
-			GVL.g_eStaLedColor := E_KmweLedColors.Green;
-		END_IF
-		
-		GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaVisible	:= FALSE;
-		GVL_KMWEGenericLib.g_fbHmiBtnAcknowledge.p_bStaEnabled	:= FALSE;
-		
-//		IF GVL_KMWEGenericLib.g_fbHmiBtnReturnToStart.p_osrBtnPress THEN
-//			GVL.g_sToHmiMiddleContent 	:= ST_HmiMiddle.Start;
-//			GVL.g_sToHmiBottomContect	:= ST_HmiBottomBar.Start;
-//		END_IF
+		;
+	E_CtrlMode.MAINTENANCE:
+		;
+	E_CtrlMode.IO:
+		;
+	E_CtrlMode.CLEANING:
 		;
 END_CASE
 
@@ -417,8 +297,6 @@ s_fbHmiBtnOpenInnerTBDoor();
 s_fbHmiBtnCloseInnerTBDoor();
 s_fbHmiBtnPickTrolleyFromTB();
 s_fbHmiBtnPlaceTrolleyInTB();
-
-GVL.g_fbHmiBtnSimulation();
 ]]></ST>
       </Implementation>
     </Method>
@@ -426,7 +304,8 @@ GVL.g_fbHmiBtnSimulation();
       <Declaration><![CDATA[METHOD PROTECTED _m_Init : BOOL
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF NOT SUPER^._m_Init() THEN
+        <ST><![CDATA[
+IF NOT SUPER^._m_Init() THEN
 	RETURN;
 END_IF
 
@@ -806,11 +685,6 @@ s_fbHmiBtnPlaceTrolleyInTB.p_bStaEnabled := TRUE;
 s_fbHmiBtnPlaceTrolleyInTB.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 s_fbHmiBtnPlaceTrolleyInTB.p_sBtnText := 'Place Trolley In TB';
 
-GVL.g_fbHmiBtnSimulation.p_bStaVisible := TRUE;
-GVL.g_fbHmiBtnSimulation.p_bStaEnabled := TRUE;
-GVL.g_fbHmiBtnSimulation.p_eButtontype := E_HmiButtonType.TOGGLEBUTTON;
-GVL.g_fbHmiBtnSimulation.p_sBtnText := 'Simulation';
-
 GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible := FALSE;
 GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled := FALSE;
 
@@ -828,7 +702,7 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-s_FbModeStateControl(
+s_fbModeStateControl(
 	i_bReqStopAlarm :=
 		(
 			GVL_Modules.g_emUtilities.p_bStaError
@@ -839,8 +713,8 @@ s_FbModeStateControl(
 		AND	( (s_eCtrlMode = E_CtrlMode.AUTOMATIC) OR (s_eCtrlMode = E_CtrlMode.MANUAL) ),
 	i_bStaAllStopped := TRUE);
 
-s_eCtrlMode := s_FbModeStateControl.p_eCtrlMode;
-s_eCtrlState :=	s_FbModeStateControl.p_eCtrlState;
+s_eCtrlMode := s_fbModeStateControl.p_eCtrlMode;
+s_eCtrlState :=	s_fbModeStateControl.p_eCtrlState;
 
 // EM_Utilities ///////////////////////////////////////////////////////////////////////////////////
 GVL_Modules.g_emUtilities.m_GetGeneralState(
@@ -975,9 +849,7 @@ _m_Modules := TRUE;
     </Method>
     <Method Name="_m_Sequence" Id="{90534ebe-9d21-4aeb-b2cc-cf785c67a06d}">
       <Declaration><![CDATA[METHOD PROTECTED _m_Sequence : BOOL
-VAR
-	sReason : STRING;
-END_VAR]]></Declaration>
+]]></Declaration>
       <Implementation>
         <ST><![CDATA[
 //Register previous step

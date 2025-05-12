@@ -24,8 +24,10 @@ VAR_OUTPUT
 END_VAR
 
 VAR
+	{warning '#2HC: Consider adding 2-hand-control later'}
+	(*
 	s_eActionSelection : E_ActionSelection;
-	
+	*)	
 	//Interlocks
 	s_fbIlckHandlerConveyorBackward : FB_InterlockHandler;
 	s_fbIlckHandlerConveyorForward : FB_InterlockHandler;
@@ -121,10 +123,6 @@ VAR
 	s_tDoorCheckTime : TIME;
 	s_bDoorCheckTimeDisabled : BOOL := FALSE;
 	
-//-- Intergrated in Transport sequencer	
-//--	s_eSeqCentering : E_SeqCentering;
-//--	s_fbSeqCenteringControl : FB_SeqControl;
-	
 	//Hmi
 	//Buttons
 	s_fbHmiBtnTB_ToInfeed : FB_HmiBtn;
@@ -148,7 +146,6 @@ VAR
 END_VAR
 
 VAR PERSISTENT //Variables below will be returned during: Power Cycle, Active Configuration, Download, Cold Restart
-//--	s_eLastStepCenteringPersistent : E_SeqCentering := E_SeqCentering.READY;
 	s_eLastStepTransportPersistent : E_SeqTransport := E_SeqTransport.READY;
 END_VAR
 ]]></Declaration>
@@ -345,7 +342,7 @@ s_cmPalletConveyor(
 	i_bIclkBackward := s_bIlckConveyorBackward AND (i_eCtrlMode <> E_CtrlMode.IO));
 
 s_bStaBrakeReleased := s_cmPalletConveyor.p_bStaBrakeReleased;
-s_bStaDriveError := s_cmPalletConveyor.p_bStaError; 
+s_bStaDriveError := s_cmPalletConveyor.p_bStaError;
 
 s_cmCenteringUnit(
 	i_bReqEnable := i_bReqEnable,
@@ -666,120 +663,6 @@ _m_Params := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="_m_SeqCentering" Id="{9ea29294-eb8f-4625-80fc-76ae8a3e8898}">
-      <Declaration><![CDATA[METHOD PROTECTED _m_SeqCentering : BOOL
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[
-s_fbSeqCenteringControl(
-	i_nSeqStep := s_eSeqCentering,
-	i_sStepName := TO_STRING(s_eSeqCentering),
-	i_bCmdReset := i_bCmdReset
-					AND (s_eSeqCentering = E_SeqCentering.ERROR) // Only reset/resume sequencer from ERROR state
-					AND NOT(s_cmCenteringUnit.p_bStaError)
-					AND NOT(s_cmPalletConveyor.p_bStaError)
-					AND i_bReqEnable,
-	i_bStaError := s_bStaError OR NOT(i_bReqEnable));
-
-//Abbort operation (go to stop)
-IF (i_eCtrlState = E_CtrlState.STOPPING) THEN
-	s_eSeqTransport := E_SeqTransport.STOP;
-//--s_eSeqCentering := E_SeqCentering.MOVE_TO_IDLE;
-END_IF
-
-CASE s_eSeqCentering OF
-	
-	E_SeqCentering.IDLE:
-		s_bReqCenteringTB := FALSE;
-		
-		IF (i_eCtrlState = E_CtrlState.IDLE) THEN
-			s_eSeqCentering := E_SeqCentering.START;
-		END_IF
-		
-	E_SeqCentering.START:
-//--		IF s_fbSeqCenteringControl.q_tmStepTime > T#1S THEN
-//--			s_eSeqCentering := E_SeqCentering.MOVE_TO_IDLE;
-//--		END_IF
-		
-		IF i_eCtrlState = E_CtrlState.RUNNING THEN
-			s_eSeqCentering := E_SeqCentering.MOVE_TO_IDLE;
-		END_IF
-		
-	E_SeqCentering.MOVE_TO_IDLE:
-		IF s_cmCenteringUnit.m_Off() THEN
-			s_eSeqCentering := E_SeqCentering.AT_IDLE;
-		END_IF
-		
-		{warning '#2HC: Consider adding 2-hand-control later'}
-		(*
-		IF i_bSta2HC_Active THEN
-			IF s_cmCenteringUnit.m_Off() THEN
-			s_eSeqCentering := E_SeqCentering.AT_IDLE;
-		END_IF
-		ELSE
-			s_cmCenteringUnit.m_Stop();
-		END_IF
-		*)
-		
-	E_SeqCentering.AT_IDLE:
-//--		IF s_fbSeqCenteringControl.q_tmStepTime > T#1S THEN
-		//??IF s_fbSeqCenteringControl.q_tmStepTime > T#1S AND NOT(i_bSta2HC_Active) THEN
-			s_eSeqCentering := E_SeqCentering.READY;
-//--		END_IF
-		
-	E_SeqCentering.READY:
-		IF s_fbSeqCenteringControl.q_bStaEntry THEN
-			i_refTB.p_bCenteringDone S= s_eTmpCenteringDone; //Explicity SET value
-			s_eTmpCenteringDone := FALSE;
-		END_IF
-		
-		IF i_eCtrlState <> E_CtrlState.RUNNING THEN
-			s_eSeqCentering := E_SeqCentering.START;
-		END_IF
-		
-		IF s_bReqCenteringTB THEN
-			IF _m_CmdCenteringTB(i_refReason := s_sMessage) THEN
-				s_eSeqCentering := E_SeqCentering.MOVE_TO_CENTER;
-			//ELSE	If failed (command not allowed): the message will be written with the interlock reason
-			END_IF
-			
-			s_bReqCenteringTB := FALSE;
-		END_IF
-		
-	E_SeqCentering.MOVE_TO_CENTER:
-		//++IF s_cmCenteringUnit.m_On() THEN // Temp. added time delay as extra condition to skip reed contacts (end position not reachable with test box)
-		IF s_cmCenteringUnit.m_On() OR (s_fbSeqCenteringControl.q_tmStepTime >= T#1S) THEN
-			s_eSeqCentering := E_SeqCentering.AT_CENTER;
-		END_IF
-		
-		//??IF i_bSta2HC_Active THEN
-		//??	IF s_cmCenteringUnit.m_On() THEN
-		//??		s_eSeqCentering := E_SeqCentering.AT_CENTER;
-		//??	END_IF
-		//??ELSE
-		//??	s_cmCenteringUnit.m_Stop();
-		//??END_IF
-		
-	E_SeqCentering.AT_CENTER:
-		IF s_fbSeqCenteringControl.q_tmStepTime > i_ref_stSettings.tCenteringDuration THEN
-			s_eTmpCenteringDone := TRUE;
-			s_eSeqCentering := E_SeqCentering.MOVE_TO_IDLE;
-		END_IF
-	
-	E_SeqCentering.STOP:
-		s_cmCenteringUnit.m_Off();
-		
-		IF s_cmCenteringUnit.p_bStaIsOff THEN
-			s_eSeqCentering := E_SeqCentering.READY;
-		END_IF
-		
-	E_SeqCentering.ERROR:
-		s_cmCenteringUnit.m_Stop();
-	
-END_CASE
-]]></ST>
-      </Implementation>
-    </Method>
     <Method Name="_m_Sequence" Id="{7bf2ff54-007b-4f2a-966d-421cf756f1be}">
       <Declaration><![CDATA[METHOD PROTECTED _m_Sequence : BOOL
 ]]></Declaration>
@@ -1067,7 +950,6 @@ CASE i_eCtrlMode OF
 
 	E_CtrlMode.IDLE:
 		s_eSequence := E_SeqTransport.IDLE;
-//--		s_eSeqCentering := E_SeqCentering.IDLE;
 		
 	E_CtrlMode.AUTOMATIC:
 		//Automatic commands are controlled by higher-layer unit
@@ -1112,7 +994,6 @@ CASE i_eCtrlMode OF
 	E_CtrlMode.MAINTENANCE:
 		//Execute maintenance control (HMI control module buttons)
 		s_eSequence := E_SeqTransport.IDLE;
-//--		s_eSeqCentering := E_SeqCentering.IDLE;
 		; 	//Maintenance control is implemented in lower-layer control modules
 		
 	E_CtrlMode.IO:

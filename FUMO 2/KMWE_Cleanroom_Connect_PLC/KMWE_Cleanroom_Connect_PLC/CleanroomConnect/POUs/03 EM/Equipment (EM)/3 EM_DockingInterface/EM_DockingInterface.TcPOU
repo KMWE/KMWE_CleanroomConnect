@@ -143,8 +143,6 @@ VAR
 	s_bIlckInnerCabinDoorToClose : BOOL;
 	s_bIlckInnerCabinDoorToOpen : BOOL;
 	
-	s_sMessage : STRING;
-	
 	//Sequencers
 	s_eSequence : E_SeqDockingInterface;
 	s_fbSeqControl : FB_SeqControl;
@@ -158,6 +156,9 @@ VAR
 	s_bTmpUndockingDone : BOOL;
 	
 	//Alarms
+	s_sReason : STRING(GVL.g_nMAX_LEN_REASON);
+	s_sMessage : STRING(GVL.g_nMAX_LEN_MESSAGE);
+	
 	s_fbAlarmHandlerClosingDoorFailed : FB_AlarmHandler;
 	s_bErrClosingDoorFailed : BOOL;
 	
@@ -319,7 +320,7 @@ _m_Alarms := TRUE;
     <Method Name="_m_CmdCloseInnerDoor" Id="{410bcb72-5351-4d55-ac55-5d0e27ce8155}">
       <Declaration><![CDATA[METHOD PROTECTED _m_CmdCloseInnerDoor : BOOL
 VAR_INPUT
-	i_refReason : REFERENCE TO STRING;
+	i_refReason : REFERENCE TO STRING(GVL.g_nMAX_LEN_MESSAGE);
 END_VAR
 ]]></Declaration>
       <Implementation>
@@ -343,7 +344,7 @@ END_IF
     <Method Name="_m_CmdDockTB" Id="{8e382bf6-1d32-4474-a8a5-7c183a3c7036}">
       <Declaration><![CDATA[METHOD PROTECTED _m_CmdDockTB : BOOL
 VAR_INPUT
-	i_refReason : REFERENCE TO STRING;
+	i_refReason : REFERENCE TO STRING(GVL.g_nMAX_LEN_MESSAGE);
 END_VAR
 ]]></Declaration>
       <Implementation>
@@ -366,7 +367,7 @@ END_IF
     <Method Name="_m_CmdOpenInnerDoor" Id="{8be47e79-6c29-4713-b252-eb11a6bb46fb}">
       <Declaration><![CDATA[METHOD PROTECTED _m_CmdOpenInnerDoor : BOOL
 VAR_INPUT
-	i_refReason : REFERENCE TO STRING;
+	i_refReason : REFERENCE TO STRING(GVL.g_nMAX_LEN_MESSAGE);
 END_VAR
 ]]></Declaration>
       <Implementation>
@@ -390,7 +391,7 @@ END_IF
     <Method Name="_m_CmdUndockTB" Id="{b328f671-5464-49bf-836c-f1f93f3d32af}">
       <Declaration><![CDATA[METHOD PROTECTED _m_CmdUndockTB : BOOL
 VAR_INPUT
-	i_refReason : REFERENCE TO STRING;
+	i_refReason : REFERENCE TO STRING(GVL.g_nMAX_LEN_MESSAGE);
 END_VAR
 ]]></Declaration>
       <Implementation>

@@ -109,7 +109,8 @@ VAR
 	s_bIlckTransportRetract : BOOL := TRUE;
 	
 	//Alarms
-	s_sReason : STRING;
+	s_sReason : STRING(GVL.g_nMAX_LEN_REASON);
+	s_sMessage : STRING(GVL.g_nMAX_LEN_MESSAGE);
 	
 	s_fbAlarmHandlerLiftDrive : FB_AlarmHandler;
 	s_fbAlarmHandlerTransportDrive : FB_AlarmHandler;
@@ -132,8 +133,6 @@ VAR
 	s_bWrnSafetyDoorNotClosed : BOOL;
 	
 	s_bStaWarning : BOOL;
-	
-	s_sMessage : STRING(128);
 	
 	//Params
 	s_fbParamAutoRecoveryToIdle : FB_HmiParamHandler;
@@ -259,7 +258,7 @@ _m_Alarms := TRUE;
     <Method Name="_m_CmdGoToIdle" Id="{5f07294c-c083-4786-a1a2-586c95e439f7}">
       <Declaration><![CDATA[METHOD PROTECTED _m_CmdGoToIdle : BOOL
 VAR_INPUT
-	i_refReason : REFERENCE TO STRING(128);
+	i_refReason : REFERENCE TO STRING(GVL.g_nMAX_LEN_REASON);
 END_VAR
 ]]></Declaration>
       <Implementation>
@@ -290,7 +289,7 @@ END_IF
     <Method Name="_m_CmdPickTrolleyFromTB" Id="{3a534c15-c636-468b-8b82-6fd59e761d1a}">
       <Declaration><![CDATA[METHOD PROTECTED _m_CmdPickTrolleyFromTB : BOOL
 VAR_INPUT
-	i_refReason : REFERENCE TO STRING(128);
+	i_refReason : REFERENCE TO STRING(GVL.g_nMAX_LEN_REASON);
 END_VAR
 ]]></Declaration>
       <Implementation>
@@ -325,7 +324,7 @@ END_IF
     <Method Name="_m_CmdPlaceTrolleyInTB" Id="{fddfe49e-6281-47a3-8534-8abf984608e2}">
       <Declaration><![CDATA[METHOD PROTECTED _m_CmdPlaceTrolleyInTB : BOOL
 VAR_INPUT
-	i_refReason : REFERENCE TO STRING(128);
+	i_refReason : REFERENCE TO STRING(GVL.g_nMAX_LEN_REASON);
 END_VAR
 ]]></Declaration>
       <Implementation>

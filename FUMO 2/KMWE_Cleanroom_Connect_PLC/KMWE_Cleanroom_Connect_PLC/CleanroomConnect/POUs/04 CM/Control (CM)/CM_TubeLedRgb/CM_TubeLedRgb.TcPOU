@@ -4,6 +4,7 @@
     <Declaration><![CDATA[FUNCTION_BLOCK CM_TubeLedRgb IMPLEMENTS I_LedRgb
 
 VAR_INPUT
+	i_bFlashPulse : BOOL;
 	i_ref_eCtrlMode : REFERENCE TO E_CtrlMode;
 	i_ref_eCtrlState : REFERENCE TO E_CtrlState;
 END_VAR
@@ -35,21 +36,14 @@ VAR
 	s_bCmdColorWhite : BOOL;
 	
 	s_bFlash : BOOL;
-	s_fbFlash : FB_Flash;
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[
-s_fbFlash(
-	i_bExcecute := TRUE,
-	t_tOnTime := T#750MS,
-	t_tOffTime := T#750MS);
-	
-IF s_bFlash THEN
-	s_bCmdColorRed := s_bColorRed AND s_fbFlash.o_bQ;
-	s_bCmdColorGreen := s_bColorGreen AND s_fbFlash.o_bQ;
-	s_bCmdColorBlue := s_bColorBlue AND s_fbFlash.o_bQ;
-	s_bCmdColorWhite := s_bColorWhite AND s_fbFlash.o_bQ;
+      <ST><![CDATA[IF s_bFlash THEN
+	s_bCmdColorRed := s_bColorRed AND i_bFlashPulse;
+	s_bCmdColorGreen := s_bColorGreen AND i_bFlashPulse;
+	s_bCmdColorBlue := s_bColorBlue AND i_bFlashPulse;
+	s_bCmdColorWhite := s_bColorWhite AND i_bFlashPulse;
 ELSE
 	s_bCmdColorRed := s_bColorRed;
 	s_bCmdColorGreen := s_bColorGreen;

@@ -41,11 +41,9 @@ VAR
 	s_bStaCabinetTemperatureOk : BOOL := FALSE;
 	s_bRestartSafetyState : BOOL := FALSE;
 	
-	//Timer
-	s_tp1HzPulse : FB_Flash;
-	
 	//s_bStaError
 	s_bStaWarning : BOOL;
+	s_bFlashPulse : BOOL;
 	
 	s_bExtError : BOOL;
 	s_bExtWarning : BOOL;
@@ -121,6 +119,7 @@ VAR
 END_VAR
 
 VAR_INPUT
+	i_bFlashPulse : BOOL;
 	i_eCtrlState : E_CtrlState;
 END_VAR
 
@@ -236,8 +235,7 @@ s_doSnRestartSafety();
 
 IF NOT(s_bStaSafetyOk) THEN
 	IF s_bSafetyFbErr THEN
-		s_tp1HzPulse(i_bExcecute := TRUE, t_tOnTime := T#500MS, t_tOffTime := T#500MS);
-		s_bRestartSafetyState := s_tp1HzPulse.o_bQ;
+		s_bRestartSafetyState := s_bFlashPulse;
 	ELSE
 		s_bRestartSafetyState := TRUE;
 	END_IF
@@ -427,6 +425,7 @@ IF NOT SUPER^._m_Inputs() THEN
 	RETURN;
 END_IF
 
+s_bFlashPulse := i_bFlashPulse;
 s_bStaSafetyOk := s_diSafetyOk.p_bStaInputDelayed AND s_diSafetyOk.p_bStaInput; //on-delay only
 s_bSafetyFbErr := s_diSafetyFbErr.p_bStaInput;
 s_bEstopInfeedOk := I_bStaTwinSAFE_Estop1ChA AND I_bStaTwinSAFE_Estop1ChB;

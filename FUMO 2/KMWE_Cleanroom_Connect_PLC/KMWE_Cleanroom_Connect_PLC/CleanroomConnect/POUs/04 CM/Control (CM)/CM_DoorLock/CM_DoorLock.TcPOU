@@ -3,6 +3,7 @@
   <POU Name="CM_DoorLock" Id="{ea68c333-cb10-44e9-998f-ee97a6acb23c}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK CM_DoorLock EXTENDS CM_Base
 VAR_INPUT
+	i_bFlashPulse : BOOL;
 	i_stSettings : ST_SettingsDoorLock;
 	i_bAllowUnlock : BOOL; //TRUE = Allowed to unlock
 	
@@ -35,6 +36,7 @@ VAR
 	//----------------------Properties---------------------------//
 	// States
 	s_bStaWarning : BOOL;
+	s_bFlashPulse : BOOL;
 	
 	s_bStaLockIsActivated : BOOL;
 	s_bStaDoorIsClosed : BOOL;
@@ -44,7 +46,6 @@ VAR
 	
 	// Timers
 	s_tonUnlockRequestTimeout : TON;
-	s_fbFlash : FB_Flash;
 	
 	// Alarms
 	s_fbAlmHdlrDoorStatusUnknown : FB_AlarmHandler;
@@ -136,9 +137,6 @@ IF NOT SUPER^._m_Devices() THEN
 	RETURN;
 END_IF
 
-//Generate flash pulse
-s_fbFlash(i_bExcecute := TRUE, t_tOnTime := T#500MS, t_tOffTime := T#500MS);
-
 s_fbR_TrigReqToggleLock(CLK := s_bStaReqToggleLock);
 s_bOsrReqToggleLock := s_fbR_TrigReqToggleLock.Q;
 
@@ -174,7 +172,7 @@ CASE s_eSequence OF
 		
 	E_SeqDoorLock.ACCESS_REQUEST_PENDING:
 		s_bCmdActivateLock := TRUE;
-		s_bCmdLockStatus := s_fbFlash.o_bQ; //Pending...
+		s_bCmdLockStatus := s_bFlashPulse; //Pending...
 		s_bReqAccessRequest := TRUE;
 		
 		IF i_bAllowUnlock THEN
@@ -322,6 +320,7 @@ IF NOT SUPER^._m_Inputs() THEN
 	RETURN;
 END_IF
 
+s_bFlashPulse := i_bFlashPulse;
 s_bStaReqToggleLock := I_bPbReqToggleLock;
 s_bStaLockIsActivated := Q_bCmdLock;
 s_bStaDoorIsClosed := I_bStaDoorIsClosed;

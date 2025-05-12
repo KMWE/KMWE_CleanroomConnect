@@ -9,6 +9,8 @@ VAR
 	
 	//Function Blocks
 	s_fbModeStateControl : FB_ModeStateControl;
+	s_fbFlashSlow : FB_Flash;
+	s_fbFlashFast : FB_Flash;
 	
 	//EM Pallet Conveyor
 	s_fbIlckHandlerConvBwd : FB_InterlockHandler;
@@ -130,8 +132,20 @@ IF NOT SUPER^._m_Devices() THEN
 	RETURN;
 END_IF
 
-//------------------------------------------//
-// Control Modules
+//Function blocks
+s_fbFlashSlow(
+	i_bExcecute := TRUE,
+	t_tOnTime := T#1000MS,
+	t_tOffTime := T#1000MS,
+	o_bQ => GVL.g_bLedFlashSlow);
+	
+s_fbFlashFast(
+	i_bExcecute := TRUE,
+	t_tOnTime := T#500MS,
+	t_tOffTime := T#500MS,
+	o_bQ => GVL.g_bLedFlashFast);
+
+//Control Modules
 
 //Severity from high to low 
 	//RED = Not Accesible, dirty air after opening outer cabin door 
@@ -199,6 +213,7 @@ ELSIF s_cmDoorLockCleanroomDoor.p_bStaAccessGranted THEN
 END_IF
 
 s_cmCabinStateIndicator(
+	i_bFlashPulse := GVL.g_bLedFlashSlow,
 	i_ref_eCtrlMode := s_eCtrlMode,
 	i_ref_eCtrlState := s_eCtrlState);
 	
@@ -215,6 +230,7 @@ s_cmDoorLockCleanroomDoor.i_bAllowUnlock :=
 
 s_cmDoorLockCleanroomDoor(
 	i_bReqEnable := TRUE,
+	i_bFlashPulse := GVL.g_bLedFlashFast,
 	i_eCtrlMode := s_eCtrlMode,
 	i_ref_eCtrlState := s_eCtrlState,
 	i_bCmdReset := p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn); //Add temp reset button

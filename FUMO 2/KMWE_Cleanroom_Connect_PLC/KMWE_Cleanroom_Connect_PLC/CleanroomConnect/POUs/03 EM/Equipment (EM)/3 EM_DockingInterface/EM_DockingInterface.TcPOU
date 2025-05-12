@@ -14,7 +14,7 @@ VAR_INPUT
 	i_bStaTbAtDockingPosition : BOOL;
 	i_bStaDockingPositionFree : BOOL;
 	
-	// External interlocks (from outside this EM)
+	//External interlocks (from outside this EM)
 	{warning '#TODO: Delete unused (not written external) inputs'}
 	i_stExtIlckDockingClampsToClose : ST_Interlock;
 	i_stExtIlckDockingClampsToOpen : ST_Interlock;
@@ -38,17 +38,17 @@ END_VAR
 
 VAR
 	//Control Modules (Devices)
-	s_cmDockingClampsUpper : CM_ValveWithDoubleFB; // Off = Open, On = Close
-	s_cmDockingClampsLower : CM_ValveWithDoubleFB; // Off = Open, On = Close
+	s_cmDockingClampsUpper : CM_ValveWithDoubleFB; //Off = Open, On = Close
+	s_cmDockingClampsLower : CM_ValveWithDoubleFB; //Off = Open, On = Close
 	
-	s_cmClampsUpperHighPressure : CM_DigOutput; // Off = Low, On = High
-	s_cmClampsLowerHighPressure : CM_DigOutput; // Off = Low, On = High
+	s_cmClampsUpperHighPressure : CM_DigOutput; //Off = Low, On = High
+	s_cmClampsLowerHighPressure : CM_DigOutput; //Off = Low, On = High
 	
-	s_cmUnlockingPinUpper : CM_ValveWithFB; // Off = Lock, On = Release
-	s_cmUnlockingPinLower : CM_ValveWithFB; // Off = Lock, On = Release
+	s_cmUnlockingPinUpper : CM_ValveWithFB; //Off = Lock, On = Release
+	s_cmUnlockingPinLower : CM_ValveWithFB; //Off = Lock, On = Release
 	
-	s_cmDoorOpener : CM_ValveWithFB; // Off = Close, On = Open
-	s_cmDoorShutter : CM_ValveWithFB; // Off = Open, On = Close
+	s_cmDoorOpener : CM_ValveWithFB; //Off = Close, On = Open
+	s_cmDoorShutter : CM_ValveWithFB; //Off = Open, On = Close
 	
 	s_cmOuterCabinDoor : CM_SpeedDoor;
 	s_cmInnerCabinDoor : CM_SpeedDoor;
@@ -272,9 +272,9 @@ IF NOT SUPER^._m_Alarms() THEN
 	RETURN;
 END_IF
 
-// Set error bits
+//Set error bits
 
-// Alarm Handlers
+//Alarm Handlers
 s_fbAlarmHandlerClosingDoorFailed(i_bStaActive := s_bErrClosingDoorFailed);
 s_fbAlarmHandlerNoBoxPresentAtPreDockingPosition(i_bStaActive := s_bWrnNoBoxPresentAtPreDockingPosition);
 s_fbAlarmHandlerNoBoxPresentAtDockedPosition(i_bStaActive := s_bWrnNoBoxPresentAtDockedPosition);
@@ -283,7 +283,7 @@ s_fbAlarmHandlerCmdNotAllowed(
 	i_bStaActive := s_bErrCmdNotAllowed,
 	i_sAlarmText := CONCAT(i_sEmName, CONCAT(': ', s_sMessage)));
 
-// Reset warnings
+//Reset warnings
 IF i_bCmdReset THEN
 	s_bWrnNoBoxPresentAtPreDockingPosition := FALSE;
 	s_bWrnNoBoxPresentAtDockedPosition := FALSE;
@@ -606,7 +606,7 @@ s_cmDockingClampsUpper.i_eCtrlMode := E_CtrlMode.IDLE;
 s_cmDockingClampsUpper.i_sCmName := 'CM Docking Clamps Upper';
 s_cmDockingClampsUpper.i_stSettings.tValveOnTimeout := T#10S;
 s_cmDockingClampsUpper.i_stSettings.tValveOffTimeout := T#10S;
-s_cmDockingClampsUpper.p_bCfgBiStableValve := FALSE; // 5/3 monostable, closed middle position
+s_cmDockingClampsUpper.p_bCfgBiStableValve := FALSE; //5/3 monostable, closed middle position
 s_cmDockingClampsUpper.p_bCfgReverseValve := FALSE;
 s_cmDockingClampsUpper.p_sCfgOffName := 'Release';
 s_cmDockingClampsUpper.p_sCfgOnName := 'Clamp';
@@ -616,7 +616,7 @@ s_cmDockingClampsUpper.p_sCfgFB2Name := 'Right';
 s_cmClampsUpperHighPressure.i_bReqEnable := FALSE;
 s_cmClampsUpperHighPressure.i_eCtrlMode := E_CtrlMode.IDLE;
 s_cmClampsUpperHighPressure.i_sCmName := 'CM Clamps Upper Pressure Select';
-s_cmClampsUpperHighPressure.i_stSettings.bCfgDelay := FALSE; // 3/2 monostable
+s_cmClampsUpperHighPressure.i_stSettings.bCfgDelay := FALSE; //3/2 monostable
 s_cmClampsUpperHighPressure.i_stSettings.tmOutputDelay := T#0S;
 s_cmClampsUpperHighPressure.p_bCfgReverseOutput := FALSE;
 s_cmClampsUpperHighPressure.p_sCfgOffName := 'Low';
@@ -627,7 +627,7 @@ s_cmDockingClampsLower.i_eCtrlMode := E_CtrlMode.IDLE;
 s_cmDockingClampsLower.i_sCmName := 'CM Docking Clamps Lower';
 s_cmDockingClampsLower.i_stSettings.tValveOnTimeout := T#10S;
 s_cmDockingClampsLower.i_stSettings.tValveOffTimeout := T#10S;
-s_cmDockingClampsLower.p_bCfgBiStableValve := FALSE; // 5/3 monostable, closed middle position
+s_cmDockingClampsLower.p_bCfgBiStableValve := FALSE; //5/3 monostable, closed middle position
 s_cmDockingClampsLower.p_bCfgReverseValve := FALSE;
 s_cmDockingClampsLower.p_sCfgOffName := 'Release';
 s_cmDockingClampsLower.p_sCfgOnName := 'Clamp';
@@ -637,7 +637,7 @@ s_cmDockingClampsLower.p_sCfgFB2Name := 'Right';
 s_cmClampsLowerHighPressure.i_bReqEnable := FALSE;
 s_cmClampsLowerHighPressure.i_eCtrlMode := E_CtrlMode.IDLE;
 s_cmClampsLowerHighPressure.i_sCmName := 'CM Clamps Lower Pressure Select';
-s_cmClampsLowerHighPressure.i_stSettings.bCfgDelay := FALSE; // 3/2 monostable
+s_cmClampsLowerHighPressure.i_stSettings.bCfgDelay := FALSE; //3/2 monostable
 s_cmClampsLowerHighPressure.i_stSettings.tmOutputDelay := T#0S;
 s_cmClampsLowerHighPressure.p_bCfgReverseOutput := FALSE;
 s_cmClampsLowerHighPressure.p_sCfgOffName := 'Low';
@@ -648,7 +648,7 @@ s_cmUnlockingPinUpper.i_eCtrlMode := E_CtrlMode.IDLE;
 s_cmUnlockingPinUpper.i_sCmName := 'CM Unlocking Pin Upper';
 s_cmUnlockingPinUpper.i_stSettings.tValveOnTimeout := T#10S;
 s_cmUnlockingPinUpper.i_stSettings.tValveOffTimeout := T#10S;
-s_cmUnlockingPinUpper.p_bCfgBiStableValve := FALSE; // 5/2 monostable
+s_cmUnlockingPinUpper.p_bCfgBiStableValve := FALSE; //5/2 monostable
 s_cmUnlockingPinUpper.p_bCfgReverseValve := FALSE;
 s_cmUnlockingPinUpper.p_sCfgOffName := 'Lock';
 s_cmUnlockingPinUpper.p_sCfgOnName := 'Unlock';
@@ -658,7 +658,7 @@ s_cmUnlockingPinLower.i_eCtrlMode := E_CtrlMode.IDLE;
 s_cmUnlockingPinLower.i_sCmName := 'CM Unlocking Pin Lower';
 s_cmUnlockingPinLower.i_stSettings.tValveOnTimeout := T#10S;
 s_cmUnlockingPinLower.i_stSettings.tValveOffTimeout := T#10S;
-s_cmUnlockingPinLower.p_bCfgBiStableValve := FALSE; // 5/2 monostable
+s_cmUnlockingPinLower.p_bCfgBiStableValve := FALSE; //5/2 monostable
 s_cmUnlockingPinLower.p_bCfgReverseValve := FALSE;
 s_cmUnlockingPinLower.p_sCfgOffName := 'Lock';
 s_cmUnlockingPinLower.p_sCfgOnName := 'Unlock';
@@ -668,7 +668,7 @@ s_cmDoorOpener.i_eCtrlMode := E_CtrlMode.IDLE;
 s_cmDoorOpener.i_sCmName := 'CM Door Opener';
 s_cmDoorOpener.i_stSettings.tValveOnTimeout := T#10S;
 s_cmDoorOpener.i_stSettings.tValveOffTimeout := T#10S;
-s_cmDoorOpener.p_bCfgBiStableValve := TRUE; // 5/2 bistable
+s_cmDoorOpener.p_bCfgBiStableValve := TRUE; //5/2 bistable
 s_cmDoorOpener.p_bCfgReverseValve := FALSE;
 s_cmDoorOpener.p_sCfgOffName := 'Close';
 s_cmDoorOpener.p_sCfgOnName := 'Open';
@@ -680,7 +680,7 @@ s_cmDoorShutter.i_eCtrlMode := E_CtrlMode.IDLE;
 s_cmDoorShutter.i_sCmName := 'CM Door Shutter';
 s_cmDoorShutter.i_stSettings.tValveOnTimeout := T#10S;
 s_cmDoorShutter.i_stSettings.tValveOffTimeout := T#10S;
-s_cmDoorShutter.p_bCfgBiStableValve := TRUE; // 5/2 bistable
+s_cmDoorShutter.p_bCfgBiStableValve := TRUE; //5/2 bistable
 s_cmDoorShutter.p_bCfgReverseValve := FALSE;
 s_cmDoorShutter.p_sCfgOffName := 'Open';
 s_cmDoorShutter.p_sCfgOnName := 'Close';
@@ -1081,7 +1081,7 @@ s_fbIlckHandlerOuterCabinDoorOpen();
 s_fbIlckHandlerOuterCabinDoorClose.i_stInterlockList.arr_Interlocks[0] := i_stExtIlckOuterCabinDoorToClose;
 s_fbIlckHandlerOuterCabinDoorClose.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
 s_fbIlckHandlerOuterCabinDoorClose.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_bStaDockingClampsClosed);
-s_fbIlckHandlerOuterCabinDoorClose.i_stInterlockList.arr_Interlocks[3].bState := NOT(s_bStaUnlockingPinsLocked); 
+s_fbIlckHandlerOuterCabinDoorClose.i_stInterlockList.arr_Interlocks[3].bState := NOT(s_bStaUnlockingPinsLocked);
 s_fbIlckHandlerOuterCabinDoorClose();
 
 s_bIlckOuterCabinDoorToOpen := s_fbIlckHandlerOuterCabinDoorOpen.p_bInterlocked;
@@ -1110,7 +1110,7 @@ s_fbIlckHandlerInnerCabinDoorOpen();
 s_fbIlckHandlerInnerCabinDoorClose.i_stInterlockList.arr_Interlocks[0] := i_stExtIlckInnerCabinDoorToClose;
 s_fbIlckHandlerInnerCabinDoorClose.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
 s_fbIlckHandlerInnerCabinDoorClose.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_bStaDoorOpenerClosed);
-s_fbIlckHandlerInnerCabinDoorClose.i_stInterlockList.arr_Interlocks[3].bState := NOT(s_bStaDoorShutterClosed); 
+s_fbIlckHandlerInnerCabinDoorClose.i_stInterlockList.arr_Interlocks[3].bState := NOT(s_bStaDoorShutterClosed);
 s_fbIlckHandlerInnerCabinDoorClose();
 
 s_bIlckInnerCabinDoorToOpen := s_fbIlckHandlerInnerCabinDoorOpen.p_bInterlocked;
@@ -1222,7 +1222,7 @@ s_fbSeqControl(
 	i_bCmdReset :=
 		i_bCmdReset
 		AND i_bReqEnable
-		AND (s_eSequence = E_SeqDockingInterface.ERROR) // Only reset/resume sequencer from ERROR state
+		AND (s_eSequence = E_SeqDockingInterface.ERROR) //Only reset/resume sequencer from ERROR state
 		AND NOT(s_bStaError),
 	i_bStaError := s_bStaError OR NOT(i_bReqEnable));
 	
@@ -1294,8 +1294,8 @@ CASE s_eSequence OF
 //??			s_eSeqDockingInterface := E_SeqDockingInterface.READY;
 //??		END_IF
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//READY/////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//READY////////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqDockingInterface.READY:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_eResumeStep := E_SeqDockingInterface.READY;
@@ -1334,7 +1334,7 @@ CASE s_eSequence OF
 			END_IF
 		END_IF
 		
-		//Command Open Inner TB Door //////////////////////////////////////////////////////////////
+		//Command Open Inner TB Door///////////////////////////////////////////////////////////////
 		IF s_bReqOpenInnerDoor THEN
 			IF _m_CmdOpenInnerDoor(i_refReason := s_sMessage) THEN
 				
@@ -1350,7 +1350,7 @@ CASE s_eSequence OF
 			END_IF
 		END_IF
 		
-		//Command Close Inner TB Door /////////////////////////////////////////////////////////////
+		//Command Close Inner TB Door//////////////////////////////////////////////////////////////
 		IF s_bReqCloseInnerDoor THEN
 			IF _m_CmdCloseInnerDoor(i_refReason := s_sMessage) THEN
 				s_eSequence := E_SeqDockingInterface.CLOSE_DOOR_OPENER;
@@ -1359,8 +1359,8 @@ CASE s_eSequence OF
 			END_IF
 		END_IF
 		
-//DOCK TB /////////////////////////////////////////////////////////////////////////////////////////
-{warning '#TODO: Not clear why this step is needed?'} // Not used at this point, if this keeps the case then delete
+//DOCK TB//////////////////////////////////////////////////////////////////////////////////////////
+{warning '#TODO: Not clear why this step is needed?'} //Not used at this point, if this keeps the case then delete
 	E_SeqDockingInterface.PREPAPRE_DOCK:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmClampsUpperHighPressure.m_Off();
@@ -1426,7 +1426,7 @@ CASE s_eSequence OF
 			s_tonTimer.IN := FALSE;
 			s_eSequence := E_SeqDockingInterface.COMPRESS_ALL_SEAL;
 		//ELSE
-		//  In case of error all docking clamps will be openeed (this is implemented in error-step)
+		//In case of error all docking clamps will be openeed (this is implemented in error-step)
 		END_IF
 		
 	E_SeqDockingInterface.COMPRESS_ALL_SEAL:
@@ -1455,7 +1455,7 @@ CASE s_eSequence OF
 			s_tonTimer.IN := FALSE;
 			s_eSequence := E_SeqDockingInterface.COMPRESS_LOWER_SEAL;
 		//ELSE
-		//  In case of error all docking clamps will be openeed (this is implemented in error-step)
+		//In case of error all docking clamps will be openeed (this is implemented in error-step)
 		END_IF
 		
 	E_SeqDockingInterface.COMPRESS_LOWER_SEAL:
@@ -1482,7 +1482,7 @@ CASE s_eSequence OF
 			s_tonTimer.IN := FALSE;
 			s_eSequence := E_SeqDockingInterface.COMPRESS_UPPER_SEAL;
 		//ELSE
-		//  In case of error all docking clamps will be openeed (this is implemented in error-step)
+		//In case of error all docking clamps will be openeed (this is implemented in error-step)
 		END_IF
 		
 	E_SeqDockingInterface.COMPRESS_UPPER_SEAL:
@@ -1624,7 +1624,7 @@ CASE s_eSequence OF
 			s_eSequence := E_SeqDockingInterface.READY;
 		END_IF
 		
-//CLOSE INNER TB DOOR//////////////////////////////////////////////////////////////////////////////			
+//CLOSE INNER TB DOOR//////////////////////////////////////////////////////////////////////////////
 	E_SeqDockingInterface.CLOSE_DOOR_OPENER:
 		s_tonTimer.IN := s_cmDoorOpener.m_Off();
 		
@@ -1721,14 +1721,14 @@ CASE s_eSequence OF
 				
 			//Error response: During "Open Inner Door"
 			ELSIF FALSE THEN
-				; // TBD (reverse sequence?)
+				; //TBD (reverse sequence?)
 				
 				//Resume from "TB Docked"
 				s_eResumeStep := E_SeqDockingInterface.DOCK_TB_DONE;
 				
 			//Error response: During "Close Inner Door"
 			ELSIF FALSE THEN
-				; // TBD (reverse sequence?)
+				; //TBD (reverse sequence?)
 				
 				//Resume from "Inner Door Opened"
 				s_eResumeStep := E_SeqDockingInterface.DOCK_TB_DONE;
@@ -1810,9 +1810,9 @@ CASE i_eCtrlMode OF
 		
 END_CASE
 
-//AUTOMATIC-mode //////////////////////////////////////////////////////////////////////////////////
+//AUTOMATIC-mode///////////////////////////////////////////////////////////////////////////////////
 
-//MANUAL-mode /////////////////////////////////////////////////////////////////////////////////////
+//MANUAL-mode//////////////////////////////////////////////////////////////////////////////////////
 
 //Buttons visibility
 IF (i_eCtrlMode = E_CtrlMode.MANUAL) THEN
@@ -1870,7 +1870,7 @@ ELSE
 	s_fbHmiBtnCloseInnerDoor.p_bStaEnabled := FALSE;
 END_IF
 
-//IO-mode /////////////////////////////////////////////////////////////////////////////////////////
+//IO-mode//////////////////////////////////////////////////////////////////////////////////////////
 IF (i_eCtrlMode = E_CtrlMode.IO) AND (i_eCtrlState = E_CtrlState.RUNNING) THEN
 	s_bHmiForceOutputEnabled := TRUE;
 ELSE

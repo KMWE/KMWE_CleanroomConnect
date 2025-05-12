@@ -11,29 +11,29 @@ VAR_INPUT
 END_VAR
 
 VAR
-	// Inputs
+	//Inputs
 	I_bPbReqToggleLock AT %I* : BOOL; //Request toggle lock
 	I_bStaDoorIsClosed AT %I* : BOOL; //Door is closed
 	I_bStaDoorIsOpened AT %I* : BOOL; //Door is opened
 	
-	// Outputs
+	//Outputs
 	Q_bCmdLock AT %Q* : BOOL; //TRUE = Lock
 	Q_bSnReqStatus AT %Q* : BOOL; //FASLE = Locked, Blink = pending, TRUE = Unlocked
 	
-	// Force outputs (IO-test functions)
+	//Force outputs (IO-test functions)
 	s_fbForceStaRequestLamp : FB_ForceOutput;
 	s_fbForceCmdLock : FB_ForceOutput;
 	
-	// Requests
+	//Requests
 	s_bReqActivateLock : BOOL; //external request
 	s_bReqActivateUnlock : BOOL; //external request
 	s_bReqAccessRequest : BOOL;
 	
-	// Commands
+	//Commands
 	s_bCmdActivateLock : BOOL;
 	s_bCmdLockStatus : BOOL;
 	
-	// States
+	//States
 	s_bStaWarning : BOOL;
 	s_bFlashPulse : BOOL;
 	
@@ -43,10 +43,10 @@ VAR
 	s_bStaReqToggleLock : BOOL;
 	s_bOsrReqToggleLock : BOOL;
 	
-	// Timers
+	//Timers
 	s_tonUnlockRequestTimeout : TON;
 	
-	// Alarms
+	//Alarms
 	s_fbAlmHdlrDoorStatusUnknown : FB_AlarmHandler;
 	s_fbAlmHdlrReqUnlockTimeout : FB_AlarmHandler;
 	s_fbAlmHdlrDoorNotClosed : FB_AlarmHandler;
@@ -57,10 +57,10 @@ VAR
 	
 	s_fbR_TrigReqToggleLock : R_TRIG;
 	
-	// Sequence
+	//Sequence
 	s_eSequence : E_SeqDoorLock;
 	
-	// Hmi
+	//Hmi
 	s_stHmiData : ST_DoorLock_HMI;
 	s_bHmiInit : BOOL := FALSE;
 	
@@ -91,16 +91,16 @@ IF NOT SUPER^._m_Alarms() THEN
 	RETURN;
 END_IF
 
-// Timeout (timers)
+//Timeout (timers)
 s_tonUnlockRequestTimeout(
 	IN := i_bReqEnable AND (s_eSequence = E_SeqDoorLock.ACCESS_REQUEST_PENDING),
 	PT := i_stSettings.tUnlockingRequestTimeout);
 	
-// Wrtie error bits
+//Wrtie error bits
 s_wrnReqUnlockTimeout := (s_tonUnlockRequestTimeout.Q);	
 s_wrnDoorStatusUnknown := NOT(s_bStaDoorIsClosed) AND NOT(s_bStaDoorIsOpened);
 
-// Alarm Handlers
+//Alarm Handlers
 s_fbAlmHdlrDoorStatusUnknown(
 	i_bStaActive := s_wrnDoorStatusUnknown);
 	
@@ -114,7 +114,7 @@ IF i_bCmdReset OR s_bStaDoorIsClosed THEN
 	s_wrnDoorNotClosed := FALSE;
 END_IF
 
-// Alarm collector
+//Alarm collector
 s_bStaError :=
 	FALSE;
 	
@@ -278,7 +278,7 @@ IF NOT SUPER^._m_Init() THEN
 	RETURN;
 END_IF
 
-// Alarm config
+//Alarm config
 s_fbAlmHdlrDoorStatusUnknown.i_eAlarmLevel := E_AlarmLevel.Warning;
 s_fbAlmHdlrDoorStatusUnknown.i_sAlarmText := CONCAT(i_sCmName , ': Door Status Unknown');
 
@@ -288,7 +288,7 @@ s_fbAlmHdlrReqUnlockTimeout.i_sAlarmText := CONCAT(i_sCmName , ': Request Unlock
 s_fbAlmHdlrDoorNotClosed.i_eAlarmLevel := E_AlarmLevel.Warning;
 s_fbAlmHdlrDoorNotClosed.i_sAlarmText := CONCAT(i_sCmName , ': Door Not Closed');
 
-// Hmi
+//Hmi
 s_fbHmiLedRequestButton.p_bStaVisible := TRUE;
 s_fbHmiLedRequestButton.p_sToHmiDescriptionLed := 'Request Button Is Pressed';
 

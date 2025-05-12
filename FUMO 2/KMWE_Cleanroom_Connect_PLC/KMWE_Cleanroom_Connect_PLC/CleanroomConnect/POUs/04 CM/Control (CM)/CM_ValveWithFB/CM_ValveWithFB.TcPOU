@@ -16,27 +16,27 @@ VAR_INPUT
 END_VAR
 
 VAR
-	// Inputs
+	//Inputs
 	I_bStaValveIsOn AT %I* : BOOL; //Valve is on (on = positive logic of fuction)
 	I_bStaValveIsOff AT %I* : BOOL; //Valve is off
 	
-	// Outputs
+	//Outputs
 	Q_bCmdOn AT %Q* : BOOL; //Commnad to set valve on
 	Q_bCmdOff AT %Q* : BOOL; //Command to set valve off
 	
-	// Force outputs (IO-test functions)
+	//Force outputs (IO-test functions)
 	s_fbForceCmdOn : FB_ForceOutput;
 	s_fbForceCmdOff : FB_ForceOutput;
 	
-	// Interlocks
+	//Interlocks
 	s_sInterlockedReasonOn : STRING(GVL.g_MAX_LEN_INTERLOCK_REASON); //External interlocked reason for clarifying reason
 	s_sInterlockedReasonOff : STRING(GVL.g_MAX_LEN_INTERLOCK_REASON); //External interlocked reason for clarifying reason
 	
-	// Request
+	//Request
 	s_bReqOff : BOOL;
 	s_bReqOn : BOOL;
 	
-	// Status
+	//Status
 	s_bStaValveIsOff : BOOL;
 	s_bStaValveIsOn : BOOL;
 	s_bStaWarning : BOOL;
@@ -45,13 +45,13 @@ VAR
 	s_bSimFeedBackIsOn : BOOL;
 	
 	{attribute: 'Hide'}
-	s_bCfgReverseValve : BOOL; // FALSE = NORMAL, TRUE = INVERTED
-	s_bCfgBiStableValve : BOOL; // FALSE = MONO, TRUE = BI
+	s_bCfgReverseValve : BOOL; //FALSE = NORMAL, TRUE = INVERTED
+	s_bCfgBiStableValve : BOOL; //FALSE = MONO, TRUE = BI
 	
 	s_sCfgOffName : STRING(c_MAX_FB_NAME_LENGTH) := 'Off';
 	s_sCfgOnName : STRING(c_MAX_FB_NAME_LENGTH) := 'On';
 	
-	// Alarms
+	//Alarms
 	s_fbAlarmHandlerFeedbackOnTimeout : FB_AlarmHandler;
 	s_fbAlarmHandlerFeedbackOffTimeout : FB_AlarmHandler;
 	s_fbAlarmHandlerOnInterlocked : FB_AlarmHandler;
@@ -62,11 +62,11 @@ VAR
 	s_wrnOnInterlocked : BOOL;
 	s_wrnOffInterlocked : BOOL;
 	
-	// Timers
+	//Timers
 	s_tonFeedbackOnTimeout : TON;
 	s_tonFeedBackOffTimeout : TON;
 	
-	// Hmi
+	//Hmi
 	s_stHmiData : ST_ValveWithFB_HMI;
 	s_bHmiInit : BOOL := FALSE;
 	
@@ -101,7 +101,7 @@ END_IF
 s_bSimFeedBackIsOff := (i_stSettings.tValveOffTimeout = T#0S);
 s_bSimFeedBackIsOn := (i_stSettings.tValveOnTimeout = T#0S);
 
-// Timeout (timers)
+//Timeout (timers)
 s_tonFeedBackOffTimeout(
 	IN := i_bReqEnable AND s_bReqOff AND NOT(s_bStaValveIsOff) AND NOT(s_bSimFeedBackIsOff) AND (i_eCtrlMode <> E_CtrlMode.IO),
 	PT := i_stSettings.tValveOffTimeout );
@@ -110,11 +110,11 @@ s_tonFeedbackOnTimeout(
 	IN := i_bReqEnable AND s_bReqOn AND NOT(s_bStaValveIsOn) AND NOT(s_bSimFeedBackIsOn) AND (i_eCtrlMode <> E_CtrlMode.IO),
 	PT := i_stSettings.tValveOnTimeout );
 	
-// Set error bits
+//Set error bits
 s_errFeedbackOffTimeout := (s_tonFeedBackOffTimeout.Q OR s_errFeedbackOffTimeout) AND NOT(i_bCmdReset);
 s_errFeedbackOnTimeout := (s_tonFeedbackOnTimeout.Q OR s_errFeedbackOnTimeout) AND NOT(i_bCmdReset);
 
-// Interlock warnings
+//Interlock warnings
 IF s_bReqOn AND i_bIclkOn THEN
 	s_wrnOnInterlocked := TRUE;
 	s_bReqOn := FALSE;
@@ -129,7 +129,7 @@ ELSIF NOT(i_bIclkOff) OR i_bCmdReset THEN
 	s_wrnOffInterlocked := FALSE;
 END_IF
 
-//--// Interlock warnings
+//--//Interlock warnings
 //--IF i_bIclkOn AND NOT(s_bStaValveIsOff) THEN
 //--	s_wrnOnInterlocked := TRUE;
 //--	m_Off();
@@ -181,7 +181,7 @@ IF NOT SUPER^._m_Devices() THEN
 	RETURN;
 END_IF
 
-// Reset request
+//Reset request
 IF s_bCfgBiStableValve THEN
 	IF NOT(i_bReqEnable) THEN
 		s_bReqOff := FALSE;
@@ -347,7 +347,7 @@ IF NOT SUPER^._m_Outputs() THEN
 END_IF
 
 CASE BOOL_TO_USINT(s_bCfgBiStableValve) OF
-	0 : // MONO-STABLE
+	0 : //MONO-STABLE
 		IF i_bReqEnable AND s_bReqOff AND NOT(i_bIclkOff) THEN
 			s_bCmdOff := TRUE;
 			s_bCmdOn := FALSE;
@@ -368,7 +368,7 @@ CASE BOOL_TO_USINT(s_bCfgBiStableValve) OF
 			s_bCmdOn := FALSE;
 		END_IF
 		
-	1 : // BI-STABLE
+	1 : //BI-STABLE
 		s_bCmdOff := i_bReqEnable AND s_bReqOff AND NOT(s_bStaValveIsOff) AND NOT(i_bIclkOff);
 		s_bCmdOn := i_bReqEnable AND s_bReqOn AND NOT(s_bStaValveIsOn) AND NOT(i_bIclkOn);
 END_CASE

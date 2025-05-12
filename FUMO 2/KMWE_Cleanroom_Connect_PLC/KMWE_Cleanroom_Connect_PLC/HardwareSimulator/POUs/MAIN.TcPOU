@@ -4,10 +4,9 @@
     <Declaration><![CDATA[PROGRAM MAIN
 VAR
 	//EM Pallet Transport
-	sim_MOVITRAC_B : SIM_MOVITRAC_B;
-	//--sim_MOVITRAC_B2 : SIM_MOVITRAC_B2;
-	simCentering : SIM_ValveWithDoubleFB;	
-
+	simMOVITRAC_B : SIM_MOVITRAC_B;
+	simCentering : SIM_ValveWithDoubleFB;
+	
 	//EM Docking Interface
 	simDockingClampUpper : SIM_ValveWithDoubleFB;
 	simDockingClampLower : SIM_ValveWithDoubleFB;
@@ -47,20 +46,6 @@ VAR
 	simTransportLimitPos AT %Q* : BOOL;
 	simTransportLimitNeg AT %Q* : BOOL;
 	
-////{attribute 'TcLinkTo' := 'TIID^Device 1 (EtherCAT)^Term 1 (EK1100)^Term 2 (EL1004)^Channel 2^Input'}
-(*	{attribute 'TcLinkTo' := 'TIPC^CleanroomConnect^CleanroomConnect Instance^PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdReset'}
-	I_bCmdReset AT %I* : BOOL;
-	{attribute 'TcLinkTo' := 'TIPC^CleanroomConnect^CleanroomConnect Instance^PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdEnable'}
-	I_bCmdEnable AT %I* : BOOL;
-	{attribute 'TcLinkTo' := 'TIPC^CleanroomConnect^CleanroomConnect Instance^PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdStartCW'}
-	I_bCmdStartCW AT %I* : BOOL;
-	{attribute 'TcLinkTo' := 'TIPC^CleanroomConnect^CleanroomConnect Instance^PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdStartCCW'}
-	I_bCmdStartCCW AT %I* : BOOL;
-	{attribute 'TcLinkTo' := 'TIPC^CleanroomConnect^CleanroomConnect Instance^PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.I_bStaReadyForOperation'}
-	Q_bStaReadyForOperation AT %Q* : BOOL;
-	{attribute 'TcLinkTo' := 'TIPC^CleanroomConnect^CleanroomConnect Instance^PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.I_bStaMotorIsRunning'}
-	Q_bStaMotorIsRunning AT %Q* : BOOL;
-*)	
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -88,16 +73,8 @@ END_VAR
 END_IF
 
 //EM Pallet Conveyor
-sim_MOVITRAC_B();
-(*
-sim_MOVITRAC_B2(
-	i_ref_I_bCmdReset := I_bCmdReset, 
-	i_ref_I_bCmdEnable := I_bCmdEnable, 
-	i_ref_I_bCmdStartCW := I_bCmdStartCW, 
-	i_ref_I_bCmdStartCCW := I_bCmdStartCCW, 
-	i_ref_Q_bStaReadyForOperation := Q_bStaReadyForOperation, 
-	i_ref_Q_bStaMotorIsRunning := Q_bStaMotorIsRunning);
-*)
+simMOVITRAC_B();
+
 simCentering();
 
 //EM Docking Interface
@@ -110,11 +87,6 @@ simDoorShutter();
 
 tonDoorOpenerAlmosClosed(IN := (simDoorOpener.q_bCmdValveOff OR simDoorOpener.q_bStaValveOff), PT := T#1S);
 simDoorOpenerAlmostClosed := tonDoorOpenerAlmosClosed.Q; 
-
-//IF (simLiftActPosition > 9999999000 AND simLiftActPosition < 10000000000 THEN
-//simLiftHomed := TRUE;
-
-//simLiftHomed := FALSE;
 
 //EM Doors
 simOuterCabinDoor();

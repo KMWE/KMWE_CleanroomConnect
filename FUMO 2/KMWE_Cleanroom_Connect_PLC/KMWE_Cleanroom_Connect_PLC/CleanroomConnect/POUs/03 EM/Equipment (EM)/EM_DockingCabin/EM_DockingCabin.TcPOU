@@ -55,25 +55,25 @@ VAR
 	s_fbSeqControl : FB_SeqControl;
 	
 	//Sensor data
-	s_aMagneticX						: ARRAY[0..c_nResultDataSize] OF LREAL;
-	s_aMagneticY						: ARRAY[0..c_nResultDataSize] OF LREAL;
-	s_aMagneticZ						: ARRAY[0..c_nResultDataSize] OF LREAL;
-	s_aMagneticMagnitude				: ARRAY[0..c_nResultDataSize] OF LREAL;
-	s_aProbePositionZ					: ARRAY[0..c_nResultDataSize] OF LREAL;
+	s_aMagneticX : ARRAY[0..c_nResultDataSize] OF LREAL;
+	s_aMagneticY : ARRAY[0..c_nResultDataSize] OF LREAL;
+	s_aMagneticZ : ARRAY[0..c_nResultDataSize] OF LREAL;
+	s_aMagneticMagnitude : ARRAY[0..c_nResultDataSize] OF LREAL;
+	s_aProbePositionZ : ARRAY[0..c_nResultDataSize] OF LREAL;
 	
-	s_sXMLData							: STRING(Param_Project.n_MaxLenghtXmlDbRow*Param_Project.n_NumberofRowsXmlDb);
+	s_sXMLData : STRING(Param_Project.n_MaxLenghtXmlDbRow*Param_Project.n_NumberofRowsXmlDb);
 	
-	s_aHmi_MagneticTest					: ARRAY[1..3,0..c_nResultDataSize] OF ST_POINT;
+	s_aHmi_MagneticTest	: ARRAY[1..3,0..c_nResultDataSize] OF ST_POINT;
 	
 	//Alarms
 	
 	//Hmi
-	s_nToHmiStepNr						: INT;
-	s_nToHmiMaxStepNr					: INT;
-	s_sToHmiInstructionText				: T_MAXSTRING;
-	s_sToHmiProcedure					: T_MAXSTRING;
+	s_nToHmiStepNr : INT;
+	s_nToHmiMaxStepNr : INT;
+	s_sToHmiInstructionText : T_MAXSTRING;
+	s_sToHmiProcedure : T_MAXSTRING;
 	
-	s_fbHmiBtnReset						: FB_HmiBtn;
+	s_fbHmiBtnReset : FB_HmiBtn;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -95,22 +95,22 @@ END_IF
 		i_bStaActive := i_bReqEnable AND s_bWrnOuterDoorNoAllowedToOpen,
 		i_eAlarmLevel := E_AlarmLevel.Warning,
 		i_sAlarmText := 'Outer Door Not Allowed To Open');
-	
+		
 	s_fbAlarmHandlerOuterDoorNoAllowedToClose(
 		i_bStaActive := i_bReqEnable AND s_bWrnOuterDoorNoAllowedToClose,
 		i_eAlarmLevel := E_AlarmLevel.Warning,
 		i_sAlarmText := 'Outer Door Not Allowed To Close');
-	
+		
 	s_fbAlarmHandlerCleanroomDoorNoAllowedToRelease(
 		i_bStaActive := i_bReqEnable AND s_bWrnCleanroomDoorNoAllowedToRelease,
 		i_eAlarmLevel := E_AlarmLevel.Warning,
 		i_sAlarmText := 'Cleanroom Door Not Allowed To Release/Open');
-	
+		
 	s_fbAlarmHandlerCleanroomDoorNoAllowedToLock(
 		i_bStaActive := i_bReqEnable AND s_bWrnCleanroomDoorNoAllowedToLock,
 		i_eAlarmLevel := E_AlarmLevel.Warning,
 		i_sAlarmText := 'Cleanroom Door Not Allowed To Lock');
-	
+		
 	//Reset error/warning bits
 	IF i_bCmdReset THEN
 		s_bWrnOuterDoorNoAllowedToOpen := FALSE;
@@ -134,17 +134,17 @@ END_IF
 
 //Buttons
 s_fbHmiBtnReset();
-	
+
 s_fbHmiBtnCloseOuterDoor();
 s_fbHmiBtnOpenOuterDoor();
-	
+
 s_fbHmiBtnApplyLockCleanroomDoor();;
 s_fbHmiBtnReleaseLockCleanroomDoor();
 
-//Leds	
+//Leds
 s_fbHmiLedOuterDoorClosed(i_bStaLed := s_bStaOuterDoorClosed);
 s_fbHmiLedOuterDoorOpened(i_bStaLed := s_bStaOuterDoorOpened);
-	
+
 s_fbHmiLedCleanDoorClosed(i_bStaLed := s_bStaCleanroomDoorClosed);
 s_fbHmiLedCleanDoorOpened(i_bStaLed := s_bStaCleanroomDoorOpened);
 s_fbHmiLedCleanroomDoorLocked(i_bStaLed := s_bStaCleanroomLockApplied);
@@ -212,7 +212,7 @@ s_fbHmiLedCleanroomDoorLocked.p_sToHmiDescriptionLed := 'Cleanroom Door Locked';
 
 s_fbHmiLedCleanroomDoorReleased.p_bStaVisible := FALSE;
 s_fbHmiLedCleanroomDoorReleased.p_sToHmiDescriptionLed := 'Cleanroom Door Released';
- 
+
 //Initialize all moving averages
 
 //Inputs
@@ -237,10 +237,9 @@ IF NOT SUPER^._m_Inputs() THEN
 	RETURN;
 END_IF
 
-
 s_bIlckOuterDoorToOpen := i_bIlckOuterDoorToOpen;
 s_bIlckOuterDoorToClose := i_bIlckOuterDoorToClose;
-	
+
 s_bIlckCleanroomDoorToRelease := i_bIlckCleanroomDoorToRelease;
 s_bIlckCleanroomDoorToLock := i_bIlckCleanroomDoorToLock;
 
@@ -268,26 +267,25 @@ s_emDoors.i_bIlckOuterDoorToOpen :=
 	OR NOT(s_emDoors.p_bStaCleanroomDoorClosed
 	OR NOT(s_emDoors.p_bStaCleanroomLockApplied)
 	OR NOT (s_emAirTreatment.p_bStaPressurizingOK));
-
+	
 s_emDoors.i_bIlckCleanroomDoorToLock :=
 	NOT(s_emDoors.p_bStaCleanroomDoorClosed);
-
-s_emDoors.i_bIlckCleanroomDoorToRelease := 
+	
+s_emDoors.i_bIlckCleanroomDoorToRelease :=
 	NOT(s_emDoors.p_bStaOuterDoorClosed)
 	OR NOT (s_emAirTreatment.p_bStaPressurizingOK);
 	
-
 //EM_DockingInterface
-s_emDockingInterface.i_bIlckDockingClampsToClose := TRUE; //TODO 
+s_emDockingInterface.i_bIlckDockingClampsToClose := TRUE; //TODO
 s_emDockingInterface.i_bIlckDockingClampsToOpen := TRUE; //TODO
 s_emDockingInterface.i_bIlckUnlockingPinsToLock := TRUE; //TODO
 s_emDockingInterface.i_bIlckUnlockingPinsToRelease := TRUE; //TODO
 
 //Call of all sub-modules (EM's)
 s_emDoors(
-	i_bReqEnable := i_bReqEnable, 
+	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
-	i_bCmdReset := i_bCmdReset, 
+	i_bCmdReset := i_bCmdReset,
 	i_sEmName := 'EM Doors');
 	
 s_emDockingInterface(
@@ -300,8 +298,8 @@ s_emAirTreatment(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
 	i_bCmdReset := i_bCmdReset,
-	i_sEmName := 'EM Air Treatment');	
-
+	i_sEmName := 'EM Air Treatment');
+	
 //Statusses
 s_bStaError :=
 	s_emDoors.p_bStaError
@@ -334,17 +332,15 @@ IF NOT SUPER^.m_Main() THEN
 	RETURN;
 END_IF
 
-
-// Hier alleen wel het doorschuiven van de carier posities
-				IF s_emDockingInterface.p_bStaBoxAtDockedPosition THEN
-					i_ref_objCarrier.p_eLocation := E_Location.DOCKING; 
-				END_IF
+//Hier alleen wel het doorschuiven van de carier posities
+IF s_emDockingInterface.p_bStaBoxAtDockedPosition THEN
+i_ref_objCarrier.p_eLocation := E_Location.DOCKING;
+END_IF
 
 CASE i_eCtrlMode OF
-
 	E_CtrlMode.IDLE:
 		;
-	
+		
 	E_CtrlMode.AUTOMATIC:
 	
 		IF (s_eSequence <> E_SeqDockingCabin.IDLE)
@@ -355,27 +351,26 @@ CASE i_eCtrlMode OF
 		END_IF
 		
 		s_fbSeqControl(
-			i_nSeqStep := s_eSequence, 
-			i_sStepName := TO_STRING(s_fbSeqControl.q_eActState), 
-			i_bCmdReset := i_bCmdReset, 
+			i_nSeqStep := s_eSequence,
+			i_sStepName := TO_STRING(s_fbSeqControl.q_eActState),
+			i_bCmdReset := i_bCmdReset,
 			i_bStaError := s_bStaError); //In case of an error Sequence Control will force sequencer to ERROR step
 			
-		CASE s_eSequence OF 
-		
+		CASE s_eSequence OF
 			E_SeqDockingCabin.IDLE:
-			
+				
 				s_emAirTreatment.m_Pressurize();
-			
+				
 				IF s_bReqToDock THEN
 					s_eSequence := E_SeqDockingCabin.DOCK_CHECK_CLEANROOM_DOORS;
 					
 				ELSIF s_bReqToUndock THEN
 					s_eSequence := E_SeqDockingCabin.UNDOCK_CHECK_CLEANROOM_DOORS;
 				END_IF
-						
+				
 			//DOCK
 			E_SeqDockingCabin.DOCK_CHECK_CLEANROOM_DOORS:
-			
+				
 				IF s_emDoors.p_bStaCleanroomDoorClosed AND s_emDoors.p_bStaCleanroomLockApplied THEN
 					s_eSequence := E_SeqDockingCabin.DOCK_CHECK_PRESSURE_DECO;
 					
@@ -383,9 +378,9 @@ CASE i_eCtrlMode OF
 					{warning '#TODO: Generate warning message, and return to IDLE'}
 					s_eSequence := E_SeqDockingCabin.IDLE;
 				END_IF
-			
+				
 			E_SeqDockingCabin.DOCK_CHECK_PRESSURE_DECO:
-			
+				
 				IF s_emAirTreatment.p_bStaPressurizingOK THEN
 					s_eSequence := E_SeqDockingCabin.DOCK_OPEN_OUTER_DOOR;
 					
@@ -393,42 +388,42 @@ CASE i_eCtrlMode OF
 					{warning '#TODO: Generate warning message, and return to IDLE'}
 					s_eSequence := E_SeqDockingCabin.IDLE;
 				END_IF
-			
+				
 			E_SeqDockingCabin.DOCK_OPEN_OUTER_DOOR:
-			
+				
 				IF s_fbSeqControl.q_bStaEntry THEN
 					s_emDoors.m_OpenOuterDoor();
 				END_IF
 				
 				IF s_emDoors.p_bStaOuterDoorOpened THEN
 					s_eSequence := E_SeqDockingCabin.DOCK_OPEN_DOCKING_CLAMPS;
-				ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN  
+				ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN
 					s_eSequence := E_SeqDockingCabin.ERROR;
 				END_IF
-			
+				
 			E_SeqDockingCabin.DOCK_OPEN_DOCKING_CLAMPS:
-			
+				
 				IF s_fbSeqControl.q_bStaEntry THEN
 					s_emDockingInterface.m_OpenDockingClamps();
 				END_IF
 				
 				IF s_emDockingInterface.p_bStaDockingClampsOpened THEN
 					s_eSequence := E_SeqDockingCabin.DOCK_WAIT_FOR_BOX_AT_DOCK_POSITION;
-				ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN  
+				ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN
 					s_eSequence := E_SeqDockingCabin.ERROR;
 				END_IF
-			
+				
 			E_SeqDockingCabin.DOCK_WAIT_FOR_BOX_AT_DOCK_POSITION:
-			
+				
 				IF s_bStaBoxAtDockPosition THEN
 					s_eSequence := E_SeqDockingCabin.DOCK_DOCK_BOX;
 				ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN
-					{warning '#TODO: Generate wwarning to indicate that removing box has taken to lomg'}  
+					{warning '#TODO: Generate wwarning to indicate that removing box has taken to long'} 
 					s_eSequence := E_SeqDockingCabin.DOCK_CLOSE_DOCKING_CLAMPS;
 				END_IF
-			
+				
 			E_SeqDockingCabin.DOCK_CLOSE_DOCKING_CLAMPS:
-			
+				
 				//Close outer door again after placing box at docking position takes to long
 				IF s_fbSeqControl.q_bStaEntry THEN
 					s_emDoors.m_CloseOuterDoor();
@@ -436,36 +431,36 @@ CASE i_eCtrlMode OF
 				
 				IF s_emDoors.p_bStaOuterDoorClosed THEN
 					s_eSequence := E_SeqDockingCabin.IDLE;
-				ELSIF fbSeqControl.q_tmStepTime > T#10S THEN  
+				ELSIF fbSeqControl.q_tmStepTime > T#10S THEN
 					s_eSequence := E_SeqDockingCabin.ERROR;
 				END_IF
-			
+				
 			E_SeqDockingCabin.DOCK_DOCK_BOX:
-			
+				
 				IF s_fbSeqControl.q_bStaEntry THEN
 					s_emDockingInterface.m_DockBox();
 				END_IF
 				
 				IF s_emDockingInterface.p_bStaDockingDone THEN
 					s_eSequence := E_SeqDockingCabin.DOCK_FLUSHING_DECO;
-				ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN  
+				ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN
 					s_eSequence := E_SeqDockingCabin.ERROR;
 				END_IF
-			
+				
 			E_SeqDockingCabin.DOCK_FLUSHING_DECO:
-			
+				
 				IF s_fbSeqControl.q_bStaEntry THEN
 					s_emAirTreatment.m_Flush();
 				END_IF
 				
 				IF s_emAirTreatment.p_bStaFlushingDone THEN
 					s_eSequence := E_SeqDockingCabin.DOCK_WAIT;
-				ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN  
+				ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN 
 					s_eSequence := E_SeqDockingCabin.ERROR;
 				END_IF
-			
+				
 			E_SeqDockingCabin.DOCK_WAIT:
-			
+				
 				IF s_fbSeqControl.q_bStaEntry THEN
 					s_emAirTreatment.m_Pressurize();
 				END_IF
@@ -475,21 +470,21 @@ CASE i_eCtrlMode OF
 				ELSIF s_bReqToUndock THEN
 					s_eSequence := E_SeqDockingCabin.UNDOCK_CHECK_CLEANROOM_DOORS; //Switch to undocking
 				END_IF
-						
+				
 			E_SeqDockingCabin.DOCK_EQUALIZE_DECO:
-			
+				
 				IF s_fbSeqControl.q_bStaEntry THEN
 					s_emAirTreatment.m_Equalize();
 				END_IF
 				
 				IF s_emAirTreatment.p_bStaEqualizingDone THEN
 					s_eSequence := E_SeqDockingCabin.DOCK_RELEASE_CLEANROOM_DOOR;
-				ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN  
+				ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN
 					s_eSequence := E_SeqDockingCabin.ERROR;
 				END_IF
-			
+				
 			E_SeqDockingCabin.DOCK_RELEASE_CLEANROOM_DOOR:
-			
+				
 				IF s_fbSeqControl.q_bStaEntry THEN
 					s_emDoors.m_ReleaseLockCleanroomDoor();
 				END_IF
@@ -497,43 +492,43 @@ CASE i_eCtrlMode OF
 				IF s_emDoors.p_bStaCleanroomLockReleased AND s_emDoors.p_bStaCleanroomDoorOpened THEN
 					s_eSequence := E_SeqDockingCabin.DOCK_CLEANROOM_DOOR_OPENED;
 				ELSIF s_bReqToUndock THEN
-					s_eSequence := E_SeqDockingCabin.DOCK_LOCK_CLEANROOM_DOOR;	
-				ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN  
+					s_eSequence := E_SeqDockingCabin.DOCK_LOCK_CLEANROOM_DOOR;
+				ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN
 					s_eSequence := E_SeqDockingCabin.ERROR;
 				END_IF
-			
+				
 			E_SeqDockingCabin.DOCK_CLEANROOM_DOOR_OPENED:
-			
+				
 				IF s_emDoors.p_bStaCleanroomDoorClosed THEN
 					s_eSequence := E_SeqDockingCabin.DOCK_LOCK_CLEANROOM_DOOR;
-				ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN  
+				ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN
 					s_eSequence := E_SeqDockingCabin.ERROR;
 				END_IF
-			
+				
 			E_SeqDockingCabin.DOCK_LOCK_CLEANROOM_DOOR:
-			
+				
 				IF s_fbSeqControl.q_bStaEntry THEN
 					s_emDoors.m_ApplyLockCleanroomDoor();
 				END_IF
 				
 				IF s_emDoors.p_bStaCleanroomLockApplied AND s_emDoors.p_bStaCleanroomDoorClosed THEN
 					s_eSequence := E_SeqDockingCabin.DOCK_PRESSURIZE_DECO;
-				ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN  
+				ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN
 					s_eSequence := E_SeqDockingCabin.ERROR;
-				END_IF	
-			
+				END_IF
+				
 			E_SeqDockingCabin.DOCK_PRESSURIZE_DECO:
-			
+				
 				IF s_fbSeqControl.q_bStaEntry THEN
 					s_emAirTreatment.m_Pressurize();
 				END_IF
 				
 				IF s_emAirTreatment.p_bStaPressurizingOK THEN
 					s_eSequence := E_SeqDockingCabin.DOCK_WAIT;
-				ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN  
+				ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN
 					s_eSequence := E_SeqDockingCabin.ERROR;
 				END_IF
-			
+				
 			//UNDOCK
 			E_SeqDockingCabin.UNDOCK_CHECK_CLEANROOM_DOORS:
 				
@@ -542,43 +537,43 @@ CASE i_eCtrlMode OF
 				
 				ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN
 					{warning '#TODO: Generate warning message, and return to IDLE'}
-					s_eSequence := E_SeqDockingCabin.IDLE; // of better to go to error?
+					s_eSequence := E_SeqDockingCabin.IDLE; //of better to go to error?
 				END_IF
 				
 			E_SeqDockingCabin.UNDOCK_CHECK_PRESSURE_DECO:
-			
+				
 				IF s_emAirTreatment.p_bStaPressurizingOK THEN
 					s_eSequence := E_SeqDockingCabin.UNDOCK_UNDOCK_BOX;
-
+					
 				ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN
 					{warning '#TODO: Generate warning message, and return to IDLE'}
-					s_eSequence := E_SeqDockingCabin.IDLE; // of better to go to error?
+					s_eSequence := E_SeqDockingCabin.IDLE; //of better to go to error?
 				END_IF
-			
+				
 			E_SeqDockingCabin.UNDOCK_UNDOCK_BOX:
-			
+				
 				IF s_fbSeqControl.q_bStaEntry THEN
 					s_emDockingInterface.m_UndockBox();
 				END_IF
 				
 				IF s_emDockingInterface.p_bStaUndockingDone THEN
 					s_eSequence := E_SeqDockingCabin.UNDOCK_WAIT_FOR_BOX_REMOVED;
-				ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN  
+				ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN
 					s_eSequence := E_SeqDockingCabin.ERROR;
 				END_IF
 				
 			E_SeqDockingCabin.UNDOCK_WAIT_FOR_BOX_REMOVED:
-			
+				
 				IF s_bStaBoxRemovedFromDockPosition THEN
 					s_eSequence := E_SeqDockingCabin.UNDOCK_CLOSE_DOCKING_CLAMPS;
 					
 				ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN
-					{warning '#TODO: Generate wwarning to indicate that removing box has taken to lomg'}  
+					{warning '#TODO: Generate wwarning to indicate that removing box has taken to long'} 
 					s_eSequence := E_SeqDockingCabin.UNDOCK_DOCK_BOX;
 				END_IF
-			
+				
 			E_SeqDockingCabin.UNDOCK_DOCK_BOX:
-			
+				
 				//Re-Dock box after removing box from docking position takes to long
 				IF s_fbSeqControl.q_bStaEntry THEN
 					s_emDockingInterface.m_DockBox();
@@ -586,41 +581,41 @@ CASE i_eCtrlMode OF
 				
 				IF s_emDockingInterface.p_bStaDockingDone THEN
 					s_eSequence := E_SeqDockingCabin.IDLE;
-				ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN  
+				ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN
 					s_eSequence := E_SeqDockingCabin.ERROR;
 				END_IF
-
+				
 			E_SeqDockingCabin.UNDOCK_CLOSE_DOCKING_CLAMPS:
-
+				
 				IF s_fbSeqControl.q_bStaEntry THEN
 					s_emDockingInterface.m_CloseDockingClamps();
 				END_IF
 				
 				IF s_emDockingInterface.p_bStaDockingClampsClosed THEN
 					s_eSequence := E_SeqDockingCabin.UNDOCK_CLOSE_OUTER_DOOR;
-				ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN  
+				ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN
 					s_eSequence := E_SeqDockingCabin.ERROR;
 				END_IF
-			
+				
 			E_SeqDockingCabin.UNDOCK_CLOSE_OUTER_DOOR:
-			
+				
 				IF s_fbSeqControl.q_bStaEntry THEN
 					s_emDoors.m_CloseOuterDoor();
 				END_IF
 				
 				IF s_emDoors.p_bStaOuterDoorClosed THEN
 					s_eSequence := E_SeqDockingCabin.IDLE;
-				ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN  
+				ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN
 					s_eSequence := E_SeqDockingCabin.ERROR;
 				END_IF
-
-			//ERROR	
+				
+			//ERROR
 			E_SeqDockingCabin.ERROR:
-			
+				
 				IF i_bCmdReset THEN
 					s_ePrevStep := s_eSequence;
 				END_IF
-			
+				
 			//READY
 			E_SeqDockingCabin.READY:
 				;
@@ -629,7 +624,7 @@ CASE i_eCtrlMode OF
 			{warning '#TODO: Consider to trigger warning, error, move to ERROR step instead of IDLE'}
 			s_eSequence := E_SeqDockingCabin.ERROR;
 		END_CASE
-	
+		
 	E_CtrlMode.MANUAL:
 		;
 		

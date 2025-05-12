@@ -17,7 +17,9 @@ VAR
 	//Control Modules
 	s_cmFanMotor : CM_DigOutput;
 	
+	//Function Blocks
 	s_fbPIDPressCtrl : FB_BasicPID;
+	s_fbGetCurTaskIdx : GETCURTASKINDEX;
 	
 	//Inputs
 	s_fbFanThermal : FB_DigInput;
@@ -116,11 +118,11 @@ IF NOT SUPER^._m_Alarms() THEN
 	RETURN;
 END_IF
 
-// Alarm Handlers ( config --> init() )
+//Alarm Handlers ( config --> init() )
 s_fbAlarmHandlerFanThermalError
 	(i_bStaActive := s_bErrFanThermalError);
 	
-// Reset warnings
+//Reset warnings
 IF i_bCmdReset THEN
 	s_bErrFanThermalError := FALSE;
 END_IF
@@ -200,9 +202,7 @@ _m_Hmi := TRUE;
     </Method>
     <Method Name="_m_Init" Id="{d5bdcfa5-a106-4207-af78-e9a00adc354c}" FolderPath="Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Init : BOOL
-VAR
-	s_fbGetCurTaskIdx : GETCURTASKINDEX;
-END_VAR]]></Declaration>
+]]></Declaration>
       <Implementation>
         <ST><![CDATA[
 IF NOT SUPER^._m_Init() THEN
@@ -402,7 +402,7 @@ s_fbSeqControl(
 	i_bCmdReset :=
 		i_bCmdReset
 		AND i_bReqEnable
-		AND (s_eSequence = E_SeqAirTreatment.ERROR) // Only reset/resume sequencer from ERROR state
+		AND (s_eSequence = E_SeqAirTreatment.ERROR) //Only reset/resume sequencer from ERROR state
 		AND NOT(s_bStaError),
 	i_bStaError := s_bStaError OR NOT(i_bReqEnable));
 
@@ -494,7 +494,7 @@ CASE s_eSequence OF
 			s_eSequence := E_SeqAirTreatment.STOP;
 		END_IF
 		
-//EQUALIZING//////////////////////////////////////////////////////////////////////////////////////////
+//EQUALIZING///////////////////////////////////////////////////////////////////////////////////////
 	E_SeqAirTreatment.EQUALIZE:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_bCmdFanMotorOn := TRUE;
@@ -623,9 +623,9 @@ CASE i_eCtrlMode OF
 		
 END_CASE
 
-//AUTOMATIC-mode //////////////////////////////////////////////////////////////////////////////////
+//AUTOMATIC-mode///////////////////////////////////////////////////////////////////////////////////
 
-//MANUAL-mode /////////////////////////////////////////////////////////////////////////////////////
+//MANUAL-mode//////////////////////////////////////////////////////////////////////////////////////
 
 //Buttons visibility
 IF (i_eCtrlMode = E_CtrlMode.MANUAL) THEN
@@ -672,7 +672,7 @@ ELSE
 	s_fbHmiBtnStop.p_bStaEnabled := FALSE;
 END_IF
 
-//MAINTENANCE-mode ////////////////////////////////////////////////////////////////////////////////
+//MAINTENANCE-mode/////////////////////////////////////////////////////////////////////////////////
 
 //Stopping control modules
 IF (i_eCtrlMode = E_CtrlMode.MAINTENANCE) AND (i_eCtrlState = E_CtrlState.STOPPING) THEN
@@ -681,7 +681,7 @@ IF (i_eCtrlMode = E_CtrlMode.MAINTENANCE) AND (i_eCtrlState = E_CtrlState.STOPPI
 	s_fbSeqControl.i_bCmdReset := TRUE;
 END_IF
 
-//IO-mode /////////////////////////////////////////////////////////////////////////////////////////
+//IO-mode//////////////////////////////////////////////////////////////////////////////////////////
 IF (i_eCtrlMode = E_CtrlMode.IO) AND (i_eCtrlState = E_CtrlState.RUNNING) THEN
 	s_bHmiForceOutputEnabled := TRUE;
 	s_bHmiForceOutputStartEnabled := s_cmFanMotor.p_bStaOutput;

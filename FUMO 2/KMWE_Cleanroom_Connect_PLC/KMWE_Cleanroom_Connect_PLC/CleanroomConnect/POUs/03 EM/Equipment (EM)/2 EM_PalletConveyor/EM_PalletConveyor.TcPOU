@@ -7,7 +7,7 @@ VAR_INPUT
 	//Inputs
 	i_ref_stSettings : REFERENCE TO ST_SettingsPalletConveyor;
 	
-	// External interlocks (from outside this EM)
+	//External interlocks (from outside this EM)
 	i_stExtIlckConvFwd : ST_Interlock;
 	i_stExtIlckConvBwd : ST_Interlock;
 	
@@ -37,7 +37,7 @@ VAR
 	
 	//Control Modules (Devices)
 	s_cmPalletConveyor : CM_MOVITRAC_B;
-	s_cmCenteringUnit : CM_ValveWithDoubleFB; // Off = Idle, On = Center
+	s_cmCenteringUnit : CM_ValveWithDoubleFB; //Off = Idle, On = Center
 	
 	//Inputs
 	s_diStaAtInfeedPositionRear : FB_DigInput;
@@ -192,7 +192,7 @@ IF NOT SUPER^._m_Alarms() THEN
 	RETURN;
 END_IF
 
-// Alarm Handlers ( config --> init() )
+//Alarm Handlers ( config --> init() )
 s_fbAlarmHandlerTravelTimeOut(
 	i_bStaActive := s_bErrTravelTimeOut, 
 	i_sAlarmText := CONCAT(i_sEmName, CONCAT(': Travel error: ', s_sReason)));
@@ -203,7 +203,7 @@ s_fbAlarmHandlerCmdNotAllowed(
 	i_bStaActive := s_bErrCmdNotAllowed,
 	i_sAlarmText := CONCAT(i_sEmName, CONCAT(': ', s_sMessage)));
 
-// Reset warnings
+//Reset warnings
 IF i_bCmdReset THEN
 	s_bErrTravelTimeOut := FALSE;
 	s_bErrCmdNotAllowed := FALSE;
@@ -409,7 +409,7 @@ s_cmPalletConveyor.i_sCmName := 'CM Pallet Conveyor';
 s_cmPalletConveyor.i_stSettings.tResetPulseDuration := T#1S;
 s_cmPalletConveyor.i_stSettings.tBrakeReleasedDelay := T#1S;
 s_cmPalletConveyor.i_stSettings.tMotorStoppedDelay := T#3S;
-s_cmPalletConveyor.i_stSettings.rMaxTargetSpeed := 200.0; // mm/s
+s_cmPalletConveyor.i_stSettings.rMaxTargetSpeed := 200.0; //[mm/s]
 s_cmPalletConveyor.p_sCfgFwdName := 'Forward';
 s_cmPalletConveyor.p_sCfgBckName := 'Backward';
 
@@ -419,7 +419,7 @@ s_cmCenteringUnit.i_sCmName := 'CM Centering Unit';
 s_cmCenteringUnit.i_stSettings.tValveOnTimeout := T#5S;
 s_cmCenteringUnit.i_stSettings.tValveOffTimeout := T#5S;
 
-s_cmCenteringUnit.p_bCfgBiStableValve := FALSE; // 5/2 monostable
+s_cmCenteringUnit.p_bCfgBiStableValve := FALSE; //5/2 monostable
 s_cmCenteringUnit.p_bCfgReverseValve := FALSE;
 s_cmCenteringUnit.p_sCfgOffName := 'Rest';
 s_cmCenteringUnit.p_sCfgOnName := 'Center';
@@ -667,7 +667,7 @@ s_fbSeqControl(
 	i_bCmdReset :=
 		i_bCmdReset
 		AND i_bReqEnable
-		AND (s_eSequence = E_SeqTransport.ERROR) // Only reset/resume sequencer from ERROR state
+		AND (s_eSequence = E_SeqTransport.ERROR) //Only reset/resume sequencer from ERROR state
 		AND NOT(s_bStaError),
 	i_bStaError := s_bStaError OR NOT(i_bReqEnable));
 	
@@ -794,7 +794,7 @@ CASE s_eSequence OF
 			s_eSequence := E_SeqTransport.ERROR;
 		END_IF
 		
-//CENTERING////////////////////////////////////////////////////////////////////////////////////////	
+//CENTERING////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqTransport.MOVE_TO_CENTERING:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_tMaxTravelTime :=
@@ -1000,9 +1000,9 @@ CASE i_eCtrlMode OF
 		
 END_CASE
 
-//AUTOMATIC-mode //////////////////////////////////////////////////////////////////////////////////
+//AUTOMATIC-mode///////////////////////////////////////////////////////////////////////////////////
 
-//MANUAL-mode /////////////////////////////////////////////////////////////////////////////////////
+//MANUAL-mode//////////////////////////////////////////////////////////////////////////////////////
 
 //Buttons visibility
 IF (i_eCtrlMode = E_CtrlMode.MANUAL) THEN
@@ -1054,14 +1054,14 @@ ELSE
 	s_fbHmiBtnTB_Centering.p_bStaEnabled := FALSE;
 END_IF
 
-//MAINTENANCE-mode ////////////////////////////////////////////////////////////////////////////////
+//MAINTENANCE-mode/////////////////////////////////////////////////////////////////////////////////
 
 //Stopping control modules
 IF (i_eCtrlMode = E_CtrlMode.MAINTENANCE) AND (i_eCtrlState = E_CtrlState.STOPPING) THEN
 	s_cmPalletConveyor.m_Stop();
 END_IF
 
-//IO-mode /////////////////////////////////////////////////////////////////////////////////////////
+//IO-mode//////////////////////////////////////////////////////////////////////////////////////////
 IF (i_eCtrlMode = E_CtrlMode.IO) AND (i_eCtrlState = E_CtrlState.RUNNING) THEN
 	s_bHmiForceOutputEnabled := TRUE;
 	s_bHmiForceOutputStartEnabled := s_cmPalletConveyor.p_bStaBrakeReleasedQ;

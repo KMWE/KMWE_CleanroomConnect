@@ -16,20 +16,20 @@ VAR_INPUT
 END_VAR
 
 VAR
-	// Inputs
-	I_bStaReadyForOperation AT %I* : BOOL; // Drive is ready operation (no error)
-	I_bStaMotorIsRunning AT %I* : BOOL; // Drive/motor is running
+	//Inputs
+	I_bStaReadyForOperation AT %I* : BOOL; //Drive is ready operation (no error)
+	I_bStaMotorIsRunning AT %I* : BOOL; //Drive/motor is running
 	
-	// Outputs
-	Q_bCmdReset AT %Q* : BOOL; // Command to reset drive.
-	Q_bCmdEnable AT %Q* : BOOL; // Command to enable drive.
-	Q_bCmdStartCW AT %Q* : BOOL; // Command start in clock-wise direction.
-	Q_bCmdStartCCW AT %Q* : BOOL; // Command start in counter-clock-wise direction.
+	//Outputs
+	Q_bCmdReset AT %Q* : BOOL; //Command to reset drive.
+	Q_bCmdEnable AT %Q* : BOOL; //Command to enable drive.
+	Q_bCmdStartCW AT %Q* : BOOL; //Command start in clock-wise direction.
+	Q_bCmdStartCCW AT %Q* : BOOL; //Command start in counter-clock-wise direction.
 	
-	Q_bCmdReleaseBrake AT %Q* : BOOL; // Command to release brake
-	Q_nSetTargetSpeed AT %Q* : INT; // Target speed
+	Q_bCmdReleaseBrake AT %Q* : BOOL; //Command to release brake
+	Q_nSetTargetSpeed AT %Q* : INT; //Target speed
 	
-	// Force outputs (IO-test functions)
+	//Force outputs (IO-test functions)
 	s_fbForceCmdReset : FB_ForceOutput;
 	s_fbForceCmdEnable : FB_ForceOutput;
 	s_fbForceCmdStartCW : FB_ForceOutput;
@@ -37,11 +37,11 @@ VAR
 	s_fbForceCmdReleaseBrake : FB_ForceOutput;
 	s_fForceValueTargetSpeed : LREAL; //[0..100%]
 	
-	// Interlocks
+	//Interlocks
 	s_bIclkForward : BOOL;
 	s_bIclkBackward : BOOL;
 	
-	// Requests
+	//Requests
 	s_bReqStop : BOOL;
 	s_bReqStartForward : BOOL;
 	s_bReqStartBackward : BOOL;
@@ -49,14 +49,14 @@ VAR
 	s_bReqApplyBrake : BOOL;
 	s_bReqReset : BOOL;
 	
-	// Commands
+	//Commands
 	s_bCmdEnable : BOOL;
 	s_bCmdReset : BOOL;
 	s_bCmdForward : BOOL;
 	s_bCmdBackward : BOOL;
 	s_bCmdReleaseBrake : BOOL;
-		
-	// States
+	
+	//States
 	s_bStaReadyForOperation: BOOL;
 	s_bStaDriveError: BOOL;
 	s_bStaBrakeReleased : BOOL;
@@ -68,17 +68,17 @@ VAR
 	s_sInterlockedReasonForward : STRING; //External interlocked reason for clarifying reason
 	s_sInterlockedReasonBackward : STRING; //External interlocked reason for clarifying reason
 	
-	// Setpoints
-	s_fTargetSpeed : LREAL; // Target speed [mm/s]
+	//Setpoints
+	s_fTargetSpeed : LREAL; //Target speed [mm/s]
 	
 	s_sCfgBckName : STRING(c_MAX_FB_NAME_LENGTH) := 'Backward';
 	s_sCfgFwdName : STRING(c_MAX_FB_NAME_LENGTH) := 'Foreward';
 	
-	// Timers
+	//Timers
 	s_tofResetPulse : TOF;
 	s_tonMotorStoppedDelay : TON;
 	
-	// Alarms
+	//Alarms
 	s_fbAlarmHandlerDriveError : FB_AlarmHandler;
 	s_fbAlarmHandlerApplyingBrakeNotAllowed : FB_AlarmHandler;
 	s_fbAlarmHandlerStartMotorNotAllowed : FB_AlarmHandler;
@@ -91,7 +91,7 @@ VAR
 	s_wrnMotorForwardInterlocked : BOOL;
 	s_wrnMotorBackwardInterlocked : BOOL;
 	
-	// Hmi
+	//Hmi
 	s_stHmiData : ST_MoviTrac_B_HMI;
 	s_bHmiInit : BOOL := FALSE;
 	
@@ -138,11 +138,11 @@ IF NOT SUPER^._m_Alarms() THEN
 	RETURN;
 END_IF
 
-// Set error bits
+//Set error bits
 s_errDriveError R= i_bCmdReset;
 s_errDriveError S= i_bReqEnable AND s_bStaDriveError;
 
-// Interlock warnings
+//Interlock warnings
 IF s_bIclkForward AND NOT(s_bStaMotorStopped) THEN
 	s_wrnMotorForwardInterlocked := TRUE;
 	m_Stop();
@@ -157,7 +157,7 @@ ELSIF NOT(s_bIclkBackward) OR i_bCmdReset THEN
 	s_wrnMotorBackwardInterlocked := FALSE;
 END_IF
 
-// Alarm Handlers ( config --> init() )
+//Alarm Handlers ( config --> init() )
 s_fbAlarmHandlerDriveError(i_bStaActive := s_errDriveError);
 
 s_fbAlarmHandlerApplyingBrakeNotAllowed(i_bStaActive := s_wrnApplyingBrakeNotAllowed);
@@ -174,11 +174,11 @@ s_fbAlarmHandlerMotorBackwardInterlocked(
 	i_bStaActive := s_wrnMotorBackwardInterlocked,
 	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move backward, Reason: ',CONCAT(s_sInterlockedReasonBackward, '.'))) );
 	
-// Alarm collector
+//Alarm collector
 s_bStaError := 
 	s_fbAlarmHandlerDriveError.q_bStaActive;
 	
-// Warning collector
+//Warning collector
 s_bStaWarning :=
 	s_fbAlarmHandlerApplyingBrakeNotAllowed.q_bStaActive
 	OR s_fbAlarmHandlerStartMotorNotAllowed.q_bStaActive
@@ -641,9 +641,9 @@ s_fbForceCmdReleaseBrake(
 	i_ref_bCmdOutput := Q_bCmdReleaseBrake);
 	
 IF s_fForceValueTargetSpeed = 0.0 THEN
-	Q_nSetTargetSpeed := LREAL_TO_INT(s_fTargetSpeed / i_stSettings.rMaxTargetSpeed * cMAX_INT_VALUE); // [mm/s]
+	Q_nSetTargetSpeed := LREAL_TO_INT(s_fTargetSpeed / i_stSettings.rMaxTargetSpeed * cMAX_INT_VALUE); //[mm/s]
 ELSE
-	Q_nSetTargetSpeed := LREAL_TO_INT(s_fForceValueTargetSpeed / 100.0  * cMAX_INT_VALUE); // [%]
+	Q_nSetTargetSpeed := LREAL_TO_INT(s_fForceValueTargetSpeed / 100.0  * cMAX_INT_VALUE); //[%]
 END_IF
 
 _m_Outputs := TRUE;
@@ -712,7 +712,7 @@ m_Reset := s_bCmdReset;
     <Method Name="m_StartBackward" Id="{3070eb62-39b9-41c5-ab6f-4f29bd1c0220}" FolderPath="Methods\">
       <Declaration><![CDATA[METHOD PUBLIC m_StartBackward : BOOL
 VAR_INPUT
-	i_rTargetSpeed : LREAL; // Target speed [mm/s]
+	i_rTargetSpeed : LREAL; //Target speed [mm/s]
 END_VAR
 ]]></Declaration>
       <Implementation>
@@ -743,7 +743,7 @@ m_StartBackward := s_bCmdBackward;
     <Method Name="m_StartForward" Id="{39ee694a-3d82-40c1-89dd-29f4a0ed3ffe}" FolderPath="Methods\">
       <Declaration><![CDATA[METHOD PUBLIC m_StartForward : BOOL
 VAR_INPUT
-	i_rTargetSpeed : LREAL; // Target speed [mm/s]
+	i_rTargetSpeed : LREAL; //Target speed [mm/s]
 END_VAR
 ]]></Declaration>
       <Implementation>

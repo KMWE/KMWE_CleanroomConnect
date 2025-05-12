@@ -30,7 +30,7 @@ VAR_INPUT
 	//Inputs
 	i_ref_stSettings : REFERENCE TO ST_SettingsLiftingTransport;
 	
-	// External interlocks (from outside this EM)
+	//External interlocks (from outside this EM)
 	{warning '#TODO: Delete unused (not written external) inputs'}
 	i_stExtIlckLiftUp : ST_Interlock;			//-- NOT_USED
 	i_stExtIlckLiftDown : ST_Interlock;			//-- NOT_USED
@@ -57,10 +57,10 @@ VAR
 	
 	//Control Modules
 	axisLift : AXIS_REF; //??AXIS_REF; TC2_MC2.AXIS_REF;
-	s_cmLift : CM_Servo; // Including 2 limit switched and 1 reference switch
+	s_cmLift : CM_Servo; //Including 2 limit switched and 1 reference switch
 	
 	axisTransport : AXIS_REF; //??AXIS_REF TC2_MC2.AXIS_REF;
-	s_cmTransport : CM_Servo; // Including 2 limit switched and 1 reference switch
+	s_cmTransport : CM_Servo; //Including 2 limit switched and 1 reference switch
 	
 	//Inputs
 	s_diStaTrolleyOnPositionLeft : FB_DigInput;
@@ -200,7 +200,7 @@ END_IF
 s_bErrLiftDrive S= s_cmLift.p_bError;
 s_bErrTransportDrive S= s_cmTransport.p_bError;
 
-// Alarm Handlers
+//Alarm Handlers
 s_fbAlarmHandlerLiftDrive(
 	i_bStaActive := s_bErrLiftDrive,
 	i_sAlarmText := CONCAT(i_sEmName, CONCAT( ': Scissor Lift Drive error: ', s_sReason)) );
@@ -229,7 +229,7 @@ s_fbAlarmHandlerCmdNotAllowed(
 	i_bStaActive := s_bErrCmdNotAllowed,
 	i_sAlarmText := CONCAT(i_sEmName, CONCAT(': ', s_sMessage)) );
 	
-// Reset warnings
+//Reset warnings
 IF i_bCmdReset THEN
 	s_bWrnSafetyDoorNotClosed := FALSE;
 	s_bErrLockTrolleyFailed := FALSE;
@@ -359,7 +359,7 @@ END_IF
       </Implementation>
     </Method>
     <Method Name="_m_ConvLiftHeightToSpindPos" Id="{8617e5f7-c58b-4537-8cd1-e74ba22bdca2}">
-      <Declaration><![CDATA[///Convert Lift Height To Spindle Position
+      <Declaration><![CDATA[//Convert Lift Height To Spindle Position
 METHOD PROTECTED _m_ConvLiftHeightToSpindPos : LREAL
 VAR_INPUT
 	i_fSetLiftHeight : LREAL; //[mm]
@@ -371,11 +371,11 @@ VAR
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[// Calculate spindle position as function of lift height setpoint
-// a^2 + b^2 = c^2
-// 	a = s_fScissorHeight
-// 	b = s_fScissorBase
-// 	c = c_fLEG_LENGTH
+        <ST><![CDATA[//Calculate spindle position as function of lift height setpoint
+//a^2 + b^2 = c^2
+//a = s_fScissorHeight
+//b = s_fScissorBase
+//c = c_fLEG_LENGTH
 
 //Calculate Lift Target
 //	b = SQRT( c^2 - a^2 )
@@ -386,14 +386,14 @@ _m_ConvLiftHeightToSpindPos := c_fLEG_LENGTH - (s_fScissorBase - c_fSPINDLE_OFFS
       </Implementation>
     </Method>
     <Method Name="_m_ConvLiftToMotorPos" Id="{3e5c7f8b-1cdb-4f91-8994-492b3f27a304}">
-      <Declaration><![CDATA[///Convert Lift (desired) To Motor Position
+      <Declaration><![CDATA[//Convert Lift (desired) To Motor Position
 METHOD PROTECTED _m_ConvLiftToMotorPos : ST_PositioningProfile
 VAR_INPUT
 	i_stPosProf : ST_PositioningProfile;
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[// Calculate required motor position as function of desired lift position
+        <ST><![CDATA[//Calculate required motor position as function of desired lift position
 
 _m_ConvLiftToMotorPos := i_stPosProf;
 _m_ConvLiftToMotorPos.fPos := _m_ConvLiftHeightToSpindPos(i_stPosProf.fPos);
@@ -401,7 +401,7 @@ _m_ConvLiftToMotorPos.fPos := _m_ConvLiftHeightToSpindPos(i_stPosProf.fPos);
       </Implementation>
     </Method>
     <Method Name="_m_ConvSpindPosToLiftHeight" Id="{b4c945b7-7c49-44aa-94eb-77b098eae95c}">
-      <Declaration><![CDATA[///Convert Spindle Position To Lift Height
+      <Declaration><![CDATA[//Convert Spindle Position To Lift Height
 METHOD PROTECTED _m_ConvSpindPosToLiftHeight : LREAL
 VAR_INPUT
 	i_fActSpindPos : LREAL; //[mm]
@@ -412,14 +412,14 @@ VAR
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[// Calculate lift height as function of spindle position
-// a^2 + b^2 = c^2
-// 	a = s_fScissorHeight
-// 	b = s_fScissorBase
-// 	c = c_fLEG_LENGTH
+        <ST><![CDATA[//Calculate lift height as function of spindle position
+//a^2 + b^2 = c^2
+//a = s_fScissorHeight
+//b = s_fScissorBase
+//c = c_fLEG_LENGTH
 
 //Calculate Lift Target
-//	b = SQRT( c^2 - a^2 )
+//b = SQRT( c^2 - a^2 )
 s_fScissorBase := c_fLEG_LENGTH - (i_fActSpindPos - c_fSPINDLE_OFFSET);
 
 IF (c_fLEG_LENGTH >= s_fScissorBase) THEN
@@ -433,7 +433,7 @@ _m_ConvSpindPosToLiftHeight := s_fScissorHeight - c_fHEIGHT_OFFSET;
       </Implementation>
     </Method>
     <Method Name="_m_ConvTranspToMotorPos" Id="{5ab8735e-3225-492d-860a-94723f1f74f0}">
-      <Declaration><![CDATA[///Convert Transport (desired) To Motor Position
+      <Declaration><![CDATA[//Convert Transport (desired) To Motor Position
 METHOD PROTECTED _m_ConvTranspToMotorPos : ST_PositioningProfile
 VAR_INPUT
 	i_stPosProf : ST_PositioningProfile;
@@ -444,7 +444,7 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-// Calculate required motor position as function of desired transport unit position
+//Calculate required motor position as function of desired transport unit position
 s_fConvFactor := 0.5;
 
 _m_ConvTranspToMotorPos.fPos := i_stPosProf.fPos * s_fConvFactor;
@@ -843,7 +843,7 @@ s_fbSeqControl(
 	i_bCmdReset :=
 		i_bCmdReset
 		AND i_bReqEnable
-		AND (s_eSequence = E_SeqLiftingTransport.ERROR) // Only reset/resume sequencer from ERROR state
+		AND (s_eSequence = E_SeqLiftingTransport.ERROR) //Only reset/resume sequencer from ERROR state
 		AND NOT(s_bStaError),
 	i_bStaError := s_bStaError OR NOT(i_bReqEnable));
 	
@@ -866,7 +866,7 @@ CASE s_eSequence OF
 		s_eResumeStep := E_SeqLiftingTransport.READY;
 		s_eSequence := E_SeqLiftingTransport.START;
 		
-	E_SeqLiftingTransport.START: // Afhankelijk van de voorgaande stap, stappen programma hervatten. Wanneer actie voltooit
+	E_SeqLiftingTransport.START: //Afhankelijk van de voorgaande stap, stappen programma hervatten. Wanneer actie voltooit
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_sMessage := 'start';
 		END_IF
@@ -876,7 +876,7 @@ CASE s_eSequence OF
 		END_IF
 		
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-// READY //////////////////////////////////////////////////////////////////////////////////////////
+//READY////////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqLiftingTransport.READY:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_eResumeStep := E_SeqLiftingTransport.READY;
@@ -905,7 +905,7 @@ CASE s_eSequence OF
 		END_IF
 		
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-// GO TO IDLE /////////////////////////////////////////////////////////////////////////////////////
+//GO TO IDLE///////////////////////////////////////////////////////////////////////////////////////
 	E_SeqLiftingTransport.TRANSPORT_TO_IDLE:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmTransport.m_MoveAbsolute(_m_ConvTranspToMotorPos(i_ref_stSettings.arr_stTransportPositioningProfile[0]));
@@ -937,7 +937,7 @@ CASE s_eSequence OF
 		END_IF
 		
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// PICK TROLLEY FROM TB //////////////////////////////////////////////////////////////////////////
+///PICK TROLLEY FROM TB////////////////////////////////////////////////////////////////////////////
 	E_SeqLiftingTransport.LIFT_PRE_PICK_FROM_TB:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmLift.m_MoveAbsolute(_m_ConvLiftToMotorPos(i_ref_stSettings.arr_stLiftPositioningProfile[1]));
@@ -1099,7 +1099,7 @@ CASE s_eSequence OF
 		END_IF
 		
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// PICK TROLLEY FROM CABIN ///////////////////////////////////////////////////////////////////////
+///PICK TROLLEY FROM CABIN/////////////////////////////////////////////////////////////////////////
 	E_SeqLiftingTransport.LIFT_PRE_PICK_FROM_CABIN:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmLift.m_MoveAbsolute(_m_ConvLiftToMotorPos(i_ref_stSettings.arr_stLiftPositioningProfile[6]));
@@ -1278,7 +1278,7 @@ CASE s_eSequence OF
 		END_IF
 		
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-// STOP ///////////////////////////////////////////////////////////////////////////////////////////
+//STOP/////////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqLiftingTransport.STOP:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmLift.m_Stop(
@@ -1300,7 +1300,7 @@ CASE s_eSequence OF
 		END_IF
 		
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-// ERROR //////////////////////////////////////////////////////////////////////////////////////////
+//ERROR////////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqLiftingTransport.ERROR:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			IF s_ePreviousStep > E_SeqLiftingTransport.START
@@ -1360,9 +1360,9 @@ CASE i_eCtrlMode OF
 		
 END_CASE
 
-//AUTOMATIC-mode //////////////////////////////////////////////////////////////////////////////////
+//AUTOMATIC-mode///////////////////////////////////////////////////////////////////////////////////
 
-//MANUAL-mode /////////////////////////////////////////////////////////////////////////////////////
+//MANUAL-mode//////////////////////////////////////////////////////////////////////////////////////
 
 //Buttons visibility
 IF (i_eCtrlMode = E_CtrlMode.MANUAL) THEN
@@ -1409,7 +1409,7 @@ ELSE
 	s_fbHmiBtnPlaceTrolleyInTB.p_bStaEnabled := FALSE;
 END_IF
 
-//MAINTENANCE-mode ////////////////////////////////////////////////////////////////////////////////
+//MAINTENANCE-mode/////////////////////////////////////////////////////////////////////////////////
 
 //Stopping control modules
 IF (i_eCtrlMode = E_CtrlMode.MAINTENANCE) AND (i_eCtrlState = E_CtrlState.STOPPING) THEN
@@ -1423,7 +1423,7 @@ IF (i_eCtrlMode = E_CtrlMode.MAINTENANCE) AND (i_eCtrlState = E_CtrlState.STOPPI
 		i_fJrk := i_ref_stSettings.stSettingsServoTransport.fStopJrk);
 END_IF
 
-//IO-mode /////////////////////////////////////////////////////////////////////////////////////////
+//IO-mode//////////////////////////////////////////////////////////////////////////////////////////
 IF (i_eCtrlMode = E_CtrlMode.IO) AND (i_eCtrlState = E_CtrlState.RUNNING) THEN
 	s_bHmiForceOutputEnabled := TRUE;
 ELSE

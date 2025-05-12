@@ -155,7 +155,7 @@ s_bErrPowerPotentialGroup24VdcOk S= NOT(s_bStsPowerPotentialGroup24VdcOk);
 s_bErrAirPressureNotOk S= NOT(s_bStaAirPressureOk);
 s_bErrCabinetTemperatureNotOk S= NOT(s_bStaCabinetTemperatureOk);
 
-// Alarm Handlers ( config --> init() )
+//Alarm Handlers ( config --> init() )
 s_fbAlarmHandlerSafetyCrc(i_bStaActive := (I_nTwinSATE_ProjectCrc <> s_nVerified_Crc));
 s_fbAlarmHandlerSafetyNotOk(i_bStaActive := s_bErrSafetyNotOk);
 s_fbAlarmHandlerSafetyFbErr(i_bStaActive := s_bErrSafetyFbErr);
@@ -170,7 +170,7 @@ s_fbAlarmHandlerPowerPotentialGroup24VdcNotOk(i_bStaActive := s_bErrPowerPotenti
 s_fbAlarmHandlerAirPressureNotOk(i_bStaActive := s_bErrAirPressureNotOk);
 s_fbAlarmHandlerCabinetTemperatureNotOk(i_bStaActive := s_bErrCabinetTemperatureNotOk);
 
-// Reset Errors
+//Reset Errors
 s_bErrSafetyNotOk R= i_bCmdReset AND s_bStaSafetyOk;
 s_bErrSafetyFbErr R= i_bCmdReset AND NOT(s_bSafetyFbErr);
 s_bErrEstopInfeedPressed R= i_bCmdReset AND s_bEstopInfeedOk;
@@ -551,16 +551,16 @@ CASE i_eCtrlMode OF
 		;	//Cleaning control is not implemented, this could be a done in the future if neccesary
 END_CASE
 
-//AUTOMATIC-mode //////////////////////////////////////////////////////////////////////////////////
+//AUTOMATIC-mode///////////////////////////////////////////////////////////////////////////////////
 //..
 
-//MANUAL-mode /////////////////////////////////////////////////////////////////////////////////////
+//MANUAL-mode//////////////////////////////////////////////////////////////////////////////////////
 //..
 
-//MAINTENANCE-mode ////////////////////////////////////////////////////////////////////////////////
+//MAINTENANCE-mode/////////////////////////////////////////////////////////////////////////////////
 //..
 
-//IO-mode /////////////////////////////////////////////////////////////////////////////////////////
+//IO-mode//////////////////////////////////////////////////////////////////////////////////////////
 IF (i_eCtrlMode = E_CtrlMode.IO) AND (i_eCtrlState = E_CtrlState.RUNNING) THEN
 	s_bHmiForceOutputEnabled := TRUE;
 ELSE

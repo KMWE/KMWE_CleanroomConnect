@@ -21,28 +21,28 @@ VAR_INPUT
 END_VAR
 
 VAR
-	// Inputs
+	//Inputs
 	I_bEnable AT %I* : BOOL; //Enable from safety controller
 	I_bDetReferenceSwitch AT %I* : BOOL; //Reference-/home switch
 	I_bDetLimitSwitchPos AT %I* : BOOL; //Limit switch positive-/CW- direction
 	I_bDetLimitSwitchNeg AT %I* : BOOL; //Limit switch negative-/CCW- direction
 	
-	// Outputs
+	//Outputs
 	
-	// Interlocks
+	//Interlocks
 	s_bIclkPos : BOOL;
 	s_bIclkNeg : BOOL;
 	s_sInterlockedReasonPos : STRING; //External interlocked reason for clarifying reason
 	s_sInterlockedReasonNeg : STRING; //External interlocked reason for clarifying reason
 	
-	// Requests
+	//Requests
 	s_bReqNcStop : BOOL;
 	s_bReqNcReset : BOOL;
 	s_bReqNcHome : BOOL;
 	s_bReqNcJog : BOOL;
 	s_bReqNcMoveAbs : BOOL;
 	
-	// States
+	//States
 	s_bStaEnabled : BOOL;
 	s_bStaReferenceSwitch : BOOL;
 	s_bStaLimitSwitchPos : BOOL;
@@ -72,13 +72,13 @@ VAR
 	s_bError : BOOL; 
 	s_nErrorID : UDINT;
 	
-	// Setpoints
+	//Setpoints
 	s_fSetTargetPosition : LREAL;
 	
 	s_sCfgNegName : STRING(c_MAX_FB_NAME_LENGTH) := 'Neg.';
 	s_sCfgPosName : STRING(c_MAX_FB_NAME_LENGTH) := 'Pos.';
 	
-	// Alarms
+	//Alarms
 	s_fbAlarmHandlerDriveError : FB_AlarmHandler;
 	s_fbAlarmHandlerStartMotorNotAllowed : FB_AlarmHandler;
 	
@@ -92,7 +92,7 @@ VAR
 	s_wrnMotorPosInterlocked : BOOL;
 	s_wrnMotorNegInterlocked : BOOL;
 	
-	// NC-task function blocks
+	//NC-task function blocks
 	s_fbMcPower : Tc2_MC2.MC_Power;
 	s_fbMcReset : Tc2_MC2.MC_Reset;
 	s_fbMcHome : Tc2_MC2.MC_Home;
@@ -101,7 +101,7 @@ VAR
 	s_fbMcStop : Tc2_MC2.MC_Stop;
 	s_fOverride : LREAL := 100.0;
 	
-	// Hmi
+	//Hmi
 	s_stHmiData : ST_Servo_HMI;
 	s_bHmiInit : BOOL := FALSE;
 	
@@ -122,7 +122,7 @@ VAR
 	s_fbHmiLedAtPosition : FB_HmiLed;
 	s_fbHmiLedDriveError : FB_HmiLed;
 	
-	// Sequence
+	//Sequence
 	s_eSequence : E_SeqServo;
 	s_fbSeqControl : FB_SeqControl;
 	s_mcDirection : Tc2_MC2.MC_Direction;
@@ -163,10 +163,10 @@ IF NOT SUPER^._m_Alarms() THEN
 	RETURN;
 END_IF
 
-// Set error bits
+//Set error bits
 s_errDriveError := (i_bReqEnable AND s_bStaDriveError) AND NOT(i_bCmdReset);
 
-// Interlock warnings
+//Interlock warnings
 s_bPositiveDirection := (i_refAxis.NcToPlc.ActVelo > 0);
 
 IF s_bIclkPos AND NOT(s_bStaStandstill) AND s_bPositiveDirection THEN
@@ -191,7 +191,7 @@ ELSIF NOT(s_bIclkNeg) OR i_bCmdReset THEN
 	s_wrnMotorNegInterlocked := FALSE;
 END_IF
 
-// Alarm Handlers
+//Alarm Handlers
 s_fbAlarmHandlerDriveError(
 	i_bStaActive := s_errDriveError,
 	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Drive - has error: ', UDINT_TO_STRING(i_refAxis.NcToPlc.ErrorCode))) );
@@ -213,11 +213,11 @@ s_fbAlarmHandlerLimitPositiveReached(
 s_fbAlarmHandlerLimitNegativeReached(
 	i_bStaActive := NOT(s_bStaLimitSwitchNeg));
 	
-// Alarm collector
+//Alarm collector
 s_bStaError :=
 	s_fbAlarmHandlerDriveError.q_bStaActive;
 	
-// Warning collector
+//Warning collector
 s_bStaWarning :=
 	s_fbAlarmHandlerMotorPosInterlocked.q_bStaActive
 	OR s_fbAlarmHandlerMotorNegInterlocked.q_bStaActive
@@ -599,7 +599,7 @@ IF NOT SUPER^._m_Init() THEN
 END_IF
 
 //Alarm Config
-// Alarm Handlers
+//Alarm Handlers
 s_fbAlarmHandlerDriveError.i_eAlarmLevel := E_AlarmLevel.Alarm;
 
 s_fbAlarmHandlerMotorPosInterlocked.i_eAlarmLevel := E_AlarmLevel.Warning;
@@ -722,7 +722,7 @@ IF NOT(s_bStaEnabled) AND (i_eCtrlMode = E_CtrlMode.MAINTENANCE) THEN
 ELSIF NOT(s_bStaLimitSwitchPos) THEN  
 	s_sInterlockedReasonPos := CONCAT('Limit-switch ', s_sCfgPosName);
 ELSE
-	;// Else, allow external to write
+	;//Else, allow external to write
 END_IF
 
 //Local reasons, first
@@ -731,7 +731,7 @@ IF NOT(s_bStaEnabled) AND (i_eCtrlMode = E_CtrlMode.MAINTENANCE) THEN
 ELSIF NOT(s_bStaLimitSwitchNeg) THEN
 	s_sInterlockedReasonNeg := CONCAT('Limit-switch ', s_sCfgNegName);
 ELSE
-	;// Else, allow external to write
+	;//Else, allow external to write
 END_IF
 
 _m_Inputs := TRUE;

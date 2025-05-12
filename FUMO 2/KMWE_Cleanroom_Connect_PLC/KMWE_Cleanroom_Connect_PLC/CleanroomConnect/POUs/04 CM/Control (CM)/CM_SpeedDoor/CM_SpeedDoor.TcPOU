@@ -16,40 +16,40 @@ VAR_INPUT
 END_VAR
 
 VAR
-	// Inputs
-	I_bStaDoorIsOpened AT %I* : BOOL; // Door is opened
-	I_bStaDoorIsClosed AT %I* : BOOL; // Door is closed
-	I_bStaControllerIsReady AT %I* : BOOL; // Controller is ready (no error)
+	//Inputs
+	I_bStaDoorIsOpened AT %I* : BOOL; //Door is opened
+	I_bStaDoorIsClosed AT %I* : BOOL; //Door is closed
+	I_bStaControllerIsReady AT %I* : BOOL; //Controller is ready (no error)
 	
-	// Outputs
-	Q_bCmdOpen AT %Q* : BOOL; // Command to open door
-	Q_bCmdClose AT %Q* : BOOL; // Command to close door
-	Q_bCmdReset AT %Q* : BOOL; // Command to reset door (controller)
+	//Outputs
+	Q_bCmdOpen AT %Q* : BOOL; //Command to open door
+	Q_bCmdClose AT %Q* : BOOL; //Command to close door
+	Q_bCmdReset AT %Q* : BOOL; //Command to reset door (controller)
 	
-	// Force outputs (IO-test functions)
+	//Force outputs (IO-test functions)
 	s_fbForceCmdReset : FB_ForceOutput;
 	s_fbForceCmdOpen : FB_ForceOutput;
 	s_fbForceCmdClose : FB_ForceOutput;
 	
-	// Interlocks
+	//Interlocks
 	s_sInterlockedReasonOpen : STRING(GVL.g_MAX_LEN_INTERLOCK_REASON); //External interlocked reason for clarifying reason
 	s_sInterlockedReasonClose : STRING(GVL.g_MAX_LEN_INTERLOCK_REASON); //External interlocked reason for clarifying reason
 	
-	// Interlocks
+	//Interlocks
 	s_bIclkOpen : BOOL;
 	s_bIclkClose : BOOL;
 	
-	// Requests
+	//Requests
 	s_bReqClose : BOOL;
 	s_bReqOpen : BOOL;
 	s_bReqReset : BOOL;
 	
-	// Commands
+	//Commands
 	s_bCmdClose : BOOL;
 	s_bCmdOpen : BOOL;
 	s_bCmdReset : BOOL;
 	
-	// States
+	//States
 	s_bStaDoorIsClosed : BOOL;
 	s_bStaDoorIsClosing : BOOL;
 	s_bStaDoorIsOpened : BOOL;
@@ -61,7 +61,7 @@ VAR
 	s_sCfgCloseName : STRING(c_MAX_FB_NAME_LENGTH) := 'Close';
 	s_sCfgOpenName : STRING(c_MAX_FB_NAME_LENGTH) := 'Open';
 	
-	// Alarms	
+	//Alarms
 	s_fbAlarmHandlerDoorController : FB_AlarmHandler;
 	s_fbAlarmHandlerOpeningTimeout : FB_AlarmHandler;
 	s_fbAlarmHandlerClosingTimeout : FB_AlarmHandler;
@@ -73,7 +73,7 @@ VAR
 	s_errOpeningTimeout : BOOL;
 	s_errClosingTimeout : BOOL;
 	
-	// Timers
+	//Timers
 	s_tofResetPulse : TOF;
 	s_tonOpeningTimeout : TON;
 	s_tonClosingTimeout : TON;
@@ -113,7 +113,7 @@ IF NOT SUPER^._m_Alarms() THEN
 	RETURN;
 END_IF
 
-// Timeout (timers)
+//Timeout (timers)
 s_tonOpeningTimeout(
 	IN := i_bReqEnable AND s_bReqOpen AND NOT(s_bStaDoorIsOpened),
 	PT := i_stSettings.tDoorOpeningTimeout );
@@ -122,12 +122,12 @@ s_tonClosingTimeout(
 	IN := i_bReqEnable AND s_bReqClose AND NOT(s_bStaDoorIsClosed),
 	PT := i_stSettings.tDoorClosingTimeout );
 	
-// Set error bits
+//Set error bits
 s_errDoorController := i_bReqEnable AND (s_bStaDoorControllerError OR s_errDoorController) AND NOT(i_bCmdReset);
 s_errOpeningTimeout := (s_tonOpeningTimeout.Q OR s_errOpeningTimeout) AND NOT(i_bCmdReset);
 s_errClosingTimeout := (s_tonClosingTimeout.Q OR s_errClosingTimeout) AND NOT(i_bCmdReset);
 
-// Alarm Handlers
+//Alarm Handlers
 s_fbAlarmHandlerDoorController(
 	i_bStaActive := s_errDoorController);
 	
@@ -137,7 +137,7 @@ s_fbAlarmHandlerOpeningTimeout(
 s_fbAlarmHandlerClosingTimeout(
 	i_bStaActive := s_errClosingTimeout);
 	
-// Alarm collector
+//Alarm collector
 s_bStaError :=
 	s_fbAlarmHandlerDoorController.q_bStaActive
 	OR s_fbAlarmHandlerOpeningTimeout.q_bStaActive
@@ -159,7 +159,7 @@ IF NOT SUPER^._m_Devices() THEN
 	RETURN;
 END_IF
 
-// Reset request
+//Reset request
 IF s_bStaDoorIsOpened THEN
 	s_bReqOpen := FALSE;
 ELSIF s_bStaDoorIsClosed THEN
@@ -384,7 +384,7 @@ IF __ISVALIDREF(i_ref_eCtrlState) THEN
 	END_IF
 END_IF
 
-// Generate reset pulse for resetting speeddoor controller (via IO)
+//Generate reset pulse for resetting speeddoor controller (via IO)
 s_tofResetPulse(
 	IN := (i_bCmdReset AND s_bStaDoorControllerError) OR s_bReqReset,
 	PT := i_stSettings.tResetPulseDuration);

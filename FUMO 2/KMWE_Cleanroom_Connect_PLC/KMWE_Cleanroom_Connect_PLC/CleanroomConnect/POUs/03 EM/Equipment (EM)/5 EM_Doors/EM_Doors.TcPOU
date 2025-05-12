@@ -12,7 +12,7 @@ VAR_INPUT
 	
 	i_bStaInfeedSealed : BOOL;
 	
-	// External interlocks (from outside this EM)
+	//External interlocks (from outside this EM)
 	i_fbExtIlckOuterDoorOpen : FB_Interlock;
 	i_fbExtIlckOuterDoorClose : FB_Interlock;
 	
@@ -79,7 +79,7 @@ VAR
 	s_eSeqDoors : E_SeqDoors;
 	s_fbSeqDoorsControl : FB_SeqControl;
 	
-	// Interlocks
+	//Interlocks
 	s_bIlckOuterDoorToClose : BOOL := TRUE;
 	s_bIlckOuterDoorToOpen : BOOL := TRUE;
 	
@@ -161,7 +161,7 @@ END_IF
 		i_bStaActive := i_bReqEnable AND s_bWrnOuterDoorNoAllowedToOpen,
 		i_eAlarmLevel := E_AlarmLevel.Warning,
 		i_sAlarmText := 'Outer Cabin Door Not Allowed To Open');
-	
+		
 	s_fbAlarmHandlerOuterDoorNoAllowedToClose(
 		i_bStaActive := i_bReqEnable AND s_bWrnOuterDoorNoAllowedToClose,
 		i_eAlarmLevel := E_AlarmLevel.Warning,
@@ -171,22 +171,22 @@ END_IF
 		i_bStaActive := i_bReqEnable AND s_bWrnInnerDoorNoAllowedToOpen,
 		i_eAlarmLevel := E_AlarmLevel.Warning,
 		i_sAlarmText := 'Inner Cabin Door Not Allowed To Open');
-	
+		
 	s_fbAlarmHandlerInnerDoorNoAllowedToClose(
 		i_bStaActive := i_bReqEnable AND s_bWrnInnerDoorNoAllowedToClose,
 		i_eAlarmLevel := E_AlarmLevel.Warning,
 		i_sAlarmText := 'Inner Cabin Door Not Allowed To Close');
-	
+		
 //++	s_fbAlarmHandlerCleanroomDoorNoAllowedToRelease(
 //++		i_bStaActive := i_bReqEnable AND s_bWrnCleanroomDoorNoAllowedToRelease,
 //++		i_eAlarmLevel := E_AlarmLevel.Warning,
 //++		i_sAlarmText := 'Cleanroom Door Not Allowed To Release/Open');
-	
+		
 //++	s_fbAlarmHandlerCleanroomDoorNoAllowedToLock(
 //++		i_bStaActive := i_bReqEnable AND s_bWrnCleanroomDoorNoAllowedToLock,
 //++		i_eAlarmLevel := E_AlarmLevel.Warning,
 //++		i_sAlarmText := 'Cleanroom Door Not Allowed To Lock');
-	
+		
 	//Reset error/warning bits
 	IF i_bCmdReset THEN
 		s_bWrnOuterDoorNoAllowedToOpen := FALSE;
@@ -223,10 +223,10 @@ _m_SeqDoors();
 VAR_INPUT
 	i_refReason : REFERENCE TO STRING;
 END_VAR
-	]]></Declaration>
+]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -236,7 +236,7 @@ IF s_bIlckInnerDoorToClose THEN
 	s_bErrCmdNotAllowed := TRUE;
 ELSE
 	i_refReason := '-';
-	_m_CmdCloseInnerDoor := TRUE;	
+	_m_CmdCloseInnerDoor := TRUE;
 END_IF
 ]]></ST>
       </Implementation>
@@ -246,10 +246,10 @@ END_IF
 VAR_INPUT
 	i_refReason : REFERENCE TO STRING;
 END_VAR
-	]]></Declaration>
+]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -259,7 +259,7 @@ IF s_bIlckOuterDoorToClose THEN
 	s_bErrCmdNotAllowed := TRUE;
 ELSE
 	i_refReason := '-';
-	_m_CmdCloseOuterDoor := TRUE;	
+	_m_CmdCloseOuterDoor := TRUE;
 END_IF
 ]]></ST>
       </Implementation>
@@ -269,10 +269,10 @@ END_IF
 VAR_INPUT
 	i_refReason : REFERENCE TO STRING;
 END_VAR
-	]]></Declaration>
+]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -282,7 +282,7 @@ IF s_bIlckInnerDoorToOpen THEN
 	s_bErrCmdNotAllowed := TRUE;
 ELSE
 	i_refReason := '-';
-	_m_CmdOpenInnerDoor := TRUE;	
+	_m_CmdOpenInnerDoor := TRUE;
 END_IF
 ]]></ST>
       </Implementation>
@@ -292,10 +292,10 @@ END_IF
 VAR_INPUT
 	i_refReason : REFERENCE TO STRING;
 END_VAR
-	]]></Declaration>
+]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -305,7 +305,7 @@ IF s_bIlckOuterDoorToOpen THEN
 	s_bErrCmdNotAllowed := TRUE;
 ELSE
 	i_refReason := '-';
-	_m_CmdOpenOuterDoor := TRUE;	
+	_m_CmdOpenOuterDoor := TRUE;
 END_IF
 ]]></ST>
       </Implementation>
@@ -324,15 +324,15 @@ s_cmOuterCabinDoor(
 	i_eCtrlMode := i_eCtrlMode,
 	i_ref_eCtrlState := i_eCtrlState,
 	i_bCmdReset := i_bCmdReset,
-	i_bIclkOpen := s_bIlckOuterDoorToOpen AND NOT(s_bOverruleInterlocks), 
+	i_bIclkOpen := s_bIlckOuterDoorToOpen AND NOT(s_bOverruleInterlocks),
 	i_bIclkClose := s_bIlckOuterDoorToClose AND NOT(s_bOverruleInterlocks));
-
+	
 s_cmInnerCabinDoor(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
 	i_ref_eCtrlState := i_eCtrlState,
 	i_bCmdReset := i_bCmdReset,
-	i_bIclkOpen := s_bIlckInnerDoorToOpen AND NOT(s_bOverruleInterlocks), 
+	i_bIclkOpen := s_bIlckInnerDoorToOpen AND NOT(s_bOverruleInterlocks),
 	i_bIclkClose := s_bIlckInnerDoorToClose AND NOT(s_bOverruleInterlocks));
 	
 //++s_cmCleanroomDoor(
@@ -353,7 +353,7 @@ s_bStaInnerDoorOpened := s_cmInnerCabinDoor.p_bStaIsOpened;
 //++s_bStaCleanroomDoorOpened := NOT(s_cmCleanroomDoor.p_bStaDoorIsClosed);
 
 s_bStaError := s_cmOuterCabinDoor.p_bStaError OR s_cmInnerCabinDoor.p_bStaError; (* OR s_cmCleanroomDoor.p_bStaError;*)
-	
+
 _m_Devices := TRUE;
 ]]></ST>
       </Implementation>
@@ -375,7 +375,7 @@ s_fbHmiBtnOpenOuterDoor();
 
 s_fbHmiBtnCloseInnerDoor();
 s_fbHmiBtnOpenInnerDoor();
-	
+
 //++s_fbHmiBtnApplyLockCleanroomDoor();;
 //++s_fbHmiBtnReleaseLockCleanroomDoor();
 
@@ -385,7 +385,7 @@ s_fbHmiLedOuterDoorOpened(i_bStaLed := s_bStaOuterDoorOpened);
 
 s_fbHmiLedInnerDoorClosed(i_bStaLed := s_bStaInnerDoorClosed);
 s_fbHmiLedInnerDoorOpened(i_bStaLed := s_bStaInnerDoorOpened);
-	
+
 //++s_fbHmiLedCleanDoorClosed(i_bStaLed := s_bStaCleanroomDoorClosed);
 //++s_fbHmiLedCleanDoorOpened(i_bStaLed := s_bStaCleanroomDoorOpened);
 //++s_fbHmiLedCleanroomDoorLocked(i_bStaLed := s_bStaCleanroomLockApplied);
@@ -430,9 +430,9 @@ s_cmInnerCabinDoor.p_sCfgCloseName := 'Close';
 //++s_cmCleanroomDoor.i_stSettings.tReleasingLockTimeout := T#3S;
 //++{warning '#TODO: Dot we need to added configuration parameters? Seperate struct or via settings or dedicateed variables'}
 
-// Waarschijnlijk is het toch beter om de interlock uitsluited extern te verzamelen. 
-// Denk bijvoorbeeld aan de situatie dat er een box gedocked is (outer door is dan open),
-// de claenroom deur mag in die sitiuatie geopende worden
+//Waarschijnlijk is het toch beter om de interlock uitsluited extern te verzamelen.
+//Denk bijvoorbeeld aan de situatie dat er een box gedocked is (outer door is dan open),
+//de claenroom deur mag in die sitiuatie geopende worden
 
 //Interlock strings
 //Outer Cabin Door
@@ -456,46 +456,46 @@ s_fbAlarmHandlerOuterDoorNoAllowedToOpen.i_eAlarmLevel := E_AlarmLevel.Warning;
 s_fbAlarmHandlerOuterDoorNoAllowedToOpen.i_sAlarmText := 'Outer Cabin Door Not Allowed To Open';
 s_fbAlarmHandlerOuterDoorNoAllowedToClose.i_eAlarmLevel := E_AlarmLevel.Warning;
 s_fbAlarmHandlerOuterDoorNoAllowedToClose.i_sAlarmText := 'Outer Cabin Door Not Allowed To Close';
-		
+
 s_fbAlarmHandlerInnerDoorNoAllowedToOpen.i_eAlarmLevel := E_AlarmLevel.Warning;
 s_fbAlarmHandlerInnerDoorNoAllowedToOpen.i_sAlarmText := 'Inner Cabin Door Not Allowed To Open';
 s_fbAlarmHandlerInnerDoorNoAllowedToClose.i_eAlarmLevel := E_AlarmLevel.Warning;
 s_fbAlarmHandlerInnerDoorNoAllowedToClose.i_sAlarmText := 'Inner Cabin Door Not Allowed To Close';
-	
+
 //Hmi
-	s_fbHmiBtnReset.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnReset.p_bStaVisible := FALSE;
-	s_fbHmiBtnReset.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnReset.p_sBtnText := 'Reset';
-	
-	s_fbHmiBtnCloseOuterDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnCloseOuterDoor.p_bStaVisible := FALSE;
-	s_fbHmiBtnCloseOuterDoor.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnCloseOuterDoor.p_sBtnText := 'Close Outer Cabin Door';
-	
-	s_fbHmiBtnOpenOuterDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnOpenOuterDoor.p_bStaVisible := FALSE;
-	s_fbHmiBtnOpenOuterDoor.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnOpenOuterDoor.p_sBtnText := 'Open Outer Cabin Door';
-	
-	s_fbHmiBtnCloseInnerDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnCloseInnerDoor.p_bStaVisible := FALSE;
-	s_fbHmiBtnCloseInnerDoor.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnCloseInnerDoor.p_sBtnText := 'Close Inner Cabin Door';
-	
-	s_fbHmiBtnOpenInnerDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnOpenInnerDoor.p_bStaVisible := FALSE;
-	s_fbHmiBtnOpenInnerDoor.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnOpenInnerDoor.p_sBtnText := 'Open Inner Cabin Door';
-	
+s_fbHmiBtnReset.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnReset.p_bStaVisible := FALSE;
+s_fbHmiBtnReset.p_bStaEnabled := FALSE;
+s_fbHmiBtnReset.p_sBtnText := 'Reset';
+
+s_fbHmiBtnCloseOuterDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnCloseOuterDoor.p_bStaVisible := FALSE;
+s_fbHmiBtnCloseOuterDoor.p_bStaEnabled := FALSE;
+s_fbHmiBtnCloseOuterDoor.p_sBtnText := 'Close Outer Cabin Door';
+
+s_fbHmiBtnOpenOuterDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnOpenOuterDoor.p_bStaVisible := FALSE;
+s_fbHmiBtnOpenOuterDoor.p_bStaEnabled := FALSE;
+s_fbHmiBtnOpenOuterDoor.p_sBtnText := 'Open Outer Cabin Door';
+
+s_fbHmiBtnCloseInnerDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnCloseInnerDoor.p_bStaVisible := FALSE;
+s_fbHmiBtnCloseInnerDoor.p_bStaEnabled := FALSE;
+s_fbHmiBtnCloseInnerDoor.p_sBtnText := 'Close Inner Cabin Door';
+
+s_fbHmiBtnOpenInnerDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnOpenInnerDoor.p_bStaVisible := FALSE;
+s_fbHmiBtnOpenInnerDoor.p_bStaEnabled := FALSE;
+s_fbHmiBtnOpenInnerDoor.p_sBtnText := 'Open Inner Cabin Door';
+
 //++	s_fbHmiBtnApplyLockCleanroomDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 //++	s_fbHmiBtnApplyLockCleanroomDoor.p_bStaVisible := FALSE;
-//++	s_fbHmiBtnApplyLockCleanroomDoor.p_bStaEnabled := FALSE;		
+//++	s_fbHmiBtnApplyLockCleanroomDoor.p_bStaEnabled := FALSE;
 //++	s_fbHmiBtnApplyLockCleanroomDoor.p_sBtnText := 'Lock Cleanroom Door';
 	
 //++	s_fbHmiBtnReleaseLockCleanroomDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 //++	s_fbHmiBtnReleaseLockCleanroomDoor.p_bStaVisible := FALSE;
-//++	s_fbHmiBtnReleaseLockCleanroomDoor.p_bStaEnabled := FALSE;		
+//++	s_fbHmiBtnReleaseLockCleanroomDoor.p_bStaEnabled := FALSE;
 //++	s_fbHmiBtnReleaseLockCleanroomDoor.p_sBtnText := 'Release Cleanroom Door';
 
 	s_fbHmiLedOuterDoorClosed.p_bStaVisible := FALSE;
@@ -522,7 +522,8 @@ s_fbAlarmHandlerInnerDoorNoAllowedToClose.i_sAlarmText := 'Inner Cabin Door Not 
 //++	s_fbHmiLedCleanroomDoorReleased.p_bStaVisible := FALSE;
 //++	s_fbHmiLedCleanroomDoorReleased.p_sToHmiDescriptionLed := 'Cleanroom Door Released';
  
-_m_Init := TRUE;]]></ST>
+_m_Init := TRUE;
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_Inputs" Id="{08e3676c-19d2-4657-8762-4d7303d85c82}" FolderPath="Base\">
@@ -644,41 +645,41 @@ _m_Params := TRUE;
       <Implementation>
         <ST><![CDATA[
 s_fbSeqDoorsControl(
-	i_nSeqStep := s_eSeqDoors, 
-	i_sStepName := TO_STRING(s_eSeqDoors), 
+	i_nSeqStep := s_eSeqDoors,
+	i_sStepName := TO_STRING(s_eSeqDoors),
 	i_bCmdReset := i_bCmdReset
-					AND (s_eSeqDoors = E_SeqTransport.ERROR) // Only reset/resume sequencer from ERROR state
+					AND (s_eSeqDoors = E_SeqTransport.ERROR) //Only reset/resume sequencer from ERROR state
 					AND NOT(s_cmOuterCabinDoor.p_bStaError)
 					AND NOT(s_cmInnerCabinDoor.p_bStaError)
-					AND i_bReqEnable, 
+					AND i_bReqEnable,
 	i_bStaError := s_bStaError OR NOT(i_bReqEnable));
 
 //Abort operation (go to stop)
 IF (i_eCtrlState = E_CtrlState.STOPPING) THEN
 	s_eSeqDoors := E_SeqDoors.STOP;
-END_IF	
-	
+END_IF
+
 CASE s_eSeqDoors OF
 	
 	E_SeqTransport.IDLE:
 		IF (i_eCtrlState = E_CtrlState.IDLE) THEN
 			s_eSeqDoors := E_SeqDoors.START;
 		END_IF
-
-//START////////////////////////////////////////////////////////////////////////////////////////////			
+	
+//START////////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqTransport.START:
 		IF s_fbSeqDoorsControl.q_bStaEntry THEN
 			s_cmOuterCabinDoor.m_Stop();
 			s_cmInnerCabinDoor.m_Stop();
 			//--s_bCmdHold := FALSE;
-			s_sMessage := '***';
-		END_IF		
-	
+			s_sMessage := 'start';
+		END_IF
+		
 		IF i_eCtrlState = E_CtrlState.RUNNING THEN
 			s_eSeqDoors := E_SeqDoors.READY;
 		END_IF
 
-//READY////////////////////////////////////////////////////////////////////////////////////////////		
+//READY////////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqTransport.READY:
 		IF s_fbSeqDoorsControl.q_bStaEntry THEN
 			;
@@ -689,17 +690,17 @@ CASE s_eSeqDoors OF
 		END_IF
 		
 		IF s_bReqOpenOuterDoor THEN
-
+		
 			IF _m_CmdOpenOuterDoor(i_refReason := s_sMessage) THEN
 				s_eSeqDoors := E_SeqDoors.OPEN_OUTER_DOOR;
 			ELSE //If failed (command not allowed): the message will be written with the interlock reason
 				;
 			END_IF
-
+			
 //--			s_bReqOpenOuterDoor := FALSE;
 			
 		ELSIF s_bReqCloseOuterDoor THEN
-
+			
 			IF _m_CmdCloseOuterDoor(i_refReason := s_sMessage) THEN
 				s_eSeqDoors := E_SeqDoors.CLOSE_OUTER_DOOR;
 			ELSE //If failed (command not allowed): the message will be written with the interlock reason
@@ -707,11 +708,11 @@ CASE s_eSeqDoors OF
 				//--s_bErrCmdNotAllowed := TRUE;
 				;
 			END_IF
-
-//--			s_bReqCloseOuterDoor := FALSE;	
+			
+//--			s_bReqCloseOuterDoor := FALSE;
 			
 		ELSIF s_bReqOpenInnerDoor THEN
-
+			
 			IF _m_CmdOpenInnerDoor(i_refReason := s_sMessage) THEN
 				s_eSeqDoors := E_SeqDoors.OPEN_INNER_DOOR;
 			ELSE //If failed (command not allowed): the message will be written with the interlock reason
@@ -719,11 +720,11 @@ CASE s_eSeqDoors OF
 				//--s_bErrCmdNotAllowed := TRUE;
 				;
 			END_IF
-
+				
 //--			s_bReqOpenInnerDoor := FALSE;
 			
 		ELSIF s_bReqCloseInnerDoor THEN
-
+			
 			IF _m_CmdCloseInnerDoor(i_refReason := s_sMessage) THEN
 				s_eSeqDoors := E_SeqDoors.CLOSE_INNER_DOOR;
 			ELSE //If failed (command not allowed): the message will be written with the interlock reason
@@ -731,27 +732,27 @@ CASE s_eSeqDoors OF
 				//--s_bErrCmdNotAllowed := TRUE;
 				;
 			END_IF
-
+			
 //--			s_bReqCloseInnerDoor := FALSE;
-		
+			
 		END_IF
-
-//OPEN_OUTER_DOOR//////////////////////////////////////////////////////////////////////////////////		
+		
+//OPEN_OUTER_DOOR//////////////////////////////////////////////////////////////////////////////////
 	E_SeqDoors.OPEN_OUTER_DOOR:
 		IF s_fbSeqDoorsControl.q_bStaEntry THEN
-			s_cmOuterCabinDoor.m_Open();		
+			s_cmOuterCabinDoor.m_Open();
 		END_IF
 		
 		IF s_cmOuterCabinDoor.p_bStaIsOpened THEN
 			s_eSeqDoors := E_SeqDoors.READY;
-		//ELSE 
+		//ELSE
 			//In case of error, fb sequener will force to ERROR --> reset --> START
 		END_IF
 		
-//CLOSE_OUTER_DOOR//////////////////////////////////////////////////////////////////////////////////		
+//CLOSE_OUTER_DOOR//////////////////////////////////////////////////////////////////////////////////
 	E_SeqDoors.CLOSE_OUTER_DOOR:
 		IF s_fbSeqDoorsControl.q_bStaEntry THEN
-			s_cmOuterCabinDoor.m_Close();		
+			s_cmOuterCabinDoor.m_Close();
 		END_IF
 		
 		IF s_cmOuterCabinDoor.p_bStaIsClosed THEN
@@ -759,11 +760,11 @@ CASE s_eSeqDoors OF
 		//ELSE 
 			//In case of error, fb sequener will force to ERROR --> reset --> START
 		END_IF
-
-//OPEN_INNER_DOOR//////////////////////////////////////////////////////////////////////////////////		
+		
+//OPEN_INNER_DOOR//////////////////////////////////////////////////////////////////////////////////
 	E_SeqDoors.OPEN_INNER_DOOR:
 		IF s_fbSeqDoorsControl.q_bStaEntry THEN
-			s_cmInnerCabinDoor.m_Open();		
+			s_cmInnerCabinDoor.m_Open();
 		END_IF
 		
 		IF s_cmInnerCabinDoor.p_bStaIsOpened THEN
@@ -771,20 +772,20 @@ CASE s_eSeqDoors OF
 		//ELSE 
 			//In case of error, fb sequener will force to ERROR --> reset --> START
 		END_IF
-
-//CLOSE_INNER_DOOR//////////////////////////////////////////////////////////////////////////////////		
+		
+//CLOSE_INNER_DOOR//////////////////////////////////////////////////////////////////////////////////
 	E_SeqDoors.CLOSE_INNER_DOOR:
 		IF s_fbSeqDoorsControl.q_bStaEntry THEN
-			s_cmInnerCabinDoor.m_Close();		
+			s_cmInnerCabinDoor.m_Close();
 		END_IF
 		
 		IF s_cmInnerCabinDoor.p_bStaIsClosed THEN
 			s_eSeqDoors := E_SeqDoors.READY;
-		//ELSE 
+		//ELSE
 			//In case of error, fb sequener will force to ERROR --> reset --> START
-		END_IF		
-
-//STOP		
+		END_IF
+		
+//STOP
 	E_SeqDoors.STOP:
 		IF s_fbSeqDoorsControl.q_bStaEntry THEN
 			s_cmOuterCabinDoor.m_Stop();
@@ -804,7 +805,8 @@ END_CASE
 s_bReqOpenOuterDoor := FALSE;
 s_bReqCloseOuterDoor := FALSE;
 s_bReqOpenInnerDoor := FALSE;
-s_bReqCloseInnerDoor := FALSE;]]></ST>
+s_bReqCloseInnerDoor := FALSE;
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="m_ApplyLockCleanroomDoor" Id="{4499f858-1c66-4e87-af48-eca8a833d6ae}">
@@ -812,7 +814,7 @@ s_bReqCloseInnerDoor := FALSE;]]></ST>
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -842,7 +844,6 @@ IF NOT SUPER^.m_Main() THEN
 END_IF
 
 CASE i_eCtrlMode OF
-
 	E_CtrlMode.IDLE:
 		s_eSeqDoors := E_SeqDoors.IDLE;
 	
@@ -857,7 +858,7 @@ CASE i_eCtrlMode OF
 			s_bReqCloseOuterDoor := s_fbHmiBtnCloseOuterDoor.p_osrBtnPress;
 			s_bReqOpenInnerDoor := s_fbHmiBtnOpenInnerDoor.p_osrBtnPress;
 			s_bReqCloseInnerDoor := s_fbHmiBtnCloseInnerDoor.p_osrBtnPress;
-		END_IF	
+		END_IF
 		
 		_m_AutomaticControl();
 		
@@ -874,12 +875,12 @@ CASE i_eCtrlMode OF
 	E_CtrlMode.CLEANING:
 		//Execute cleaning control (cleaning  specific functionalities)
 		;	//Cleaning control is not implemented, this could be a done in the future if neccesary
-			
+		
 END_CASE
 
-//AUTOMATIC-mode //////////////////////////////////////////////////////////////////////////////////
+//AUTOMATIC-mode///////////////////////////////////////////////////////////////////////////////////
 
-//MANUAL-mode /////////////////////////////////////////////////////////////////////////////////////
+//MANUAL-mode//////////////////////////////////////////////////////////////////////////////////////
 
 //Buttons visibility
 IF (i_eCtrlMode = E_CtrlMode.MANUAL) THEN
@@ -896,21 +897,20 @@ END_IF
 
 //Buttons enabling
 IF i_bReqEnable AND (i_eCtrlMode = E_CtrlMode.MANUAL) AND (i_eCtrlState = E_CtrlState.RUNNING) THEN
-
 	//Outer Cabin Door
-	s_fbHmiBtnCloseOuterDoor.p_bStaEnabled := 
+	s_fbHmiBtnCloseOuterDoor.p_bStaEnabled :=
 		NOT(s_bIlckOuterDoorToClose);
-
+	
 	s_fbHmiBtnOpenOuterDoor.p_bStaEnabled :=
 		NOT(s_bIlckOuterDoorToOpen);
 	
 	//Inner Cabin Door
-	s_fbHmiBtnCloseInnerDoor.p_bStaEnabled := 
+	s_fbHmiBtnCloseInnerDoor.p_bStaEnabled :=
 		NOT(s_bIlckInnerDoorToClose);
-
+	
 	s_fbHmiBtnOpenInnerDoor.p_bStaEnabled :=
 		NOT(s_bIlckInnerDoorToOpen);
-
+	
 ELSE
 	s_fbHmiBtnCloseOuterDoor.p_bStaEnabled := FALSE;
 	s_fbHmiBtnOpenOuterDoor.p_bStaEnabled := FALSE;
@@ -918,15 +918,15 @@ ELSE
 	s_fbHmiBtnOpenInnerDoor.p_bStaEnabled := FALSE;
 END_IF
 
-//MAINTENANCE-mode ////////////////////////////////////////////////////////////////////////////////
+//MAINTENANCE-mode/////////////////////////////////////////////////////////////////////////////////
 
 //Stopping control modules
-IF (i_eCtrlMode = E_CtrlMode.MAINTENANCE) AND (i_eCtrlState = E_CtrlState.STOPPING) THEN 
+IF (i_eCtrlMode = E_CtrlMode.MAINTENANCE) AND (i_eCtrlState = E_CtrlState.STOPPING) THEN
 	s_cmOuterCabinDoor.m_Stop();
 	s_cmInnerCabinDoor.m_Stop();
 END_IF
 
-//IO-mode /////////////////////////////////////////////////////////////////////////////////////////
+//IO-mode//////////////////////////////////////////////////////////////////////////////////////////
 IF (i_eCtrlMode = E_CtrlMode.IO) AND (i_eCtrlState = E_CtrlState.RUNNING) THEN
 	s_bHmiForceOutputEnabled := TRUE;
 ELSE
@@ -942,7 +942,7 @@ m_Main := TRUE;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -967,7 +967,7 @@ END_IF
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -999,7 +999,7 @@ END_IF
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -1031,7 +1031,7 @@ END_IF
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -1063,7 +1063,7 @@ END_IF
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -1086,7 +1086,7 @@ ELSE
 	s_bWrnOuterDoorNoAllowedToOpen := TRUE;
 	
 	m_ReqOpenOuterDoor := FALSE;
-END_IF	
+END_IF
 *)]]></ST>
       </Implementation>
     </Method>

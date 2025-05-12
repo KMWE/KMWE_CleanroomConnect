@@ -3,10 +3,6 @@
   <POU Name="CM_MoviTrac_B" Id="{fa9a3c02-fb9e-4f0d-9f6f-ce091f3d4d49}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK CM_MoviTrac_B EXTENDS CM_Base //??IMPLEMENTS I_Motor_base
 
-VAR CONSTANT
-	c_MAX_FB_NAME_LENGTH : USINT := 8; //Maximum feedback-name length
-END_VAR
-
 VAR_INPUT
 	i_stSettings : ST_SettingsMOVITRAC_B_WithBrake;
 	i_bIclkForward : BOOL := TRUE; //TRUE = interlocked
@@ -71,8 +67,8 @@ VAR
 	//Setpoints
 	s_fTargetSpeed : LREAL; //Target speed [mm/s]
 	
-	s_sCfgBckName : STRING(c_MAX_FB_NAME_LENGTH) := 'Backward';
-	s_sCfgFwdName : STRING(c_MAX_FB_NAME_LENGTH) := 'Foreward';
+	s_sCfgBckName : STRING(GVL.g_MAX_FB_NAME_LENGTH) := 'Backward';
+	s_sCfgFwdName : STRING(GVL.g_MAX_FB_NAME_LENGTH) := 'Foreward';
 	
 	//Timers
 	s_tofResetPulse : TOF;
@@ -850,7 +846,7 @@ p_bStaWarning := s_bStaWarning;
     </Property>
     <Property Name="p_sCfgBckName" Id="{19f555b7-20e2-4435-9117-e965ccb52cf2}" FolderPath="Properties\">
       <Declaration><![CDATA[{attribute 'monitoring':='call'}
-PROPERTY PUBLIC p_sCfgBckName : STRING(c_MAX_FB_NAME_LENGTH)]]></Declaration>
+PROPERTY PUBLIC p_sCfgBckName : STRING(GVL.g_MAX_FB_NAME_LENGTH)]]></Declaration>
       <Get Name="Get" Id="{ab7986d5-4082-4d1a-8e7c-b4e3325490d4}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
@@ -870,7 +866,7 @@ s_sCfgBckName := p_sCfgBckName;
     </Property>
     <Property Name="p_sCfgFwdName" Id="{d5b7673b-6566-4d61-9351-7ebf9adab4b5}" FolderPath="Properties\">
       <Declaration><![CDATA[{attribute 'monitoring':='call'}
-PROPERTY PUBLIC p_sCfgFwdName : STRING(c_MAX_FB_NAME_LENGTH)]]></Declaration>
+PROPERTY PUBLIC p_sCfgFwdName : STRING(GVL.g_MAX_FB_NAME_LENGTH)]]></Declaration>
       <Get Name="Get" Id="{23baf8b9-78eb-4ff1-8f8a-467330adb995}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>

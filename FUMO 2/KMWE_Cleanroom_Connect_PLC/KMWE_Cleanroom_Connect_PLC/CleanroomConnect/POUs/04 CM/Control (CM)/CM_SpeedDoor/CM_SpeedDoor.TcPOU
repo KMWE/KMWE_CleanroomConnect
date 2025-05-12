@@ -3,10 +3,6 @@
   <POU Name="CM_SpeedDoor" Id="{e2ac819d-166f-472e-93dd-5b172f53ac70}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK CM_SpeedDoor EXTENDS CM_Base IMPLEMENTS I_Door
 
-VAR CONSTANT
-	c_MAX_FB_NAME_LENGTH : USINT := 8; //Maximum feedback-name length
-END_VAR
-
 VAR_INPUT
 	i_stSettings : ST_SettingsSpeedDoor;
 	i_bIclkOpen : BOOL := TRUE; //TRUE = interlocked
@@ -58,8 +54,8 @@ VAR
 	s_bStaDoorReset : BOOL;
 	s_bStaWarning : BOOL;
 	
-	s_sCfgCloseName : STRING(c_MAX_FB_NAME_LENGTH) := 'Close';
-	s_sCfgOpenName : STRING(c_MAX_FB_NAME_LENGTH) := 'Open';
+	s_sCfgCloseName : STRING(GVL.g_MAX_FB_NAME_LENGTH) := 'Close';
+	s_sCfgOpenName : STRING(GVL.g_MAX_FB_NAME_LENGTH) := 'Open';
 	
 	//Alarms
 	s_fbAlarmHandlerDoorController : FB_AlarmHandler;
@@ -356,8 +352,12 @@ IF NOT SUPER^._m_Inputs() THEN
 	RETURN;
 END_IF
 
+s_bStaDoorIsOpening := s_bReqOpen AND NOT(s_bStaDoorIsOpened);
 s_bStaDoorIsOpened := I_bStaDoorIsOpened;
+
+s_bStaDoorIsClosing := s_bReqClose AND NOT(s_bStaDoorIsClosed);
 s_bStaDoorIsClosed := I_bStaDoorIsClosed;
+
 s_bStaDoorControllerError := NOT(I_bStaControllerIsReady);
 
 s_bIclkOpen := i_bIclkOpen;
@@ -491,7 +491,7 @@ PROPERTY PUBLIC p_bStaIsClosing : BOOL]]></Declaration>
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaIsClosing := s_bReqClose AND NOT(s_bStaDoorIsClosed);
+p_bStaIsClosing := s_bStaDoorIsClosing;
 ]]></ST>
         </Implementation>
       </Get>
@@ -515,7 +515,7 @@ PROPERTY PUBLIC p_bStaIsOpening : BOOL]]></Declaration>
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaIsOpening := s_bReqOpen AND NOT(s_bStaDoorIsOpened);
+p_bStaIsOpening := s_bStaDoorIsOpening;
 ]]></ST>
         </Implementation>
       </Get>
@@ -534,7 +534,7 @@ p_bStaWarning := s_bStaWarning;
     </Property>
     <Property Name="p_sCfgCloseName" Id="{80ab1272-73fd-45ad-bf31-7e9fa30658f0}" FolderPath="Properties\">
       <Declaration><![CDATA[{attribute 'monitoring':='call'}
-PROPERTY PUBLIC p_sCfgCloseName : STRING(c_MAX_FB_NAME_LENGTH)]]></Declaration>
+PROPERTY PUBLIC p_sCfgCloseName : STRING(GVL.g_MAX_FB_NAME_LENGTH)]]></Declaration>
       <Get Name="Get" Id="{f0653086-7e22-40cb-8e24-398094960daf}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
@@ -554,7 +554,7 @@ s_sCfgCloseName := p_sCfgCloseName;
     </Property>
     <Property Name="p_sCfgOpenName" Id="{b54758bf-ffc1-4a6a-9bf6-cd30b163ccb6}" FolderPath="Properties\">
       <Declaration><![CDATA[{attribute 'monitoring':='call'}
-PROPERTY PUBLIC p_sCfgOpenName : STRING(c_MAX_FB_NAME_LENGTH)]]></Declaration>
+PROPERTY PUBLIC p_sCfgOpenName : STRING(GVL.g_MAX_FB_NAME_LENGTH)]]></Declaration>
       <Get Name="Get" Id="{9822d540-29ce-43e4-a1f6-91fc1bbfa3e8}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>

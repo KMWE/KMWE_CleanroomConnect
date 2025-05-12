@@ -3,10 +3,6 @@
   <POU Name="CM_Servo" Id="{29dfdbae-f16d-497a-b262-2baea4701d77}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK CM_Servo EXTENDS CM_Base //??IMPLEMENTS I_Servo
 
-VAR CONSTANT
-	c_MAX_FB_NAME_LENGTH : USINT := 8; //Maximum feedback-name length
-END_VAR
-
 VAR_INPUT
 	i_refAxis : REFERENCE TO Tc2_MC2.AXIS_REF;
 	
@@ -75,8 +71,8 @@ VAR
 	//Setpoints
 	s_fSetTargetPosition : LREAL;
 	
-	s_sCfgNegName : STRING(c_MAX_FB_NAME_LENGTH) := 'Neg.';
-	s_sCfgPosName : STRING(c_MAX_FB_NAME_LENGTH) := 'Pos.';
+	s_sCfgNegName : STRING(GVL.g_MAX_FB_NAME_LENGTH) := 'Neg.';
+	s_sCfgPosName : STRING(GVL.g_MAX_FB_NAME_LENGTH) := 'Pos.';
 	
 	//Alarms
 	s_fbAlarmHandlerDriveError : FB_AlarmHandler;
@@ -1037,7 +1033,7 @@ p_nErrorID := s_nErrorID;
     </Property>
     <Property Name="p_sCfgNegName" Id="{aa36f5b3-fa04-4b6b-b87e-efe9098fc635}" FolderPath="Properties\">
       <Declaration><![CDATA[{attribute 'monitoring':='call'}
-PROPERTY PUBLIC p_sCfgNegName : STRING(c_MAX_FB_NAME_LENGTH)]]></Declaration>
+PROPERTY PUBLIC p_sCfgNegName : STRING(GVL.g_MAX_FB_NAME_LENGTH)]]></Declaration>
       <Get Name="Get" Id="{84146f27-461f-4593-9e06-9197e9531159}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
@@ -1057,7 +1053,7 @@ s_sCfgNegName := p_sCfgNegName;
     </Property>
     <Property Name="p_sCfgPosName" Id="{8b63f952-8768-4156-b96b-7566ac473745}" FolderPath="Properties\">
       <Declaration><![CDATA[{attribute 'monitoring':='call'}
-PROPERTY PUBLIC p_sCfgPosName : STRING(c_MAX_FB_NAME_LENGTH)]]></Declaration>
+PROPERTY PUBLIC p_sCfgPosName : STRING(GVL.g_MAX_FB_NAME_LENGTH)]]></Declaration>
       <Get Name="Get" Id="{5c00dee9-b5e4-49d8-9f02-588f77b0776c}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>

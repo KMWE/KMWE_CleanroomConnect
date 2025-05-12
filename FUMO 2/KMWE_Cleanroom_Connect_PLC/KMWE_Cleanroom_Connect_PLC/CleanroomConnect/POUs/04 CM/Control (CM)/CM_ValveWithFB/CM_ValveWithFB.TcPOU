@@ -3,10 +3,6 @@
   <POU Name="CM_ValveWithFB" Id="{4f71df3e-1fa0-4b1d-8b52-9d243bcf380c}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK CM_ValveWithFB EXTENDS CM_Base IMPLEMENTS I_Valve
 
-VAR CONSTANT
-	c_MAX_FB_NAME_LENGTH : USINT := 8; //Maximum feedback-name length
-END_VAR
-
 VAR_INPUT
 	i_stSettings : ST_SettingsValveWithFB;
 	i_bIclkOn : BOOL := TRUE; //TRUE = interlocked
@@ -48,8 +44,8 @@ VAR
 	s_bCfgReverseValve : BOOL; //FALSE = NORMAL, TRUE = INVERTED
 	s_bCfgBiStableValve : BOOL; //FALSE = MONO, TRUE = BI
 	
-	s_sCfgOffName : STRING(c_MAX_FB_NAME_LENGTH) := 'Off';
-	s_sCfgOnName : STRING(c_MAX_FB_NAME_LENGTH) := 'On';
+	s_sCfgOffName : STRING(GVL.g_MAX_FB_NAME_LENGTH) := 'Off';
+	s_sCfgOnName : STRING(GVL.g_MAX_FB_NAME_LENGTH) := 'On';
 	
 	//Alarms
 	s_fbAlarmHandlerFeedbackOnTimeout : FB_AlarmHandler;
@@ -538,7 +534,7 @@ p_bStaWarning := s_bStaWarning;
     </Property>
     <Property Name="p_sCfgOffName" Id="{f418ae27-f959-4304-85c4-104b64a50df4}" FolderPath="Properties\">
       <Declaration><![CDATA[{attribute 'monitoring':='call'}
-PROPERTY PUBLIC p_sCfgOffName : STRING(c_MAX_FB_NAME_LENGTH)]]></Declaration>
+PROPERTY PUBLIC p_sCfgOffName : STRING(GVL.g_MAX_FB_NAME_LENGTH)]]></Declaration>
       <Get Name="Get" Id="{28fd5ffe-2b72-43f5-88ae-e40f3bfa6846}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
@@ -558,7 +554,7 @@ s_sCfgOffName := p_sCfgOffName;
     </Property>
     <Property Name="p_sCfgOnName" Id="{88d202a5-e290-4299-93dc-cb3bbe0abb1e}" FolderPath="Properties\">
       <Declaration><![CDATA[{attribute 'monitoring':='call'}
-PROPERTY PUBLIC p_sCfgOnName : STRING(c_MAX_FB_NAME_LENGTH)]]></Declaration>
+PROPERTY PUBLIC p_sCfgOnName : STRING(GVL.g_MAX_FB_NAME_LENGTH)]]></Declaration>
       <Get Name="Get" Id="{84f9ce99-13fe-417b-81f7-ed591430456a}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>

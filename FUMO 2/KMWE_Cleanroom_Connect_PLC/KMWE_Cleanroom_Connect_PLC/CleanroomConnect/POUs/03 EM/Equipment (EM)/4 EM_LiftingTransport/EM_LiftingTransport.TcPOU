@@ -101,7 +101,6 @@ VAR
 	s_bStaAtIdlePosition : BOOL := FALSE;
 	s_bStaTrolleyPickedFromTB : BOOL := FALSE;
 	s_bStaTrolleyPlacedInTB : BOOL := FALSE;
-	s_bStaTrolleyOnSystem : BOOL := FALSE;
 	
 	//Interlockes
 	s_bIlckLiftUp : BOOL := TRUE;
@@ -694,8 +693,11 @@ IF NOT SUPER^._m_Inputs() THEN
 	RETURN;
 END_IF
 
-//Convert Lift and Transport Unit positons to actula translations
+//Convert Lift and Transport Unit positons to actual translations
+s_fSetLiftPosition := LIMIT(c_fMIN_LIFT_TARGET, s_fSetLiftPosition, c_fMAX_LIFT_TARGET);
 s_cmLift.p_fSetTargetPosition := _m_ConvLiftHeightToSpindPos(s_fSetLiftPosition);
+
+s_fSetTransportPosition := LIMIT(c_fMIN_TRANSPORT_TARGET, s_fSetTransportPosition, c_fMAX_TRANSPORT_TARGET);
 s_cmTransport.p_fSetTargetPosition := s_fSetTransportPosition * 0.5;
 
 //Interlocks

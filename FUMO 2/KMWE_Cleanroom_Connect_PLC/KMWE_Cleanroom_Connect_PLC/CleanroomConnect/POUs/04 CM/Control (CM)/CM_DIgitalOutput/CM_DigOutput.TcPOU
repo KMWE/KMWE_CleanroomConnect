@@ -3,10 +3,6 @@
   <POU Name="CM_DigOutput" Id="{f6926334-60a3-431a-8319-95017baa0ee2}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK CM_DigOutput EXTENDS CM_Base
 
-VAR CONSTANT
-	c_MAX_FB_NAME_LENGTH : USINT := 8; //Maximum feedback-name length
-END_VAR
-
 VAR_INPUT
 	i_stSettings : ST_DigOutputSettings;
 	i_bIclkOn : BOOL := TRUE; //TRUE = interlocked
@@ -43,8 +39,8 @@ VAR
 	{attribute: 'Hide'}
 	s_bCfgReverseOutput : BOOL; //FALSE = NORMAL, TRUE = INVERTED
 	
-	s_sCfgOffName : STRING(c_MAX_FB_NAME_LENGTH) := 'Off';
-	s_sCfgOnName : STRING(c_MAX_FB_NAME_LENGTH) := 'On';
+	s_sCfgOffName : STRING(GVL.g_MAX_FB_NAME_LENGTH) := 'Off';
+	s_sCfgOnName : STRING(GVL.g_MAX_FB_NAME_LENGTH) := 'On';
 	
 	//Alarms
 	//none
@@ -324,7 +320,7 @@ p_bStaWarning := s_bStaWarning;
     </Property>
     <Property Name="p_sCfgOffName" Id="{bad7f86a-ed76-4fc4-b545-49766b502d8b}" FolderPath="Properties\">
       <Declaration><![CDATA[{attribute 'monitoring':='call'}
-PROPERTY PUBLIC p_sCfgOffName : STRING(c_MAX_FB_NAME_LENGTH)]]></Declaration>
+PROPERTY PUBLIC p_sCfgOffName : STRING(GVL.g_MAX_FB_NAME_LENGTH)]]></Declaration>
       <Get Name="Get" Id="{ecdac295-9e12-42e1-af6a-1438fc907ace}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
@@ -344,7 +340,7 @@ s_sCfgOffName := p_sCfgOffName;
     </Property>
     <Property Name="p_sCfgOnName" Id="{c262eae1-1891-4a87-a7b5-82eb7fd3a41c}" FolderPath="Properties\">
       <Declaration><![CDATA[{attribute 'monitoring':='call'}
-PROPERTY PUBLIC p_sCfgOnName : STRING(c_MAX_FB_NAME_LENGTH)]]></Declaration>
+PROPERTY PUBLIC p_sCfgOnName : STRING(GVL.g_MAX_FB_NAME_LENGTH)]]></Declaration>
       <Get Name="Get" Id="{f4a2f70f-caa9-4957-9aec-eceee385e016}">
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>

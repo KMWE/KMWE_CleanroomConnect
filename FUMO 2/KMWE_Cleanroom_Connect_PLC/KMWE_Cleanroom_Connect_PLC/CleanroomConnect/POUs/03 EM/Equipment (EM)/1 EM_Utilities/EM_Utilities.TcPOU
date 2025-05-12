@@ -104,22 +104,20 @@ VAR
 	Q_bCmdErrAck AT %Q* : BOOL; //Reset errors in TwinSAFE logic
 	Q_bCmdRestartSafety AT %Q* : BOOL; //Restart/reset safety blocks (reset Estop-safety-relay)
 	
-	{warning '#TODO: Nog beslissen of dat deze statussen ook weergegeven moeten gaan worden op het HMI'}
-	// En moeten er dan alarmen voor worden aangemaakt met name voor welke noodstop knop er is ingedrukt
 	I_bStaTwinSAFE_Estop1ChA AT %I* : BOOL;
 	I_bStaTwinSAFE_Estop1ChB AT %I* : BOOL;
 	I_bStaTwinSAFE_Estop2ChA AT %I* : BOOL;
 	I_bStaTwinSAFE_Estop2ChB AT %I* : BOOL;
 	I_bStaTwinSAFE_FbPalletConveyorSTO AT %I* : BOOL;
 	I_bStaTwinSAFE_FbPotGrpValvesOFF AT %I* : BOOL;
-//?	I_bStaTwinSAFE_FbTransportUnitSTO AT %I* : BOOL;
+//??	I_bStaTwinSAFE_FbTransportUnitSTO AT %I* : BOOL;
 	I_bStaTwinSAFE_DoorGuardCleanroomChA AT %I* : BOOL;
 	I_bStaTwinSAFE_DoorGuardCleanroomChB AT %I* : BOOL;
 	
 	I_nTwinSATE_ProjectCrc AT %I* : WORD; //Cyclic Redundancy Check (check if TwinSAFE code is still the same)
 	s_nVerified_Crc : WORD := 16#0000;
 	
-	{warning '#TODO: Het zou beter zijn om dit onder te brengen in de onderstaande control modules'}
+	{warning '#IO-MODE: Het zou beter zijn om dit onder te brengen in de onderstaande control modules'}
 	s_bHmiForceOutputEnabled : BOOL;
 END_VAR
 
@@ -617,7 +615,7 @@ PROPERTY PUBLIC p_bStsPowerOk : BOOL]]></Declaration>
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStsPowerOk := 
+p_bStsPowerOk :=
 	s_bStsPower400VacOk
 	AND s_bStsPower230VacOk
 	AND s_bStsPower230VacSocketsOk

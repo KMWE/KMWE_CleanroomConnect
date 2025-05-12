@@ -100,7 +100,7 @@ VAR
 	s_fbHmiBtnPlaceTrolleyInTB : FB_HmiBtn;
 //------------------------------------------//
 
-	{warning '#TODO: Het zou beter zijn om dit onder te brengen in de onderstaande control modules'}
+	{warning '#IO-MODE: Het zou beter zijn om dit onder te brengen in de onderstaande control modules'}
 	s_bHmiForceOutputEnabled : BOOL;
 	s_bHmiForceOutputRGBEnabled : BOOL;
 	s_bHmiForceOutputWEnabled : BOOL;
@@ -161,7 +161,7 @@ END_IF
 	//YELLOW = Equalize (flash = busy, on = done)
 	//GREEN = Accessible (flash = request pending, on = done)
 	//WHITE = Worklight
-{warning '#TODO: FUMO3 add conditions for air status in the future'}
+{warning '#FUMO3: Add conditions for air status in the future'}
 
 //Docking / Undocking
 
@@ -229,9 +229,11 @@ s_cmDoorLockCleanroomDoor.i_bAllowUnlock :=
 	GVL_Modules.g_emLiftingTransport.p_bStaAtIdlePosition
 	AND (GVL_Modules.g_emDockingInterface.p_bStaDocked
 		OR GVL_Modules.g_emDockingInterface.p_bStaOuterDoorClosed);
-	{warning '#TODO: FUMO3 - Activate conditions below in future'}
-//++	AND (GVL_Modules.g_emAirTreatment.p_bStaClean
-//++		AND GVL_Modules.g_emAirTreatment.p_bStaEqualized);
+	{warning '#FUMO3: Activate conditions below in future'}
+	(*
+	AND (GVL_Modules.g_emAirTreatment.p_bStaClean
+		AND GVL_Modules.g_emAirTreatment.p_bStaEqualized);
+	*)
 
 s_cmDoorLockCleanroomDoor(
 	i_bReqEnable := TRUE,
@@ -885,7 +887,7 @@ GVL_Modules.g_emPalletConveyor(
 s_fbIlckHandlerClampsToClose.i_stInterlockList.arr_Interlocks[0].bState := FALSE; //none
 s_fbIlckHandlerClampsToClose();
 
-{warning '#TODO' ADD cleanroom door status}
+{warning '#FUMO3: ADD cleanroom door status}
 s_fbIlckHandlerClampsToOpen.i_stInterlockList.arr_Interlocks[0].bState := FALSE; //++ NOT(GVL_Modules.g_emDoors.p_bStaCleanroomDoorNotClosedAndLocked);
 s_fbIlckHandlerClampsToOpen();
 
@@ -1175,7 +1177,7 @@ CASE s_eSequence OF
 		IF s_fbSeqControl.q_tmStepTime > T#5S THEN
 			s_eCabinAirState := E_AirState.CLEAN;
 			
-			{warning '#TODO: Add future/FUMO3 code'}
+			{warning '#FUMO3: Add future/FUMO3 code'}
 			IF ( (s_eReqAction = E_ReqAction.INBOUND) (*OR (s_eReqAction = E_ReqAction.PICK_TROLLEY_FROM_TB)*) ) THEN
 				s_eSequence := E_SeqCleanroomConnect.PICK_TROLLEY_FROM_TB;
 			ELSIF ( (s_eReqAction = E_ReqAction.OUTBOUND) OR (s_eReqAction = E_ReqAction.PLACE_TROLLEY_IN_TB) ) THEN
@@ -1268,8 +1270,7 @@ CASE s_eSequence OF
 		
 	//OPEN CLEANROOM DOOR//////////////////////////////////////////////////////////////////////////
 	E_SeqCleanroomConnect.OPEN_CLEANROOM_DOOR:
-		;
-		{warning '#TODO: Add future/FUMO3 code'}
+		{warning '#FUMO3: Add future/FUMO3 code'}
 		IF ( (s_eReqAction = E_ReqAction.INBOUND) (*OR (s_eReqAction = E_ReqAction.PICK_TROLLEY_FROM_TB)*) ) THEN
 			s_eSequence := E_SeqCleanroomConnect.CLOSE_CLEANROOM_DOOR;
 		ELSIF (s_eReqAction = E_ReqAction.OUTBOUND) THEN
@@ -1279,7 +1280,7 @@ CASE s_eSequence OF
 	//CLOSE CLEANROOM DOOR/////////////////////////////////////////////////////////////////////////
 	E_SeqCleanroomConnect.CLOSE_CLEANROOM_DOOR:
 		;
-		{warning '#TODO: Add future/FUMO3 code'}
+		{warning '#FUMO3: Add future/FUMO3 code'}
 		s_eSequence := E_SeqCleanroomConnect.CLOSE_INNER_TB_DOOR;
 		
 	//STOP/////////////////////////////////////////////////////////////////////////////////////////

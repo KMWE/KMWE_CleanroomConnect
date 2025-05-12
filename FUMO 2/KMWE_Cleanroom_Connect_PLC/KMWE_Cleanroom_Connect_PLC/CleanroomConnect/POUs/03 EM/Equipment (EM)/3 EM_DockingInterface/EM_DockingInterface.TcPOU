@@ -9,13 +9,13 @@ END_VAR
 VAR_INPUT
 	i_ref_stSettings : REFERENCE TO ST_SettingsDockingInterface;
 	
-	{warning '#TODO: Option can be deleted when cabin doors are commisioned'}
+	{warning '#FUMO3: Option can be deleted when cabin doors are commisioned'}
 	i_bTestDisableCabinDoors : BOOL;
 	i_bStaTbAtDockingPosition : BOOL;
 	i_bStaDockingPositionFree : BOOL;
 	
 	// External interlocks (from outside this EM)
-	{warning '#TODO: Delete unused (not written extrnal) inputs'}
+	{warning '#TODO: Delete unused (not written external) inputs'}
 	i_stExtIlckDockingClampsToClose : ST_Interlock;
 	i_stExtIlckDockingClampsToOpen : ST_Interlock;
 	i_stExtIlckUnlockingPinsToLock : ST_Interlock;		//-- NOT_USED
@@ -228,10 +228,9 @@ VAR
 	s_fbHmiLedInnerDoorClosed : FB_HmiLed;
 	s_fbHmiLedInnerDoorOpened : FB_HmiLed;
 	
-	{warning '#TODO: Het zou beter zijn om dit onder te brengen in de onderstaande control modules'}
+	{warning '#IO-MODE: Het zou beter zijn om dit onder te brengen in de onderstaande control modules'}
 	s_bHmiForceOutputEnabled : BOOL;
 	
-	s_bTmpDisableUnlockingPinsRelease : BOOL;
 END_VAR
 
 VAR PERSISTENT //Variables below will be returned during: Power Cycle, Active Configuration, Download, Cold Restart
@@ -333,7 +332,7 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-{warning '#TOOD: Interlock is blocking TO start buttone in MANUAL-Mode'}
+{warning '#TOOD: Interlock is blocking to start buttone in MANUAL-Mode'}
 IF s_bIlckDoorOpenerToClose AND FALSE THEN
 	i_refReason := CONCAT('Cmd To Close Inner Door: Interlocked - ', s_fbIlckHandlerDoorOpenerClose.p_sReason);
 	_m_CmdCloseInnerDoor := FALSE;
@@ -380,7 +379,7 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-{warning '#TOOD: Interlock is blocking TO start buttone in MANUAL-Mode'}
+{warning '#TOOD: Interlock is blocking to start buttone in MANUAL-Mode'}
 IF s_bIlckDoorShutterToOpen AND FALSE THEN
 	i_refReason := CONCAT('Cmd To Open Inner Door: Interlocked - ', s_fbIlckHandlerDoorShutterOpen.p_sReason);
 	_m_CmdOpenInnerDoor := FALSE;
@@ -1340,7 +1339,7 @@ CASE s_eSequence OF
 		IF s_bReqOpenInnerDoor THEN
 			IF _m_CmdOpenInnerDoor(i_refReason := s_sMessage) THEN
 				
-				{warning '#DELETE: "Disabled Doors" option can be deleted, IF FUMO3 is build'}
+				{warning '#FUMO3: "Disabled Doors" option can be deleted, IF FUMO3 is build'}
 				IF i_bTestDisableCabinDoors THEN
 					s_eSequence := E_SeqDockingInterface.RELEASE_UNLOCKING_PINS;
 				ELSE
@@ -1371,14 +1370,7 @@ CASE s_eSequence OF
 		
 		IF s_cmDockingClampsUpper.m_Off() AND s_cmDockingClampsLower.m_Off()
 			AND (s_fbSeqControl.q_tmStepTime >= T#2S) THEN
-//--			IF s_cmDoorOpener.m_Off() THEN
-//--				IF s_cmDoorShutter.m_On() THEN
-//--					IF s_cmUnlockingPinUpper.m_Off() AND s_cmUnlockingPinLower.m_Off() THEN
-//--						s_eSeqDockingInterface := E_SeqDockingInterface.WAIT_FOR_TB_IN_PLACE;
-						s_eSequence := E_SeqDockingInterface.OPEN_OUTER_CABIN_DOOR;
-//--					END_IF
-//--				END_IF
-//--			END_IF
+				s_eSequence := E_SeqDockingInterface.OPEN_OUTER_CABIN_DOOR;
 		END_IF
 		
 	E_SeqDockingInterface.OPEN_OUTER_CABIN_DOOR:
@@ -1509,9 +1501,7 @@ CASE s_eSequence OF
 		
 	E_SeqDockingInterface.DOCK_TB_DONE:
 		IF s_fbSeqControl.q_bStaEntry THEN
-			{warning '#TODO: Nog goed bepalen waar dit moet plaatsvinden nu nog maar op een plek'}
-//--			s_bStaDocked := TRUE;
-//--			s_bStaUndocked := FALSE;
+			;
 		END_IF
 		
 		IF (s_fbSeqControl.q_tmStepTime > T#2S) THEN
@@ -1558,7 +1548,7 @@ CASE s_eSequence OF
 		
 		IF s_cmDockingClampsUpper.p_bStaIsOn AND s_cmDockingClampsLower.p_bStaIsOn THEN
 			
-			{warning '#DELETE: "Disabled Doors" option can be deleted, IF FUMO3 is build'}
+			{warning '#FUMO3: "Disabled Doors" option can be deleted, IF FUMO3 is build'}
 			IF i_bTestDisableCabinDoors THEN
 				s_eSequence := E_SeqDockingInterface.UNDOCK_TB_DONE;
 			ELSE
@@ -1578,9 +1568,7 @@ CASE s_eSequence OF
 		
 	E_SeqDockingInterface.UNDOCK_TB_DONE:
 		IF s_fbSeqControl.q_bStaEntry THEN
-			{warning '#TODO: Nog goed bepalen waar dit moet plaatsvinden nu nog maar op een plek'}
-//--			s_bStaDocked := FALSE;
-//--			s_bStaUndocked := TRUE;
+			;
 		END_IF
 		
 		IF (s_fbSeqControl.q_tmStepTime > T#2S) THEN
@@ -1598,25 +1586,17 @@ CASE s_eSequence OF
 		END_IF
 		
 	E_SeqDockingInterface.RELEASE_UNLOCKING_PINS:
-		{warning '#DELETE AFTER TESTING: Functionality to skip the control of unlocking pins can be removed if it is no longer needed'}
-		// Set value to TRUE to skip the release movemnt of the locking pins, if testing with test box.
-		IF NOT(s_bTmpDisableUnlockingPinsRelease) THEN
-			
-			IF s_fbSeqControl.q_bStaEntry THEN
-				s_cmUnlockingPinUpper.m_On();
-				s_cmUnlockingPinLower.m_On();
-			END_IF
-			
-			s_tonTimer.IN := s_cmUnlockingPinUpper.p_bStaIsOn AND s_cmUnlockingPinLower.p_bStaIsOn;
-			{warning #TODO: Nog beslissen wat te doen, trigger met entry OF METHOD RETURN?}
+		IF s_fbSeqControl.q_bStaEntry THEN
+			s_cmUnlockingPinUpper.m_On();
+			s_cmUnlockingPinLower.m_On();
+		END_IF
+		
+		s_tonTimer.IN := s_cmUnlockingPinUpper.p_bStaIsOn AND s_cmUnlockingPinLower.p_bStaIsOn;
+		{warning #TODO: Nog beslissen wat te doen, trigger met entry OF METHOD RETURN?}
 //--			s_tonTimer.IN := s_cmUnlockingPinUpper.m_On() AND s_cmUnlockingPinLower.m_On();
-			
-			IF s_tonTimer.ET > i_ref_stSettings.tDelayNextStep THEN
-				s_tonTimer.IN := FALSE;
-				s_eSequence := E_SeqDockingInterface.OPEN_DOOR_SHUTTER;
-			END_IF
-			
-		ELSE
+		
+		IF s_tonTimer.ET > i_ref_stSettings.tDelayNextStep THEN
+			s_tonTimer.IN := FALSE;
 			s_eSequence := E_SeqDockingInterface.OPEN_DOOR_SHUTTER;
 		END_IF
 		
@@ -1723,16 +1703,12 @@ CASE s_eSequence OF
 				AND s_ePreviousStep < E_SeqDockingInterface.ERROR THEN
 				s_eResumeStep := s_ePreviousStep;
 			ELSE
-				{warning '#TODO: Is this still the correct way to go'}
 				s_eResumeStep := E_SeqDockingInterface.PREPARE_READY;
 			END_IF
 			
 			//Error response: During "Dock TB"
 			IF i_ref_stSettings.bOpenClampsAfterClosingTimeout AND_THEN
-				(s_ePreviousStep >= E_SeqDockingInterface.DOCK_CLOSE_DOCKING_CLAMPS AND s_ePreviousStep <= E_SeqDockingInterface.COMPRESS_UPPER_SEAL)
-				//--(s_ePreviousStep = E_SeqDockingInterface.CLOSE_ALL_DOCKING_CLAMPS
-				//--OR s_ePreviousStep = E_SeqDockingInterface.CLOSE_LOWER_DOCKING_CLAMPS
-				//--OR s_ePreviousStep = E_SeqDockingInterface.CLOSE_UPPER_DOCKING_CLAMPS)
+				((s_ePreviousStep >= E_SeqDockingInterface.DOCK_CLOSE_DOCKING_CLAMPS) AND (s_ePreviousStep <= E_SeqDockingInterface.COMPRESS_UPPER_SEAL))
 				AND (s_cmDockingClampsUpper.p_bStaError OR s_cmDockingClampsLower.p_bStaError)
 				THEN
 				//Open all docking clamps if closing on low pressure has failed
@@ -1770,7 +1746,6 @@ CASE s_eSequence OF
 		
 END_CASE
 
-{warning '#TODO: remove on all other location where THIS is written TO FALSE, it is non nessecary as it wil BY cylically be written FASLE here'}
 s_bReqDockTB := FALSE;
 s_bReqUndockTB := FALSE;
 s_bReqOpenInnerDoor := FALSE;
@@ -1818,10 +1793,9 @@ CASE i_eCtrlMode OF
 		IF i_eCtrlState = E_CtrlState.RUNNING THEN
 			s_eSequence := E_SeqDockingInterface.IDLE;
 			
-		ELSIF i_eCtrlState = E_CtrlState.IDLE THEN	
-			{warning '#TODO: Added stop() for DoorOpener and DoorShutter'}
-			s_cmDoorOpener.m_Stop();
-			//??s_cmDoorShutter.m_Stop();
+		ELSIF i_eCtrlState = E_CtrlState.IDLE THEN
+			s_cmDoorOpener.m_Stop(); //keep last position
+			s_cmDoorShutter.m_Stop(); //keep last position
 			
 		END_IF
 		; 	//Maintenance control is implemented in lower-layer control modules

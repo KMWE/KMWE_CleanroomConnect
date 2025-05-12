@@ -13,7 +13,10 @@ VAR_INPUT
 	
 	i_eCtrlState : E_CtrlState;
 	
-//??	i_bSta2HC_Active : BOOL;
+	{warning '#2HC: Consider adding 2-hand-control later'}
+	(*
+	i_bSta2HC_Active : BOOL;
+	*)
 END_VAR
 
 VAR_OUTPUT
@@ -139,7 +142,7 @@ VAR
 	s_fbHmiLedCenteringIdle	: FB_HmiLed;
 	s_fbHmiLedCenteringCenter : FB_HmiLed;
 	
-	{warning '#TODO: Het zou beter zijn om dit onder te brengen in de onderstaande control modules'}
+	{warning '#IO-MODE: Het zou beter zijn om dit onder te brengen in de onderstaande control modules'}
 	s_bHmiForceOutputEnabled : BOOL;
 	s_bHmiForceOutputStartEnabled : BOOL;
 	
@@ -708,13 +711,16 @@ CASE s_eSeqCentering OF
 			s_eSeqCentering := E_SeqCentering.AT_IDLE;
 		END_IF
 		
-		//??IF i_bSta2HC_Active THEN
-		//??	IF s_cmCenteringUnit.m_Off() THEN
-		//??	s_eSeqCentering := E_SeqCentering.AT_IDLE;
-		//??END_IF
-		//??ELSE
-		//??	s_cmCenteringUnit.m_Stop();
-		//??END_IF
+		{warning '#TODO: Consider adding 2-hand-control later'}
+		(*
+		IF i_bSta2HC_Active THEN
+			IF s_cmCenteringUnit.m_Off() THEN
+			s_eSeqCentering := E_SeqCentering.AT_IDLE;
+		END_IF
+		ELSE
+			s_cmCenteringUnit.m_Stop();
+		END_IF
+		*)
 		
 	E_SeqCentering.AT_IDLE:
 //--		IF s_fbSeqCenteringControl.q_tmStepTime > T#1S THEN
@@ -814,7 +820,10 @@ CASE s_eSequence OF
 		END_IF
 		
 		IF s_cmPalletConveyor.p_bStaMotorStopped AND_THEN NOT(s_cmPalletConveyor.p_bStaBrakeReleased) AND s_fbSeqControl.q_tmStepTime > T#1S THEN
-		//??	AND NOT(i_bSta2HC_Active) THEN
+			{warning '#2HC: Consider adding 2-hand-control later'}
+			(*
+			AND NOT(i_bSta2HC_Active) THEN
+			*)
 			
 			IF i_eCtrlState = E_CtrlState.RUNNING THEN
 				s_eSequence := E_SeqTransport.READY;
@@ -1069,7 +1078,7 @@ CASE i_eCtrlMode OF
 		//Execute manaual control (based on HMI buttons)
 		
 		//Store the selected action (so it could be rstart / resumed if two-hand-control is activated)
-		{warning '#TODO: Could be omitted if 2HCtrl is not used'}
+		{warning '#2HC: Could be omitted if 2HCtrl is not used'}
 		IF s_fbHmiBtnTB_ToInfeed.p_osrBtnPress THEN
 			s_eActionSelection := E_ActionSelection.MOVE_TO_INFEED;
 		ELSIF s_fbHmiBtnTB_ToCentering.p_osrBtnPress THEN
@@ -1086,11 +1095,14 @@ CASE i_eCtrlMode OF
 			s_bReqTB_ToCenter := s_fbHmiBtnTB_ToCentering.p_osrBtnPress;
 			s_bReqTB_ToDocking := s_fbHmiBtnTB_ToDocking.p_osrBtnPress;
 			s_bReqCenteringTB := s_fbHmiBtnTB_Centering.p_osrBtnPress;
-		
-		//??	s_bReqTB_ToInfeed := (eActionSelection = E_ActionSelection.MOVE_TO_INFEED) AND i_bSta2HC_Active;
-		//??	s_bReqTB_ToCenter := (eActionSelection = E_ActionSelection.MOVE_TO_CENTER) AND i_bSta2HC_Active;
-		//??	s_bReqTB_ToDocking := (eActionSelection = E_ActionSelection.MOVE_TO_DOCKING) AND i_bSta2HC_Active;
-		//??	s_bReqCenteringTB := (eActionSelection = E_ActionSelection.CENTER_TB) AND i_bSta2HC_Active;
+			
+			{warning '#2HC: Consider adding 2-hand-control later'}
+			(*
+			s_bReqTB_ToInfeed := (eActionSelection = E_ActionSelection.MOVE_TO_INFEED) AND i_bSta2HC_Active;
+			s_bReqTB_ToCenter := (eActionSelection = E_ActionSelection.MOVE_TO_CENTER) AND i_bSta2HC_Active;
+			s_bReqTB_ToDocking := (eActionSelection = E_ActionSelection.MOVE_TO_DOCKING) AND i_bSta2HC_Active;
+			s_bReqCenteringTB := (eActionSelection = E_ActionSelection.CENTER_TB) AND i_bSta2HC_Active;
+			*)
 		END_IF
 		
 		_m_Sequence();

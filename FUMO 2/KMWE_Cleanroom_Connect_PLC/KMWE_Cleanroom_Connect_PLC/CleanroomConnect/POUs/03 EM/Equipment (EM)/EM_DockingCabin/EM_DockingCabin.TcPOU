@@ -2,7 +2,7 @@
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
   <POU Name="EM_DockingCabin" Id="{ddb6504e-a47b-46ee-987c-d5bb3bc3434b}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK EM_DockingCabin EXTENDS EM_Base
-VAR CONSTANT 
+VAR CONSTANT
 	c_nResultDataSize : UINT := 20;
 END_VAR
 
@@ -14,40 +14,28 @@ VAR_INPUT
 END_VAR
 
 VAR
-//------------------------------------------//
-//Equipment Modules (sub equipment)
+	//Equipment Modules (sub equipment)
 	s_emDoors : EM_Doors;
 	s_emDockingInterface : EM_DockingInterface;
 	s_emAirTreatment : EM_AirTreatment;
-//------------------------------------------//
-
-//------------------------------------------//
-//Outputs
+	
+	//Outputs
 	//..
-
-//------------------------------------------//
-
-//Requests
+	
+	//Requests
 	s_bReqToDock : BOOL;
 	s_bReqToUndock : BOOL;
 	s_bReqToUnlockCleanroomDoor : BOOL;
 	
-//Status
+	//Status
 	s_bStaBoxAtPreDockPosition : BOOL;
 	s_bStaBoxAtDockPosition : BOOL;
 	s_bStaBoxRemovedFromDockPosition : BOOL;
 	
-//Properties
+	//Properties
 	
-//------------------------------------------//
-//Params
+	//Params
 	//Tool settings
-	s_fbParamToolHardwareNr : FB_HmiParamHandler;
-    s_fbParamToolSoftwareVersion : FB_HmiParamHandler;
-
-	s_fbParamName : FB_HmiParamHandler;
-	s_fbParamNumber : FB_HmiParamHandler;
-	s_fbParamRevision : FB_HmiParamHandler;
 	
 	//Product settings (Maybe)
 	s_fbParamTotalStroke : FB_HmiParamHandler;
@@ -60,18 +48,13 @@ VAR
 	s_fbParamRefItm : FB_HmiParamHandler;
 	s_fbParamRefCenterTpmPipe : FB_HmiParamHandler;
 	s_fbParamRefCpValve	: FB_HmiParamHandler;
-//------------------------------------------//
-
-//------------------------------------------//
-//Variables
+	
+	//Variables
 	s_eSequence : E_SeqDockingCabin;
 	s_ePrevStep : E_SeqDockingCabin;
 	s_fbSeqControl : FB_SeqControl;
 	
-//------------------------------------------//
-
-//------------------------------------------//
-//Sensor data
+	//Sensor data
 	s_aMagneticX						: ARRAY[0..c_nResultDataSize] OF LREAL;
 	s_aMagneticY						: ARRAY[0..c_nResultDataSize] OF LREAL;
 	s_aMagneticZ						: ARRAY[0..c_nResultDataSize] OF LREAL;
@@ -82,26 +65,15 @@ VAR
 	
 	s_aHmi_MagneticTest					: ARRAY[1..3,0..c_nResultDataSize] OF ST_POINT;
 	
-//	s_aHmi_ProbePositionZ				: ARRAY[1..1,1..GVL_Datalogging.c_nHmiLogSize] OF ST_POINT;
-//------------------------------------------//
-
-//------------------------------------------//
-//Alarms
+	//Alarms
 	
-	
-//------------------------------------------//
-
-//------------------------------------------//
-//Hmi
+	//Hmi
 	s_nToHmiStepNr						: INT;
 	s_nToHmiMaxStepNr					: INT;
 	s_sToHmiInstructionText				: T_MAXSTRING;
 	s_sToHmiProcedure					: T_MAXSTRING;
 	
 	s_fbHmiBtnReset						: FB_HmiBtn;
-	
-	
-//------------------------------------------//
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -196,75 +168,64 @@ s_emDockingInterface.i_stSettings := i_stSettings.stSettingsDockingInterface;
 s_emAirTreatment.i_stSettings := i_stSettings.stSettingsAirTrearment;
 
 //Equipment Module
-	
-//---------------------------------//	
 
-//----------------------------------//
-
-	
-//----------------------------------//	
 //Hmi
-	s_fbHmiBtnReset.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnReset.p_bStaVisible := FALSE;
-	s_fbHmiBtnReset.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnReset.p_sBtnText := 'Reset';
-	
-	s_fbHmiBtnCloseOuterDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnCloseOuterDoor.p_bStaVisible := FALSE;
-	s_fbHmiBtnCloseOuterDoor.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnCloseOuterDoor.p_sBtnText := 'Close Outer Door';
-	
-	s_fbHmiBtnOpenOuterDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnOpenOuterDoor.p_bStaVisible := FALSE;
-	s_fbHmiBtnOpenOuterDoor.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnOpenOuterDoor.p_sBtnText := 'Open Outer Door';
-	
-	s_fbHmiBtnApplyLockCleanroomDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnApplyLockCleanroomDoor.p_bStaVisible := FALSE;
-	s_fbHmiBtnApplyLockCleanroomDoor.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnApplyLockCleanroomDoor.p_sBtnText := 'Lock Cleanroom Door';
-	
-	s_fbHmiBtnReleaseLockCleanroomDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnReleaseLockCleanroomDoor.p_bStaVisible := FALSE;
-	s_fbHmiBtnReleaseLockCleanroomDoor.p_bStaEnabled := FALSE;		
-	s_fbHmiBtnReleaseLockCleanroomDoor.p_sBtnText := 'Release Cleanroom Door';
+s_fbHmiBtnReset.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnReset.p_bStaVisible := FALSE;
+s_fbHmiBtnReset.p_bStaEnabled := FALSE;
+s_fbHmiBtnReset.p_sBtnText := 'Reset';
 
-	s_fbHmiLedOuterDoorClosed.p_bStaVisible := FALSE;
-	s_fbHmiLedOuterDoorClosed.p_sToHmiDescriptionLed := 'Outer Door Closed';
-	
-	s_fbHmiLedOuterDoorOpened.p_bStaVisible := FALSE;
-	s_fbHmiLedOuterDoorOpened.p_sToHmiDescriptionLed := 'Outer Door Opened';
-	
-	s_fbHmiLedCleanDoorClosed.p_bStaVisible := FALSE;
-	s_fbHmiLedCleanDoorClosed.p_sToHmiDescriptionLed := 'Cleanroom Door Closed';
-	
-	s_fbHmiLedCleanDoorOpened.p_bStaVisible := FALSE;
-	s_fbHmiLedCleanDoorOpened.p_sToHmiDescriptionLed := 'Cleanroom Door Opened';
-	
-	s_fbHmiLedCleanroomDoorLocked.p_bStaVisible := FALSE;
-	s_fbHmiLedCleanroomDoorLocked.p_sToHmiDescriptionLed := 'Cleanroom Door Locked';
-	
-	s_fbHmiLedCleanroomDoorReleased.p_bStaVisible := FALSE;
-	s_fbHmiLedCleanroomDoorReleased.p_sToHmiDescriptionLed := 'Cleanroom Door Released';
+s_fbHmiBtnCloseOuterDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnCloseOuterDoor.p_bStaVisible := FALSE;
+s_fbHmiBtnCloseOuterDoor.p_bStaEnabled := FALSE;
+s_fbHmiBtnCloseOuterDoor.p_sBtnText := 'Close Outer Door';
+
+s_fbHmiBtnOpenOuterDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnOpenOuterDoor.p_bStaVisible := FALSE;
+s_fbHmiBtnOpenOuterDoor.p_bStaEnabled := FALSE;
+s_fbHmiBtnOpenOuterDoor.p_sBtnText := 'Open Outer Door';
+
+s_fbHmiBtnApplyLockCleanroomDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnApplyLockCleanroomDoor.p_bStaVisible := FALSE;
+s_fbHmiBtnApplyLockCleanroomDoor.p_bStaEnabled := FALSE;
+s_fbHmiBtnApplyLockCleanroomDoor.p_sBtnText := 'Lock Cleanroom Door';
+
+s_fbHmiBtnReleaseLockCleanroomDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnReleaseLockCleanroomDoor.p_bStaVisible := FALSE;
+s_fbHmiBtnReleaseLockCleanroomDoor.p_bStaEnabled := FALSE;
+s_fbHmiBtnReleaseLockCleanroomDoor.p_sBtnText := 'Release Cleanroom Door';
+
+s_fbHmiLedOuterDoorClosed.p_bStaVisible := FALSE;
+s_fbHmiLedOuterDoorClosed.p_sToHmiDescriptionLed := 'Outer Door Closed';
+
+s_fbHmiLedOuterDoorOpened.p_bStaVisible := FALSE;
+s_fbHmiLedOuterDoorOpened.p_sToHmiDescriptionLed := 'Outer Door Opened';
+
+s_fbHmiLedCleanDoorClosed.p_bStaVisible := FALSE;
+s_fbHmiLedCleanDoorClosed.p_sToHmiDescriptionLed := 'Cleanroom Door Closed';
+
+s_fbHmiLedCleanDoorOpened.p_bStaVisible := FALSE;
+s_fbHmiLedCleanDoorOpened.p_sToHmiDescriptionLed := 'Cleanroom Door Opened';
+
+s_fbHmiLedCleanroomDoorLocked.p_bStaVisible := FALSE;
+s_fbHmiLedCleanroomDoorLocked.p_sToHmiDescriptionLed := 'Cleanroom Door Locked';
+
+s_fbHmiLedCleanroomDoorReleased.p_bStaVisible := FALSE;
+s_fbHmiLedCleanroomDoorReleased.p_sToHmiDescriptionLed := 'Cleanroom Door Released';
  
 //Initialize all moving averages
 
-//----------------------------------//	
-
-//----------------------------------//	
 //Inputs
-//--s_diTableDownSensor.i_stSettings.tmInputDelay	:= T#0S;	
+//--s_diTableDownSensor.i_stSettings.tmInputDelay	:= T#0S;
 //--s_diBtnTableDown.i_stSettings.tmInputDelay		:= T#0S;
 //--s_diBtnStop.i_stSettings.tmInputDelay			:= T#0S;
-//----------------------------------//	
 
-//----------------------------------//	
 //Inputs
-//--s_doRelayTableDown.i_stSettings.bCfgDelay		:= FALSE;	
-//--s_doRelayTableDown.i_stSettings.tmOutputDelay	:= T#0S;	
-//----------------------------------//	
+//--s_doRelayTableDown.i_stSettings.bCfgDelay		:= FALSE;
+//--s_doRelayTableDown.i_stSettings.tmOutputDelay	:= T#0S;
 
-_m_Init := TRUE;]]></ST>
+_m_Init := TRUE;
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="_m_Inputs" Id="{cc1bc341-dd7b-479d-bdfb-f8e12a5629d4}" FolderPath="Base\">

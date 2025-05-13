@@ -1222,8 +1222,7 @@ END_IF
 
 s_sResumeStep := TO_STRING(s_eResumeStep);
 
-CASE s_eSequence OF
-	
+CASE s_eSequence OF	
 	E_SeqDockingInterface.IDLE:
 		IF (i_eCtrlState = E_CtrlState.IDLE) THEN
 			s_eSequence := E_SeqDockingInterface.START;
@@ -1813,32 +1812,42 @@ END_IF
 IF i_bReqEnable AND (i_eCtrlMode = E_CtrlMode.MANUAL) AND (i_eCtrlState = E_CtrlState.RUNNING) THEN
 	
 	s_fbHmiBtnDockTB.p_bStaEnabled :=
-		NOT(s_bIlckDockingClampsToClose)
+		NOT(s_bStaDocked)
+		AND NOT(s_bIlckDockingClampsToClose)
 		AND NOT(s_cmDockingClampsUpper.p_bStaError)
 		AND NOT(s_cmDockingClampsLower.p_bStaError)
 		AND NOT(s_cmOuterCabinDoor.p_bStaError)
 		AND ( (s_eSequence = E_SeqDockingInterface.READY) OR (s_eSequence =E_SeqDockingInterface.WAIT_FOR_TB_REMOVED) );
 		
 	s_fbHmiBtnUnDockTB.p_bStaEnabled :=
-		NOT(s_bIlckDockingClampsToOpen)
+		NOT(s_bStaUndocked)
+		AND s_bStaInnerDoorClosedAndLocked
+		AND NOT(s_bIlckDockingClampsToOpen)
 		AND NOT(s_cmDockingClampsUpper.p_bStaError)
 		AND NOT(s_cmDockingClampsLower.p_bStaError)
 		AND NOT(s_cmOuterCabinDoor.p_bStaError)
 		AND ( (s_eSequence = E_SeqDockingInterface.READY) OR (s_eSequence =E_SeqDockingInterface.WAIT_FOR_TB_PLACED) );
 		
 	s_fbHmiBtnOpenInnerDoor.p_bStaEnabled :=
-		NOT(s_bIlckUnlockingPinsToRelease)
+		s_bStaDocked
+		AND NOT(s_bStaInnerDoorOpenedAndReleased)
+		AND NOT(s_bIlckUnlockingPinsToRelease)
+		AND NOT(s_bIlckDoorShutterToOpen)
+//		AND NOT(s_bIlckDoorOpenerToOpen) //to prevent death-lock
+		AND NOT(s_bIlckUnlockingPinsToRelease)
 		AND NOT(s_cmUnlockingPinUpper.p_bStaError)
 		AND NOT(s_cmUnlockingPinLower.p_bStaError)
 		AND NOT(s_cmDoorShutter.p_bStaError)
 		AND NOT(s_cmDoorOpener.p_bStaError)
 		AND NOT(s_cmInnerCabinDoor.p_bStaError)
-		//++
 		AND (s_eSequence = E_SeqDockingInterface.READY);
 		
 	s_fbHmiBtnCloseInnerDoor.p_bStaEnabled :=
-		NOT(s_bIlckUnlockingPinsToLock)
+		s_bStaDocked
+		AND NOT(s_bStaInnerDoorClosedAndLocked)
 		AND NOT(s_bIlckDoorOpenerToClose)
+//		AND NOT(s_bIlckDoorShutterToClose) //to prevent death-lock
+		AND NOT(s_bIlckUnlockingPinsToLock)
 		AND NOT(s_cmUnlockingPinUpper.p_bStaError)
 		AND NOT(s_cmUnlockingPinLower.p_bStaError)
 		AND NOT(s_cmDoorShutter.p_bStaError)

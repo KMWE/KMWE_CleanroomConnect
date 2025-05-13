@@ -317,10 +317,8 @@ s_fbHmiBtnInbound();
 s_fbHmiBtnOutbound();
 s_fbHmiBtnDockTB();
 s_fbHmiBtnUndockTB();
-IF GVL.g_bFUMO3_Enabled THEN
-	s_fbHmiBtnOpenInnerTBDoor();
-	s_fbHmiBtnCloseInnerTBDoor();
-END_IF
+s_fbHmiBtnOpenInnerTBDoor();
+s_fbHmiBtnCloseInnerTBDoor();
 s_fbHmiBtnPickTrolleyFromTB();
 s_fbHmiBtnPlaceTrolleyInTB();
 ]]></ST>
@@ -702,18 +700,16 @@ s_fbHmiBtnUndockTB.p_bStaEnabled := TRUE;
 s_fbHmiBtnUndockTB.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 s_fbHmiBtnUndockTB.p_sBtnText := 'Undock TB';
 
-IF GVL.g_bFUMO3_Enabled THEN
-	s_fbHmiBtnOpenInnerTBDoor.p_bStaVisible := TRUE;
-	s_fbHmiBtnOpenInnerTBDoor.p_bStaEnabled := TRUE;
-	s_fbHmiBtnOpenInnerTBDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnOpenInnerTBDoor.p_sBtnText := 'Open Inner TB Door';
-	
-	s_fbHmiBtnCloseInnerTBDoor.p_bStaVisible := TRUE;
-	s_fbHmiBtnCloseInnerTBDoor.p_bStaEnabled := TRUE;
-	s_fbHmiBtnCloseInnerTBDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnCloseInnerTBDoor.p_sBtnText := 'Close Inner TB Door';
-END_IF
-	
+s_fbHmiBtnOpenInnerTBDoor.p_bStaVisible := TRUE;
+s_fbHmiBtnOpenInnerTBDoor.p_bStaEnabled := TRUE;
+s_fbHmiBtnOpenInnerTBDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnOpenInnerTBDoor.p_sBtnText := 'Open Inner TB Door';
+
+s_fbHmiBtnCloseInnerTBDoor.p_bStaVisible := TRUE;
+s_fbHmiBtnCloseInnerTBDoor.p_bStaEnabled := TRUE;
+s_fbHmiBtnCloseInnerTBDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnCloseInnerTBDoor.p_sBtnText := 'Close Inner TB Door';
+
 s_fbHmiBtnPickTrolleyFromTB.p_bStaVisible := TRUE;
 s_fbHmiBtnPickTrolleyFromTB.p_bStaEnabled := TRUE;
 s_fbHmiBtnPickTrolleyFromTB.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
@@ -939,6 +935,7 @@ CASE s_eSequence OF
 	E_SeqCleanroomConnect.READY:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_eResumeStep := E_SeqCleanroomConnect.READY;
+			s_eReqAction := E_ReqAction.NONE;
 		END_IF
 		
 		//Return to START

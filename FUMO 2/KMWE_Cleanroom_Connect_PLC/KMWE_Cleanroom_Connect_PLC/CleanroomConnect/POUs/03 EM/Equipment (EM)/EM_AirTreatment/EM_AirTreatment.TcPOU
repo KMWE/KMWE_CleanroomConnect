@@ -3,9 +3,7 @@
   <POU Name="EM_AirTreatment" Id="{81e48a97-313d-405f-b257-49532a716bbe}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK EM_AirTreatment EXTENDS EM_Base IMPLEMENTS I_EM_AirTreatment
 VAR_INPUT
-	//Inputs
 	i_ref_stSettings : REFERENCE TO ST_SettingsAirTreatment;
-	
 	i_eCtrlState : E_CtrlState;
 END_VAR
 
@@ -17,10 +15,6 @@ VAR
 	//Control Modules
 	s_cmFanMotor : CM_DigOutput;
 	
-	//Function Blocks
-	s_fbPIDPressCtrl : FB_BasicPID;
-	s_fbGetCurTaskIdx : GETCURTASKINDEX;
-	
 	//Inputs
 	s_fbFanThermal : FB_DigInput;
 	s_fbDeltaP_CleanroomAmbient : FB_AnaInput;
@@ -29,11 +23,15 @@ VAR
 	//Outputs
 	s_fbFanSpeed : FB_AnaOutput;
 	
+	//Function Blocks
+	s_fbPIDPressCtrl : FB_BasicPID;
+	s_fbGetCurTaskIdx : GETCURTASKINDEX;
+	
 	//Requests
-	s_bReqEqualize : BOOL := FALSE;
-	s_bReqFlush : BOOL := FALSE;
-	s_bReqPressureize : BOOL := FALSE;
-	s_bReqStop : BOOL := FALSE;
+	s_bReqEqualize : BOOL;		//-- := FALSE;
+	s_bReqFlush : BOOL;			//-- := FALSE;
+	s_bReqPressureize : BOOL;	//-- := FALSE;
+	s_bReqStop : BOOL;			//-- := FALSE;
 	
 	//Commands
 	s_bCmdFanMotorOn : BOOL;
@@ -74,18 +72,21 @@ VAR
 	s_fbParamEqualizingPress : FB_HmiParamHandler;
 	s_fbParamPressureRange : FB_HmiParamHandler;
 	
+	//Variables
+	s_fTaskCycleTime : LREAL; //[s]
+	
 	//Sequencers
 	s_eSequence : E_SeqAirTreatment;
 	s_fbSeqControl : FB_SeqControl;
 	
 	s_ePreviousStep : E_SeqAirTreatment;
 	s_eResumeStep : E_SeqAirTreatment;
-	s_sResumeStep : STRING;
+	s_sResumeStep : STRING(GVL.g_nMAX_LEN_STEP_NAME);;
 	
 	s_tonTimer : TON;
 	
 	//Hmi
-	//Buttons
+	//Buttons for MANUAL-mode
 	s_fbHmiBtnPressurize : FB_HmiBtn;
 	s_fbHmiBtnFlushing : FB_HmiBtn;
 	s_fbHmiBtnEqualizing : FB_HmiBtn;
@@ -97,10 +98,10 @@ VAR
 	s_fbHmiLedEqualized : FB_HmiLed;
 	s_fbHmiLedStopped : FB_HmiLed;
 	
+	//Enable force output in IO-mode
 	s_bHmiForceOutputEnabled : BOOL;
 	s_bHmiForceOutputStartEnabled : BOOL;
 	
-	s_fTaskCycleTime : LREAL; //[s]
 END_VAR
 ]]></Declaration>
     <Implementation>

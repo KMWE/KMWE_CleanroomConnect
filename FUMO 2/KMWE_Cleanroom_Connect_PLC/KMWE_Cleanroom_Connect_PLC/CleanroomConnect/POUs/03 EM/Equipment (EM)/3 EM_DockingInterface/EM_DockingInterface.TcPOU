@@ -5,6 +5,7 @@
 
 VAR_INPUT
 	i_ref_stSettings : REFERENCE TO ST_SettingsDockingInterface;
+	i_eCtrlState : E_CtrlState;
 	
 	{warning '#FUMO3: Option can be deleted when cabin doors are commisioned'}
 	i_bTestDisableCabinDoors : BOOL;
@@ -25,8 +26,6 @@ VAR_INPUT
 	i_stExtIlckOuterCabinDoorToOpen : ST_Interlock;		//-- NOT_USED
 	i_stExtIlckInnerCabinDoorToClose : ST_Interlock;
 	i_stExtIlckInnerCabinDoorToOpen : ST_Interlock;		//-- NOT_USED
-	
-	i_eCtrlState : E_CtrlState;
 END_VAR
 
 VAR_OUTPUT
@@ -34,29 +33,31 @@ VAR_OUTPUT
 END_VAR
 
 VAR
-	//Control Modules (Devices)
+	//Control Modules
 	s_cmDockingClampsUpper : CM_ValveWithDoubleFB; //Off = Open, On = Close
 	s_cmDockingClampsLower : CM_ValveWithDoubleFB; //Off = Open, On = Close
-	
 	s_cmClampsUpperHighPressure : CM_DigOutput; //Off = Low, On = High
 	s_cmClampsLowerHighPressure : CM_DigOutput; //Off = Low, On = High
-	
 	s_cmUnlockingPinUpper : CM_ValveWithFB; //Off = Lock, On = Release
 	s_cmUnlockingPinLower : CM_ValveWithFB; //Off = Lock, On = Release
-	
 	s_cmDoorOpener : CM_ValveWithFB; //Off = Close, On = Open
 	s_cmDoorShutter : CM_ValveWithFB; //Off = Open, On = Close
-	
 	s_cmOuterCabinDoor : CM_SpeedDoor;
 	s_cmInnerCabinDoor : CM_SpeedDoor;
+	
+	//Inputs
+	s_diStaDoorAlmostClosed : FB_DigInput;
+	
+	//Outputs
+	//none
 	
 	//Interlocks
 	s_fbIlckHandlerClampsUpperPressureLow : FB_InterlockHandler;
 	s_fbIlckHandlerClampsUpperPressureHigh : FB_InterlockHandler;
 	s_fbIlckHandlerClampsLowerPressureLow : FB_InterlockHandler;
 	s_fbIlckHandlerClampsLowerPressureHigh : FB_InterlockHandler;
-	s_fbIlckHandlerDockingClampsOpen : FB_InterlockHandler;
 	s_fbIlckHandlerDockingClampsClose : FB_InterlockHandler;
+	s_fbIlckHandlerDockingClampsOpen : FB_InterlockHandler;
 	s_fbIlckHandlerUnlockingPinsLock : FB_InterlockHandler;
 	s_fbIlckHandlerUnlockingPinsRelease : FB_InterlockHandler;
 	s_fbIlckHandlerDoorOpenerClose : FB_InterlockHandler;
@@ -68,64 +69,6 @@ VAR
 	s_fbIlckHandlerInnerCabinDoorOpen : FB_InterlockHandler;
 	s_fbIlckHandlerInnerCabinDoorClose : FB_InterlockHandler;
 	
-	//Inputs
-	s_diStaDoorAlmostClosed : FB_DigInput;
-	
-	//Outputs
-	//--
-	
-	//Requests
-	s_bReqDockTB : BOOL := FALSE;
-	s_bReqUndockTB : BOOL := FALSE;
-	s_bReqOpenInnerDoor : BOOL := FALSE;
-	s_bReqCloseInnerDoor : BOOL := FALSE;
-	
-	s_bOverruleInterlocks : BOOL := FALSE;
-	
-	//States
-	s_bStaDockingClampsUpperHighPressure : BOOL := FALSE;
-	s_bStaDockingClampsLowerHighPressure : BOOL := FALSE;
-	s_bStaDockingClampsUpperClosed : BOOL := FALSE;
-	s_bStaDockingClampsUpperOpened : BOOL := FALSE;
-	s_bStaDockingClampsLowerClosed : BOOL := FALSE;
-	s_bStaDockingClampsLowerOpened : BOOL := FALSE;
-	s_bStaLockingPinUpperReleased : BOOL := FALSE;
-	s_bStaLockingPinUpperLocked : BOOL := FALSE;
-	s_bStaLockingPinLowerReleased : BOOL := FALSE;
-	s_bStaLockingPinLowerLocked : BOOL := FALSE;
-	s_bStaDoorOpenerOpened : BOOL := FALSE;
-	s_bStaDoorOpenerClosed : BOOL := FALSE;
-	s_bStaDoorOpenerAlmostClosed : BOOL := FALSE;
-	s_bStaDoorShutterOpened : BOOL := FALSE;
-	s_bStaDoorShutterClosed : BOOL := FALSE;
-	s_bStaOuterCabinDoorOpened : BOOL := FALSE;
-	s_bStaOuterCabinDoorClosed : BOOL := FALSE;
-	s_bStaInnerCabinDoorOpened : BOOL := FALSE;
-	s_bStaInnerCabinDoorClosed : BOOL := FALSE;
-	s_bStaTbAtDockingPosition : BOOL := FALSE;
-	s_bStaDockingPositionFree : BOOL := FALSE;
-	
-	//Properties
-	s_bStaDocked : BOOL := FALSE;
-	s_bStaUndocked : BOOL := FALSE;
-	
-	s_bStaHighPressureSelected : BOOL := FALSE;
-	s_bStaDockingClampsClosed : BOOL := FALSE;
-	s_bStaDockingClampsOpened : BOOL := FALSE;
-	
-	s_bStaUnlockingPinsLocked : BOOL := FALSE;
-	s_bStaUnlockingPinsReleased : BOOL := FALSE;
-	
-	s_bStaBoxAtPreDockingPosition : BOOL := FALSE;
-	s_bStaBoxAtDockedPosition : BOOL := FALSE;
-	
-	s_bStaInnerDoorClosedAndLocked : BOOL := FALSE;
-	s_bStaInnerDoorOpenedAndReleased : BOOL := FALSE;
-	
-	s_bStsReadyToReceiveTB : BOOL := FALSE;
-	s_bStsReadyToSendTB : BOOL := FALSE;
-	
-	//Interlockes
 	s_bIlckDockingClampsUpperPressureLow : BOOL;
 	s_bIlckDockingClampsUpperPressureHigh : BOOL;
 	s_bIlckDockingClampsLowerPressureLow : BOOL;
@@ -143,26 +86,60 @@ VAR
 	s_bIlckInnerCabinDoorToClose : BOOL;
 	s_bIlckInnerCabinDoorToOpen : BOOL;
 	
-	//Sequencers
-	s_eSequence : E_SeqDockingInterface;
-	s_fbSeqControl : FB_SeqControl;
+	//Requests
+	s_bReqDockTB : BOOL;							//-- := FALSE;
+	s_bReqUndockTB : BOOL;							//-- := FALSE;
+	s_bReqOpenInnerDoor : BOOL;						//-- := FALSE;
+	s_bReqCloseInnerDoor : BOOL;					//-- := FALSE;
 	
-	s_ePreviousStep : E_SeqDockingInterface;
-	s_eResumeStep : E_SeqDockingInterface;
-	s_sResumeStep : STRING;
+	s_bOverruleInterlocks : BOOL;					//-- := FALSE;
 	
-	s_tonTimer : TON;
+	//States
+	s_bStaDockingClampsUpperHighPressure : BOOL;	//-- := FALSE;
+	s_bStaDockingClampsLowerHighPressure : BOOL;	//-- := FALSE;
+	s_bStaDockingClampsUpperClosed : BOOL;			//-- := FALSE;
+	s_bStaDockingClampsUpperOpened : BOOL;			//-- := FALSE;
+	s_bStaDockingClampsLowerClosed : BOOL;			//-- := FALSE;
+	s_bStaDockingClampsLowerOpened : BOOL;			//-- := FALSE;
+	s_bStaLockingPinUpperReleased : BOOL;			//-- := FALSE;
+	s_bStaLockingPinUpperLocked : BOOL;				//-- := FALSE;
+	s_bStaLockingPinLowerReleased : BOOL;			//-- := FALSE;
+	s_bStaLockingPinLowerLocked : BOOL;				//-- := FALSE;
+	s_bStaDoorOpenerOpened : BOOL;					//-- := FALSE;
+	s_bStaDoorOpenerClosed : BOOL;					//-- := FALSE;
+	s_bStaDoorOpenerAlmostClosed : BOOL;			//-- := FALSE;
+	s_bStaDoorShutterOpened : BOOL;					//-- := FALSE;
+	s_bStaDoorShutterClosed : BOOL;					//-- := FALSE;
+	s_bStaOuterCabinDoorOpened : BOOL;				//-- := FALSE;
+	s_bStaOuterCabinDoorClosed : BOOL;				//-- := FALSE;
+	s_bStaInnerCabinDoorOpened : BOOL;				//-- := FALSE;
+	s_bStaInnerCabinDoorClosed : BOOL;				//-- := FALSE;
+	s_bStaTbAtDockingPosition : BOOL;				//-- := FALSE;
+	s_bStaDockingPositionFree : BOOL;				//-- := FALSE;
 	
-	s_bTmpUndockingDone : BOOL;
+	//Properties
+	s_bStaDocked : BOOL;						//-- := FALSE;
+	s_bStaUndocked : BOOL;						//-- := FALSE;
+	s_bStaHighPressureSelected : BOOL;			//-- := FALSE;
+	s_bStaDockingClampsClosed : BOOL;			//-- := FALSE;
+	s_bStaDockingClampsOpened : BOOL;			//-- := FALSE;
+	s_bStaUnlockingPinsLocked : BOOL;			//-- := FALSE;
+	s_bStaUnlockingPinsReleased : BOOL;			//-- := FALSE;
+	s_bStaBoxAtPreDockingPosition : BOOL;		//-- := FALSE;
+	s_bStaBoxAtDockedPosition : BOOL;			//-- := FALSE;
+	s_bStaInnerDoorClosedAndLocked : BOOL;		//-- := FALSE;
+	s_bStaInnerDoorOpenedAndReleased : BOOL;	//-- := FALSE;
+	s_bStsReadyToReceiveTB : BOOL;				//-- := FALSE;
+	s_bStsReadyToSendTB : BOOL;					//-- := FALSE;
 	
 	//Alarms
 	s_sReason : STRING(GVL.g_nMAX_LEN_REASON);
 	s_sMessage : STRING(GVL.g_nMAX_LEN_MESSAGE);
 	
 	s_fbAlarmHandlerClosingDoorFailed : FB_AlarmHandler;
-	s_bErrClosingDoorFailed : BOOL;
-	
 	s_fbAlarmHandlerCmdNotAllowed : FB_AlarmHandler;
+	
+	s_bErrClosingDoorFailed : BOOL;
 	s_bErrCmdNotAllowed : BOOL;
 	
 	//Warnings
@@ -179,9 +156,23 @@ VAR
 	s_fbParamCloseClampsAfterEachOther : FB_HmiParamHandler;
 	s_fbParamCompressSealDuration : FB_HmiParamHandler;
 	
-	//Hmi
-	//Buttons
+	//Variables
+	//none
 	
+	//Sequencers
+	s_eSequence : E_SeqDockingInterface;
+	s_fbSeqControl : FB_SeqControl;
+	
+	s_ePreviousStep : E_SeqDockingInterface;
+	s_eResumeStep : E_SeqDockingInterface;
+	s_sResumeStep : STRING(GVL.g_nMAX_LEN_STEP_NAME);
+	
+	s_tonTimer : TON;
+	
+	{warning 'TODO: Are those temp. variables still necessary?'}
+	s_bTmpUndockingDone : BOOL;
+	
+	//Hmi
 	//Buttons for MANUAL-mode
 	s_fbHmiBtnDockTB : FB_HmiBtn;
 	s_fbHmiBtnUndockTB : FB_HmiBtn;
@@ -193,39 +184,31 @@ VAR
 	s_fbHmiLedUndockTbDone : FB_HmiLed;
 	s_fbHmiLedOpenInnerDoorDone : FB_HmiLed;
 	s_fbHmiLedCloseInnerDoorDone : FB_HmiLed;
-	
 	s_fbHmiLedClampsUpperPressureSelect : FB_HmiLed;
 	s_fbHmiLedClampsLowerPressureSelect : FB_HmiLed;
-	
 	s_fbHmiLedClampsOpened : FB_HmiLed;
 	s_fbHmiLedClampsClosed : FB_HmiLed;
-	
 	s_fbHmiLedPinsLocked : FB_HmiLed;
 	s_fbHmiLedPinsReleased : FB_HmiLed;
-	
 	s_fbHmiLedClampsUpperOpened : FB_HmiLed;
 	s_fbHmiLedClampsUpperClosed : FB_HmiLed;
 	s_fbHmiLedClampsLowerOpened : FB_HmiLed;
 	s_fbHmiLedClampsLowerClosed : FB_HmiLed;
-	
 	s_fbHmiLedPinUpperReleased : FB_HmiLed;
 	s_fbHmiLedPinUpperLocked : FB_HmiLed;
 	s_fbHmiLedPinLowerReleased : FB_HmiLed;
 	s_fbHmiLedPinLowerLocked : FB_HmiLed;
-	
 	s_fbHmiLedOpenerOpened : FB_HmiLed;
 	s_fbHmiLedOpenerClosed : FB_HmiLed;
 	s_fbHmiLedOpenerAlmostClosed : FB_HmiLed;
-	
 	s_fbHmiLedShutterOpened : FB_HmiLed;
 	s_fbHmiLedShutterClosed : FB_HmiLed;
-	
 	s_fbHmiLedOuterDoorClosed : FB_HmiLed;
 	s_fbHmiLedOuterDoorOpened : FB_HmiLed;
-	
 	s_fbHmiLedInnerDoorClosed : FB_HmiLed;
 	s_fbHmiLedInnerDoorOpened : FB_HmiLed;
 	
+	//Enable force output in IO-mode
 	s_bHmiForceOutputEnabled : BOOL;
 	
 END_VAR
@@ -233,6 +216,7 @@ END_VAR
 VAR PERSISTENT //Variables below will be returned during: Power Cycle, Active Configuration, Download, Cold Restart
 	s_eLastStepPersistent : E_SeqDockingInterface := E_SeqDockingInterface.READY;
 END_VAR
+
 ]]></Declaration>
     <Implementation>
       <ST><![CDATA[

@@ -4,14 +4,12 @@
     <Declaration><![CDATA[FUNCTION_BLOCK EM_PalletConveyor EXTENDS EM_Base IMPLEMENTS I_EM_PalletConveyor
 
 VAR_INPUT
-	//Inputs
 	i_ref_stSettings : REFERENCE TO ST_SettingsPalletConveyor;
+	i_eCtrlState : E_CtrlState;
 	
 	//External interlocks (from outside this EM)
 	i_stExtIlckConvFwd : ST_Interlock;
 	i_stExtIlckConvBwd : ST_Interlock;
-	
-	i_eCtrlState : E_CtrlState;
 	
 	{warning '#2HC: Consider adding 2-hand-control later'}
 	(*
@@ -24,18 +22,7 @@ VAR_OUTPUT
 END_VAR
 
 VAR
-	{warning '#2HC: Consider adding 2-hand-control later'}
-	(*
-	s_eActionSelection : E_ActionSelection;
-	*)	
-	//Interlocks
-	s_fbIlckHandlerConveyorBackward : FB_InterlockHandler;
-	s_fbIlckHandlerConveyorForward : FB_InterlockHandler;
-	
-	s_fbIlckHandlerCenteringIdle : FB_InterlockHandler;
-	s_fbIlckHandlerCenteringCenter : FB_InterlockHandler;
-	
-	//Control Modules (Devices)
+	//Control Modules
 	s_cmPalletConveyor : CM_MOVITRAC_B;
 	s_cmCenteringUnit : CM_ValveWithDoubleFB; //Off = Idle, On = Center
 	
@@ -47,25 +34,40 @@ VAR
 	s_diStaDoorOpened : FB_DigInput;
 	
 	//Outputs
+	//none
+	
+	//Interlocks
+	s_fbIlckHandlerConveyorBackward : FB_InterlockHandler;
+	s_fbIlckHandlerConveyorForward : FB_InterlockHandler;
+	s_fbIlckHandlerCenteringIdle : FB_InterlockHandler;
+	s_fbIlckHandlerCenteringCenter : FB_InterlockHandler;
+	
+	s_bIlckConveyorBackward : BOOL; 	//-- := TRUE;
+	s_bIlckConveyorForward : BOOL; 		//-- := TRUE;
+	s_bIlckCenteringToIdle : BOOL; 		//-- := TRUE;
+	s_bIlckCenteringToCenter : BOOL; 	//-- := TRUE;
 	
 	//Requests
-	s_bReqTB_ToInfeed : BOOL := FALSE;
-	s_bReqTB_ToCenter : BOOL := FALSE;
-	s_bReqTB_ToDocking : BOOL := FALSE;
-	s_bReqCenteringTB : BOOL := FALSE;
+	s_bReqTB_ToInfeed : BOOL;//-- 		:= FALSE;
+	s_bReqTB_ToCenter : BOOL;//-- 		:= FALSE;
+	s_bReqTB_ToDocking : BOOL;//-- 		:= FALSE;
+	s_bReqCenteringTB : BOOL;//-- 		:= FALSE;
+	
+	{warning '#2HC: Consider adding 2-hand-control later'}
+	(*
+	s_eActionSelection : E_ActionSelection;
+	*)
 	
 	//States
-	s_bStaBrakeReleased : BOOL := FALSE;
-	s_bStaDriveError : BOOL := FALSE;
-	
-	s_bStaAtInfeedRearPosition : BOOL := FALSE;
-	s_bStaAtInfeedFrontPosition : BOOL := FALSE;
-	s_bStaAtCenteringPosition : BOOL := FALSE;
-	s_bStaAtDockingPosition : BOOL := FALSE;
-	s_bStaDoorOpened : BOOL := FALSE;
-	
-	s_bStaCenteringCenter : BOOL := FALSE;
-	s_bStaCenteringIdle : BOOL := FALSE;
+	s_bStaBrakeReleased : BOOL; 		//-- := FALSE;
+	s_bStaDriveError : BOOL; 			//-- := FALSE;
+	s_bStaAtInfeedRearPosition : BOOL; 	//-- := FALSE;
+	s_bStaAtInfeedFrontPosition : BOOL; //-- := FALSE;
+	s_bStaAtCenteringPosition : BOOL; 	//-- := FALSE;
+	s_bStaAtDockingPosition : BOOL; 	//-- := FALSE;
+	s_bStaDoorOpened : BOOL; 			//-- := FALSE;
+	s_bStaCenteringCenter : BOOL;		//-- := FALSE;
+	s_bStaCenteringIdle : BOOL; 		//-- := FALSE;
 	
 	//Properties
 	s_bStaTB_AtInfeed : BOOL;
@@ -73,24 +75,19 @@ VAR
 	s_bStaTB_AtDocking : BOOL;
 	s_bStaTB_CenteringDone : BOOL;
 	
-	//Interlockes
-	s_bIlckConveyorBackward : BOOL := TRUE;
-	s_bIlckConveyorForward : BOOL := TRUE;
-	
-	s_bIlckCenteringToIdle : BOOL := TRUE;
-	s_bIlckCenteringToCenter : BOOL := TRUE;
-	
 	//Alarms
 	s_sReason : STRING(GVL.g_nMAX_LEN_REASON);
 	s_sMessage : STRING(GVL.g_nMAX_LEN_MESSAGE);
-	s_fbAlarmHandlerTravelTimeOut : FB_AlarmHandler;
-	s_bErrTravelTimeOut : BOOL;
 	
+	s_fbAlarmHandlerTravelTimeOut : FB_AlarmHandler;
 	s_fbAlarmHandlerCmdNotAllowed : FB_AlarmHandler;
+	
+	s_bErrTravelTimeOut : BOOL;
 	s_bErrCmdNotAllowed : BOOL;
 	
 	//Warnings
 	s_fbAlarmHandlerOuterDoorNotOpened : FB_AlarmHandler;
+	
 	s_bWrnOuterDoorNotOpened : BOOL;
 	
 	s_bStaWarning : BOOL;
@@ -101,23 +98,26 @@ VAR
 	s_fbParamSpeedGoToDocking : FB_HmiParamHandler;
 	s_fbParamCenteringDuration : FB_HmiParamHandler;
 	
+	//Variables
+	{warning 'TODO: Are those temp. variables still necessary?'}
+	s_eTmpLocation : E_Location;
+	s_eTmpCenteringDone : BOOL;
+	
+	s_tMaxTravelTime : TIME;
+	s_tDoorCheckTime : TIME;
+	{warning 'TODO: Not used/read in program, delete?'}
+	s_bDoorCheckTimeDisabled : BOOL := FALSE;
+	
 	//Sequencers
 	s_eSequence : E_SeqTransport;
 	s_fbSeqControl : FB_SeqControl;
 	
 	s_ePreviousStep : E_SeqTransport;
 	s_eResumeStep : E_SeqTransport;
-	s_sResumeStep : STRING;
-	
-	s_eTmpLocation : E_Location;
-	s_eTmpCenteringDone : BOOL;
-	
-	s_tMaxTravelTime : TIME;
-	s_tDoorCheckTime : TIME;
-	s_bDoorCheckTimeDisabled : BOOL := FALSE;
+	s_sResumeStep : STRING(GVL.g_nMAX_LEN_STEP_NAME);
 	
 	//Hmi
-	//Buttons
+	//Buttons for MANUAL-mode
 	s_fbHmiBtnTB_ToInfeed : FB_HmiBtn;
 	s_fbHmiBtnTB_ToCentering : FB_HmiBtn;
 	s_fbHmiBtnTB_ToDocking : FB_HmiBtn;
@@ -129,10 +129,10 @@ VAR
 	s_fbHmiLedCenteringPosition : FB_HmiLed;
 	s_fbHmiLedDockingPosition : FB_HmiLed;
 	s_fbHmiLedDoorOpened : FB_HmiLed;
-	
 	s_fbHmiLedCenteringIdle	: FB_HmiLed;
 	s_fbHmiLedCenteringCenter : FB_HmiLed;
 	
+	//Enable force output in IO-mode
 	s_bHmiForceOutputEnabled : BOOL;
 	s_bHmiForceOutputStartEnabled : BOOL;
 	

@@ -27,8 +27,8 @@ VAR CONSTANT
 END_VAR
 
 VAR_INPUT
-	//Inputs
 	i_ref_stSettings : REFERENCE TO ST_SettingsLiftingTransport;
+	i_eCtrlState : E_CtrlState;
 	
 	//External interlocks (from outside this EM)
 	{warning '#TODO: Delete unused (not written external) inputs'}
@@ -37,59 +37,60 @@ VAR_INPUT
 	i_stExtIlckTransportExtract : ST_Interlock;
 	i_stExtIlckTransportRetract : ST_Interlock;	//-- NOT_USED
 	
-	i_eCtrlState : E_CtrlState;
-	
-	I_nInfoDataInputLevel AT %I* : UINT; //Bit8: STO Input Level (UINT8)
 END_VAR
 
 VAR_OUTPUT
 	q_bStaWarning : BOOL;
-	Q_bDriveStateSTO AT %Q* : BOOL;
 END_VAR
 
 VAR
-	//Interlocks
-	s_fbIlckHandlerLiftUp : FB_InterlockHandler;
-	s_fbIlckHandlerLiftDown : FB_InterlockHandler;
-	
-	s_fbIlckHandlerTransportExtract : FB_InterlockHandler;
-	s_fbIlckHandlerTransportRetract : FB_InterlockHandler;
-	
 	//Control Modules
-	axisLift : AXIS_REF; //??AXIS_REF; TC2_MC2.AXIS_REF;
 	s_cmLift : CM_Servo; //Including 2 limit switched and 1 reference switch
-	
-	axisTransport : AXIS_REF; //??AXIS_REF TC2_MC2.AXIS_REF;
 	s_cmTransport : CM_Servo; //Including 2 limit switched and 1 reference switch
+	
+	axisLift : AXIS_REF; //??AXIS_REF; TC2_MC2.AXIS_REF;
+	axisTransport : AXIS_REF; //??AXIS_REF TC2_MC2.AXIS_REF;
 	
 	//Inputs
 	s_diStaTrolleyOnPositionLeft : FB_DigInput;
 	s_diStaTrolleyOnPositionRight : FB_DigInput;
 	s_diStaCabinAreaOccupied : FB_DigInput;
-	
 	s_diStaCollisionAvoidanceSensor : FB_DigInput;
 	s_diStaTrolleyLocked : FB_DigInput;
 	
 	//Outputs
+	//none
+	
+	//TwinSAFE
+	I_nInfoDataInputLevel AT %I* : UINT; //Bit8: STO Input Level (UINT8)
+	Q_bDriveStateSTO AT %Q* : BOOL;
+	
+	//Interlocks
+	s_fbIlckHandlerLiftUp : FB_InterlockHandler;
+	s_fbIlckHandlerLiftDown : FB_InterlockHandler;
+	s_fbIlckHandlerTransportExtract : FB_InterlockHandler;
+	s_fbIlckHandlerTransportRetract : FB_InterlockHandler;
+	
+	s_bIlckLiftUp : BOOL;			//-- := TRUE;
+	s_bIlckLiftDown : BOOL;			//-- := TRUE;
+	s_bIlckTransportExtract : BOOL;	//-- := TRUE;
+	s_bIlckTransportRetract : BOOL;	//-- := TRUE;
 	
 	//Requests
-	s_bReqGoToIdle : BOOL := FALSE;
-	s_bReqPickTrolleyFromTB : BOOL := FALSE;
-	s_bReqPlaceTrolleyInTB : BOOL := FALSE;
+	s_bReqGoToIdle : BOOL;			//-- := FALSE;
+	s_bReqPickTrolleyFromTB : BOOL;	//-- := FALSE;
+	s_bReqPlaceTrolleyInTB : BOOL;	//-- := FALSE;
 	
 	//States
-	s_bStaLiftDriveError : BOOL := FALSE;
-	s_bStaTransportDriveError : BOOL := FALSE;
-	
-	s_bStaTrolleyOnPositionLeft : BOOL := FALSE;
-	s_bStaTrolleyOnPositionRight : BOOL := FALSE;
-	s_bStaCabinAreaOccupied : BOOL := FALSE;
-	
-	s_bStaCabinAreaFree : BOOL := FALSE;
-	s_bStaTrolleyAtLiftPos : BOOL := FALSE;
-	
-	s_bStaCollisionAvoidanceSensor : BOOL := FALSE;
-	s_bStaTrolleyLocked : BOOL := FALSE;
+	s_bStaLiftDriveError : BOOL;			//-- := FALSE;
+	s_bStaTransportDriveError : BOOL;		//-- := FALSE;
+	s_bStaTrolleyOnPositionLeft : BOOL;		//-- := FALSE;
+	s_bStaTrolleyOnPositionRight : BOOL;	//-- := FALSE;
+	s_bStaCabinAreaOccupied : BOOL;			//-- := FALSE;
+	s_bStaCabinAreaFree : BOOL;				//-- := FALSE;
+	s_bStaTrolleyAtLiftPos : BOOL;			//-- := FALSE;
+	s_bStaCollisionAvoidanceSensor : BOOL;	//-- := FALSE;
+	s_bStaTrolleyLocked : BOOL;				//-- := FALSE;
 	
 	s_fSetLiftPosition : LREAL; //[mm]
 	s_fActLiftPosition : LREAL; //Converted to vertical movement of scissor lift [mm]
@@ -98,15 +99,9 @@ VAR
 	s_fActTransportPosition : LREAL; //Converted to horizontal movement of transport unit [mm]
 	
 	//Properties
-	s_bStaAtIdlePosition : BOOL := FALSE;
-	s_bStaTrolleyPickedFromTB : BOOL := FALSE;
-	s_bStaTrolleyPlacedInTB : BOOL := FALSE;
-	
-	//Interlockes
-	s_bIlckLiftUp : BOOL := TRUE;
-	s_bIlckLiftDown : BOOL := TRUE;
-	s_bIlckTransportExtract : BOOL := TRUE;
-	s_bIlckTransportRetract : BOOL := TRUE;
+	s_bStaAtIdlePosition : BOOL;		//-- := FALSE;
+	s_bStaTrolleyPickedFromTB : BOOL;	//-- := FALSE;
+	s_bStaTrolleyPlacedInTB : BOOL;		//-- := FALSE;
 	
 	//Alarms
 	s_sReason : STRING(GVL.g_nMAX_LEN_REASON);
@@ -130,6 +125,7 @@ VAR
 	
 	//Warnings
 	s_fbAlarmHandlerSafetyDoorNotClosed : FB_AlarmHandler;
+	
 	s_bWrnSafetyDoorNotClosed : BOOL;
 	
 	s_bStaWarning : BOOL;
@@ -142,19 +138,20 @@ VAR
 	s_fbParamTrolleyAtCabinCheckMaxTime : FB_HmiParamHandler;
 	s_fbParamWaitForNextStep : FB_HmiParamHandler;
 	
+	//Variables
+	s_bActionDone : BOOL := FALSE;
+	s_bNextStep : BOOL := FALSE;
+	
 	//Sequencers
 	s_eSequence : E_SeqLiftingTransport;
 	s_fbSeqControl : FB_SeqControl;
 	
-	s_bActionDone : BOOL := FALSE;
-	s_bNextStep : BOOL := FALSE;
-	
 	s_ePreviousStep : E_SeqLiftingTransport;
 	s_eResumeStep : E_SeqLiftingTransport;
-	s_sResumeStep : STRING;
+	s_sResumeStep : STRING(GVL.g_nMAX_LEN_STEP_NAME);
 	
 	//Hmi
-	//Buttons
+	//Buttons for MANUAL-mode
 	s_fbHmiBtnGoToIdle : FB_HmiBtn;
 	s_fbHmiBtnPickTrolleyFromTB : FB_HmiBtn;
 	s_fbHmiBtnPlaceTrolleyInTB : FB_HmiBtn;
@@ -166,11 +163,11 @@ VAR
 	s_fbHmiLedCollisionAvoidanceSensor : FB_HmiLed;
 	s_fbHmiLedTrolleyLocked : FB_HmiLed;
 	s_fbHmiLedTrolleyUnlocked : FB_HmiLed;
-	
 	s_fbHmiLedAtIdlePosition : FB_HmiLed;
 	s_fbHmiLedTrolleyPickedFromTB : FB_HmiLed;
 	s_fbHmiLedTrolleyPlacedInTB : FB_HmiLed;
 	
+	//Enable force output in IO-mode
 	s_bHmiForceOutputEnabled : BOOL;
 	
 END_VAR

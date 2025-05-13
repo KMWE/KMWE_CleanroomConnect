@@ -2,8 +2,21 @@
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
   <POU Name="EM_Utilities" Id="{d3bdaf93-23e0-447c-addf-e1fdaa10e5f0}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK EM_Utilities EXTENDS EM_Base IMPLEMENTS I_EM_Utilities
+
+VAR_INPUT
+	i_bFlashPulse : BOOL;
+	i_eCtrlState : E_CtrlState;
+END_VAR
+
+VAR_OUTPUT
+	q_bStaWarning : BOOL;
+END_VAR
+
 VAR
 	//Control modules
+	//none
+	
+	//Inputs
 	s_diSafetyOk : FB_DigInput;	//State from TwinSAFE
 	s_diSafetyFbErr : FB_DigInput;	//State from TwinSAFE
 	s_diRestartSafety : FB_DigInput;
@@ -15,6 +28,7 @@ VAR
 	s_diAirPressureOk : FB_DigInput;
 	s_diCabinetTemperatureOk : FB_DigInput;
 	
+	//Outputs
 	s_doBeaconLedGreen : FB_DigOutput;
 	s_doBeaconLedYellow : FB_DigOutput;
 	s_doBeaconLedRed : FB_DigOutput;
@@ -25,29 +39,44 @@ VAR
 	s_FbForceOutputLedRed : FB_ForceOutput;
 	s_FbForceOutputSnRestartSafety : FB_ForceOutput;
 	
+	//Interface with TwinSAFE
+	Q_bCmdRun AT %Q* : BOOL; //Set TwinSAFE to Run-Mode
+	Q_bCmdErrAck AT %Q* : BOOL; //Reset errors in TwinSAFE logic
+	Q_bCmdRestartSafety AT %Q* : BOOL; //Restart/reset safety blocks (reset Estop-safety-relay)
+	
+	I_bStaTwinSAFE_Estop1ChA AT %I* : BOOL;
+	I_bStaTwinSAFE_Estop1ChB AT %I* : BOOL;
+	I_bStaTwinSAFE_Estop2ChA AT %I* : BOOL;
+	I_bStaTwinSAFE_Estop2ChB AT %I* : BOOL;
+	I_bStaTwinSAFE_DoorGuardCleanroomChA AT %I* : BOOL;
+	I_bStaTwinSAFE_DoorGuardCleanroomChB AT %I* : BOOL;
+	
+	I_nTwinSATE_ProjectCrc AT %I* : WORD; //Cyclic Redundancy Check (check if TwinSAFE code is still the same)
+	s_nVerified_Crc : WORD := 16#0000;
+	
+	//Interlocks
+	//none
+	
+	//Requests
+	
 	//States
-	s_bStaSafetyOk : BOOL := FALSE;
-	s_bSafetyFbErr : BOOL := FALSE;
-	s_bEstopInfeedOk : BOOL := FALSE;
-	s_bEstopCleanroomOk : BOOL := FALSE;
-	s_bDoorGuardCleanroomOk : BOOL := FALSE;
-	s_bRestartSafety : BOOL := FALSE;
-	s_bStsPower400VacOk : BOOL := FALSE;
-	s_bStsPower230VacOk : BOOL := FALSE;
-	s_bStsPower230VacSocketsOk : BOOL := FALSE;
-	s_bStsPower48VdcOk : BOOL := FALSE;
-	s_bStsPowerPotentialGroup24VdcOk : BOOL := FALSE;
-	s_bStaAirPressureOk : BOOL := FALSE;
-	s_bStaCabinetTemperatureOk : BOOL := FALSE;
-	s_bRestartSafetyState : BOOL := FALSE;
+	s_bSafetyFbErr : BOOL;						//-- := FALSE;
+	s_bEstopInfeedOk : BOOL;					//-- := FALSE;
+	s_bEstopCleanroomOk : BOOL;					//-- := FALSE;
+	s_bDoorGuardCleanroomOk : BOOL;				//-- := FALSE;
+	s_bRestartSafety : BOOL;					//-- := FALSE;
+	s_bStsPower400VacOk : BOOL;					//-- := FALSE;
+	s_bStsPower230VacOk : BOOL;					//-- := FALSE;
+	s_bStsPower230VacSocketsOk : BOOL;			//-- := FALSE;
+	s_bStsPower48VdcOk : BOOL;					//-- := FALSE;
+	s_bStsPowerPotentialGroup24VdcOk : BOOL;	//-- := FALSE;
+	s_bRestartSafetyState : BOOL;				//-- := FALSE;
 	
-	//s_bStaError
-	s_bStaWarning : BOOL;
-	s_bFlashPulse : BOOL;
-	
-	s_bExtError : BOOL;
-	s_bExtWarning : BOOL;
-	s_bExtRunning : BOOL;
+	//Properties
+	s_bStaAirPressureOk : BOOL;					//-- := FALSE;
+	s_bStaCabinetTemperatureOk : BOOL;			//-- := FALSE;
+	s_bStaSafetyOk : BOOL;						//-- := FALSE;
+	s_bStsPowerOk : BOOL;
 	
 	//Alarms
 	s_fbAlarmHandlerSafetyCrc : FB_AlarmHandler;
@@ -77,7 +106,24 @@ VAR
 	s_bErrAirPressureNotOk : BOOL;
 	s_bErrCabinetTemperatureNotOk : BOOL;
 	
+	//Warnings
+	s_bStaWarning : BOOL;
+	
+	//Params
+	//none
+	
+	//Variables
+	s_bFlashPulse : BOOL;
+	
+	s_bExtError : BOOL;
+	s_bExtWarning : BOOL;
+	s_bExtRunning : BOOL;
+	
+	//Sequencers
+	//none
+	
 	//Hmi
+	//Leds
 	s_fbHmiLedSafetyOk : FB_HmiLed;
 	s_fbHmiLedSafetyFbErr : FB_HmiLed;
 	s_fbHmiLedEstopInfeedOk : FB_HmiLed;
@@ -89,40 +135,17 @@ VAR
 	s_fbHmiLedPower230VacSocketsOk : FB_HmiLed;
 	s_fbHmiLedPower48VdcOk : FB_HmiLed;
 	s_fbHmiLedPowerPotentialGroup24VdcOk : FB_HmiLed;
-	
 	s_fbHmiLedAirPressureOk : FB_HmiLed;
 	s_fbHmiLedCabinetTemperatureOk : FB_HmiLed;
-	
 	s_fbHmiLedBeaconGreen : FB_HmiLed;
 	s_fbHmiLedBeaconYellow : FB_HmiLed;
 	s_fbHmiLedBeaconRed : FB_HmiLed;
 	
-	//Interface with TwinSAFE
-	Q_bCmdRun AT %Q* : BOOL; //Set TwinSAFE to Run-Mode	
-	Q_bCmdErrAck AT %Q* : BOOL; //Reset errors in TwinSAFE logic
-	Q_bCmdRestartSafety AT %Q* : BOOL; //Restart/reset safety blocks (reset Estop-safety-relay)
-	
-	I_bStaTwinSAFE_Estop1ChA AT %I* : BOOL;
-	I_bStaTwinSAFE_Estop1ChB AT %I* : BOOL;
-	I_bStaTwinSAFE_Estop2ChA AT %I* : BOOL;
-	I_bStaTwinSAFE_Estop2ChB AT %I* : BOOL;
-	I_bStaTwinSAFE_DoorGuardCleanroomChA AT %I* : BOOL;
-	I_bStaTwinSAFE_DoorGuardCleanroomChB AT %I* : BOOL;
-	
-	I_nTwinSATE_ProjectCrc AT %I* : WORD; //Cyclic Redundancy Check (check if TwinSAFE code is still the same)
-	s_nVerified_Crc : WORD := 16#0000;
-	
+	//Enable force output in IO-mode
 	s_bHmiForceOutputEnabled : BOOL;
+	
 END_VAR
-
-VAR_INPUT
-	i_bFlashPulse : BOOL;
-	i_eCtrlState : E_CtrlState;
-END_VAR
-
-VAR_OUTPUT
-	q_bStaWarning : BOOL;
-END_VAR]]></Declaration>
+]]></Declaration>
     <Implementation>
       <ST><![CDATA[
 SUPER^();
@@ -436,6 +459,11 @@ s_bStsPower48VdcOk := s_diPower48VdcOk.p_bStaInputDelayed AND s_diPower48VdcOk.p
 s_bStsPowerPotentialGroup24VdcOk := s_diPowerPotentialGroup24VdcOk.p_bStaInputDelayed AND s_diPowerPotentialGroup24VdcOk.p_bStaInput; //on-delay only
 s_bStaAirPressureOk := s_diAirPressureOk.p_bStaInputDelayed AND s_diAirPressureOk.p_bStaInput; //on-delay only
 s_bStaCabinetTemperatureOk := s_diCabinetTemperatureOk.p_bStaInputDelayed OR s_diCabinetTemperatureOk.p_bStaInput; //off-delay only
+s_bStsPowerOk :=
+	s_bStsPower400VacOk
+	AND s_bStsPower230VacOk
+	AND s_bStsPower230VacSocketsOk
+	AND s_bStsPowerPotentialGroup24VdcOk;
 
 _m_Inputs := TRUE;
 ]]></ST>
@@ -609,11 +637,7 @@ PROPERTY PUBLIC p_bStsPowerOk : BOOL]]></Declaration>
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStsPowerOk :=
-	s_bStsPower400VacOk
-	AND s_bStsPower230VacOk
-	AND s_bStsPower230VacSocketsOk
-	AND s_bStsPowerPotentialGroup24VdcOk;
+p_bStsPowerOk := s_bStsPowerOk
 ]]></ST>
         </Implementation>
       </Get>

@@ -166,7 +166,9 @@ s_bErrSafetyNotOk S= NOT(s_bStaSafetyOk);
 s_bErrSafetyFbErr S= s_bSafetyFbErr;
 s_bErrEstopInfeedPressed S= NOT(s_bEstopInfeedOk);
 s_bErrEstopCleanroomPressed S= NOT(s_bEstopCleanroomOk);
-s_bErrDoorGuardCleanroomOpened S= NOT(s_bDoorGuardCleanroomOk);
+IF GVl.g_bFUMO3_Enabled THEN
+	s_bErrDoorGuardCleanroomOpened S= NOT(s_bDoorGuardCleanroomOk);
+END_IF;
 s_bErrPower400VacOk S= NOT(s_bStsPower400VacOk);
 s_bErrPower230VacOk S= NOT(s_bStsPower230VacOk);
 s_bWrnPower230VacSocketsOk S= NOT(s_bStsPower230VacSocketsOk);
@@ -181,7 +183,9 @@ s_fbAlarmHandlerSafetyNotOk(i_bStaActive := s_bErrSafetyNotOk);
 s_fbAlarmHandlerSafetyFbErr(i_bStaActive := s_bErrSafetyFbErr);
 s_fbAlarmHandlerEstopInfeedPressed(i_bStaActive := s_bErrEstopInfeedPressed);
 s_fbAlarmHandlerEstopCleanroomPressed(i_bStaActive := s_bErrEstopCleanroomPressed);
-s_fbAlarmHandlerDoorGuardCleanroomOpened(i_bStaActive := s_bErrDoorGuardCleanroomOpened);
+IF GVl.g_bFUMO3_Enabled THEN
+	s_fbAlarmHandlerDoorGuardCleanroomOpened(i_bStaActive := s_bErrDoorGuardCleanroomOpened);
+END_IF;
 s_fbAlarmHandlerPower400VacNotOk(i_bStaActive := s_bErrPower400VacOk);
 s_fbAlarmHandlerPower230VacNotOk(i_bStaActive := s_bErrPower230VacOk);
 s_fbAlarmHandlerPower230VacSocketsNotOk(i_bStaActive := s_bWrnPower230VacSocketsOk);
@@ -201,9 +205,7 @@ s_bErrPower230VacOk R= i_bCmdReset AND s_bStsPower230VacOk;
 s_bWrnPower230VacSocketsOk R= i_bCmdReset AND s_bStsPower230VacSocketsOk;
 s_bErrPower48VdcOk R= i_bCmdReset AND s_bStsPower48VdcOk;
 s_bErrPowerPotentialGroup24VdcOk R= i_bCmdReset AND s_bStsPowerPotentialGroup24VdcOk;
-
 s_bErrAirPressureNotOk R= i_bCmdReset AND s_bStaAirPressureOk;
-
 s_bErrCabinetTemperatureNotOk R= i_bCmdReset AND s_bStaCabinetTemperatureOk;
 
 s_bStaError :=
@@ -292,7 +294,9 @@ s_fbHmiLedSafetyOk(i_bStaLed := s_bStaSafetyOk);
 s_fbHmiLedSafetyFbErr(i_bStaLed := s_bSafetyFbErr);
 s_fbHmiLedEstopInfeedOk(i_bStaLed := s_bEstopInfeedOk);
 s_fbHmiLedEstopCleanroomOk(i_bStaLed := s_bEstopCleanroomOk);
-s_fbHmiLedDoorGuardOk(i_bStaLed := s_bDoorGuardCleanroomOk);
+IF GVl.g_bFUMO3_Enabled THEN
+	s_fbHmiLedDoorGuardOk(i_bStaLed := s_bDoorGuardCleanroomOk);
+END_IF;
 s_fbHmiLedRestartSafety(i_bStaLed := s_bRestartSafetyState);
 s_fbHmiLedPower400VacOk(i_bStaLed := s_bStsPower400VacOk);
 s_fbHmiLedPower230VacOk(i_bStaLed := s_bStsPower230VacOk);
@@ -320,6 +324,7 @@ IF NOT SUPER^._m_Init() THEN
 END_IF
 
 //Safety config
+{warning #TODO: Take over FROM TwinSAFE configuration after verification}
 s_nVerified_Crc := 16#0000;
 
 //Control Modules
@@ -359,8 +364,10 @@ s_fbAlarmHandlerEstopInfeedPressed.i_eAlarmLevel := E_AlarmLevel.Alarm;
 s_fbAlarmHandlerEstopCleanroomPressed.i_sAlarmText := CONCAT(i_sEmName, ' - Emergency stop button cleanroom not OK');
 s_fbAlarmHandlerEstopCleanroomPressed.i_eAlarmLevel := E_AlarmLevel.Alarm;
 
-s_fbAlarmHandlerDoorGuardCleanroomOpened.i_sAlarmText := CONCAT(i_sEmName, ' - Door guard cleanroom not OK');
-s_fbAlarmHandlerDoorGuardCleanroomOpened.i_eAlarmLevel := E_AlarmLevel.Warning;
+IF GVl.g_bFUMO3_Enabled THEN
+	s_fbAlarmHandlerDoorGuardCleanroomOpened.i_sAlarmText := CONCAT(i_sEmName, ' - Door guard cleanroom not OK');
+	s_fbAlarmHandlerDoorGuardCleanroomOpened.i_eAlarmLevel := E_AlarmLevel.Warning;
+END_IF;
 
 s_fbAlarmHandlerPower400VacNotOk.i_sAlarmText := CONCAT(i_sEmName, ' - Power supply 400Vac not OK');
 s_fbAlarmHandlerPower400VacNotOk.i_eAlarmLevel := E_AlarmLevel.Alarm;
@@ -393,26 +400,28 @@ s_fbHmiLedEstopInfeedOk.p_sToHmiDescriptionLed := 'Emergency stop button Infeed 
 s_fbHmiLedEstopCleanroomOk.p_bStaVisible := FALSE;
 s_fbHmiLedEstopCleanroomOk.p_sToHmiDescriptionLed := 'Emergency stop button Cleanroom OK';
 
-s_fbHmiLedDoorGuardOk.p_bStaVisible := FALSE;
-s_fbHmiLedDoorGuardOk.p_sToHmiDescriptionLed := 'Door Guard Cleanroom OK';
+IF GVl.g_bFUMO3_Enabled THEN
+	s_fbHmiLedDoorGuardOk.p_bStaVisible := FALSE;
+	s_fbHmiLedDoorGuardOk.p_sToHmiDescriptionLed := 'Door Guard Cleanroom OK';
+END_IF;
 
 s_fbHmiLedRestartSafety.p_bStaVisible := FALSE;
 s_fbHmiLedRestartSafety.p_sToHmiDescriptionLed := 'Restart Safety';
 
 s_fbHmiLedSafetyFbErr.p_bStaVisible := FALSE;
-s_fbHmiLedSafetyFbErr.p_sToHmiDescriptionLed := 'Safety FB error';
+s_fbHmiLedSafetyFbErr.p_sToHmiDescriptionLed := 'Safety System error';
 
 s_fbHmiLedPower400VacOk.p_bStaVisible := FALSE;
-s_fbHmiLedPower400VacOk.p_sToHmiDescriptionLed := 'Power 400Vac Ok';
+s_fbHmiLedPower400VacOk.p_sToHmiDescriptionLed := 'Power 400Vac Ok (F1)';
 
 s_fbHmiLedPower230VacOk.p_bStaVisible := FALSE;
-s_fbHmiLedPower230VacOk.p_sToHmiDescriptionLed := 'Power 230Vac Ok';
+s_fbHmiLedPower230VacOk.p_sToHmiDescriptionLed := 'Power 230Vac Ok (F2)';
 
 s_fbHmiLedPower230VacSocketsOk.p_bStaVisible := FALSE;
-s_fbHmiLedPower230VacSocketsOk.p_sToHmiDescriptionLed := 'Power 230Vac Service Ok';
+s_fbHmiLedPower230VacSocketsOk.p_sToHmiDescriptionLed := 'Power 230Vac Service Ok (F3)';
 
 s_fbHmiLedPower48VdcOk.p_bStaVisible := FALSE;
-s_fbHmiLedPower48VdcOk.p_sToHmiDescriptionLed := 'Power 48Vdc Ok';
+s_fbHmiLedPower48VdcOk.p_sToHmiDescriptionLed := 'Power 48Vdc Ok (F4)';
 
 s_fbHmiLedPowerPotentialGroup24VdcOk.p_bStaVisible := FALSE;
 s_fbHmiLedPowerPotentialGroup24VdcOk.p_sToHmiDescriptionLed := 'Power Potentialgroup Ok';
@@ -424,13 +433,13 @@ s_fbHmiLedCabinetTemperatureOk.p_bStaVisible := FALSE;
 s_fbHmiLedCabinetTemperatureOk.p_sToHmiDescriptionLed := 'Cabinet temperature Ok';
 
 s_fbHmiLedBeaconGreen.p_bStaVisible := FALSE;
-s_fbHmiLedBeaconGreen.p_sToHmiDescriptionLed := 'Beacon green led';
+s_fbHmiLedBeaconGreen.p_sToHmiDescriptionLed := 'Running';
 
 s_fbHmiLedBeaconYellow.p_bStaVisible := FALSE;
-s_fbHmiLedBeaconYellow.p_sToHmiDescriptionLed := 'Beacon yellow led';
+s_fbHmiLedBeaconYellow.p_sToHmiDescriptionLed := 'Warning Active';
 
 s_fbHmiLedBeaconRed.p_bStaVisible := FALSE;
-s_fbHmiLedBeaconRed.p_sToHmiDescriptionLed := 'Beacon red led';
+s_fbHmiLedBeaconRed.p_sToHmiDescriptionLed := 'Error Active';
 
 _m_Init := TRUE;
 ]]></ST>
@@ -450,7 +459,9 @@ s_bStaSafetyOk := s_diSafetyOk.p_bStaInputDelayed AND s_diSafetyOk.p_bStaInput; 
 s_bSafetyFbErr := s_diSafetyFbErr.p_bStaInput;
 s_bEstopInfeedOk := I_bStaTwinSAFE_Estop1ChA AND I_bStaTwinSAFE_Estop1ChB;
 s_bEstopCleanroomOk := I_bStaTwinSAFE_Estop2ChA AND I_bStaTwinSAFE_Estop2ChB;
-s_bDoorGuardCleanroomOk := I_bStaTwinSAFE_DoorGuardCleanroomChA AND I_bStaTwinSAFE_DoorGuardCleanroomChB;
+IF GVL.g_bFUMO3_Enabled THEN
+	s_bDoorGuardCleanroomOk := I_bStaTwinSAFE_DoorGuardCleanroomChA AND I_bStaTwinSAFE_DoorGuardCleanroomChB;
+END_IF;
 s_bRestartSafety := s_diRestartSafety.p_bStaInput;
 s_bStsPower400VacOk := s_diPower400VacOk.p_bStaInputDelayed AND s_diPower400VacOk.p_bStaInput; //on-delay only
 s_bStsPower230VacOk := s_diPower230VacOk.p_bStaInputDelayed AND s_diPower230VacOk.p_bStaInput; //on-delay only

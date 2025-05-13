@@ -27,9 +27,9 @@ VAR
 	
 	//Inputs
 //??	s_diTwoHandControl : FB_DigInput;
-
+	
 	//Alarms
-
+	
 	//Params
 	s_stSettings : ST_UN_CleanroomConnectSettings;
 	
@@ -50,8 +50,6 @@ VAR
 	s_eCtrlState : E_CtrlState;
 	
 	s_eCabinAirState : E_AirState := E_AirState.UNKNOWN;
-	
-	s_bTestDisableCabinDoors : BOOL := FALSE;
 	
 	//Properties
 	
@@ -146,93 +144,96 @@ s_fbFlashFast(
 
 //Control Modules
 
-//Severity from high to low 
-	//RED = Not Accesible, dirty air after opening outer cabin door 
-	//MAGENTA = Not Accesible, dirty air after opening outer cabin door
-	//BLUE = Pressurize (flash = busy, on = done)
-	//CYAN = Flush (flash = busy, on = done)
-	//YELLOW = Equalize (flash = busy, on = done)
-	//GREEN = Accessible (flash = request pending, on = done)
-	//WHITE = Worklight
-{warning '#FUMO3: Add conditions for air status in the future'}
+IF GVL.g_bFUMO3_Enabled THEN
 
-//Docking / Undocking
-
-//Error, not opertinal
-IF GVL_Modules.g_emAirTreatment.p_bStaStopped THEN
-	s_cmCabinStateIndicator.m_Red(c_bBLINK);
-ELSIF FALSE (*_spare_*) THEN
-	s_cmCabinStateIndicator.m_Red(c_bON);
+	{warning '#FUMO3: Add conditions for air status in the future'}
+	//Severity from high to low 
+		//RED = Not Accesible, dirty air after opening outer cabin door 
+		//MAGENTA = Not Accesible, dirty air after opening outer cabin door
+		//BLUE = Pressurize (flash = busy, on = done)
+		//CYAN = Flush (flash = busy, on = done)
+		//YELLOW = Equalize (flash = busy, on = done)
+		//GREEN = Accessible (flash = request pending, on = done)
+		//WHITE = Worklight
 	
-ELSIF ((s_eCabinAirState = E_AirState.UNKNOWN) OR (s_eCabinAirState = E_AirState.DIRTY))
-	AND NOT(GVL_Modules.g_emDockingInterface.p_bStaDocked)
-	AND NOT(GVL_Modules.g_emDockingInterface.p_bStaOuterDoorClosed) THEN
-	s_cmCabinStateIndicator.m_Magenta(c_bBLINK);
+	//Docking / Undocking
 	
-ELSIF (s_eCabinAirState = E_AirState.DIRTY) THEN
-	s_cmCabinStateIndicator.m_Magenta(c_bON);
+	//Error, not opertinal
+	IF GVL_Modules.g_emAirTreatment.p_bStaStopped THEN
+		s_cmCabinStateIndicator.m_Red(c_bBLINK);
+	ELSIF FALSE (*_spare_*) THEN
+		s_cmCabinStateIndicator.m_Red(c_bON);
+		
+	ELSIF ((s_eCabinAirState = E_AirState.UNKNOWN) OR (s_eCabinAirState = E_AirState.DIRTY))
+		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaDocked)
+		AND NOT(GVL_Modules.g_emDockingInterface.p_bStaOuterDoorClosed) THEN
+		s_cmCabinStateIndicator.m_Magenta(c_bBLINK);
+		
+	ELSIF (s_eCabinAirState = E_AirState.DIRTY) THEN
+		s_cmCabinStateIndicator.m_Magenta(c_bON);
+		
+	//Spare
+	ELSIF FALSE (*_spare_*) THEN
+		s_cmCabinStateIndicator.m_Magenta(c_bBLINK);
+	ELSIF FALSE (*_spare_*) THEN
+		s_cmCabinStateIndicator.m_Magenta(c_bON);
+		
+	//Pressurize
+	ELSIF FALSE (*_pressurizing_cabin_*) THEN
+		s_cmCabinStateIndicator.m_Blue(c_bBLINK);
+	ELSIF FALSE (*_cabin_pressurized_*) THEN
+		s_cmCabinStateIndicator.m_Blue(c_bON);
+		
+	//Flush
+	ELSIF FALSE (*_flushing_cabin_*) THEN
+		s_cmCabinStateIndicator.m_Cyan(c_bBLINK);
+	ELSIF FALSE (*_cabin_flushed_*) THEN
+		s_cmCabinStateIndicator.m_Cyan(c_bON);
+		
+	//Equalize
+	ELSIF FALSE (*_equalizing_cabin_*) THEN
+		s_cmCabinStateIndicator.m_Yellow(c_bBLINK);
+	ELSIF FALSE (*_cabin_equalized_*) THEN
+		s_cmCabinStateIndicator.m_Yellow(c_bON);
+		
+	//Clean air
+	ELSIF GVL_Modules.g_emAirTreatment.p_bStaClean
+		AND NOT(s_cmDoorLockCleanroomDoor.p_bReqAccessRequest)
+		AND NOT(s_cmDoorLockCleanroomDoor.p_bStaAccessGranted) THEN
+		s_cmCabinStateIndicator.m_Green(c_bON);
+		
+	//Access Request Pending... wait for other modules are in the correct state
+	ELSIF s_cmDoorLockCleanroomDoor.p_bReqAccessRequest THEN
+		s_cmCabinStateIndicator.m_Green(c_bBLINK);
+		
+	//Access Granted (bright illumination)
+	ELSIF s_cmDoorLockCleanroomDoor.p_bStaAccessGranted THEN
+		s_cmCabinStateIndicator.m_White(c_bON);
+	END_IF
 	
-//Spare
-ELSIF FALSE (*_spare_*) THEN
-	s_cmCabinStateIndicator.m_Magenta(c_bBLINK);
-ELSIF FALSE (*_spare_*) THEN
-	s_cmCabinStateIndicator.m_Magenta(c_bON);
+	s_cmCabinStateIndicator(
+		i_bFlashPulse := GVL.g_bLedFlashSlow,
+		i_ref_eCtrlMode := s_eCtrlMode,
+		i_ref_eCtrlState := s_eCtrlState);
+		
+	//Cleanroom Door Lock
+	s_cmDoorLockCleanroomDoor.i_bAllowUnlock :=
+		GVL_Modules.g_emLiftingTransport.p_bStaAtIdlePosition
+		AND (GVL_Modules.g_emDockingInterface.p_bStaDocked
+			OR GVL_Modules.g_emDockingInterface.p_bStaOuterDoorClosed);
+		{warning '#FUMO3: Activate conditions below in future'}
+		(*
+		AND (GVL_Modules.g_emAirTreatment.p_bStaClean
+			AND GVL_Modules.g_emAirTreatment.p_bStaEqualized);
+		*)
 	
-//Pressurize
-ELSIF FALSE (*_pressurizing_cabin_*) THEN
-	s_cmCabinStateIndicator.m_Blue(c_bBLINK);
-ELSIF FALSE (*_cabin_pressurized_*) THEN
-	s_cmCabinStateIndicator.m_Blue(c_bON);
-	
-//Flush
-ELSIF FALSE (*_flushing_cabin_*) THEN
-	s_cmCabinStateIndicator.m_Cyan(c_bBLINK);
-ELSIF FALSE (*_cabin_flushed_*) THEN
-	s_cmCabinStateIndicator.m_Cyan(c_bON);
-	
-//Equalize
-ELSIF FALSE (*_equalizing_cabin_*) THEN
-	s_cmCabinStateIndicator.m_Yellow(c_bBLINK);
-ELSIF FALSE (*_cabin_equalized_*) THEN
-	s_cmCabinStateIndicator.m_Yellow(c_bON);
-	
-//Clean air
-ELSIF GVL_Modules.g_emAirTreatment.p_bStaClean
-	AND NOT(s_cmDoorLockCleanroomDoor.p_bReqAccessRequest)
-	AND NOT(s_cmDoorLockCleanroomDoor.p_bStaAccessGranted) THEN
-	s_cmCabinStateIndicator.m_Green(c_bON);
-	
-//Access Request Pending... wait for other modules are in the correct state
-ELSIF s_cmDoorLockCleanroomDoor.p_bReqAccessRequest THEN
-	s_cmCabinStateIndicator.m_Green(c_bBLINK);
-	
-//Access Granted (bright illumination)
-ELSIF s_cmDoorLockCleanroomDoor.p_bStaAccessGranted THEN
-	s_cmCabinStateIndicator.m_White(c_bON);
-END_IF
-
-s_cmCabinStateIndicator(
-	i_bFlashPulse := GVL.g_bLedFlashSlow,
-	i_ref_eCtrlMode := s_eCtrlMode,
-	i_ref_eCtrlState := s_eCtrlState);
-	
-//Cleanroom Door Lock
-s_cmDoorLockCleanroomDoor.i_bAllowUnlock :=
-	GVL_Modules.g_emLiftingTransport.p_bStaAtIdlePosition
-	AND (GVL_Modules.g_emDockingInterface.p_bStaDocked
-		OR GVL_Modules.g_emDockingInterface.p_bStaOuterDoorClosed);
-	{warning '#FUMO3: Activate conditions below in future'}
-	(*
-	AND (GVL_Modules.g_emAirTreatment.p_bStaClean
-		AND GVL_Modules.g_emAirTreatment.p_bStaEqualized);
-	*)
-
-s_cmDoorLockCleanroomDoor(
-	i_bReqEnable := TRUE,
-	i_bFlashPulse := GVL.g_bLedFlashFast,
-	i_eCtrlMode := s_eCtrlMode,
-	i_ref_eCtrlState := s_eCtrlState,
-	i_bCmdReset := p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn); //Add temp reset button
+	s_cmDoorLockCleanroomDoor(
+		i_bReqEnable := TRUE,
+		i_bFlashPulse := GVL.g_bLedFlashFast,
+		i_eCtrlMode := s_eCtrlMode,
+		i_ref_eCtrlState := s_eCtrlState,
+		i_bCmdReset := p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn); //Add temp reset button
+END_IF;
 
 _m_Devices := TRUE;
 ]]></ST>
@@ -316,8 +317,10 @@ s_fbHmiBtnInbound();
 s_fbHmiBtnOutbound();
 s_fbHmiBtnDockTB();
 s_fbHmiBtnUndockTB();
-s_fbHmiBtnOpenInnerTBDoor();
-s_fbHmiBtnCloseInnerTBDoor();
+IF GVL.g_bFUMO3_Enabled THEN
+	s_fbHmiBtnOpenInnerTBDoor();
+	s_fbHmiBtnCloseInnerTBDoor();
+END_IF
 s_fbHmiBtnPickTrolleyFromTB();
 s_fbHmiBtnPlaceTrolleyInTB();
 ]]></ST>
@@ -333,16 +336,19 @@ IF NOT SUPER^._m_Init() THEN
 END_IF
 
 //CM Config////////////////////////////////////////////////////////////////////////////////////////
-//CM Cleanroom Door////////////////////////////////////////////////////////////////////////////////
-s_cmDoorLockCleanroomDoor.i_bReqEnable := FALSE;
-s_cmDoorLockCleanroomDoor.i_eCtrlMode := E_CtrlMode.IDLE;
-s_cmDoorLockCleanroomDoor.i_bCmdReset := FALSE;
-s_cmDoorLockCleanroomDoor.i_sCmName := 'CM Cleanroom Door';
 
-//CM Settings//////////////////////////////////////////////////////////////////////////////////////
-//CM Cleanroom Door////////////////////////////////////////////////////////////////////////////////
-s_cmDoorLockCleanroomDoor.i_stSettings.bAutoLockAtInit := TRUE;
-s_cmDoorLockCleanroomDoor.i_stSettings.tUnlockingRequestTimeout := T#30S;
+IF GVL.g_bFUMO3_Enabled THEN
+	//CM Cleanroom Door////////////////////////////////////////////////////////////////////////////////
+	s_cmDoorLockCleanroomDoor.i_bReqEnable := FALSE;
+	s_cmDoorLockCleanroomDoor.i_eCtrlMode := E_CtrlMode.IDLE;
+	s_cmDoorLockCleanroomDoor.i_bCmdReset := FALSE;
+	s_cmDoorLockCleanroomDoor.i_sCmName := 'CM Cleanroom Door';
+	
+	//CM Settings//////////////////////////////////////////////////////////////////////////////////////
+	//CM Cleanroom Door////////////////////////////////////////////////////////////////////////////////
+	s_cmDoorLockCleanroomDoor.i_stSettings.bAutoLockAtInit := TRUE;
+	s_cmDoorLockCleanroomDoor.i_stSettings.tUnlockingRequestTimeout := T#30S;
+END_IF
 
 //EM Config////////////////////////////////////////////////////////////////////////////////////////
 //EM Utilities/////////////////////////////////////////////////////////////////////////////////////
@@ -389,13 +395,16 @@ GVL_Modules.g_emDoors.i_sEmName := 'EM Doors';
 *)
 
 //EM Air Treatment/////////////////////////////////////////////////////////////////////////////////
-_m_AddModule(i_itfModuleBase := GVL_Modules.g_emAirTreatment);
 
-GVL_Modules.g_emAirTreatment.i_bReqEnable := FALSE;
-GVL_Modules.g_emAirTreatment.i_eCtrlMode := E_CtrlMode.IDLE;
-GVL_Modules.g_emAirTreatment.i_bCmdReset := FALSE;
-GVL_Modules.g_emAirTreatment.i_sEmName  := 'EM Air Treatment';
-
+IF GVL.g_bFUMO3_Enabled THEN
+	_m_AddModule(i_itfModuleBase := GVL_Modules.g_emAirTreatment);
+	
+	GVL_Modules.g_emAirTreatment.i_bReqEnable := FALSE;
+	GVL_Modules.g_emAirTreatment.i_eCtrlMode := E_CtrlMode.IDLE;
+	GVL_Modules.g_emAirTreatment.i_bCmdReset := FALSE;
+	GVL_Modules.g_emAirTreatment.i_sEmName  := 'EM Air Treatment';
+END_IF
+	
 //EM Interlocks////////////////////////////////////////////////////////////////////////////////////
 //EM Utilities/////////////////////////////////////////////////////////////////////////////////////
 //<none>
@@ -643,14 +652,17 @@ GVL_Modules.g_emDockingCabin.i_stSettings.stSettingsDoors.tResetPulseDuration :=
 
 //Settings AirTreatment
 //EM Air Treatment/////////////////////////////////////////////////////////////////////////////////
-GVL_Modules.g_emAirTreatment.i_ref_stSettings REF= s_stSettings.stAirTreatment;
 
-//Pressure controller 
-s_stSettings.stAirTreatment.fKp := -1.0; //P [factor]
-s_stSettings.stAirTreatment.fTn := 10.0; //I [s]
-s_stSettings.stAirTreatment.fTv := 0.0; //D [s]
-s_stSettings.stAirTreatment.fTd := 0.0; //D-time [s]
-
+IF GVL.g_bFUMO3_Enabled THEN
+	GVL_Modules.g_emAirTreatment.i_ref_stSettings REF= s_stSettings.stAirTreatment;
+	
+	//Pressure controller 
+	s_stSettings.stAirTreatment.fKp := -1.0; //P [factor]
+	s_stSettings.stAirTreatment.fTn := 10.0; //I [s]
+	s_stSettings.stAirTreatment.fTv := 0.0; //D [s]
+	s_stSettings.stAirTreatment.fTd := 0.0; //D-time [s]
+END_IF
+	
 //Hmi//////////////////////////////////////////////////////////////////////////////////////////////
 
 //Startup
@@ -690,16 +702,18 @@ s_fbHmiBtnUndockTB.p_bStaEnabled := TRUE;
 s_fbHmiBtnUndockTB.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 s_fbHmiBtnUndockTB.p_sBtnText := 'Undock TB';
 
-s_fbHmiBtnOpenInnerTBDoor.p_bStaVisible := TRUE;
-s_fbHmiBtnOpenInnerTBDoor.p_bStaEnabled := TRUE;
-s_fbHmiBtnOpenInnerTBDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-s_fbHmiBtnOpenInnerTBDoor.p_sBtnText := 'Open Inner TB Door';
-
-s_fbHmiBtnCloseInnerTBDoor.p_bStaVisible := TRUE;
-s_fbHmiBtnCloseInnerTBDoor.p_bStaEnabled := TRUE;
-s_fbHmiBtnCloseInnerTBDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-s_fbHmiBtnCloseInnerTBDoor.p_sBtnText := 'Close Inner TB Door';
-
+IF GVL.g_bFUMO3_Enabled THEN
+	s_fbHmiBtnOpenInnerTBDoor.p_bStaVisible := TRUE;
+	s_fbHmiBtnOpenInnerTBDoor.p_bStaEnabled := TRUE;
+	s_fbHmiBtnOpenInnerTBDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnOpenInnerTBDoor.p_sBtnText := 'Open Inner TB Door';
+	
+	s_fbHmiBtnCloseInnerTBDoor.p_bStaVisible := TRUE;
+	s_fbHmiBtnCloseInnerTBDoor.p_bStaEnabled := TRUE;
+	s_fbHmiBtnCloseInnerTBDoor.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+	s_fbHmiBtnCloseInnerTBDoor.p_sBtnText := 'Close Inner TB Door';
+END_IF
+	
 s_fbHmiBtnPickTrolleyFromTB.p_bStaVisible := TRUE;
 s_fbHmiBtnPickTrolleyFromTB.p_bStaEnabled := TRUE;
 s_fbHmiBtnPickTrolleyFromTB.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
@@ -734,6 +748,7 @@ s_fbModeStateControl(
 			OR GVL_Modules.g_emPalletConveyor.p_bStaError
 			OR GVL_Modules.g_emDockingInterface.p_bStaError
 			OR GVL_Modules.g_emLiftingTransport.p_bStaError
+			OR GVL_Modules.g_emAirTreatment.p_bStaError
 		)
 		AND	( (s_eCtrlMode = E_CtrlMode.AUTOMATIC) OR (s_eCtrlMode = E_CtrlMode.MANUAL) ),
 	i_bStaAllStopped := TRUE);
@@ -746,7 +761,7 @@ GVL_Modules.g_emUtilities.m_GetGeneralState(
 	i_bError := s_bStaError,
 	i_bWarning := s_bStaWarning,
 	i_bRunning := s_bStaRunning);
-
+	
 GVL_Modules.g_emUtilities(
 	i_bReqEnable := TRUE,
 	i_eCtrlMode := s_eCtrlMode,
@@ -758,7 +773,7 @@ bReqEnable :=
 	AND GVL_Modules.g_emUtilities.p_bStsPowerOk
 	AND GVL_Modules.g_emUtilities.p_bStaAirPressureOk
 	AND NOT GVL_Modules.g_emUtilities.p_bStaError;
-
+	
 //EM_PalletConveyor////////////////////////////////////////////////////////////////////////////////
 //Interlocks
 s_fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[0].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaClampsOpened) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking;
@@ -769,7 +784,7 @@ s_fbIlckHandlerConvBwd();
 s_fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[0].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaClampsOpened) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering;
 s_fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[1].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaUnlockPinsLocked) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering;
 s_fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[2].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDoorOpenerClosed) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering;
-s_fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[3].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaOuterDoorOpened) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering AND NOT(s_bTestDisableCabinDoors);
+s_fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[3].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaOuterDoorOpened) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering AND GVL.g_bFUMO3_Enabled;
 s_fbIlckHandlerConvFwd();
 
 GVL_Modules.g_emPalletConveyor(
@@ -785,19 +800,21 @@ GVL_Modules.g_emPalletConveyor(
 s_fbIlckHandlerClampsToClose.i_stInterlockList.arr_Interlocks[0].bState := FALSE; //none
 s_fbIlckHandlerClampsToClose();
 
-{warning '#FUMO3: ADD cleanroom door status}
+{warning '#FUMO3: ADD cleanroom door status'}
 s_fbIlckHandlerClampsToOpen.i_stInterlockList.arr_Interlocks[0].bState := FALSE; //++ NOT(GVL_Modules.g_emDoors.p_bStaCleanroomDoorNotClosedAndLocked);
 s_fbIlckHandlerClampsToOpen();
 
-s_fbIlckHandlerOuterCabinDoorClose.i_stInterlockList.arr_Interlocks[0].bState := GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking;
-s_fbIlckHandlerOuterCabinDoorClose.i_stInterlockList.arr_Interlocks[1].bState := NOT(GVL_Modules.g_emLiftingTransport.p_bStaAtIdlePosition);
-s_fbIlckHandlerOuterCabinDoorClose();
-
-s_fbIlckHandlerInnerCabinDoorClose.i_stInterlockList.arr_Interlocks[0].bState := NOT(GVL_Modules.g_emLiftingTransport.p_bStaAtIdlePosition);
-s_fbIlckHandlerInnerCabinDoorClose();
+IF GVL.g_bFUMO3_Enabled THEN
+	s_fbIlckHandlerOuterCabinDoorClose.i_stInterlockList.arr_Interlocks[0].bState := GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking;
+	s_fbIlckHandlerOuterCabinDoorClose.i_stInterlockList.arr_Interlocks[1].bState := NOT(GVL_Modules.g_emLiftingTransport.p_bStaAtIdlePosition);
+	s_fbIlckHandlerOuterCabinDoorClose();
+	
+	s_fbIlckHandlerInnerCabinDoorClose.i_stInterlockList.arr_Interlocks[0].bState := NOT(GVL_Modules.g_emLiftingTransport.p_bStaAtIdlePosition);
+	s_fbIlckHandlerInnerCabinDoorClose();
+END_IF
 
 GVL_Modules.g_emDockingInterface(
-	i_bTestDisableCabinDoors := s_bTestDisableCabinDoors,
+	i_bTestDisableCabinDoors := NOT(GVL.g_bFUMO3_Enabled),
 	i_bReqEnable := bReqEnable,
 	i_eCtrlMode := s_eCtrlMode,
 	i_eCtrlState := s_eCtrlState,
@@ -812,8 +829,8 @@ GVL_Modules.g_emDockingInterface(
 //EM_LiftingTransport//////////////////////////////////////////////////////////////////////////////
 s_fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[0].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDoorOpenerOpened);
 s_fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[1].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDoorShutterOpened);
-s_fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[2].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaOuterDoorOpened);
-s_fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[3].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpened);
+s_fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[2].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaOuterDoorOpened) AND GVL.g_bFUMO3_Enabled;
+s_fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[3].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpened) AND GVL.g_bFUMO3_Enabled;
 s_fbIlckHandlerTranportExtract();
 
 GVL_Modules.g_emLiftingTransport(
@@ -843,18 +860,20 @@ GVL_Modules.g_emDoors(
 //EM_AirTreatment//////////////////////////////////////////////////////////////////////////////////
 //Interlocks
 //<none>
-
-GVL_Modules.g_emAirTreatment(
-	i_bReqEnable := bReqEnable,
-	i_eCtrlMode := s_eCtrlMode,
-	i_eCtrlState := s_eCtrlState,
-	i_bCmdReset:= p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn); //Add temp reset button
+IF GVL.g_bFUMO3_Enabled THEN
+	GVL_Modules.g_emAirTreatment(
+		i_bReqEnable := bReqEnable,
+		i_eCtrlMode := s_eCtrlMode,
+		i_eCtrlState := s_eCtrlState,
+		i_bCmdReset:= p_bCmdReset OR s_fbHmiBtnReset.p_bStaBtn); //Add temp reset button
+END_IF
 
 s_bStaError :=
 	GVL_Modules.g_emUtilities.q_bStaError
 	OR GVL_Modules.g_emPalletConveyor.q_bStaError
 	OR GVL_Modules.g_emDockingInterface.q_bStaError
 	OR GVL_Modules.g_emLiftingTransport.q_bStaError
+	OR GVL_Modules.g_emAirTreatment.q_bStaError
 	OR s_cmDoorLockCleanroomDoor.p_bStaError;
 //++	OR GVL_Modules.g_emDoors.q_bStaError;
 //++OR GVL_Modules.g_emDockingCabin.q_bStaError
@@ -864,6 +883,7 @@ s_bStaWarning :=
 	OR GVL_Modules.g_emPalletConveyor.q_bStaWarning
 	OR GVL_Modules.g_emDockingInterface.q_bStaWarning
 	OR GVL_Modules.g_emLiftingTransport.q_bStaWarning
+	OR GVL_Modules.g_emAirTreatment.q_bStaWarning
 	OR s_cmDoorLockCleanroomDoor.p_bStaWarning;
 //++	OR GVL_Modules.g_emDoors.q_bStaWarning;
 //++OR GVL_Modules.g_emDockingCabin.q_bStaWarning
@@ -886,7 +906,8 @@ END_IF
 s_bStaEmError :=
 	GVL_Modules.g_emPalletConveyor.p_bStaError
 	OR GVL_Modules.g_emDockingInterface.p_bStaError
-	OR GVL_Modules.g_emLiftingTransport.p_bStaError;
+	OR GVL_Modules.g_emLiftingTransport.p_bStaError
+	OR GVL_Modules.g_emAirTreatment.p_bStaError;
 	
 s_fbSeqControl(
 	i_nSeqStep := s_eSequence,
@@ -914,7 +935,6 @@ CASE s_eSequence OF
 			s_eSequence := s_eResumeStep;
 		END_IF
 		
-///////////////////////////////////////////////////////////////////////////////////////////////////
 ////READY//////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqCleanroomConnect.READY:
 		IF s_fbSeqControl.q_bStaEntry THEN
@@ -1066,7 +1086,11 @@ CASE s_eSequence OF
 		IF GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpened
 			AND GVL_Modules.g_emDockingInterface.p_bStaReady THEN
 			
-			s_eSequence := E_SeqCleanroomConnect.FLUSHING;
+			IF GVL.g_bFUMO3_Enabled THEN
+				s_eSequence := E_SeqCleanroomConnect.FLUSHING;
+			ELSE
+				s_eSequence := E_SeqCleanroomConnect.READY;
+			END_IF
 		END_IF
 		
 	E_SeqCleanroomConnect.FLUSHING:
@@ -1515,7 +1539,7 @@ CASE s_eCtrlMode OF
 		s_eReqAction := E_ReqAction.NONE;
 		
 	E_CtrlMode.AUTOMATIC:
-		//Wait for commands from
+		//Wait for commands from Hmi
 		IF s_fbHmiBtnInbound.p_osrBtnPress THEN
 			s_eReqAction := E_ReqAction.INBOUND;
 		END_IF
@@ -1586,7 +1610,6 @@ ELSE
 	s_bHmiForceOutputEnabled := FALSE;
 	s_bHmiForceOutputRGBEnabled := FALSE;
 	s_bHmiForceOutputWEnabled := FALSE;
-	
 END_IF
 ]]></ST>
       </Implementation>

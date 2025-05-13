@@ -404,14 +404,6 @@ IF NOT SUPER^._m_Devices() THEN
 	RETURN;
 END_IF
 
-s_cmDockingClampsUpper(
-	i_bReqEnable := i_bReqEnable,
-	i_eCtrlMode := i_eCtrlMode,
-	i_ref_eCtrlState := i_eCtrlState,
-	i_bCmdReset := i_bCmdReset,
-	i_bIclkOn := s_bIlckDockingClampsToClose AND NOT(s_bOverruleInterlocks),
-	i_bIclkOff := s_bIlckDockingClampsToOpen AND NOT(s_bOverruleInterlocks));
-	
 s_cmClampsUpperHighPressure(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
@@ -420,14 +412,6 @@ s_cmClampsUpperHighPressure(
 	i_bIclkOn := FALSE,
 	i_bIclkOff := FALSE);
 	
-s_cmDockingClampsLower(
-	i_bReqEnable := i_bReqEnable,
-	i_eCtrlMode := i_eCtrlMode,
-	i_ref_eCtrlState := i_eCtrlState,
-	i_bCmdReset := i_bCmdReset,
-	i_bIclkOn := s_bIlckDockingClampsToClose AND NOT(s_bOverruleInterlocks),
-	i_bIclkOff := s_bIlckDockingClampsToOpen AND NOT(s_bOverruleInterlocks));
-	
 s_cmClampsLowerHighPressure(
 	i_bReqEnable := i_bReqEnable,
 	i_eCtrlMode := i_eCtrlMode,
@@ -435,6 +419,22 @@ s_cmClampsLowerHighPressure(
 	i_bCmdReset := i_bCmdReset,
 	i_bIclkOn := FALSE,
 	i_bIclkOff := FALSE);
+	
+s_cmDockingClampsUpper(
+	i_bReqEnable := i_bReqEnable,
+	i_eCtrlMode := i_eCtrlMode,
+	i_ref_eCtrlState := i_eCtrlState,
+	i_bCmdReset := i_bCmdReset,
+	i_bIclkOn := s_bIlckDockingClampsToClose AND NOT(s_bOverruleInterlocks),
+	i_bIclkOff := s_bIlckDockingClampsToOpen AND NOT(s_bOverruleInterlocks));
+	
+s_cmDockingClampsLower(
+	i_bReqEnable := i_bReqEnable,
+	i_eCtrlMode := i_eCtrlMode,
+	i_ref_eCtrlState := i_eCtrlState,
+	i_bCmdReset := i_bCmdReset,
+	i_bIclkOn := s_bIlckDockingClampsToClose AND NOT(s_bOverruleInterlocks),
+	i_bIclkOff := s_bIlckDockingClampsToOpen AND NOT(s_bOverruleInterlocks));
 	
 s_bStaDockingClampsUpperHighPressure := s_cmClampsUpperHighPressure.p_bStaOutput;
 s_bStaDockingClampsLowerHighPressure := s_cmClampsLowerHighPressure.p_bStaOutput;

@@ -48,31 +48,35 @@
     "event": "TcHmiTab_General.onPressed",
     "actions": [
       {
+        "objectType": "Comment",
+        "comment": "Overwrite tab selected by PLC"
+      },
+      {
         "objectType": "WriteToSymbol",
         "active": true,
-        "symbolExpression": "%ctrl%TcHmiRegion_Content::TargetContent%/ctrl%",
+        "symbolExpression": "%pp%sContentTab%/pp%",
         "value": {
           "objectType": "Symbol",
           "valueType": "tchmi:general#/definitions/String",
-          "symbolExpression": "%f%%pp%sContentPath%/pp%+'_General.content'%/f%"
+          "symbolExpression": "%f%'General'%/f%"
         },
         "asyncWait": true
       },
       {
         "objectType": "WriteToSymbol",
         "active": true,
-        "symbolExpression": "%pp%nSelected%/pp%",
+        "symbolExpression": "%ctrl%TcHmiRegion_Content::TargetContent%/ctrl%",
         "value": {
-          "objectType": "StaticValue",
-          "valueType": "tchmi:general#/definitions/Number",
-          "value": 1.0
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%f%%pp%sContentPath%/pp%+'_'+%pp%sContentTab%/pp%+'.content'%/f%"
         },
         "asyncWait": true
       }
     ]
   },
   {
-    "event": "%pp%nSelected%/pp%",
+    "event": "%pp%sContentTab%/pp%",
     "actions": [
       {
         "objectType": "Condition",
@@ -84,12 +88,12 @@
                 "compare1": {
                   "objectType": "Symbol",
                   "valueType": "tchmi:general#/definitions/Number",
-                  "symbolExpression": "%pp%nSelected%/pp%"
+                  "symbolExpression": "%pp%sContentTab%/pp%"
                 },
                 "compare2": {
                   "objectType": "StaticValue",
-                  "valueType": "tchmi:general#/definitions/Number",
-                  "value": 1.0
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "General"
                 },
                 "compareOperator": "==",
                 "logic": null
@@ -158,7 +162,7 @@
 ]
 </script>
 </div>
-<div id="TcHmiTab_Auto" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="5" data-tchmi-height-unit="%" data-tchmi-left="10" data-tchmi-left-unit="%" data-tchmi-top="5" data-tchmi-top-unit="%" data-tchmi-width="10" data-tchmi-width-unit="%" data-tchmi-word-wrap="true" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-vertical-alignment="Center" data-tchmi-text="Auto" data-tchmi-text-font-size-unit="%" data-tchmi-text-font-size="100" data-tchmi-zindex="3">
+<div id="TcHmiTab_AutoManual" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="5" data-tchmi-height-unit="%" data-tchmi-left="10" data-tchmi-left-unit="%" data-tchmi-top="5" data-tchmi-top-unit="%" data-tchmi-width="10" data-tchmi-width-unit="%" data-tchmi-word-wrap="true" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-vertical-alignment="Center" data-tchmi-text="Auto / Manual" data-tchmi-text-font-size-unit="%" data-tchmi-text-font-size="100" data-tchmi-zindex="3">
 <script data-tchmi-target-attribute="data-tchmi-border-width" type="application/json">
 {
   "left": 1,
@@ -205,8 +209,23 @@
 <script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
 [
   {
-    "event": "TcHmiTab_Auto.onPressed",
+    "event": "TcHmiTab_AutoManual.onPressed",
     "actions": [
+      {
+        "objectType": "Comment",
+        "comment": "Overwrite tab selected by PLC"
+      },
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%pp%sContentTab%/pp%",
+        "value": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%f%'AutoManual'%/f%"
+        },
+        "asyncWait": true
+      },
       {
         "objectType": "WriteToSymbol",
         "active": true,
@@ -214,25 +233,14 @@
         "value": {
           "objectType": "Symbol",
           "valueType": "tchmi:general#/definitions/String",
-          "symbolExpression": "%f%%pp%sContentPath%/pp%+'_Auto.content'%/f%"
-        },
-        "asyncWait": true
-      },
-      {
-        "objectType": "WriteToSymbol",
-        "active": true,
-        "symbolExpression": "%pp%nSelected%/pp%",
-        "value": {
-          "objectType": "StaticValue",
-          "valueType": "tchmi:general#/definitions/Number",
-          "value": 2.0
+          "symbolExpression": "%f%%pp%sContentPath%/pp%+'_'+%pp%sContentTab%/pp%+'.content'%/f%"
         },
         "asyncWait": true
       }
     ]
   },
   {
-    "event": "%pp%nSelected%/pp%",
+    "event": "%pp%sContentTab%/pp%",
     "actions": [
       {
         "objectType": "Condition",
@@ -243,13 +251,13 @@
               {
                 "compare1": {
                   "objectType": "Symbol",
-                  "valueType": "tchmi:general#/definitions/Number",
-                  "symbolExpression": "%pp%nSelected%/pp%"
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%pp%sContentTab%/pp%"
                 },
                 "compare2": {
                   "objectType": "StaticValue",
-                  "valueType": "tchmi:general#/definitions/Number",
-                  "value": 2.0
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "AutoManual"
                 },
                 "compareOperator": "==",
                 "logic": null
@@ -259,7 +267,7 @@
               {
                 "objectType": "WriteToSymbol",
                 "active": true,
-                "symbolExpression": "%ctrl%TcHmiTab_Auto::BackgroundColor%/ctrl%",
+                "symbolExpression": "%ctrl%TcHmiTab_AutoManual::BackgroundColor%/ctrl%",
                 "value": {
                   "objectType": "StaticValue",
                   "valueType": "tchmi:framework#/definitions/Color",
@@ -272,7 +280,7 @@
               {
                 "objectType": "WriteToSymbol",
                 "active": true,
-                "symbolExpression": "%ctrl%TcHmiTab_Auto::TextColor%/ctrl%",
+                "symbolExpression": "%ctrl%TcHmiTab_AutoManual::TextColor%/ctrl%",
                 "value": {
                   "objectType": "StaticValue",
                   "valueType": "tchmi:framework#/definitions/SolidColor",
@@ -289,7 +297,7 @@
               {
                 "objectType": "WriteToSymbol",
                 "active": true,
-                "symbolExpression": "%ctrl%TcHmiTab_Auto::BackgroundColor%/ctrl%",
+                "symbolExpression": "%ctrl%TcHmiTab_AutoManual::BackgroundColor%/ctrl%",
                 "value": {
                   "objectType": "StaticValue",
                   "valueType": "tchmi:framework#/definitions/Color",
@@ -300,7 +308,7 @@
               {
                 "objectType": "WriteToSymbol",
                 "active": true,
-                "symbolExpression": "%ctrl%TcHmiTab_Auto::TextColor%/ctrl%",
+                "symbolExpression": "%ctrl%TcHmiTab_AutoManual::TextColor%/ctrl%",
                 "value": {
                   "objectType": "StaticValue",
                   "valueType": "tchmi:framework#/definitions/SolidColor",
@@ -368,31 +376,35 @@
     "event": "TcHmiTab_Maintenance.onPressed",
     "actions": [
       {
+        "objectType": "Comment",
+        "comment": "Overwrite tab selected by PLC"
+      },
+      {
         "objectType": "WriteToSymbol",
         "active": true,
-        "symbolExpression": "%ctrl%TcHmiRegion_Content::TargetContent%/ctrl%",
+        "symbolExpression": "%pp%sContentTab%/pp%",
         "value": {
           "objectType": "Symbol",
           "valueType": "tchmi:general#/definitions/String",
-          "symbolExpression": "%f%%pp%sContentPath%/pp%+'_Maintenance.content'%/f%"
+          "symbolExpression": "%f%'Maintenance'%/f%"
         },
         "asyncWait": true
       },
       {
         "objectType": "WriteToSymbol",
         "active": true,
-        "symbolExpression": "%pp%nSelected%/pp%",
+        "symbolExpression": "%ctrl%TcHmiRegion_Content::TargetContent%/ctrl%",
         "value": {
-          "objectType": "StaticValue",
-          "valueType": "tchmi:general#/definitions/Number",
-          "value": 3.0
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%f%%pp%sContentPath%/pp%+'_'+%pp%sContentTab%/pp%+'.content'%/f%"
         },
         "asyncWait": true
       }
     ]
   },
   {
-    "event": "%pp%nSelected%/pp%",
+    "event": "%pp%sContentTab%/pp%",
     "actions": [
       {
         "objectType": "Condition",
@@ -404,12 +416,12 @@
                 "compare1": {
                   "objectType": "Symbol",
                   "valueType": "tchmi:general#/definitions/Number",
-                  "symbolExpression": "%pp%nSelected%/pp%"
+                  "symbolExpression": "%pp%sContentTab%/pp%"
                 },
                 "compare2": {
                   "objectType": "StaticValue",
-                  "valueType": "tchmi:general#/definitions/Number",
-                  "value": 3.0
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "Maintenance"
                 },
                 "compareOperator": "==",
                 "logic": null
@@ -525,7 +537,7 @@
 <script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
 [
   {
-    "event": "%pp%nSelected%/pp%",
+    "event": "%pp%sContentTab%/pp%",
     "actions": [
       {
         "objectType": "Condition",
@@ -537,12 +549,12 @@
                 "compare1": {
                   "objectType": "Symbol",
                   "valueType": "tchmi:general#/definitions/Number",
-                  "symbolExpression": "%pp%nSelected%/pp%"
+                  "symbolExpression": "%pp%sContentTab%/pp%"
                 },
                 "compare2": {
                   "objectType": "StaticValue",
-                  "valueType": "tchmi:general#/definitions/Number",
-                  "value": 4.0
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "IO-Test"
                 },
                 "compareOperator": "==",
                 "logic": null
@@ -612,24 +624,28 @@
     "event": "TcHmiTab_IO-Test.onPressed",
     "actions": [
       {
+        "objectType": "Comment",
+        "comment": "Overwrite tab selected by PLC"
+      },
+      {
         "objectType": "WriteToSymbol",
         "active": true,
-        "symbolExpression": "%ctrl%TcHmiRegion_Content::TargetContent%/ctrl%",
+        "symbolExpression": "%pp%sContentTab%/pp%",
         "value": {
           "objectType": "Symbol",
           "valueType": "tchmi:general#/definitions/String",
-          "symbolExpression": "%f%%pp%sContentPath%/pp%+'_IO-Test.content'%/f%"
+          "symbolExpression": "%f%'IO-Test'%/f%"
         },
         "asyncWait": true
       },
       {
         "objectType": "WriteToSymbol",
         "active": true,
-        "symbolExpression": "%pp%nSelected%/pp%",
+        "symbolExpression": "%ctrl%TcHmiRegion_Content::TargetContent%/ctrl%",
         "value": {
-          "objectType": "StaticValue",
-          "valueType": "tchmi:general#/definitions/Number",
-          "value": 4.0
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%f%%pp%sContentPath%/pp%+'_'+%pp%sContentTab%/pp%+'.content'%/f%"
         },
         "asyncWait": true
       }
@@ -806,7 +822,7 @@
 <script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
 [
   {
-    "event": "ucTabEM.onAttached",
+    "event": "%pp%sContentTab%/pp%",
     "actions": [
       {
         "objectType": "WriteToSymbol",
@@ -815,18 +831,7 @@
         "value": {
           "objectType": "Symbol",
           "valueType": "tchmi:general#/definitions/String",
-          "symbolExpression": "%f%%pp%sContentPath%/pp%+'_General.content'%/f%"
-        },
-        "asyncWait": true
-      },
-      {
-        "objectType": "WriteToSymbol",
-        "active": true,
-        "symbolExpression": "%pp%nSelected%/pp%",
-        "value": {
-          "objectType": "StaticValue",
-          "valueType": "tchmi:general#/definitions/Number",
-          "value": 1.0
+          "symbolExpression": "%f%%pp%sContentPath%/pp%+'_'+%pp%sContentTab%/pp%+'.content'%/f%"
         },
         "asyncWait": true
       }

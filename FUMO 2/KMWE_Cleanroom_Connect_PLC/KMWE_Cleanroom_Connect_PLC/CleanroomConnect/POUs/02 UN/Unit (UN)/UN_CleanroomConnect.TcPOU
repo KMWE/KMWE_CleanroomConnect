@@ -287,17 +287,25 @@ END_IF
 {warning #TODO: Check IF THIS can be used TO automatically open tab corresponding TO the selected mode}
 CASE s_eCtrlMode OF
 	E_CtrlMode.IDLE:
-		;
+		GVL.g_sToHmiMiddleTab := 'General';
+		
 	E_CtrlMode.AUTOMATIC:
-		;
+		GVL.g_sToHmiMiddleTab := 'AutoManual';
+		
 	E_CtrlMode.MANUAL:
-		;
+		GVL.g_sToHmiMiddleTab := 'AutoManual';
+		
 	E_CtrlMode.MAINTENANCE:
-		;
+		GVL.g_sToHmiMiddleTab := 'Maintenance';
+		
 	E_CtrlMode.IO:
-		;
+		GVL.g_sToHmiMiddleTab := 'IO-Test';
+		
 	E_CtrlMode.CLEANING:
-		;
+//++		GVL.g_sToHmiMiddleTab := 'Cleaning';
+		
+ELSE
+		GVL.g_sToHmiMiddleTab := 'General';
 END_CASE
 
 //Hmi Buttons
@@ -649,6 +657,7 @@ s_stSettings.stAirTreatment.fTd := 0.0; //D-time [s]
 GVL.g_sToHmiTopContent := GVL.g_stHmiTopBar.GeneralTopbar;
 GVL.g_sToHmiMiddleContent := GVL.g_stHmiMiddle.Start;
 GVL.g_sToHmiBottomContent := GVL.g_stHmiBottomBar.Start;
+GVL.g_sToHmiMiddleTab := 'General';
 
 //Buttons
 s_fbHmiBtnAlarms.p_bStaVisible := TRUE;

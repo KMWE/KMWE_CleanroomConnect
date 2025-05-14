@@ -109,11 +109,11 @@ VAR
 	s_bDoorCheckTimeDisabled : BOOL := FALSE;
 	
 	//Sequencers
-	s_eSequence : E_SeqTransport;
+	s_eSequence : E_SeqPalletConveyor;
 	s_fbSeqControl : FB_SeqControl;
 	
-	s_ePreviousStep : E_SeqTransport;
-	s_eResumeStep : E_SeqTransport;
+	s_ePreviousStep : E_SeqPalletConveyor;
+	s_eResumeStep : E_SeqPalletConveyor;
 	s_sResumeStep : STRING(GVL.g_nMAX_LEN_STEP_NAME);
 	
 	//Hmi
@@ -139,7 +139,7 @@ VAR
 END_VAR
 
 VAR PERSISTENT //Variables below will be returned during: Power Cycle, Active Configuration, Download, Cold Restart
-	s_eLastStepTransportPersistent : E_SeqTransport := E_SeqTransport.READY;
+	s_eLastStepPersistent : E_SeqPalletConveyor := E_SeqPalletConveyor.READY;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -663,8 +663,8 @@ _m_Params := TRUE;
         <ST><![CDATA[
 //Register previous step
 IF s_eSequence <> s_ePreviousStep
-	AND s_eSequence <> E_SeqTransport.STOP
-	AND s_eSequence <> E_SeqTransport.ERROR THEN
+	AND s_eSequence <> E_SeqPalletConveyor.STOP
+	AND s_eSequence <> E_SeqPalletConveyor.ERROR THEN
 	s_ePreviousStep := s_eSequence;
 END_IF
 
@@ -674,32 +674,33 @@ s_fbSeqControl(
 	i_bCmdReset :=
 		i_bCmdReset
 		AND i_bReqEnable
-		AND (s_eSequence = E_SeqTransport.ERROR) //Only reset/resume sequencer from ERROR state
+		AND (s_eSequence = E_SeqPalletConveyor.ERROR) //Only reset/resume sequencer from ERROR state
 		AND NOT(s_bStaError),
 	i_bStaError := s_bStaError OR NOT(i_bReqEnable));
 	
 //Force to stop
 IF (i_eCtrlState = E_CtrlState.STOPPING) THEN
-	s_eSequence := E_SeqTransport.STOP;
+	s_eSequence := E_SeqPalletConveyor.STOP;
 END_IF
 
 //Load last step from persistent memory
-IF (s_eSequence > E_SeqTransport.START) AND (s_eSequence < E_SeqTransport.STOP) THEN
-	s_eLastStepTransportPersistent := s_eSequence;
+IF (s_eSequence > E_SeqPalletConveyor.START) AND (s_eSequence < E_SeqPalletConveyor.STOP) THEN
+	s_eLastStepPersistent := s_eSequence;
 END_IF
 
 s_sResumeStep := TO_STRING(s_eResumeStep);
 
 CASE s_eSequence OF
-	E_SeqTransport.IDLE:
-		s_eTmpLocation := E_Location.UNKNOWN;
-		
+	E_SeqPalletConveyor.IDLE:
 		IF (i_eCtrlState = E_CtrlState.IDLE) THEN
-			s_eSequence := E_SeqTransport.START;
+			s_eSequence := E_SeqPalletConveyor.START;
+			s_eResumeStep := s_eLastStepPersistent;
 		END_IF
 		
+		s_eTmpLocation := E_Location.UNKNOWN;
+		
 //START////////////////////////////////////////////////////////////////////////////////////////////
-	E_SeqTransport.START:
+	E_SeqPalletConveyor.START:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmPalletConveyor.m_Stop();
 			s_cmCenteringUnit.m_Off();
@@ -713,28 +714,28 @@ CASE s_eSequence OF
 			*)
 			
 			IF i_eCtrlState = E_CtrlState.RUNNING THEN
-				s_eSequence := E_SeqTransport.READY;
+				s_eSequence := E_SeqPalletConveyor.READY;
 			END_IF
 		END_IF
 		
 //READY////////////////////////////////////////////////////////////////////////////////////////////
-	E_SeqTransport.READY:
+	E_SeqPalletConveyor.READY:
 		IF s_fbSeqControl.q_bStaEntry THEN
 //??			i_refTB.p_eActLocation := s_eTmpLocation;
-			s_eResumeStep := E_SeqTransport.READY;
+			s_eResumeStep := E_SeqPalletConveyor.READY;
 			s_eTmpLocation := E_Location.UNKNOWN;
 		END_IF
 		
 //??		i_refTB.p_bOuterDoorOpened S= s_bStaAtInfeedRearPosition AND s_bStaAtInfeedFrontPosition AND s_bStaDoorOpened;
 		
 		IF i_eCtrlState <> E_CtrlState.RUNNING THEN
-			s_eSequence := E_SeqTransport.START;
+			s_eSequence := E_SeqPalletConveyor.START;
 		END_IF
 		
 		IF s_bReqTB_ToInfeed THEN
 			
 			IF _m_CmdTB_ToInfeed(i_refReason := s_sMessage) THEN
-				s_eSequence := E_SeqTransport.MOVE_TO_INFEED;
+				s_eSequence := E_SeqPalletConveyor.MOVE_TO_INFEED;
 			ELSE //If failed (command not allowed): the message will be written with the interlock reason
 				;
 			END_IF
@@ -744,7 +745,7 @@ CASE s_eSequence OF
 		ELSIF s_bReqTB_ToCenter THEN
 			
 			IF _m_CmdTB_ToCenter(i_refReason := s_sMessage) THEN
-				s_eSequence := E_SeqTransport.MOVE_TO_CENTERING;
+				s_eSequence := E_SeqPalletConveyor.MOVE_TO_CENTERING;
 			ELSE //If failed (command not allowed): the message will be written with the interlock reason
 				;
 			END_IF
@@ -754,7 +755,7 @@ CASE s_eSequence OF
 		ELSIF s_bReqTB_ToDocking THEN
 			
 			IF _m_CmdTB_ToDocking(i_refReason := s_sMessage) THEN
-				s_eSequence := E_SeqTransport.MOVE_TO_DOCKING;
+				s_eSequence := E_SeqPalletConveyor.MOVE_TO_DOCKING;
 			ELSE //If failed (command not allowed): the message will be written with the interlock reason
 				;
 			END_IF
@@ -764,7 +765,7 @@ CASE s_eSequence OF
 		ELSIF s_bReqCenteringTB THEN
 			
 			IF _m_CmdCenteringTB(i_refReason := s_sMessage) THEN
-				s_eSequence := E_SeqTransport.PUSHER_TO_CENTER;
+				s_eSequence := E_SeqPalletConveyor.PUSHER_TO_CENTER;
 			ELSE //If failed (command not allowed): the message will be written with the interlock reason
 				;
 			END_IF
@@ -774,7 +775,7 @@ CASE s_eSequence OF
 		END_IF
 		
 //MOVE TO INFEED///////////////////////////////////////////////////////////////////////////////////
-	E_SeqTransport.MOVE_TO_INFEED:
+	E_SeqPalletConveyor.MOVE_TO_INFEED:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_tMaxTravelTime :=
 				_CalcMaxTravelTime(
@@ -799,15 +800,15 @@ CASE s_eSequence OF
 		
 		IF s_bStaAtInfeedRearPosition AND s_bStaAtInfeedFrontPosition THEN
 			s_eTmpLocation := E_Location.INFEED;
-			s_eSequence := E_SeqTransport.STOP;
+			s_eSequence := E_SeqPalletConveyor.STOP;
 		ELSIF s_fbSeqControl.q_tmStepTime > s_tMaxTravelTime THEN
 			s_bErrTravelTimeOut := TRUE;
 			s_sReason := 'Moving to infeed - timeout';
-			s_eSequence := E_SeqTransport.ERROR;
+			s_eSequence := E_SeqPalletConveyor.ERROR;
 		END_IF
 		
 //CENTERING////////////////////////////////////////////////////////////////////////////////////////
-	E_SeqTransport.MOVE_TO_CENTERING:
+	E_SeqPalletConveyor.MOVE_TO_CENTERING:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_tMaxTravelTime :=
 				_CalcMaxTravelTime(
@@ -835,57 +836,57 @@ CASE s_eSequence OF
 		IF s_bStaAtCenteringPosition THEN
 			s_bDoorCheckTimeDisabled := FALSE;
 			s_eTmpLocation := E_Location.CENTERING;
-			s_eSequence := E_SeqTransport.MOVE_TO_CENTERING_STOP;
+			s_eSequence := E_SeqPalletConveyor.MOVE_TO_CENTERING_STOP;
 			
 		ELSIF s_fbSeqControl.q_tmStepTime < s_tDoorCheckTime
 			AND NOT(s_bStaDoorOpened)
 			AND s_bStaAtInfeedRearPosition THEN
 			s_bWrnOuterDoorNotOpened := TRUE;
 			s_bDoorCheckTimeDisabled := TRUE; //Disable error after first occurance (to prevent invalid retriggering at reties)
-			s_eSequence := E_SeqTransport.ERROR;
+			s_eSequence := E_SeqPalletConveyor.ERROR;
 			
 		ELSIF s_fbSeqControl.q_tmStepTime > s_tMaxTravelTime THEN
 			s_bErrTravelTimeOut := TRUE;
 			s_sReason := 'Moving to Centering - timeout';
-			s_eSequence := E_SeqTransport.ERROR;
+			s_eSequence := E_SeqPalletConveyor.ERROR;
 			
 		END_IF
 		
-	E_SeqTransport.MOVE_TO_CENTERING_STOP:
+	E_SeqPalletConveyor.MOVE_TO_CENTERING_STOP:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmPalletConveyor.m_Stop();
 		END_IF
 		
 		IF s_cmPalletConveyor.p_bStaMotorStopped THEN
-			s_eSequence := E_SeqTransport.PUSHER_TO_CENTER;
+			s_eSequence := E_SeqPalletConveyor.PUSHER_TO_CENTER;
 		END_IF
 		
-	E_SeqTransport.PUSHER_TO_CENTER:
+	E_SeqPalletConveyor.PUSHER_TO_CENTER:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmCenteringUnit.m_On();
 		END_IF
 		
 		IF s_cmCenteringUnit.p_bStaIsOn THEN
-			s_eSequence := E_SeqTransport.PUSHER_AT_CENTER;
+			s_eSequence := E_SeqPalletConveyor.PUSHER_AT_CENTER;
 		END_IF
 		
-	E_SeqTransport.PUSHER_AT_CENTER:
+	E_SeqPalletConveyor.PUSHER_AT_CENTER:
 		IF s_fbSeqControl.q_tmStepTime > i_ref_stSettings.tCenteringDuration THEN
 			s_eTmpCenteringDone := TRUE;
-			s_eSequence := E_SeqTransport.PUSHER_TO_IDLE;
+			s_eSequence := E_SeqPalletConveyor.PUSHER_TO_IDLE;
 		END_IF
 		
-	E_SeqTransport.PUSHER_TO_IDLE:
+	E_SeqPalletConveyor.PUSHER_TO_IDLE:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmCenteringUnit.m_Off();
 		END_IF
 		
 		IF s_cmCenteringUnit.p_bStaIsOff THEN
-			s_eSequence := E_SeqTransport.READY;
+			s_eSequence := E_SeqPalletConveyor.READY;
 		END_IF
 		
 //MOVE TO DOCKING//////////////////////////////////////////////////////////////////////////////////
-	E_SeqTransport.MOVE_TO_DOCKING:
+	E_SeqPalletConveyor.MOVE_TO_DOCKING:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_tMaxTravelTime :=
 				_CalcMaxTravelTime(
@@ -910,18 +911,18 @@ CASE s_eSequence OF
 		
 		IF s_bStaAtDockingPosition THEN
 			s_eTmpLocation := E_Location.DOCKING;
-			s_eSequence := E_SeqTransport.STOP;
+			s_eSequence := E_SeqPalletConveyor.STOP;
 		ELSIF s_fbSeqControl.q_tmStepTime > s_tMaxTravelTime THEN
 			s_bErrTravelTimeOut := TRUE;
 			s_sReason := 'Moving to docking - timeout';
-			s_eSequence := E_SeqTransport.ERROR;
+			s_eSequence := E_SeqPalletConveyor.ERROR;
 		END_IF
 		
 //STOP/////////////////////////////////////////////////////////////////////////////////////////////
-	E_SeqTransport.STOP:
+	E_SeqPalletConveyor.STOP:
 		IF s_fbSeqControl.q_bStaEntry THEN
-			IF s_ePreviousStep > E_SeqDockingInterface.START
-				AND s_ePreviousStep < E_SeqDockingInterface.ERROR THEN
+			IF s_ePreviousStep > E_SeqPalletConveyor.START
+				AND s_ePreviousStep < E_SeqPalletConveyor.ERROR THEN
 					s_eResumeStep := s_ePreviousStep;
 			END_IF
 			
@@ -930,22 +931,22 @@ CASE s_eSequence OF
 		
 		IF (i_eCtrlState = E_CtrlState.RUNNING) THEN
 			IF s_cmPalletConveyor.p_bStaMotorStopped THEN
-				s_eSequence := E_SeqTransport.READY;
+				s_eSequence := E_SeqPalletConveyor.READY;
 			END_IF
 		ELSE
 			IF i_eCtrlState = E_CtrlState.IDLE THEN
-				s_eSequence := E_SeqTransport.START;
+				s_eSequence := E_SeqPalletConveyor.START;
 			END_IF
 		END_IF
 		
 //ERROR////////////////////////////////////////////////////////////////////////////////////////////
-	E_SeqTransport.ERROR:
+	E_SeqPalletConveyor.ERROR:
 		IF s_fbSeqControl.q_bStaEntry THEN
-			IF s_ePreviousStep > E_SeqTransport.START
-				AND s_ePreviousStep < E_SeqTransport.ERROR THEN
+			IF s_ePreviousStep > E_SeqPalletConveyor.START
+				AND s_ePreviousStep < E_SeqPalletConveyor.ERROR THEN
 				s_eResumeStep := s_ePreviousStep;
 			ELSE
-				s_eResumeStep := E_SeqTransport.READY;
+				s_eResumeStep := E_SeqPalletConveyor.READY;
 			END_IF
 			
 			s_cmPalletConveyor.m_Stop();
@@ -968,7 +969,7 @@ END_IF
 CASE i_eCtrlMode OF
 
 	E_CtrlMode.IDLE:
-		s_eSequence := E_SeqTransport.IDLE;
+		s_eSequence := E_SeqPalletConveyor.IDLE;
 		
 	E_CtrlMode.AUTOMATIC:
 		//Automatic commands are controlled by higher-layer unit
@@ -1012,7 +1013,7 @@ CASE i_eCtrlMode OF
 		
 	E_CtrlMode.MAINTENANCE:
 		//Execute maintenance control (HMI control module buttons)
-		s_eSequence := E_SeqTransport.IDLE;
+		s_eSequence := E_SeqPalletConveyor.IDLE;
 		; 	//Maintenance control is implemented in lower-layer control modules
 		
 	E_CtrlMode.IO:
@@ -1072,7 +1073,7 @@ IF i_bReqEnable AND (i_eCtrlMode = E_CtrlMode.MANUAL) AND (i_eCtrlState = E_Ctrl
 	s_fbHmiBtnTB_Centering.p_bStaEnabled :=
 		NOT(s_bIlckCenteringToCenter)
 		AND NOT(s_cmCenteringUnit.p_bStaError)
-		AND (s_eSequence = E_SeqTransport.READY); 
+		AND (s_eSequence = E_SeqPalletConveyor.READY); 
 ELSE
 	s_fbHmiBtnTB_ToInfeed.p_bStaEnabled := FALSE;
 	s_fbHmiBtnTB_ToCentering.p_bStaEnabled := FALSE;
@@ -1167,7 +1168,7 @@ PROPERTY PUBLIC p_bStaReady : BOOL]]></Declaration>
         <Declaration><![CDATA[]]></Declaration>
         <Implementation>
           <ST><![CDATA[
-p_bStaReady := (s_eSequence = E_SeqTransport.READY);
+p_bStaReady := (s_eSequence = E_SeqPalletConveyor.READY);
 ]]></ST>
         </Implementation>
       </Get>

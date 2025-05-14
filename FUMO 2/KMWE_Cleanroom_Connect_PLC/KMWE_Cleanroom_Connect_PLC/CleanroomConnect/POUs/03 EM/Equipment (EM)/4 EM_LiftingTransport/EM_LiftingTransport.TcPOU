@@ -105,7 +105,6 @@ VAR
 	
 	//Alarms
 	s_sReason : STRING(GVL.g_nMAX_LEN_REASON);
-	s_sMessage : STRING(GVL.g_nMAX_LEN_MESSAGE);
 	
 	s_fbAlarmHandlerLiftDrive : FB_AlarmHandler;
 	s_fbAlarmHandlerTransportDrive : FB_AlarmHandler;
@@ -149,6 +148,7 @@ VAR
 	s_ePreviousStep : E_SeqLiftingTransport;
 	s_eResumeStep : E_SeqLiftingTransport;
 	s_sResumeStep : STRING(GVL.g_nMAX_LEN_STEP_NAME);
+	s_sLastStepPersistent : STRING(GVL.g_nMAX_LEN_STEP_NAME);
 	
 	//Hmi
 	//Buttons for MANUAL-mode
@@ -222,7 +222,7 @@ s_fbAlarmHandlerCabinNotEmpty(
 	
 s_fbAlarmHandlerCmdNotAllowed(
 	i_bStaActive := s_bErrCmdNotAllowed,
-	i_sAlarmText := CONCAT(i_sEmName, CONCAT(': ', s_sMessage)) );
+	i_sAlarmText := CONCAT(i_sEmName, CONCAT(': ', s_sReason)) );
 	
 //Reset warnings
 IF i_bCmdReset THEN
@@ -853,20 +853,33 @@ IF (i_eCtrlState = E_CtrlState.STOPPING) THEN
 END_IF
 
 //Load last step from persistent memory
-IF (s_eSequence > E_SeqLiftingTransport.START) AND (s_eSequence < E_SeqLiftingTransport.STOP) THEN
-	s_eLastStepPersistent := s_eSequence;
+IF s_fbSeqControl.q_bStaEntry
+	AND (s_eSequence = E_SeqLiftingTransport.READY)
+	OR ( (s_eSequence > E_SeqLiftingTransport.START) AND (s_eSequence < E_SeqLiftingTransport.STOP) )
+	THEN
+		s_eLastStepPersistent := s_eSequence;
 END_IF
 
 s_sResumeStep := TO_STRING(s_eResumeStep);
+s_sLastStepPersistent := TO_STRING(s_eLastStepPersistent);
 
 CASE s_eSequence OF
 	E_SeqLiftingTransport.IDLE:
-		s_eResumeStep := E_SeqLiftingTransport.READY;
-		s_eSequence := E_SeqLiftingTransport.START;
+		IF (i_eCtrlState = E_CtrlState.IDLE) THEN
+			s_eSequence := E_SeqLiftingTransport.START;
+			s_eResumeStep := s_eLastStepPersistent;
+		END_IF
+		
+//--		s_eResumeStep := E_SeqLiftingTransport.READY;
+//--		s_eSequence := E_SeqLiftingTransport.START;
 		
 	E_SeqLiftingTransport.START: //Afhankelijk van de voorgaande stap, stappen programma hervatten. Wanneer actie voltooit
 		IF s_fbSeqControl.q_bStaEntry THEN
-			s_sMessage := 'start';
+			s_sReason := 'start';
+			
+			IF NOT(s_bStaAtIdlePosition) THEN
+				s_eSequence := E_SeqLiftingTransport.TRANSPORT_TO_IDLE;
+			END_IF
 		END_IF
 		
 		IF i_eCtrlState = E_CtrlState.RUNNING THEN
@@ -881,21 +894,21 @@ CASE s_eSequence OF
 		END_IF
 		
 		IF s_bReqGoToIdle THEN
-			IF _m_CmdGoToIdle(i_refReason := s_sMessage) THEN
+			IF _m_CmdGoToIdle(i_refReason := s_sReason) THEN
 				s_eSequence := E_SeqLiftingTransport.TRANSPORT_TO_IDLE;
 			//ELSE	If failed (command not allowed): the message will be written with the interlock reason
 			END_IF
 			s_bReqGoToIdle := FALSE;
 			
 		ELSIF s_bReqPickTrolleyFromTB THEN
-			IF _m_CmdPickTrolleyFromTB(i_refReason := s_sMessage) THEN
+			IF _m_CmdPickTrolleyFromTB(i_refReason := s_sReason) THEN
 				s_eSequence := E_SeqLiftingTransport.LIFT_PRE_PICK_FROM_TB;
 			//ELSE	If failed (command not allowed): the message will be written with the interlock reason
 			END_IF
 			s_bReqPickTrolleyFromTB := FALSE;
 			
 		ELSIF s_bReqPlaceTrolleyInTB THEN
-			IF _m_CmdPlaceTrolleyInTB(i_refReason := s_sMessage) THEN
+			IF _m_CmdPlaceTrolleyInTB(i_refReason := s_sReason) THEN
 				s_eSequence := E_SeqLiftingTransport.LIFT_PRE_PICK_FROM_CABIN;
 			//ELSE	If failed (command not allowed): the message will be written with the interlock reason
 			END_IF

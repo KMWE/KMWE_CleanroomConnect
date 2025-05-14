@@ -55,7 +55,6 @@ VAR
 	
 	//Alarms
 	s_sReason : STRING(GVL.g_nMAX_LEN_REASON);
-	s_sMessage : STRING(GVL.g_nMAX_LEN_MESSAGE);
 	
 	s_fbAlarmHandlerFanThermalError : FB_AlarmHandler;
 	
@@ -82,6 +81,7 @@ VAR
 	s_ePreviousStep : E_SeqAirTreatment;
 	s_eResumeStep : E_SeqAirTreatment;
 	s_sResumeStep : STRING(GVL.g_nMAX_LEN_STEP_NAME);;
+	s_sLastStepPersistent : STRING(GVL.g_nMAX_LEN_STEP_NAME);
 	
 	s_tonTimer : TON;
 	
@@ -103,7 +103,10 @@ VAR
 	s_bHmiForceOutputStartEnabled : BOOL;
 	
 END_VAR
-]]></Declaration>
+
+VAR PERSISTENT //Variables below will be returned during: Power Cycle, Active Configuration, Download, Cold Restart
+	s_eLastStepPersistent : E_SeqAirTreatment := E_SeqAirTreatment.READY;
+END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[
 SUPER^();
@@ -407,13 +410,22 @@ s_fbSeqControl(
 		AND NOT(s_bStaError),
 	i_bStaError := s_bStaError OR NOT(i_bReqEnable));
 
-s_sResumeStep := TO_STRING(s_eResumeStep);
-
 //Force to stop
 {warning '#TODO: Never stop air treatment'}
 IF (i_eCtrlState = E_CtrlState.STOPPING) THEN
 	s_eSequence := E_SeqAirTreatment.STOP;
 END_IF
+
+//Load last step from persistent memory
+IF s_fbSeqControl.q_bStaEntry
+	AND (s_eSequence = E_SeqAirTreatment.READY)
+	OR ( (s_eSequence > E_SeqAirTreatment.START) AND (s_eSequence < E_SeqAirTreatment.STOP) )
+	THEN
+		s_eLastStepPersistent := s_eSequence;
+END_IF
+
+s_sResumeStep := TO_STRING(s_eResumeStep);
+s_sLastStepPersistent := TO_STRING(s_eLastStepPersistent);
 
 CASE s_eSequence OF
 	E_SeqAirTreatment.IDLE:
@@ -427,7 +439,7 @@ CASE s_eSequence OF
 			s_fbPIDPressCtrl.bReset := TRUE;
 			s_fSetFanSpeed := 0.0; //[%]
 			
-			s_sMessage := 'start';
+			s_sReason := 'start';
 		END_IF
 		
 		IF i_eCtrlState = E_CtrlState.RUNNING THEN

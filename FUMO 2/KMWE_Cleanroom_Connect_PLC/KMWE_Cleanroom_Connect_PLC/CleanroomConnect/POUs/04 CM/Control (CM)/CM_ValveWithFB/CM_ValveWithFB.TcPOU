@@ -111,40 +111,25 @@ s_errFeedbackOnTimeout := (s_tonFeedbackOnTimeout.Q OR s_errFeedbackOnTimeout) A
 
 //Interlock warnings
 IF s_bReqOn AND i_bIclkOn THEN
-	s_wrnOnInterlocked := TRUE;
+//??	s_wrnOnInterlocked := TRUE;
 	s_bReqOn := FALSE;
 ELSIF NOT(i_bIclkOn) OR i_bCmdReset THEN
 	s_wrnOnInterlocked := FALSE;
 END_IF
 
 IF s_bReqOff AND i_bIclkOff THEN
-	s_wrnOffInterlocked := TRUE;
+//??	s_wrnOffInterlocked := TRUE;
 	s_bReqOff := FALSE;
 ELSIF NOT(i_bIclkOff) OR i_bCmdReset THEN
 	s_wrnOffInterlocked := FALSE;
 END_IF
-
-//--//Interlock warnings
-//--IF i_bIclkOn AND NOT(s_bStaValveIsOff) THEN
-//--	s_wrnOnInterlocked := TRUE;
-//--	m_Off();
-//--ELSIF NOT(i_bIclkOn) OR i_bCmdReset THEN
-//--	s_wrnOnInterlocked := FALSE;
-//--END_IF
-
-//--IF i_bIclkOff AND NOT(s_bStaValveIsOn) THEN
-//--	s_wrnOffInterlocked := TRUE;
-//--	m_On();
-//--ELSIF NOT(i_bIclkOff) OR i_bCmdReset THEN
-//--	s_wrnOffInterlocked := FALSE;
-//--END_IF
 
 s_fbAlarmHandlerFeedbackOffTimeout(
 	i_bStaActive := i_bReqEnable AND s_errFeedbackOffTimeout,
 	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Feedback ', CONCAT(s_sCfgOffName, ' timeout.'))) );
 	
 s_fbAlarmHandlerFeedbackOnTimeout(
-	i_bStaActive := i_bReqEnable AND s_errFeedbackOnTimeout, 
+	i_bStaActive := i_bReqEnable AND s_errFeedbackOnTimeout,
 	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Feedback ', CONCAT(s_sCfgOnName, ' timeout.'))) );
 	
 s_fbAlarmHandlerOffInterlocked(
@@ -155,11 +140,11 @@ s_fbAlarmHandlerOnInterlocked(
 	i_bStaActive := s_wrnOnInterlocked,
 	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': ', CONCAT(s_sCfgOnName, CONCAT(' interlocked, Reason: ', CONCAT(s_sInterlockedReasonOn, '.'))))) );
 	
-s_bStaError := 
+s_bStaError :=
 	s_fbAlarmHandlerFeedbackOffTimeout.q_bStaActive
 	OR s_fbAlarmHandlerFeedbackOnTimeout.q_bStaActive;
 	
-s_bStaWarning := 
+s_bStaWarning :=
 	s_fbAlarmHandlerOffInterlocked.q_bStaActive
 	OR s_fbAlarmHandlerOnInterlocked.q_bStaActive;
 	

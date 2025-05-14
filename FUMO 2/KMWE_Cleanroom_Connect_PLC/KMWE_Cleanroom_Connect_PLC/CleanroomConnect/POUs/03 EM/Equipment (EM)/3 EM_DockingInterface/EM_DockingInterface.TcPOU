@@ -18,11 +18,11 @@ VAR_INPUT
 	i_stExtIlckDockingClampsToOpen : ST_Interlock;
 	i_stExtIlckUnlockingPinsToLock : ST_Interlock;		//-- NOT_USED
 	i_stExtIlckUnlockingPinsToRelease : ST_Interlock;	//-- NOT_USED
-	i_stExtIlckDoorOpenerToClose : ST_Interlock;		//-- NOT_USED
-	i_stExtIlckDoorOpenerToOpen : ST_Interlock;			//-- NOT_USED
-	i_stExtIlckDoorShutterToClose : ST_Interlock;		//-- NOT_USED
-	i_stExtIlckDoorShutterToOpen : ST_Interlock;		//-- NOT_USED
-	i_stExtIlckOuterCabinDoorToClose : ST_Interlock;
+	i_stExtIlckDoorOpenerToClose : ST_Interlock;
+	i_stExtIlckDoorOpenerToOpen : ST_Interlock;
+	i_stExtIlckDoorShutterToClose : ST_Interlock;
+	i_stExtIlckDoorShutterToOpen : ST_Interlock;
+	i_stExtIlckOuterCabinDoorToClose : ST_Interlock;	//-- NOT_USED
 	i_stExtIlckOuterCabinDoorToOpen : ST_Interlock;		//-- NOT_USED
 	i_stExtIlckInnerCabinDoorToClose : ST_Interlock;
 	i_stExtIlckInnerCabinDoorToOpen : ST_Interlock;		//-- NOT_USED
@@ -134,7 +134,6 @@ VAR
 	
 	//Alarms
 	s_sReason : STRING(GVL.g_nMAX_LEN_REASON);
-	s_sMessage : STRING(GVL.g_nMAX_LEN_MESSAGE);
 	
 	s_fbAlarmHandlerClosingDoorFailed : FB_AlarmHandler;
 	s_fbAlarmHandlerCmdNotAllowed : FB_AlarmHandler;
@@ -166,6 +165,7 @@ VAR
 	s_ePreviousStep : E_SeqDockingInterface;
 	s_eResumeStep : E_SeqDockingInterface;
 	s_sResumeStep : STRING(GVL.g_nMAX_LEN_STEP_NAME);
+	s_sLastStepPersistent : STRING(GVL.g_nMAX_LEN_STEP_NAME);
 	
 	s_tonTimer : TON;
 	
@@ -263,7 +263,7 @@ s_fbAlarmHandlerNoBoxPresentAtDockedPosition(i_bStaActive := s_bWrnNoBoxPresentA
 
 s_fbAlarmHandlerCmdNotAllowed(
 	i_bStaActive := s_bErrCmdNotAllowed,
-	i_sAlarmText := CONCAT(i_sEmName, CONCAT(': ', s_sMessage)));
+	i_sAlarmText := CONCAT(i_sEmName, CONCAT(': ', s_sReason)));
 
 //Reset warnings
 IF i_bCmdReset THEN
@@ -1216,22 +1216,42 @@ IF (i_eCtrlState = E_CtrlState.STOPPING) THEN
 END_IF
 
 //Load last step from persistent memory
-IF (s_eSequence > E_SeqDockingInterface.START) AND (s_eSequence < E_SeqDockingInterface.STOP) THEN
-	s_eLastStepPersistent := s_eSequence;
+IF s_fbSeqControl.q_bStaEntry
+	AND (s_eSequence = E_SeqDockingInterface.READY)
+	OR ( (s_eSequence > E_SeqDockingInterface.START) AND (s_eSequence < E_SeqDockingInterface.STOP) )
+	THEN
+		s_eLastStepPersistent := s_eSequence;
 END_IF
 
 s_sResumeStep := TO_STRING(s_eResumeStep);
+s_sLastStepPersistent := TO_STRING(s_eLastStepPersistent);
 
-CASE s_eSequence OF	
+CASE s_eSequence OF
 	E_SeqDockingInterface.IDLE:
 		IF (i_eCtrlState = E_CtrlState.IDLE) THEN
 			s_eSequence := E_SeqDockingInterface.START;
+//--			s_eSequence := E_SeqDockingInterface.PREPARE_READY;
 			s_eResumeStep := s_eLastStepPersistent;
 		END_IF
 		
 	E_SeqDockingInterface.START:
 		IF s_fbSeqControl.q_bStaEntry THEN
-			s_sMessage := 'start';
+			
+			//Check actual status
+			IF NOT(s_bStaDocked)
+				AND(
+					s_bStaHighPressureSelected
+					OR NOT(s_bStaDockingClampsClosed)
+					OR NOT(s_bStaDoorOpenerClosed)
+					OR NOT(s_bStaDoorShutterClosed)
+					OR NOT(s_bStaUnlockingPinsLocked)
+//++				OR NOT(s_bStaOuterCabinDoorOpened OR i_bTestDisableCabinDoors))
+					)
+			THEN
+				s_eSequence := E_SeqDockingInterface.PREPARE_READY;
+			END_IF;
+			
+			s_sReason := 'start';
 		END_IF
 		
 		s_tonTimer.IN := FALSE;
@@ -1258,7 +1278,8 @@ CASE s_eSequence OF
 				IF s_cmDoorShutter.m_On() THEN
 					IF s_cmUnlockingPinUpper.m_Off() AND s_cmUnlockingPinLower.m_Off() THEN
 						IF (s_fbSeqControl.q_tmStepTime >= T#2S) THEN
-							s_eSequence := E_SeqDockingInterface.READY;
+							//--s_eSequence := E_SeqDockingInterface.READY;
+							s_eSequence := E_SeqDockingInterface.START;
 						END_IF
 					END_IF
 				END_IF
@@ -1291,7 +1312,7 @@ CASE s_eSequence OF
 		
 		//Command Dock TB//////////////////////////////////////////////////////////////////////////
 		IF s_bReqDockTB THEN
-			IF _m_CmdDockTB(i_refReason := s_sMessage) THEN
+			IF _m_CmdDockTB(i_refReason := s_sReason) THEN
 				
 				{warning '#FUMO3: "Disabled Doors" option can be deleted, IF FUMO3 is build'}
 				IF i_bTestDisableCabinDoors THEN
@@ -1307,7 +1328,7 @@ CASE s_eSequence OF
 		
 		//Command Undock TB////////////////////////////////////////////////////////////////////////
 		IF s_bReqUnDockTB THEN
-			IF _m_CmdUndockTB(i_refReason := s_sMessage) THEN
+			IF _m_CmdUndockTB(i_refReason := s_sReason) THEN
 				s_eSequence := E_SeqDockingInterface.UNDOCK_OPEN_DOCKING_CLAMPS;
 			ELSE
 				s_bErrCmdNotAllowed := TRUE;
@@ -1316,7 +1337,7 @@ CASE s_eSequence OF
 		
 		//Command Open Inner TB Door///////////////////////////////////////////////////////////////
 		IF s_bReqOpenInnerDoor THEN
-			IF _m_CmdOpenInnerDoor(i_refReason := s_sMessage) THEN
+			IF _m_CmdOpenInnerDoor(i_refReason := s_sReason) THEN
 				
 				{warning '#FUMO3: "Disabled Doors" option can be deleted, IF FUMO3 is build'}
 				IF i_bTestDisableCabinDoors THEN
@@ -1332,7 +1353,7 @@ CASE s_eSequence OF
 		
 		//Command Close Inner TB Door//////////////////////////////////////////////////////////////
 		IF s_bReqCloseInnerDoor THEN
-			IF _m_CmdCloseInnerDoor(i_refReason := s_sMessage) THEN
+			IF _m_CmdCloseInnerDoor(i_refReason := s_sReason) THEN
 				s_eSequence := E_SeqDockingInterface.CLOSE_DOOR_OPENER;
 			ELSE
 				s_bErrCmdNotAllowed := TRUE;
@@ -1385,7 +1406,7 @@ CASE s_eSequence OF
 		END_IF
 		
 		IF s_bReqUnDockTB THEN //Escape
-			IF _m_CmdUndockTB(i_refReason := s_sMessage) THEN
+			IF _m_CmdUndockTB(i_refReason := s_sReason) THEN
 				s_eSequence := E_SeqDockingInterface.UNDOCK_CLOSE_DOCKING_CLAMPS;
 			ELSE
 				s_bErrCmdNotAllowed := TRUE;
@@ -1508,7 +1529,7 @@ CASE s_eSequence OF
 		END_IF
 		
 		IF s_bReqDockTB THEN //Escape
-			IF _m_CmdDockTB(i_refReason := s_sMessage) THEN
+			IF _m_CmdDockTB(i_refReason := s_sReason) THEN
 				IF NOT(i_ref_stSettings.bCloseClampsAfterEachOther) THEN
 					s_eSequence := E_SeqDockingInterface.DOCK_CLOSE_DOCKING_CLAMPS; //(option 1)
 				ELSE
@@ -1682,7 +1703,8 @@ CASE s_eSequence OF
 				AND s_ePreviousStep < E_SeqDockingInterface.ERROR THEN
 				s_eResumeStep := s_ePreviousStep;
 			ELSE
-				s_eResumeStep := E_SeqDockingInterface.PREPARE_READY;
+//--				s_eResumeStep := E_SeqDockingInterface.PREPARE_READY;
+				s_eResumeStep := E_SeqDockingInterface.READY;
 			END_IF
 			
 			//Error response: During "Dock TB"

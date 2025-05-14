@@ -140,14 +140,16 @@ s_errDriveError S= i_bReqEnable AND s_bStaDriveError;
 
 //Interlock warnings
 IF s_bIclkForward AND NOT(s_bStaMotorStopped) THEN
-	s_wrnMotorForwardInterlocked := TRUE;
+//??	s_wrnMotorForwardInterlocked := TRUE;
+	//warning set in corresponding method
 	m_Stop();
 ELSIF NOT(s_bIclkForward) OR i_bCmdReset THEN
 	s_wrnMotorForwardInterlocked := FALSE;
 END_IF
 
 IF s_bIclkBackward AND NOT(s_bStaMotorStopped) THEN
-	s_wrnMotorBackwardInterlocked := TRUE;
+//??	s_wrnMotorBackwardInterlocked := TRUE;
+	//warning set in corresponding method
 	m_Stop();
 ELSIF NOT(s_bIclkBackward) OR i_bCmdReset THEN
 	s_wrnMotorBackwardInterlocked := FALSE;
@@ -171,7 +173,7 @@ s_fbAlarmHandlerMotorBackwardInterlocked(
 	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move backward, Reason: ',CONCAT(s_sInterlockedReasonBackward, '.'))) );
 	
 //Alarm collector
-s_bStaError := 
+s_bStaError :=
 	s_fbAlarmHandlerDriveError.q_bStaActive;
 	
 //Warning collector
@@ -744,7 +746,7 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT i_bReqEnable THEN 
+IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
@@ -753,9 +755,9 @@ IF NOT(s_bIclkForward) THEN
 	
 	IF i_rTargetSpeed < 0 THEN
 		s_fTargetSpeed := 0;
-	ELSIF i_rTargetSpeed > cMAX_INT_VALUE THEN	
+	ELSIF i_rTargetSpeed > cMAX_INT_VALUE THEN
 		i_rTargetSpeed := cMAX_INT_VALUE;
-	ELSE 
+	ELSE
 		s_fTargetSpeed := i_rTargetSpeed;
 	END_IF
 	

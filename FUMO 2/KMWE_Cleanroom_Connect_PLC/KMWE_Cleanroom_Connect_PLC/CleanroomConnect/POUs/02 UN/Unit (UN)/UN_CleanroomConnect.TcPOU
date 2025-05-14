@@ -2,6 +2,7 @@
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
   <POU Name="UN_CleanroomConnect" Id="{8b93890b-f796-4713-9491-f75e01fbeba7}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK UN_CleanroomConnect EXTENDS Un_Base
+
 VAR
 	//Control Modules
 	s_cmCabinStateIndicator : CM_TubeLedRgb;
@@ -11,7 +12,15 @@ VAR
 	s_fbModeStateControl : FB_ModeStateControl;
 	s_fbFlashSlow : FB_Flash;
 	s_fbFlashFast : FB_Flash;
+	s_tonTimer : TON;
 	
+	//Inputs
+//??	s_diTwoHandControl : FB_DigInput;
+	
+	//Output
+	//none
+	
+	//Interlocks
 	//EM Pallet Conveyor
 	s_fbIlckHandlerConvBwd : FB_InterlockHandler;
 	s_fbIlckHandlerConvFwd : FB_InterlockHandler;
@@ -19,26 +28,23 @@ VAR
 	//EM Docking Interface
 	s_fbIlckHandlerClampsToClose : FB_InterlockHandler;
 	s_fbIlckHandlerClampsToOpen : FB_InterlockHandler;
+	
+	s_fbIlckInnerTbDoorToCloseAndOpen : FB_InterlockHandler;
+	
 	s_fbIlckHandlerOuterCabinDoorClose : FB_InterlockHandler;
 	s_fbIlckHandlerInnerCabinDoorClose : FB_InterlockHandler;
 	
 	//EM Lifting Transport
 	s_fbIlckHandlerTranportExtract : FB_InterlockHandler;
 	
-	//Inputs
-//??	s_diTwoHandControl : FB_DigInput;
+	//Request
+	s_eReqAction : E_ReqAction;
+	s_osrReqDockTb : F_TRIG;
 	
-	//Alarms
-	
-	//Params
-	s_stSettings : ST_UN_CleanroomConnectSettings;
-	
-	//Variables
-	s_bStaWarning : BOOL;
+	//States
 	s_bStaRunning : BOOL;
 	
 	s_bStaAllEmReady : BOOL;
-	s_bStaEmError : BOOL;
 	
 	s_bStaDockTbDone: BOOL;
 	s_bStaUnDockTbDone : BOOL;
@@ -48,10 +54,24 @@ VAR
 	s_bStaPlaceTrolleyInTbDone : BOOL;
 	
 	s_eCtrlState : E_CtrlState;
-	
 	s_eCabinAirState : E_AirState := E_AirState.UNKNOWN;
 	
 	//Properties
+	//none
+	
+	//Alarms
+	s_bStaEmError : BOOL;
+	
+	//Warnings
+	s_bStaWarning : BOOL;
+	
+	//Params
+	s_stSettings : ST_UN_CleanroomConnectSettings;
+	
+	//Properties
+	//none
+	
+	//Variables
 	
 	//Sequencers
 	s_eSequence : E_SeqCleanroomConnect;
@@ -59,18 +79,15 @@ VAR
 	
 	s_ePreviousStep : E_SeqCleanroomConnect;
 	s_eResumeStep : E_SeqCleanroomConnect;
-	s_sResumeStep : STRING;
-	
-	s_eReqAction : E_ReqAction;
-	
-	s_osrReqDockTb : F_TRIG;
-	
-	s_tonTimer : TON;
+	s_sResumeStep : STRING(GVL.g_nMAX_LEN_STEP_NAME);
+	s_sLastStepPersistent : STRING(GVL.g_nMAX_LEN_STEP_NAME);
 	
 	//Hmi
+	//General buttons
 	s_fbHmiBtnAlarms : FB_HmiBtn;
 	s_fbHmiBtnReset : FB_HmiBtn;
 	
+	//Buttons to control sequence
 	s_fbHmiBtnInbound : FB_HmiBtn;
 	s_fbHmiBtnOutbound : FB_HmiBtn;
 	s_fbHmiBtnDockTB : FB_HmiBtn;
@@ -80,6 +97,7 @@ VAR
 	s_fbHmiBtnPickTrolleyFromTB : FB_HmiBtn;
 	s_fbHmiBtnPlaceTrolleyInTB : FB_HmiBtn;
 	
+	//Leds
 	s_bHmiForceOutputEnabled : BOOL;
 	s_bHmiForceOutputRGBEnabled : BOOL;
 	s_bHmiForceOutputWEnabled : BOOL;
@@ -422,6 +440,8 @@ s_fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[3].sReason := 'Outer Cab
 s_fbIlckHandlerClampsToClose.i_stInterlockList.arr_Interlocks[0].sReason := '<n/a>';
 
 s_fbIlckHandlerClampsToOpen.i_stInterlockList.arr_Interlocks[0].sReason := 'Cleanroom Door Not Closed';
+
+s_fbIlckInnerTbDoorToCloseAndOpen.i_stInterlockList.arr_Interlocks[0].sReason := 'Lifting Transport Not At Idle Position';
 
 //No external interlocks implemented for:
 //	- DoorOpener
@@ -800,6 +820,9 @@ s_fbIlckHandlerClampsToClose();
 s_fbIlckHandlerClampsToOpen.i_stInterlockList.arr_Interlocks[0].bState := FALSE; //++ NOT(GVL_Modules.g_emDoors.p_bStaCleanroomDoorNotClosedAndLocked);
 s_fbIlckHandlerClampsToOpen();
 
+s_fbIlckInnerTbDoorToCloseAndOpen.i_stInterlockList.arr_Interlocks[0].bState := NOT(GVL_Modules.g_emLiftingTransport.p_bStaAtIdlePosition);
+s_fbIlckInnerTbDoorToCloseAndOpen();
+
 IF GVL.g_bFUMO3_Enabled THEN
 	s_fbIlckHandlerOuterCabinDoorClose.i_stInterlockList.arr_Interlocks[0].bState := GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking;
 	s_fbIlckHandlerOuterCabinDoorClose.i_stInterlockList.arr_Interlocks[1].bState := NOT(GVL_Modules.g_emLiftingTransport.p_bStaAtIdlePosition);
@@ -819,6 +842,10 @@ GVL_Modules.g_emDockingInterface(
 	i_bStaDockingPositionFree := GVL_Modules.g_emPalletConveyor.p_bStaTB_DockPosFree,
 	i_stExtIlckDockingClampsToOpen := s_fbIlckHandlerClampsToOpen.p_stInterlock,
 	i_stExtIlckDockingClampsToClose := s_fbIlckHandlerClampsToClose.p_stInterlock,
+	i_stExtIlckDoorOpenerToClose := s_fbIlckInnerTbDoorToCloseAndOpen.p_stInterlock,
+	i_stExtIlckDoorOpenerToOpen := s_fbIlckInnerTbDoorToCloseAndOpen.p_stInterlock,
+	i_stExtIlckDoorShutterToClose := s_fbIlckInnerTbDoorToCloseAndOpen.p_stInterlock,
+	i_stExtIlckDoorShutterToOpen := s_fbIlckInnerTbDoorToCloseAndOpen.p_stInterlock,
 	i_stExtIlckOuterCabinDoorToClose := s_fbIlckHandlerOuterCabinDoorClose.p_stInterlock,
 	i_stExtIlckInnerCabinDoorToClose := s_fbIlckHandlerInnerCabinDoorClose.p_stInterlock);
 	
@@ -895,6 +922,7 @@ _m_Modules := TRUE;
         <ST><![CDATA[
 //Register previous step
 IF s_eSequence <> s_ePreviousStep
+	AND s_eSequence <> E_SeqCleanroomConnect.STOP
 	AND s_eSequence <> E_SeqCleanroomConnect.ERROR THEN
 	s_ePreviousStep := s_eSequence;
 END_IF
@@ -919,6 +947,7 @@ IF (s_eCtrlState = E_CtrlState.STOPPING) THEN
 END_IF
 
 s_sResumeStep := TO_STRING(s_eResumeStep);
+//++s_sLastStepPersistent := TO_STRING(s_eLastStepPersistent);
 
 CASE s_eSequence OF
 	E_SeqCleanroomConnect.IDLE:
@@ -1203,8 +1232,14 @@ CASE s_eSequence OF
 	//STOP/////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqCleanroomConnect.STOP:
 		//Do not use .qEnrty forced stop doesn't make use of fbSeqControl
-		
-		s_eReqAction := E_ReqAction.NONE;
+		IF s_fbSeqControl.q_bStaEntry THEN
+			IF s_ePreviousStep > E_SeqCleanroomConnect.START
+				AND s_ePreviousStep < E_SeqCleanroomConnect.ERROR THEN
+					s_eResumeStep := s_ePreviousStep;
+			END_IF
+			
+			s_eReqAction := E_ReqAction.NONE;
+		END_IF
 		
 		IF (s_eCtrlState = E_CtrlState.IDLE) THEN
 			s_eSequence := E_SeqCleanroomConnect.START;

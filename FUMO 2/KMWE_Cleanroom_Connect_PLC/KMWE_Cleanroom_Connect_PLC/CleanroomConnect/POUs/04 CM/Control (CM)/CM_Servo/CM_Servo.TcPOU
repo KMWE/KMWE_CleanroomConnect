@@ -76,7 +76,6 @@ VAR
 	
 	//Alarms
 	s_fbAlarmHandlerDriveError : FB_AlarmHandler;
-	s_fbAlarmHandlerStartMotorNotAllowed : FB_AlarmHandler;
 	
 	s_fbAlarmHandlerMotorPosInterlocked : FB_AlarmHandler;
 	s_fbAlarmHandlerMotorNegInterlocked : FB_AlarmHandler;
@@ -84,9 +83,13 @@ VAR
 	s_fbAlarmHandlerLimitPositiveReached : FB_AlarmHandler;
 	s_fbAlarmHandlerLimitNegativeReached : FB_AlarmHandler;
 	
+	s_fbAlarmHandlerMotorNotHomed : FB_AlarmHandler;
+	
 	s_errDriveError : BOOL;
 	s_wrnMotorPosInterlocked : BOOL;
 	s_wrnMotorNegInterlocked : BOOL;
+	
+	s_wrnMotorNotHomed : BOOL;
 	
 	//NC-task function blocks
 	s_fbMcPower : Tc2_MC2.MC_Power;
@@ -209,6 +212,9 @@ s_fbAlarmHandlerLimitPositiveReached(
 s_fbAlarmHandlerLimitNegativeReached(
 	i_bStaActive := NOT(s_bStaLimitSwitchNeg));
 	
+s_fbAlarmHandlerMotorNotHomed(
+	i_bStaActive := NOT(s_bStaHomed));
+	
 //Alarm collector
 s_bStaError :=
 	s_fbAlarmHandlerDriveError.q_bStaActive;
@@ -219,7 +225,8 @@ s_bStaWarning :=
 	OR s_fbAlarmHandlerMotorNegInterlocked.q_bStaActive
 	OR s_fbAlarmHandlerNotEnabled.q_bStaActive
 	OR s_fbAlarmHandlerLimitPositiveReached.q_bStaActive
-	OR s_fbAlarmHandlerLimitNegativeReached.q_bStaActive;
+	OR s_fbAlarmHandlerLimitNegativeReached.q_bStaActive
+	OR s_fbAlarmHandlerMotorNotHomed.q_bStaActive;
 	
 _m_Alarms := TRUE;
 ]]></ST>
@@ -603,13 +610,16 @@ s_fbAlarmHandlerMotorPosInterlocked.i_eAlarmLevel := E_AlarmLevel.Warning;
 s_fbAlarmHandlerMotorNegInterlocked.i_eAlarmLevel := E_AlarmLevel.Warning;
 
 s_fbAlarmHandlerNotEnabled.i_eAlarmLevel := E_AlarmLevel.Warning;
-s_fbAlarmHandlerNotEnabled.i_sAlarmText := CONCAT(i_sCmName, ' - Not enabled');
+s_fbAlarmHandlerNotEnabled.i_sAlarmText := CONCAT(i_sCmName, ' - Not Enabled');
 
 s_fbAlarmHandlerLimitPositiveReached.i_eAlarmLevel := E_AlarmLevel.Warning;
-s_fbAlarmHandlerLimitPositiveReached.i_sAlarmText := CONCAT(i_sCmName, CONCAT(' - Limit switch reached: ', s_sCfgPosName));
+s_fbAlarmHandlerLimitPositiveReached.i_sAlarmText := CONCAT(i_sCmName, CONCAT(' - Limit Switch Eeached: ', s_sCfgPosName));
 
 s_fbAlarmHandlerLimitNegativeReached.i_eAlarmLevel := E_AlarmLevel.Warning;
-s_fbAlarmHandlerLimitNegativeReached.i_sAlarmText := CONCAT(i_sCmName, CONCAT(' - Limit switch reached: ', s_sCfgNegName));
+s_fbAlarmHandlerLimitNegativeReached.i_sAlarmText := CONCAT(i_sCmName, CONCAT(' - Limit Switch Reached: ', s_sCfgNegName));
+
+s_fbAlarmHandlerMotorNotHomed.i_eAlarmLevel := E_AlarmLevel.Warning;
+s_fbAlarmHandlerMotorNotHomed.i_sAlarmText := CONCAT(i_sCmName, ' - Not Homed');
 
 //Hmi 
 	//Buttons
@@ -761,14 +771,16 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-s_bReqNcMoveAbs := TRUE;
-
-//Inputs
-s_fbMcMoveAbs.Position := i_stPositioningProfile.fPos;
-s_fbMcMoveAbs.Velocity := i_stPositioningProfile.fVel;
-s_fbMcMoveAbs.Acceleration := i_stPositioningProfile.fAcc;
-s_fbMcMoveAbs.Deceleration := i_stPositioningProfile.fDec;
-s_fbMcMoveAbs.Jerk := i_stPositioningProfile.fJrk;
+IF s_bStaHomed THEN
+	s_bReqNcMoveAbs := TRUE;
+	
+	//Inputs
+	s_fbMcMoveAbs.Position := i_stPositioningProfile.fPos;
+	s_fbMcMoveAbs.Velocity := i_stPositioningProfile.fVel;
+	s_fbMcMoveAbs.Acceleration := i_stPositioningProfile.fAcc;
+	s_fbMcMoveAbs.Deceleration := i_stPositioningProfile.fDec;
+	s_fbMcMoveAbs.Jerk := i_stPositioningProfile.fJrk;
+END_IF
 
 //Outputs
 o_Busy := s_fbMcMoveAbs.Busy;

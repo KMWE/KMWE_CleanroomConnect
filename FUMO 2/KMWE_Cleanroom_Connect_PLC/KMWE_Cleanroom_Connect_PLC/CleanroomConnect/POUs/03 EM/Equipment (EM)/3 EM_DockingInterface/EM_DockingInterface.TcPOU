@@ -1269,32 +1269,27 @@ CASE s_eSequence OF
 		
 	E_SeqDockingInterface.PREPARE_READY:
 		IF s_fbSeqControl.q_bStaEntry THEN
+//--			s_cmClampsUpperHighPressure.m_Off();
+//--			s_cmClampsLowerHighPressure.m_Off();
+		END_IF
+	
+		IF NOT(s_cmClampsUpperHighPressure.p_bStaIsOff) OR NOT(s_cmClampsLowerHighPressure.p_bStaIsOff) THEN
 			s_cmClampsUpperHighPressure.m_Off();
 			s_cmClampsLowerHighPressure.m_Off();
+		ELSIF NOT(s_cmDockingClampsUpper.p_bStaIsOn) OR NOT(s_cmDockingClampsLower.p_bStaIsOn) THEN
+			s_cmDockingClampsUpper.m_On();
+			s_cmDockingClampsLower.m_On();
+		ELSIF NOT(s_cmDoorOpener.p_bStaIsOff) THEN
+			s_cmDoorOpener.m_Off();
+		ELSIF NOT(s_cmDoorShutter.p_bStaIsOn) THEN
+			s_cmDoorShutter.m_On();
+		ELSIF NOT(s_cmUnlockingPinUpper.p_bStaIsOff) OR NOT(s_cmUnlockingPinLower.p_bStaIsOff) THEN
+			s_cmUnlockingPinUpper.m_Off();
+			s_cmUnlockingPinLower.m_Off();
+		ELSE
+			s_eSequence := E_SeqDockingInterface.READY;
 		END_IF
 		
-		IF s_cmDockingClampsUpper.m_On() AND s_cmDockingClampsLower.m_On() THEN
-			IF s_cmDoorOpener.m_Off() THEN
-				IF s_cmDoorShutter.m_On() THEN
-					IF s_cmUnlockingPinUpper.m_Off() AND s_cmUnlockingPinLower.m_Off() THEN
-						IF (s_fbSeqControl.q_tmStepTime >= T#2S) THEN
-							//--s_eSequence := E_SeqDockingInterface.READY;
-							s_eSequence := E_SeqDockingInterface.START;
-						END_IF
-					END_IF
-				END_IF
-			END_IF
-		END_IF
-		
-//??		IF s_fbSeqDockingInterfaceControl.q_bStaEntry THEN
-//??			s_cmClampsUpperHighPressure.m_Off();
-//??			s_cmClampsLowerHighPressure.m_Off();
-//??		END_IF
-			
-//??		IF s_cmDockingClampsUpper.m_Off() AND s_cmDockingClampsLower.m_Off() THEN
-//??			s_eSeqDockingInterface := E_SeqDockingInterface.READY;
-//??		END_IF
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //READY////////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqDockingInterface.READY:

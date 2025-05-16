@@ -435,6 +435,13 @@
       "keepAlive": false,
       "loadSync": false,
       "preloadBindings": false
+    },
+    {
+      "url": "WebContent/Popup/Message.content",
+      "preload": false,
+      "keepAlive": false,
+      "loadSync": false,
+      "preloadBindings": false
     }
   ],
   "views": [
@@ -645,6 +652,71 @@
         }
       ],
       "parameters": []
+    },
+    {
+      "displayname": "OpenPopupMsg",
+      "name": "OpenPopupMsg",
+      "category": "Action Templates",
+      "actions": [
+        {
+          "objectType": "WriteToSymbol",
+          "active": true,
+          "symbolExpression": "%ctrl%PopupMsg::TargetFile%/ctrl%",
+          "value": {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:framework#/definitions/TcHmi.Controls.System.TcHmiPopup.TargetFile",
+            "value": {
+              "path": "WebContent/Popup/Message.content"
+            }
+          },
+          "asyncWait": true
+        },
+        {
+          "objectType": "ControlApiFunction",
+          "active": true,
+          "control": "PopupMsg",
+          "fn": "open",
+          "asyncWait": true
+        },
+        {
+          "objectType": "WriteToSymbol",
+          "active": true,
+          "symbolExpression": "%ctrl%PopupMsg::Width%/ctrl%",
+          "value": {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:framework#/definitions/MeasurementValue",
+            "value": 16.0
+          },
+          "asyncWait": true
+        },
+        {
+          "objectType": "WriteToSymbol",
+          "active": true,
+          "symbolExpression": "%ctrl%PopupMsg::Height%/ctrl%",
+          "value": {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:framework#/definitions/MeasurementValue",
+            "value": 38.0
+          },
+          "asyncWait": true
+        }
+      ],
+      "parameters": []
+    },
+    {
+      "displayname": "ClosePopupMsg",
+      "name": "ClosePopupMsg",
+      "category": "Action Templates",
+      "actions": [
+        {
+          "objectType": "ControlApiFunction",
+          "active": true,
+          "control": "PopupMsg",
+          "fn": "close",
+          "asyncWait": true
+        }
+      ],
+      "parameters": []
     }
   ],
   "languages": {
@@ -700,6 +772,6 @@
     }
   },
   "systemPopups": {
-    "providerName": "Beckhoff.Popups"
+    "providerName": "Beckhoff.TcHmiPopups"
   }
 }

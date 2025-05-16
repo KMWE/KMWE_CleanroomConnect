@@ -56,6 +56,8 @@ VAR
 	s_eCtrlState : E_CtrlState;
 	s_eCabinAirState : E_AirState := E_AirState.UNKNOWN;
 	
+	s_bStaInnerTbDoorClean : BOOL;
+	
 	//Properties
 	//none
 	
@@ -101,6 +103,10 @@ VAR
 	s_bHmiForceOutputEnabled : BOOL;
 	s_bHmiForceOutputRGBEnabled : BOOL;
 	s_bHmiForceOutputWEnabled : BOOL;
+	
+	//Message box
+	s_stMsgBox : ST_MsgBox;
+	s_bShowMsg : BOOL;
 	
 END_VAR
 
@@ -986,7 +992,8 @@ CASE s_eSequence OF
 			AND ( (s_eReqAction = E_ReqAction.INBOUND)
 			OR (s_eReqAction = E_ReqAction.OUTBOUND)
 			OR (s_eReqAction = E_ReqAction.DOCK_TB) ) THEN
-				s_eSequence := E_SeqCleanroomConnect.TB_TO_CENTER;
+//--				s_eSequence := E_SeqCleanroomConnect.TB_TO_CENTER;
+				s_eSequence := E_SeqCleanroomConnect.CLEAN_OUTER_TB_DOOR;
 				
 		//REQUEST UNDOCK TB////////////////////////////////////////////////////////////////////////
 		ELSIF s_bStaAllEmReady
@@ -1015,6 +1022,30 @@ CASE s_eSequence OF
 		END_IF
 		
 	//DOCK TB//////////////////////////////////////////////////////////////////////////////////////
+	E_SeqCleanroomConnect.CLEAN_OUTER_TB_DOOR:
+		IF s_fbSeqControl.q_bStaEntry THEN
+			s_bStaInnerTbDoorClean := FALSE;
+		END_IF
+		
+		IF GVL_Modules.g_emPalletConveyor.p_bStaTB_AtInfeed
+			AND GVL_Modules.g_emPalletConveyor.p_bStaOuterTbDoorOpened THEN
+				s_stMsgBox.bShow := TRUE;
+				s_stMsgBox.sMessageText := 'TB detected at infeed. Open outer TB door';
+				s_stMsgBox.sResponse := 'YES';
+		ELSIF NOT(s_bStaInnerTbDoorClean) THEN
+//--			AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtInfeed
+//--			AND  GVL_Modules.g_emPalletConveyor.p_bStaOuterTbDoorOpened THEN
+			s_stMsgBox.bShow := TRUE;
+			s_stMsgBox.sMessageText := 'TB detected at infeed. Please confirm Inner TB-door is cleaned';
+			s_stMsgBox.sResponse := 'YES, Inner TB-door is clean';
+		END_IF
+		
+		IF s_stMsgBox.bBtnPressed THEN
+			s_bStaInnerTbDoorClean := TRUE;
+			s_stMsgBox.bShow := FALSE;
+			s_eSequence := E_SeqCleanroomConnect.TB_TO_CENTER;
+		END_IF
+		
 	E_SeqCleanroomConnect.TB_TO_CENTER:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			GVL_Modules.g_emPalletConveyor.m_ReqTB_ToCenter();
@@ -1259,7 +1290,21 @@ CASE s_eSequence OF
 		END_IF
 		
 END_CASE
-]]></ST>
+
+//--
+(*
+IF s_bShowMsg THEN
+	s_stMsgBox.bShow := TRUE;
+	s_stMsgBox.sMessageText := 'TB detected at infeed. Please confirm Inner TB-door is cleaned';
+	s_stMsgBox.sResponse := 'YES, Inner TB-door is clean';
+ELSE
+	s_stMsgBox.bShow := FALSE;
+END_IF
+
+IF s_stMsgBox.bBtnPressed THEN
+	s_bShowMsg := FALSE;
+END_IF
+*)]]></ST>
       </Implementation>
     </Method>
     <Method Name="m_FullCycle" Id="{85945a60-1e58-4d91-af47-0c270dd5f580}">

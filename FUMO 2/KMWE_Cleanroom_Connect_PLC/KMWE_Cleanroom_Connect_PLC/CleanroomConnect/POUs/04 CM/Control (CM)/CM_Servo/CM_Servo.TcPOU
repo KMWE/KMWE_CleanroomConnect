@@ -76,10 +76,11 @@ VAR
 	
 	//Alarms
 	s_fbAlarmHandlerDriveError : FB_AlarmHandler;
-	
 	s_fbAlarmHandlerMotorPosInterlocked : FB_AlarmHandler;
 	s_fbAlarmHandlerMotorNegInterlocked : FB_AlarmHandler;
 	s_fbAlarmHandlerNotEnabled : FB_AlarmHandler;
+	s_fbAlarmHandlerMoveAbsInterlocked : FB_AlarmHandler;
+	
 	s_fbAlarmHandlerLimitPositiveReached : FB_AlarmHandler;
 	s_fbAlarmHandlerLimitNegativeReached : FB_AlarmHandler;
 	
@@ -88,8 +89,7 @@ VAR
 	s_errDriveError : BOOL;
 	s_wrnMotorPosInterlocked : BOOL;
 	s_wrnMotorNegInterlocked : BOOL;
-	
-	s_wrnMotorNotHomed : BOOL;
+	s_wrnMoveAbsInterlocked : BOOL;
 	
 	//NC-task function blocks
 	s_fbMcPower : Tc2_MC2.MC_Power;
@@ -190,6 +190,10 @@ ELSIF NOT(s_bIclkNeg) OR i_bCmdReset THEN
 	s_wrnMotorNegInterlocked := FALSE;
 END_IF
 
+IF i_bCmdReset THEN
+	s_wrnMoveAbsInterlocked := FALSE;
+END_IF
+
 //Alarm Handlers
 s_fbAlarmHandlerDriveError(
 	i_bStaActive := s_errDriveError,
@@ -198,10 +202,13 @@ s_fbAlarmHandlerDriveError(
 s_fbAlarmHandlerMotorPosInterlocked(
 	i_bStaActive := s_wrnMotorPosInterlocked,
 	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move forward, Reason: ',CONCAT(s_sInterlockedReasonPos, '.'))) );
-	
+		
 s_fbAlarmHandlerMotorNegInterlocked(
 	i_bStaActive := s_wrnMotorNegInterlocked,
 	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move backward, Reason: ',CONCAT(s_sInterlockedReasonNeg, '.'))) );
+	
+s_fbAlarmHandlerMoveAbsInterlocked(
+	i_bStaActive := s_wrnMoveAbsInterlocked);
 	
 s_fbAlarmHandlerNotEnabled(
 	i_bStaActive := NOT(s_bStaEnabled));
@@ -223,6 +230,7 @@ s_bStaError :=
 s_bStaWarning :=
 	s_fbAlarmHandlerMotorPosInterlocked.q_bStaActive
 	OR s_fbAlarmHandlerMotorNegInterlocked.q_bStaActive
+	OR s_fbAlarmHandlerMoveAbsInterlocked.q_bStaActive
 	OR s_fbAlarmHandlerNotEnabled.q_bStaActive
 	OR s_fbAlarmHandlerLimitPositiveReached.q_bStaActive
 	OR s_fbAlarmHandlerLimitNegativeReached.q_bStaActive
@@ -609,6 +617,9 @@ s_fbAlarmHandlerMotorPosInterlocked.i_eAlarmLevel := E_AlarmLevel.Warning;
 
 s_fbAlarmHandlerMotorNegInterlocked.i_eAlarmLevel := E_AlarmLevel.Warning;
 
+s_fbAlarmHandlerMoveAbsInterlocked.i_eAlarmLevel := E_AlarmLevel.Warning;
+s_fbAlarmHandlerMoveAbsInterlocked.i_sAlarmText := CONCAT(i_sCmName, ': Motor - interlocked move absolute, Reason: Not Homed');
+
 s_fbAlarmHandlerNotEnabled.i_eAlarmLevel := E_AlarmLevel.Warning;
 s_fbAlarmHandlerNotEnabled.i_sAlarmText := CONCAT(i_sCmName, ' - Not Enabled');
 
@@ -771,6 +782,10 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
+IF NOT i_bReqEnable THEN
+	RETURN;
+END_IF
+
 IF s_bStaHomed THEN
 	s_bReqNcMoveAbs := TRUE;
 	
@@ -780,6 +795,9 @@ IF s_bStaHomed THEN
 	s_fbMcMoveAbs.Acceleration := i_stPositioningProfile.fAcc;
 	s_fbMcMoveAbs.Deceleration := i_stPositioningProfile.fDec;
 	s_fbMcMoveAbs.Jerk := i_stPositioningProfile.fJrk;
+	
+ELSE
+	s_wrnMoveAbsInterlocked := TRUE;
 END_IF
 
 //Outputs

@@ -77,13 +77,11 @@ VAR
 	//Alarms
 	s_fbAlarmHandlerDriveError : FB_AlarmHandler;
 	s_fbAlarmHandlerApplyingBrakeNotAllowed : FB_AlarmHandler;
-	s_fbAlarmHandlerStartMotorNotAllowed : FB_AlarmHandler;
 	s_fbAlarmHandlerMotorForwardInterlocked : FB_AlarmHandler;
 	s_fbAlarmHandlerMotorBackwardInterlocked : FB_AlarmHandler;
 	
 	s_errDriveError : BOOL;
 	s_wrnApplyingBrakeNotAllowed : BOOL;
-	s_wrnStartMotorNotAllowed : BOOL;
 	s_wrnMotorForwardInterlocked : BOOL;
 	s_wrnMotorBackwardInterlocked : BOOL;
 	
@@ -140,7 +138,6 @@ s_errDriveError S= i_bReqEnable AND s_bStaDriveError;
 
 //Interlock warnings
 IF s_bIclkForward AND NOT(s_bStaMotorStopped) THEN
-//??	s_wrnMotorForwardInterlocked := TRUE;
 	//warning set in corresponding method
 	m_Stop();
 ELSIF NOT(s_bIclkForward) OR i_bCmdReset THEN
@@ -148,7 +145,6 @@ ELSIF NOT(s_bIclkForward) OR i_bCmdReset THEN
 END_IF
 
 IF s_bIclkBackward AND NOT(s_bStaMotorStopped) THEN
-//??	s_wrnMotorBackwardInterlocked := TRUE;
 	//warning set in corresponding method
 	m_Stop();
 ELSIF NOT(s_bIclkBackward) OR i_bCmdReset THEN
@@ -159,10 +155,8 @@ END_IF
 s_fbAlarmHandlerDriveError(i_bStaActive := s_errDriveError);
 
 s_fbAlarmHandlerApplyingBrakeNotAllowed(i_bStaActive := s_wrnApplyingBrakeNotAllowed);
-s_wrnApplyingBrakeNotAllowed R= s_bStaMotorStopped;
+s_wrnApplyingBrakeNotAllowed R= i_bCmdReset;
 
-s_fbAlarmHandlerStartMotorNotAllowed(i_bStaActive := s_wrnStartMotorNotAllowed);
-s_wrnStartMotorNotAllowed R= s_bStaBrakeReleased;
 
 s_fbAlarmHandlerMotorForwardInterlocked(
 	i_bStaActive := s_wrnMotorForwardInterlocked,
@@ -179,7 +173,6 @@ s_bStaError :=
 //Warning collector
 s_bStaWarning :=
 	s_fbAlarmHandlerApplyingBrakeNotAllowed.q_bStaActive
-	OR s_fbAlarmHandlerStartMotorNotAllowed.q_bStaActive
 	OR s_fbAlarmHandlerMotorForwardInterlocked.q_bStaActive
 	OR s_fbAlarmHandlerMotorBackwardInterlocked.q_bStaActive;
 	
@@ -507,9 +500,6 @@ s_fbAlarmHandlerDriveError.i_eAlarmLevel := E_AlarmLevel.Alarm;
 s_fbAlarmHandlerApplyingBrakeNotAllowed.i_sAlarmText := CONCAT(i_sCmName, ': Brake - not allowed to be applied (motor not stopped).');
 s_fbAlarmHandlerApplyingBrakeNotAllowed.i_eAlarmLevel := E_AlarmLevel.Warning;
 
-s_fbAlarmHandlerStartMotorNotAllowed.i_sAlarmText := CONCAT(i_sCmName, ': Motor - not allowed to start (brake not released).');
-s_fbAlarmHandlerStartMotorNotAllowed.i_eAlarmLevel := E_AlarmLevel.Warning;
-
 s_fbAlarmHandlerMotorForwardInterlocked.i_eAlarmLevel := E_AlarmLevel.Warning;
 
 s_fbAlarmHandlerMotorBackwardInterlocked.i_eAlarmLevel := E_AlarmLevel.Warning;
@@ -671,7 +661,11 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-s_bReqApplyBrake := TRUE;
+IF s_bStaMotorStopped THEN
+	s_bReqApplyBrake := TRUE;
+ELSE
+	s_wrnApplyingBrakeNotAllowed := TRUE;
+END_IF
 
 m_ApplyBrake := NOT(s_bStaBrakeReleased);
 ]]></ST>

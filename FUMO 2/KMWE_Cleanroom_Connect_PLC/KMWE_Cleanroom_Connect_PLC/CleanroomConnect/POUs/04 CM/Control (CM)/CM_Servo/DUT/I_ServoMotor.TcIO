@@ -3,114 +3,197 @@
   <Itf Name="I_ServoMotor" Id="{f514c937-6091-42d0-874a-dd281c1805d2}">
     <Declaration><![CDATA[INTERFACE I_ServoMotor
 ]]></Declaration>
-    <Method Name="m_Home" Id="{43e9b00c-fb8a-459d-a16d-b54479c05f46}">
-      <Declaration><![CDATA[//Execute homing procedure
-METHOD PUBLIC m_Home : BOOL
-]]></Declaration>
-    </Method>
-    <Method Name="m_MoveAbsolute" Id="{ea58e1ce-18ec-4867-8b7e-5212dcdbad6c}">
-      <Declaration><![CDATA[//Move/Positioning absolute
+    <Method Name="m_MoveAbsolute" Id="{352d4204-8eb9-4689-a5f5-c381f92d2e23}">
+      <Declaration><![CDATA[//Returms TRUE if move absolute is done
 METHOD PUBLIC m_MoveAbsolute : BOOL
 VAR_INPUT
-	i_rPosition : LREAL; //Engineerings Units
-	i_rVelocity : LREAL; //Engineerings Units
-	i_rAcceleration : LREAL; //Engineerings Units
-	i_rDeceleration : LREAL; //Engineerings Units
-	i_rJerk : LREAL; //Engineerings Units
+	i_stPositioningProfile : ST_PositioningProfile;
+END_VAR
+VAR_OUTPUT
+	o_Busy : BOOL;
+	o_bDone : BOOL;
+	o_bError : BOOL;
 END_VAR
 ]]></Declaration>
     </Method>
-    <Method Name="m_MoveRelative" Id="{809127dd-63be-4706-9dd1-388023017610}">
-      <Declaration><![CDATA[//Move/Positioning relative
-METHOD PUBLIC m_MoveRelative : BOOL
-VAR_INPUT
-	i_rPosition : LREAL; //Engineerings Units
-	i_rVelocity : LREAL; //Engineerings Units
-	i_rAcceleration : LREAL; //Engineerings Units
-	i_rDeceleration : LREAL; //Engineerings Units
-	i_rJerk : LREAL; //Engineerings Units
-END_VAR
-]]></Declaration>
-    </Method>
-    <Method Name="m_MoveVelocity" Id="{4890369d-b225-4e64-a310-db6b627a07e3}">
-      <Declaration><![CDATA[//Move/Positioning velocity
-METHOD PUBLIC m_MoveVelocity : BOOL
-VAR_INPUT
-	i_rVelocity : LREAL; //Engineerings Units
-	i_rAcceleration : LREAL; //Engineerings Units
-	i_rDeceleration : LREAL; //Engineerings Units
-	i_rJerk : LREAL; //Engineerings Units
-END_VAR
-]]></Declaration>
-    </Method>
-    <Method Name="m_Power" Id="{f4bdb91e-42f8-4510-bd20-2ad01112b10a}">
-      <Declaration><![CDATA[//Switch power stage off/on
-METHOD PUBLIC m_Power : BOOL
-VAR_INPUT
-	i_bPower : BOOL; //FALSE = off, TRUE = on
-END_VAR
-]]></Declaration>
-    </Method>
-    <Method Name="m_Reset" Id="{9edae337-8320-414d-b386-a2d2193e83c7}">
-      <Declaration><![CDATA[//Reset drive
+    <Method Name="m_Reset" Id="{d21c967b-0f6e-4ff0-a005-3024d081b470}">
+      <Declaration><![CDATA[//Returms TRUE if reset is done
 METHOD PUBLIC m_Reset : BOOL
+VAR_OUTPUT
+	o_Busy : BOOL;
+	o_bDone : BOOL;
+	o_bError : BOOL;
+END_VAR
 ]]></Declaration>
     </Method>
-    <Method Name="m_Stop" Id="{fb69e262-37e4-40c5-91ed-da50c8e95a83}">
-      <Declaration><![CDATA[//Stop axis
+    <Method Name="m_Stop" Id="{5cc17e8b-d0af-47d2-8971-fb3746983839}">
+      <Declaration><![CDATA[//Returms TRUE if stop is done
 METHOD PUBLIC m_Stop : BOOL
 VAR_INPUT
-	i_rDeceleration : LREAL; //user units
+	i_fDec : LREAL;
+	i_fJrk : LREAL;
+END_VAR
+VAR_OUTPUT
+	o_Busy : BOOL;
+	o_bDone : BOOL;
+	o_bError : BOOL;
 END_VAR
 ]]></Declaration>
     </Method>
-    <Property Name="p_bStaAtPosition" Id="{294e9652-86a2-42fd-b220-ce286368b4d2}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaAtPosition : BOOL]]></Declaration>
-      <Get Name="Get" Id="{869393c6-6dbb-4346-a074-9992c808d039}">
+    <Property Name="p_bActive" Id="{2cb29854-3774-4cf5-a219-02c54b8bb1b4}">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bActive : BOOL]]></Declaration>
+      <Get Name="Get" Id="{a1edf287-d34f-4ece-b87a-bf7ab2d4fbf4}">
         <Declaration><![CDATA[]]></Declaration>
       </Get>
     </Property>
-    <Property Name="p_bStaError" Id="{66fc1fb4-4ba5-489d-9b16-d1d273a7e93d}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaError : BOOL]]></Declaration>
-      <Get Name="Get" Id="{0d868ed4-fd25-4ee1-bf02-ce308cf01c19}">
+    <Property Name="p_bAtPosition" Id="{0296d8a1-bba1-4848-84e5-b0f65a04689e}">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bAtPosition : BOOL]]></Declaration>
+      <Get Name="Get" Id="{d016fa02-995a-4755-bb62-750c9c44f0a4}">
         <Declaration><![CDATA[]]></Declaration>
       </Get>
     </Property>
-    <Property Name="p_bStaHomed" Id="{7551d40f-b525-41b0-abbf-000934133c5e}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaHomed : BOOL]]></Declaration>
-      <Get Name="Get" Id="{17ac572b-cbd0-4592-98b8-7ad784a2c34f}">
+    <Property Name="p_bBusy" Id="{ea672f4b-1f38-4953-9720-7b18bd53544c}">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bBusy : BOOL]]></Declaration>
+      <Get Name="Get" Id="{0ea07db0-f592-4ce4-9720-ac7d1e310d0f}">
         <Declaration><![CDATA[]]></Declaration>
       </Get>
     </Property>
-    <Property Name="p_bStaMoving" Id="{07b4e8a7-d620-478b-9162-ae9638d247a1}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaMoving : BOOL]]></Declaration>
-      <Get Name="Get" Id="{36955b1e-aad1-42ac-8bfb-f4ed7ed9eb7e}">
+    <Property Name="p_bCommandAborted" Id="{2a49cb95-fd44-4515-923b-a7bc9b380c84}">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bCommandAborted : BOOL]]></Declaration>
+      <Get Name="Get" Id="{b7369b02-f760-476b-984c-d2e8662ab36c}">
         <Declaration><![CDATA[]]></Declaration>
       </Get>
     </Property>
-    <Property Name="p_bStaPowered" Id="{5ea3fc8f-1699-450a-bfca-073bf86b1a0e}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaPowered : BOOL]]></Declaration>
-      <Get Name="Get" Id="{82dc8bf4-0c48-4e3d-ae1f-b9fdd8c9d1a5}">
+    <Property Name="p_bDone" Id="{9b672f28-ef29-46f9-936f-1604110a4a6b}">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bDone : BOOL]]></Declaration>
+      <Get Name="Get" Id="{0163db91-2d6f-4788-8064-c35f9349dcf7}">
         <Declaration><![CDATA[]]></Declaration>
       </Get>
     </Property>
-    <Property Name="p_bStaStandstill" Id="{a3ef429a-2f14-4c6c-871a-c925010477ad}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_bStaStandstill : BOOL]]></Declaration>
-      <Get Name="Get" Id="{5b30c740-e8a9-4e94-8429-b8c0ebabef7a}">
+    <Property Name="p_bError" Id="{95649822-d6d2-4770-bd6f-e314947554f0}">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bError : BOOL]]></Declaration>
+      <Get Name="Get" Id="{1ff651f8-da8d-417b-8f27-e9e5b49ab606}">
         <Declaration><![CDATA[]]></Declaration>
       </Get>
     </Property>
-    <Property Name="p_nStaErrorId" Id="{ec394e9e-b7d3-48af-aaf5-5f0bbd0b6f06}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_nStaErrorId : BOOL]]></Declaration>
-      <Get Name="Get" Id="{f4d9d556-1e45-4691-8ec0-0a0baa5bbd29}">
+    <Property Name="p_bHomed" Id="{67556394-07da-4907-b6f7-bbe492008789}">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bHomed : BOOL]]></Declaration>
+      <Get Name="Get" Id="{f738a51a-9bf0-444e-82fa-e390a6bfa6d0}">
         <Declaration><![CDATA[]]></Declaration>
       </Get>
     </Property>
-    <Property Name="p_rActPosition" Id="{8de1dc41-576b-4f6d-a01e-4f1d6160a0d7}">
-      <Declaration><![CDATA[PROPERTY PUBLIC p_rActPosition : BOOL //Engineerings Units]]></Declaration>
-      <Get Name="Get" Id="{2467ff66-0773-4193-8464-e6de973b7fb3}">
+    <Property Name="p_bMoveAbsDone" Id="{c142fda5-5127-4973-b7f1-607e66f57a18}">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bMoveAbsDone : BOOL]]></Declaration>
+      <Get Name="Get" Id="{e401bfe9-6cc5-47a0-aac0-76a1e2b26911}">
         <Declaration><![CDATA[]]></Declaration>
       </Get>
+    </Property>
+    <Property Name="p_bStandstill" Id="{070ca385-4d02-4833-9cf8-a4894d44cd4d}">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bStandstill : BOOL]]></Declaration>
+      <Get Name="Get" Id="{d848df6f-aa0b-4d04-8d1f-0f2c02dfe08c}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Property Name="p_bWarning" Id="{3a6fb864-c2c1-4662-9776-78f37cc5967d}">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_bWarning : BOOL]]></Declaration>
+      <Get Name="Get" Id="{c5d63639-4239-4ef7-a6a5-3e80d44b041e}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Property Name="p_fPosition" Id="{856b8234-728b-4c4c-9007-2b5237d8f236}">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_fPosition : LREAL]]></Declaration>
+      <Get Name="Get" Id="{fe6f1523-9852-4199-b495-c9659cb4a871}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Property Name="p_fSetOverride" Id="{4bc93d07-0df8-418d-8b35-ac36942455d8}">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_fSetOverride : LREAL]]></Declaration>
+      <Set Name="Set" Id="{bd6a4d23-ee00-4d08-b79a-4f70916e9373}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+    <Property Name="p_fSetTargetPosition" Id="{221d64ee-026d-41ef-bab6-2d969e7c5a3b}">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_fSetTargetPosition : LREAL]]></Declaration>
+      <Get Name="Get" Id="{1537636a-059b-4253-94a1-aaa26f0f680e}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+      <Set Name="Set" Id="{ec8a20e5-451f-4fc2-9e0c-1eff4f24d93e}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+    <Property Name="p_fTorque" Id="{116bf6ab-f68f-415c-9ec8-e4e0bf3198bc}">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_fTorque : LREAL]]></Declaration>
+      <Get Name="Get" Id="{2432c516-1578-4aae-a1ba-2bfe96c53801}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Property Name="p_fVelocity" Id="{32379a8d-6c57-4774-bbb5-3c8b8e291d57}">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_fVelocity : LREAL]]></Declaration>
+      <Get Name="Get" Id="{6c8b6e06-1e00-411f-b164-daaaecc0baea}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Property Name="p_nErrorID" Id="{3fff91ef-6c99-4344-bb1f-79ad133bc033}">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_nErrorID : UDINT]]></Declaration>
+      <Get Name="Get" Id="{ef54b3c8-f030-41f0-b531-435bbdec2828}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Property Name="p_sCfgNegName" Id="{d685c8c1-f786-4abe-9dfc-9d6f78b1e095}">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_sCfgNegName : STRING(GVL.g_nMAX_LEN_FEEDBACK)]]></Declaration>
+      <Get Name="Get" Id="{b1bce8d8-a1ae-418e-b5cb-c802528f17ba}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+      <Set Name="Set" Id="{7e3bfd36-bbb5-4ee0-ae23-387b355fecfb}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+    <Property Name="p_sCfgPosName" Id="{b6a8d9d2-37f9-42d5-b93e-e5f61c070a17}">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_sCfgPosName : STRING(GVL.g_nMAX_LEN_FEEDBACK)]]></Declaration>
+      <Get Name="Get" Id="{8f631c95-497c-483d-adc1-e530ba709bdc}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+      <Set Name="Set" Id="{656f01d4-c941-4331-bce4-c73178273be9}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+    <Property Name="p_sInterlockedReasonNeg" Id="{c497ff80-8b06-4428-84dd-660cca5291b2}">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_sInterlockedReasonNeg : STRING(GVL.g_nMAX_LEN_REASON)]]></Declaration>
+      <Get Name="Get" Id="{fb2f7e67-3c78-4206-8471-85d5aaf25246}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+      <Set Name="Set" Id="{87d2d8de-cdf8-4590-ac98-9b923fa882cf}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+    <Property Name="p_sInterlockedReasonPos" Id="{7e0fac2f-f327-4196-b34d-4f042c6eb4b1}">
+      <Declaration><![CDATA[{attribute 'monitoring':='call'}
+PROPERTY PUBLIC p_sInterlockedReasonPos : STRING(GVL.g_nMAX_LEN_REASON)]]></Declaration>
+      <Get Name="Get" Id="{e4d05182-e955-4f99-9018-020cfde87262}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+      <Set Name="Set" Id="{368b415d-06d6-4345-816d-9cbdfc5a4b67}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
     </Property>
   </Itf>
 </TcPlcObject>

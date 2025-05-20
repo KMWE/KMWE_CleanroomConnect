@@ -87,50 +87,51 @@ VAR
 	s_bIlckInnerCabinDoorToOpen : BOOL;
 	
 	//Requests
-	s_bReqDockTB : BOOL;							//-- := FALSE;
-	s_bReqUndockTB : BOOL;							//-- := FALSE;
-	s_bReqOpenInnerDoor : BOOL;						//-- := FALSE;
-	s_bReqCloseInnerDoor : BOOL;					//-- := FALSE;
+	s_bReqDockTB : BOOL;
+	s_bReqUndockTB : BOOL;
+	s_bReqOpenInnerDoor : BOOL;
+	s_bReqCloseInnerDoor : BOOL;
 	
-	s_bOverruleInterlocks : BOOL;					//-- := FALSE;
+	s_bOverruleInterlocks : BOOL;
 	
 	//States
-	s_bStaDockingClampsUpperHighPressure : BOOL;	//-- := FALSE;
-	s_bStaDockingClampsLowerHighPressure : BOOL;	//-- := FALSE;
-	s_bStaDockingClampsUpperClosed : BOOL;			//-- := FALSE;
-	s_bStaDockingClampsUpperOpened : BOOL;			//-- := FALSE;
-	s_bStaDockingClampsLowerClosed : BOOL;			//-- := FALSE;
-	s_bStaDockingClampsLowerOpened : BOOL;			//-- := FALSE;
-	s_bStaLockingPinUpperReleased : BOOL;			//-- := FALSE;
-	s_bStaLockingPinUpperLocked : BOOL;				//-- := FALSE;
-	s_bStaLockingPinLowerReleased : BOOL;			//-- := FALSE;
-	s_bStaLockingPinLowerLocked : BOOL;				//-- := FALSE;
-	s_bStaDoorOpenerOpened : BOOL;					//-- := FALSE;
-	s_bStaDoorOpenerClosed : BOOL;					//-- := FALSE;
-	s_bStaDoorOpenerAlmostClosed : BOOL;			//-- := FALSE;
-	s_bStaDoorShutterOpened : BOOL;					//-- := FALSE;
-	s_bStaDoorShutterClosed : BOOL;					//-- := FALSE;
-	s_bStaOuterCabinDoorOpened : BOOL;				//-- := FALSE;
-	s_bStaOuterCabinDoorClosed : BOOL;				//-- := FALSE;
-	s_bStaInnerCabinDoorOpened : BOOL;				//-- := FALSE;
-	s_bStaInnerCabinDoorClosed : BOOL;				//-- := FALSE;
-	s_bStaTbAtDockingPosition : BOOL;				//-- := FALSE;
-	s_bStaDockingPositionFree : BOOL;				//-- := FALSE;
+	s_bStaDockingClampsUpperHighPressure : BOOL;
+	s_bStaDockingClampsLowerHighPressure : BOOL;
+	s_bStaDockingClampsUpperClosed : BOOL;
+	s_bStaDockingClampsUpperOpened : BOOL;
+	s_bStaDockingClampsLowerClosed : BOOL;
+	s_bStaDockingClampsLowerOpened : BOOL;
+	s_bStaLockingPinUpperReleased : BOOL;
+	s_bStaLockingPinUpperLocked : BOOL;
+	s_bStaLockingPinLowerReleased : BOOL;
+	s_bStaLockingPinLowerLocked : BOOL;
+	s_bStaDoorOpenerOpened : BOOL;
+	s_bStaDoorOpenerClosed : BOOL;
+	s_bStaDoorOpenerAlmostClosed : BOOL;
+	s_bStaDoorShutterOpened : BOOL;
+	s_bStaDoorShutterClosed : BOOL;
+	s_bStaOuterCabinDoorOpened : BOOL;
+	s_bStaOuterCabinDoorClosed : BOOL;
+	s_bStaInnerCabinDoorOpened : BOOL;
+	s_bStaInnerCabinDoorClosed : BOOL;
+	s_bStaTbAtDockingPosition : BOOL;
+	s_bStaDockingPositionFree : BOOL;
+	s_bStaUndockingDone : BOOL;
 	
 	//Properties
-	s_bStaDocked : BOOL;						//-- := FALSE;
-	s_bStaUndocked : BOOL;						//-- := FALSE;
-	s_bStaHighPressureSelected : BOOL;			//-- := FALSE;
-	s_bStaDockingClampsClosed : BOOL;			//-- := FALSE;
-	s_bStaDockingClampsOpened : BOOL;			//-- := FALSE;
-	s_bStaUnlockingPinsLocked : BOOL;			//-- := FALSE;
-	s_bStaUnlockingPinsReleased : BOOL;			//-- := FALSE;
-	s_bStaBoxAtPreDockingPosition : BOOL;		//-- := FALSE;
-	s_bStaBoxAtDockedPosition : BOOL;			//-- := FALSE;
-	s_bStaInnerDoorClosedAndLocked : BOOL;		//-- := FALSE;
-	s_bStaInnerDoorOpenedAndReleased : BOOL;	//-- := FALSE;
-	s_bStsReadyToReceiveTB : BOOL;				//-- := FALSE;
-	s_bStsReadyToSendTB : BOOL;					//-- := FALSE;
+	s_bStaDocked : BOOL;
+	s_bStaUndocked : BOOL;
+	s_bStaHighPressureSelected : BOOL;
+	s_bStaDockingClampsClosed : BOOL;
+	s_bStaDockingClampsOpened : BOOL;
+	s_bStaUnlockingPinsLocked : BOOL;
+	s_bStaUnlockingPinsReleased : BOOL;
+	s_bStaBoxAtPreDockingPosition : BOOL;
+	s_bStaBoxAtDockedPosition : BOOL;
+	s_bStaInnerDoorClosedAndLocked : BOOL;
+	s_bStaInnerDoorOpenedAndReleased : BOOL;
+	s_bStsReadyToReceiveTB : BOOL;
+	s_bStsReadyToSendTB : BOOL;
 	
 	//Alarms
 	s_sReason : STRING(GVL.g_nMAX_LEN_REASON);
@@ -168,9 +169,6 @@ VAR
 	s_sLastStepPersistent : STRING(GVL.g_nMAX_LEN_STEP_NAME);
 	
 	s_tonTimer : TON;
-	
-	{warning 'TODO: Are those temp. variables still necessary?'}
-	s_bTmpUndockingDone : BOOL;
 	
 	//Hmi
 	//Buttons for MANUAL-mode
@@ -224,27 +222,6 @@ SUPER^();
 ]]></ST>
     </Implementation>
     <Folder Name="Base" Id="{07fbcd8f-5aa9-45bb-81ec-c9a513967daf}" />
-    <Method Name="_m_AdoptPressureSelection" Id="{bdf5c402-b106-4275-8b75-e0584a90338e}">
-      <Declaration><![CDATA[METHOD PROTECTED _m_AdoptPressureSelection : BOOL]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[
-//Let pressure selection toggle follow automatic state
-IF s_cmClampsUpperHighPressure.p_bStaOutput THEN
-	s_fbHmiBtnManualClampsUpperHighPressure.m_On();
-ELSE
-	s_fbHmiBtnManualClampsUpperHighPressure.m_Off();
-END_IF
-
-IF s_cmClampsLowerHighPressure.p_bStaOutput THEN
-	s_fbHmiBtnManualClampsLowerHighPressure.m_On();
-ELSE
-	s_fbHmiBtnManualClampsLowerHighPressure.m_Off();
-END_IF
-
-_m_AdoptPressureSelection := TRUE;
-]]></ST>
-      </Implementation>
-    </Method>
     <Method Name="_m_Alarms" Id="{c0cf83f3-e704-4016-bd6f-2d30156087ff}" FolderPath="Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Alarms : BOOL
 ]]></Declaration>
@@ -1230,7 +1207,6 @@ CASE s_eSequence OF
 	E_SeqDockingInterface.IDLE:
 		IF (i_eCtrlState = E_CtrlState.IDLE) THEN
 			s_eSequence := E_SeqDockingInterface.START;
-//--			s_eSequence := E_SeqDockingInterface.PREPARE_READY;
 			s_eResumeStep := s_eLastStepPersistent;
 		END_IF
 		
@@ -1246,7 +1222,7 @@ CASE s_eSequence OF
 					OR NOT(s_bStaDoorOpenerClosed)
 					OR NOT(s_bStaDoorShutterClosed)
 					OR NOT(s_bStaUnlockingPinsLocked)
-//++				OR NOT(s_bStaOuterCabinDoorOpened OR i_bTestDisableCabinDoors))
+					OR NOT(s_bStaOuterCabinDoorOpened OR i_bTestDisableCabinDoors)
 					)
 			THEN
 				s_eSequence := E_SeqDockingInterface.PREPARE_READY;
@@ -1295,9 +1271,7 @@ CASE s_eSequence OF
 	E_SeqDockingInterface.READY:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_eResumeStep := E_SeqDockingInterface.READY;
-			
-//??			i_refTB.p_bUndockingDone S= s_bTmpUndockingDone;
-			s_bTmpUndockingDone := FALSE;
+			s_bStaUndockingDone := FALSE;
 		END_IF
 		
 		//Resturn to start
@@ -1434,8 +1408,7 @@ CASE s_eSequence OF
 		IF s_fbSeqControl.q_tmStepTime >= i_ref_stSettings.tCompressSealDuration
 			//Check if all docking clamps are closed
 			AND (s_cmDockingClampsUpper.p_bStaIsOn AND s_cmDockingClampsLower.p_bStaIsOn) THEN
-//??			i_refTB.p_bDockingDone := TRUE;
-			s_eSequence := E_SeqDockingInterface.DOCK_TB_DONE;
+				s_eSequence := E_SeqDockingInterface.DOCK_TB_DONE;
 		END_IF
 		
 	//(option 2)
@@ -1490,8 +1463,7 @@ CASE s_eSequence OF
 		IF s_fbSeqControl.q_tmStepTime >= i_ref_stSettings.tCompressSealDuration
 			//Check if all docking clamps are closed
 			AND ((s_cmDockingClampsLower.p_bStaIsOn OR (s_cmDockingClampsLower.i_stSettings.tValveOnTimeout = T#0S)) AND s_cmDockingClampsUpper.p_bStaIsOn) THEN
-//??			i_refTB.p_bDockingDone := TRUE;
-			s_eSequence := E_SeqDockingInterface.DOCK_TB_DONE;
+				s_eSequence := E_SeqDockingInterface.DOCK_TB_DONE;
 		END_IF
 		
 	E_SeqDockingInterface.DOCK_TB_DONE:
@@ -1605,7 +1577,6 @@ CASE s_eSequence OF
 		
 	E_SeqDockingInterface.OPEN_DOOR_OPENER:
 		IF s_cmDoorOpener.m_On() THEN
-//??			i_refTB.p_bOpenInnerDoorDone := TRUE;
 			s_eSequence := E_SeqDockingInterface.OPEN_INNER_TB_DOOR_DONE;
 		END_IF
 		
@@ -1647,7 +1618,6 @@ CASE s_eSequence OF
 		
 		IF s_tonTimer.ET > i_ref_stSettings.tDelayNextStep THEN
 			s_tonTimer.IN := FALSE;
-//??			i_refTB.p_bCloseInnerDoorDone := TRUE;
 			
 			{warning '#FUMO3: "Disabled Doors" option can be deleted, IF FUMO3 is build'}
 			IF i_bTestDisableCabinDoors THEN
@@ -1765,17 +1735,11 @@ CASE i_eCtrlMode OF
 		;
 		
 	E_CtrlMode.AUTOMATIC:
-		//Let pressure selection toggle follow automatic state
-//??		_m_AdoptPressureSelection();
-		
 		//Execute automatic control
 		_m_Sequence();
 		
 	E_CtrlMode.MANUAL:
 		//Execute manaual control (based on HMI buttons)
-		
-		//Let pressure selection toggle follow automatic state
-//??		_m_AdoptPressureSelection();
 		
 		//Manual commands (convert HMI buttons to requests)
 		s_bReqDockTB := s_fbHmiBtnDockTB.p_osrBtnPress;

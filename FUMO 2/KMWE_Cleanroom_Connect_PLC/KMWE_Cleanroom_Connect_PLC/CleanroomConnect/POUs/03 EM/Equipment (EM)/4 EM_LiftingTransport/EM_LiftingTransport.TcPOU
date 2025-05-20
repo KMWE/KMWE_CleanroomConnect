@@ -48,8 +48,8 @@ VAR
 	s_cmLift : CM_Servo; //Including 2 limit switched and 1 reference switch
 	s_cmTransport : CM_Servo; //Including 2 limit switched and 1 reference switch
 	
-	axisLift : AXIS_REF; //??AXIS_REF; TC2_MC2.AXIS_REF;
-	axisTransport : AXIS_REF; //??AXIS_REF TC2_MC2.AXIS_REF;
+	axisLift : TC2_MC2.AXIS_REF;
+	axisTransport : TC2_MC2.AXIS_REF;
 	
 	//Inputs
 	s_diStaTrolleyOnPositionLeft : FB_DigInput;
@@ -71,26 +71,26 @@ VAR
 	s_fbIlckHandlerTransportExtract : FB_InterlockHandler;
 	s_fbIlckHandlerTransportRetract : FB_InterlockHandler;
 	
-	s_bIlckLiftUp : BOOL;			//-- := TRUE;
-	s_bIlckLiftDown : BOOL;			//-- := TRUE;
-	s_bIlckTransportExtract : BOOL;	//-- := TRUE;
-	s_bIlckTransportRetract : BOOL;	//-- := TRUE;
+	s_bIlckLiftUp : BOOL;
+	s_bIlckLiftDown : BOOL;
+	s_bIlckTransportExtract : BOOL;
+	s_bIlckTransportRetract : BOOL;
 	
 	//Requests
-	s_bReqGoToIdle : BOOL;			//-- := FALSE;
-	s_bReqPickTrolleyFromTB : BOOL;	//-- := FALSE;
-	s_bReqPlaceTrolleyInTB : BOOL;	//-- := FALSE;
+	s_bReqGoToIdle : BOOL;
+	s_bReqPickTrolleyFromTB : BOOL;
+	s_bReqPlaceTrolleyInTB : BOOL;
 	
 	//States
-	s_bStaLiftDriveError : BOOL;			//-- := FALSE;
-	s_bStaTransportDriveError : BOOL;		//-- := FALSE;
-	s_bStaTrolleyOnPositionLeft : BOOL;		//-- := FALSE;
-	s_bStaTrolleyOnPositionRight : BOOL;	//-- := FALSE;
-	s_bStaCabinAreaOccupied : BOOL;			//-- := FALSE;
-	s_bStaCabinAreaFree : BOOL;				//-- := FALSE;
-	s_bStaTrolleyAtLiftPos : BOOL;			//-- := FALSE;
-	s_bStaCollisionAvoidanceSensor : BOOL;	//-- := FALSE;
-	s_bStaTrolleyLocked : BOOL;				//-- := FALSE;
+	s_bStaLiftDriveError : BOOL;
+	s_bStaTransportDriveError : BOOL;
+	s_bStaTrolleyOnPositionLeft : BOOL;
+	s_bStaTrolleyOnPositionRight : BOOL;
+	s_bStaCabinAreaOccupied : BOOL;
+	s_bStaCabinAreaFree : BOOL;
+	s_bStaTrolleyAtLiftPos : BOOL;
+	s_bStaCollisionAvoidanceSensor : BOOL;
+	s_bStaTrolleyLocked : BOOL;
 	
 	s_fSetLiftPosition : LREAL; //[mm]
 	s_fActLiftPosition : LREAL; //Converted to vertical movement of scissor lift [mm]
@@ -99,9 +99,9 @@ VAR
 	s_fActTransportPosition : LREAL; //Converted to horizontal movement of transport unit [mm]
 	
 	//Properties
-	s_bStaAtIdlePosition : BOOL;		//-- := FALSE;
-	s_bStaTrolleyPickedFromTB : BOOL;	//-- := FALSE;
-	s_bStaTrolleyPlacedInTB : BOOL;		//-- := FALSE;
+	s_bStaAtIdlePosition : BOOL;
+	s_bStaTrolleyPickedFromTB : BOOL;
+	s_bStaTrolleyPlacedInTB : BOOL;
 	
 	//Alarms
 	s_sReason : STRING(GVL.g_nMAX_LEN_REASON);
@@ -869,9 +869,6 @@ CASE s_eSequence OF
 			s_eSequence := E_SeqLiftingTransport.START;
 			s_eResumeStep := s_eLastStepPersistent;
 		END_IF
-		
-//--		s_eResumeStep := E_SeqLiftingTransport.READY;
-//--		s_eSequence := E_SeqLiftingTransport.START;
 		
 	E_SeqLiftingTransport.START: //Afhankelijk van de voorgaande stap, stappen programma hervatten. Wanneer actie voltooit
 		IF s_fbSeqControl.q_bStaEntry THEN

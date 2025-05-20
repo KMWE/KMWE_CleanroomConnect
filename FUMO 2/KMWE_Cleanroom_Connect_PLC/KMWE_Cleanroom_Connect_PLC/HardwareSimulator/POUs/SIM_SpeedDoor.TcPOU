@@ -39,7 +39,6 @@ ELSIF I_bCmdDoorClose THEN
 	s_bCmdClose := TRUE;
 END_IF
 
-//--s_tonOpen(IN := I_bCmdDoorOpen AND NOT(I_bCmdDoorClose), PT := T#2S);
 s_tonOpen(IN := s_bCmdOpen, PT := T#2S);
 
 IF s_tonOpen.Q THEN
@@ -47,14 +46,12 @@ IF s_tonOpen.Q THEN
 //ELSIF I_bCmdDoorClose THEN
 ELSIF s_bCmdClose THEN
 	Q_bStaDoorIsOpened := FALSE;
-END_IF	
+END_IF
 	
-//--s_tonClose(IN := I_bCmdDoorClose AND NOT(I_bCmdDoorOpen), PT := T#2S);
 s_tonClose(IN := s_bCmdClose, PT := T#2S);
 
 IF s_tonClose.Q THEN
 	Q_bStaDoorIsClosed := TRUE;
-//--ELSIF I_bCmdDoorOpen THEN
 ELSIF s_bCmdOpen THEN
 	Q_bStaDoorIsClosed := FALSE;
 END_IF

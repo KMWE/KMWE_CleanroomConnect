@@ -56,6 +56,8 @@ VAR
 	s_eCtrlState : E_CtrlState;
 	s_eCabinAirState : E_AirState := E_AirState.UNKNOWN;
 	
+	s_eCtrlModePrevious : E_CtrlMode;
+	
 	s_bStaInnerTbDoorClean : BOOL;
 	
 	//Properties
@@ -98,6 +100,9 @@ VAR
 	s_fbHmiBtnCloseInnerTBDoor : FB_HmiBtn;
 	s_fbHmiBtnPickTrolleyFromTB : FB_HmiBtn;
 	s_fbHmiBtnPlaceTrolleyInTB : FB_HmiBtn;
+	
+	s_fbHmiBtnEmPlus : FB_HmiBtn;
+	s_fbHmiBtnEmMinus : FB_HmiBtn;
 	
 	//Leds
 	s_bHmiForceOutputEnabled : BOOL;
@@ -272,6 +277,9 @@ VAR_INST
 	s_sPrevBottom1Alarms	: STRING;
 	
 	s_sCompanySelectionVisible	: STRING;
+	
+	s_nEMSelection : USINT;
+	s_nEMSelectionPrevious : USINT;
 END_VAR
 ]]></Declaration>
       <Implementation>
@@ -300,28 +308,40 @@ IF GVL.g_sToHmiMiddleContent = GVL.g_stHmiMiddle.AlarmManager AND GVL_KMWEGeneri
 END_IF
 
 //Hmi view management (General, Em can set module specific pages)
-CASE s_eCtrlMode OF
-	E_CtrlMode.IDLE:
+IF (s_eCtrlMode <> s_eCtrlModePrevious) THEN
+	CASE s_eCtrlMode OF
+		E_CtrlMode.IDLE: GVL.g_sToHmiMiddleTab := 'General';
+		E_CtrlMode.AUTOMATIC: GVL.g_sToHmiMiddleTab := 'AutoManual';
+		E_CtrlMode.MANUAL: GVL.g_sToHmiMiddleTab := 'AutoManual';
+		E_CtrlMode.MAINTENANCE: GVL.g_sToHmiMiddleTab := 'Maintenance';
+		E_CtrlMode.IO: GVL.g_sToHmiMiddleTab := 'IO-Test';
+		E_CtrlMode.CLEANING: //++ GVL.g_sToHmiMiddleTab := 'Cleaning';
+	ELSE
 		GVL.g_sToHmiMiddleTab := 'General';
-		
-	E_CtrlMode.AUTOMATIC:
-		GVL.g_sToHmiMiddleTab := 'AutoManual';
-		
-	E_CtrlMode.MANUAL:
-		GVL.g_sToHmiMiddleTab := 'AutoManual';
-		
-	E_CtrlMode.MAINTENANCE:
-		GVL.g_sToHmiMiddleTab := 'Maintenance';
-		
-	E_CtrlMode.IO:
-		GVL.g_sToHmiMiddleTab := 'IO-Test';
-		
-	E_CtrlMode.CLEANING:
-//++		GVL.g_sToHmiMiddleTab := 'Cleaning';
-		
-ELSE
-		GVL.g_sToHmiMiddleTab := 'General';
-END_CASE
+	END_CASE
+	s_eCtrlModePrevious := s_eCtrlMode;
+END_IF
+
+//EM Selection 0 = none >1 selection
+IF s_fbHmiBtnEmPlus.p_osrBtnPress THEN s_nEMSelection := s_nEMSelection + 1;
+ELSIF s_fbHmiBtnEmMinus.p_osrBtnPress THEN s_nEMSelection := s_nEMSelection - 1;
+END_IF
+s_nEMSelection := LIMIT(1, s_nEMSelection, 4);
+
+IF (s_nEMSelection <> s_nEMSelectionPrevious) THEN 
+	IF s_nEMSelection = 1 THEN
+		GVL.g_sToHmiMiddleContent := GVL.g_stHmiMiddle.EM_Utilities;
+	ELSIF s_nEMSelection = 2 THEN
+		GVL.g_sToHmiMiddleContent := GVL.g_stHmiMiddle.EM_PalletConveyor;
+	ELSIF s_nEMSelection = 3 THEN
+		GVL.g_sToHmiMiddleContent := GVL.g_stHmiMiddle.EM_DockingInterface;
+	ELSIF s_nEMSelection = 4 THEN
+		GVL.g_sToHmiMiddleContent := GVL.g_stHmiMiddle.EM_LiftingTransport;
+	//++ELSIF s_nEMSelection = 5 THEN
+	//++	GVL.g_sToHmiMiddleContent := GVL.g_stHmiMiddle.EM_AirTreatment;
+	END_IF
+	s_nEMSelectionPrevious := s_nEMSelection;
+END_IF
 
 //Hmi Buttons
 s_fbHmiBtnAlarms();
@@ -335,6 +355,8 @@ s_fbHmiBtnOpenInnerTBDoor();
 s_fbHmiBtnCloseInnerTBDoor();
 s_fbHmiBtnPickTrolleyFromTB();
 s_fbHmiBtnPlaceTrolleyInTB();
+s_fbHmiBtnEmPlus();
+s_fbHmiBtnEmMinus();
 ]]></ST>
       </Implementation>
     </Method>
@@ -696,6 +718,16 @@ s_fbHmiBtnPlaceTrolleyInTB.p_bStaVisible := TRUE;
 s_fbHmiBtnPlaceTrolleyInTB.p_bStaEnabled := TRUE;
 s_fbHmiBtnPlaceTrolleyInTB.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 s_fbHmiBtnPlaceTrolleyInTB.p_sBtnText := 'Place Trolley In TB';
+
+s_fbHmiBtnEmPlus.p_bStaVisible := TRUE;
+s_fbHmiBtnEmPlus.p_bStaEnabled := TRUE;
+s_fbHmiBtnEmPlus.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnEmPlus.p_sBtnText := 'Next EM';
+
+s_fbHmiBtnEmMinus.p_bStaVisible := TRUE;
+s_fbHmiBtnEmMinus.p_bStaEnabled := TRUE;
+s_fbHmiBtnEmMinus.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnEmMinus.p_sBtnText := 'Prev EM';
 
 GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible := FALSE;
 GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled := FALSE;
@@ -1293,6 +1325,8 @@ s_fbHmiBtnOpenInnerTBDoor.p_bStaEnabled := s_bStaReady AND NOT(GVL_Modules.g_emD
 s_fbHmiBtnCloseInnerTBDoor.p_bStaEnabled := s_bStaReady AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosed);
 s_fbHmiBtnPickTrolleyFromTB.p_bStaEnabled := s_bStaReady AND GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpened;
 s_fbHmiBtnPlaceTrolleyInTB.p_bStaEnabled := s_bStaReady AND GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpened;
+s_fbHmiBtnEmPlus.p_bStaEnabled := TRUE;
+s_fbHmiBtnEmMinus.p_bStaEnabled := TRUE;
 
 //IO-mode//////////////////////////////////////////////////////////////////////////////////////////
 IF (s_eCtrlMode = E_CtrlMode.IO) AND (s_eCtrlState = E_CtrlState.RUNNING) THEN

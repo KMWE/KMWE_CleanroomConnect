@@ -654,7 +654,7 @@
 ]
 </script>
 </div>
-<div id="TcHmiTab_Parameters" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="5" data-tchmi-height-unit="%" data-tchmi-left="40.0" data-tchmi-left-unit="%" data-tchmi-top="5.0" data-tchmi-top-unit="%" data-tchmi-width="10" data-tchmi-width-unit="%" data-tchmi-word-wrap="true" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-vertical-alignment="Center" data-tchmi-text="Parameters" data-tchmi-text-font-size-unit="%" data-tchmi-text-font-size="100" data-tchmi-zindex="3" data-tchmi-visibility="Hidden">
+<div id="TcHmiTab_Cleaning" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="5" data-tchmi-height-unit="%" data-tchmi-left="40.0" data-tchmi-left-unit="%" data-tchmi-top="5.0" data-tchmi-top-unit="%" data-tchmi-width="10" data-tchmi-width-unit="%" data-tchmi-word-wrap="true" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-vertical-alignment="Center" data-tchmi-text="Cleaning" data-tchmi-text-font-size-unit="%" data-tchmi-text-font-size="100" data-tchmi-zindex="3" data-tchmi-visibility="Collapsed">
 <script data-tchmi-target-attribute="data-tchmi-border-width" type="application/json">
 {
   "left": 1,
@@ -701,8 +701,23 @@
 <script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
 [
   {
-    "event": "TcHmiTab_Parameters.onPressed",
+    "event": "TcHmiTab_Cleaning.onPressed",
     "actions": [
+      {
+        "objectType": "Comment",
+        "comment": "Overwrite tab selected by PLC"
+      },
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%pp%sContentTab%/pp%",
+        "value": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%f%'Cleaning'%/f%"
+        },
+        "asyncWait": true
+      },
       {
         "objectType": "WriteToSymbol",
         "active": true,
@@ -710,25 +725,14 @@
         "value": {
           "objectType": "Symbol",
           "valueType": "tchmi:general#/definitions/String",
-          "symbolExpression": "%f%%pp%sContentPath%/pp%+'_Parameters.content'%/f%"
-        },
-        "asyncWait": true
-      },
-      {
-        "objectType": "WriteToSymbol",
-        "active": true,
-        "symbolExpression": "%pp%nSelected%/pp%",
-        "value": {
-          "objectType": "StaticValue",
-          "valueType": "tchmi:general#/definitions/Number",
-          "value": 5.0
+          "symbolExpression": "%f%%pp%sContentPath%/pp%+'_'+%pp%sContentTab%/pp%+'.content'%/f%"
         },
         "asyncWait": true
       }
     ]
   },
   {
-    "event": "%pp%nSelected%/pp%",
+    "event": "%pp%sContentTab%/pp%",
     "actions": [
       {
         "objectType": "Condition",
@@ -739,13 +743,13 @@
               {
                 "compare1": {
                   "objectType": "Symbol",
-                  "valueType": "tchmi:general#/definitions/Number",
-                  "symbolExpression": "%pp%nSelected%/pp%"
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%pp%sContentTab%/pp%"
                 },
                 "compare2": {
                   "objectType": "StaticValue",
-                  "valueType": "tchmi:general#/definitions/Number",
-                  "value": 5.0
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "Cleaning"
                 },
                 "compareOperator": "==",
                 "logic": null
@@ -755,20 +759,18 @@
               {
                 "objectType": "WriteToSymbol",
                 "active": true,
-                "symbolExpression": "%ctrl%TcHmiTab_Parameters::BackgroundColor%/ctrl%",
+                "symbolExpression": "%ctrl%TcHmiTab_Cleaning::TextColor%/ctrl%",
                 "value": {
                   "objectType": "StaticValue",
-                  "valueType": "tchmi:framework#/definitions/Color",
-                  "value": {
-                    "color": "rgba(255, 255, 255, 1)"
-                  }
+                  "valueType": "tchmi:framework#/definitions/SolidColor",
+                  "value": null
                 },
                 "asyncWait": true
               },
               {
                 "objectType": "WriteToSymbol",
                 "active": true,
-                "symbolExpression": "%ctrl%TcHmiTab_Parameters::TextColor%/ctrl%",
+                "symbolExpression": "%ctrl%TcHmiTab_Cleaning::TextColor%/ctrl%",
                 "value": {
                   "objectType": "StaticValue",
                   "valueType": "tchmi:framework#/definitions/SolidColor",
@@ -785,10 +787,10 @@
               {
                 "objectType": "WriteToSymbol",
                 "active": true,
-                "symbolExpression": "%ctrl%TcHmiTab_Parameters::BackgroundColor%/ctrl%",
+                "symbolExpression": "%ctrl%TcHmiTab_Cleaning::TextColor%/ctrl%",
                 "value": {
                   "objectType": "StaticValue",
-                  "valueType": "tchmi:framework#/definitions/Color",
+                  "valueType": "tchmi:framework#/definitions/SolidColor",
                   "value": null
                 },
                 "asyncWait": true
@@ -796,7 +798,7 @@
               {
                 "objectType": "WriteToSymbol",
                 "active": true,
-                "symbolExpression": "%ctrl%TcHmiTab_Parameters::TextColor%/ctrl%",
+                "symbolExpression": "%ctrl%TcHmiTab_Cleaning::TextColor%/ctrl%",
                 "value": {
                   "objectType": "StaticValue",
                   "valueType": "tchmi:framework#/definitions/SolidColor",
@@ -816,7 +818,7 @@
 </div>
 <div id="TcHmiRegion_Content" data-tchmi-type="TcHmi.Controls.System.TcHmiRegion" data-tchmi-height="90" data-tchmi-height-unit="%" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-top="10" data-tchmi-top-unit="%" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-zindex="1">
 </div>
-<div id="TcHmiTextblock_Title" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="5" data-tchmi-height-unit="%" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-text="%pp%sName%/pp%" data-tchmi-top="0" data-tchmi-top-unit="%" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-word-wrap="true" data-tchmi-text-font-size-unit="%" data-tchmi-text-font-size="200" data-tchmi-text-vertical-alignment="Top" data-tchmi-zindex="3">
+<div id="TcHmiTextblock_Title" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="5" data-tchmi-height-unit="%" data-tchmi-left="6" data-tchmi-left-unit="%" data-tchmi-text="%pp%sName%/pp%" data-tchmi-top="0" data-tchmi-top-unit="%" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-word-wrap="true" data-tchmi-text-font-size-unit="%" data-tchmi-text-font-size="200" data-tchmi-text-vertical-alignment="Center" data-tchmi-zindex="3">
 </div>
 
 <script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
@@ -880,5 +882,9 @@
   "color": "rgba(255, 255, 255, 1)"
 }
 </script>
+</div>
+<div id="ucBtnEM_Plus" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-left="3" data-tchmi-left-unit="%" data-tchmi-target-user-control="UserControl/ucHmiButton.usercontrol" data-tchmi-top="0" data-tchmi-top-unit="%" data-tchmi-sdescription="%s%PLC1.GVL.g_unCleanroomConnect.s_fbHmiBtnEmPlus.p_sBtnText%/s%" data-tchmi-bbtnenabled="%s%PLC1.GVL.g_unCleanroomConnect.s_fbHmiBtnEmPlus.p_bStaEnabled%/s%" data-tchmi-bcmdpressed="%s%PLC1.GVL.g_unCleanroomConnect.s_fbHmiBtnEmPlus.s_bFromHmiPressed%/s%" data-tchmi-zindex="4" data-tchmi-bbtnvisible="%s%PLC1.GVL.g_unCleanroomConnect.s_fbHmiBtnEmPlus.p_bStaVisible%/s%" data-tchmi-height-unit="%" data-tchmi-width-unit="%" data-tchmi-width="3" data-tchmi-height="5">
+</div>
+<div id="ucBtnEM_Minus" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-target-user-control="UserControl/ucHmiButton.usercontrol" data-tchmi-top="0" data-tchmi-top-unit="%" data-tchmi-sdescription="%s%PLC1.GVL.g_unCleanroomConnect.s_fbHmiBtnEmMinus.p_sBtnText%/s%" data-tchmi-bbtnenabled="%s%PLC1.GVL.g_unCleanroomConnect.s_fbHmiBtnEmMinus.p_bStaEnabled%/s%" data-tchmi-bcmdpressed="%s%PLC1.GVL.g_unCleanroomConnect.s_fbHmiBtnEmMinus.s_bFromHmiPressed%/s%" data-tchmi-zindex="5" data-tchmi-bbtnvisible="%s%PLC1.GVL.g_unCleanroomConnect.s_fbHmiBtnEmMinus.p_bStaVisible%/s%" data-tchmi-height-unit="%" data-tchmi-width-unit="%" data-tchmi-width="3" data-tchmi-height="5">
 </div>
 </div>

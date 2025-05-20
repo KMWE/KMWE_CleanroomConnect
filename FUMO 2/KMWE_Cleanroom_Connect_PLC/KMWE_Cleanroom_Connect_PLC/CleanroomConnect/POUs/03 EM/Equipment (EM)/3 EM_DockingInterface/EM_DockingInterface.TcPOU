@@ -22,7 +22,7 @@ VAR_INPUT
 	i_stExtIlckDoorOpenerToOpen : ST_Interlock;
 	i_stExtIlckDoorShutterToClose : ST_Interlock;
 	i_stExtIlckDoorShutterToOpen : ST_Interlock;
-	i_stExtIlckOuterCabinDoorToClose : ST_Interlock;	//-- NOT_USED
+	i_stExtIlckOuterCabinDoorToClose : ST_Interlock;
 	i_stExtIlckOuterCabinDoorToOpen : ST_Interlock;		//-- NOT_USED
 	i_stExtIlckInnerCabinDoorToClose : ST_Interlock;
 	i_stExtIlckInnerCabinDoorToOpen : ST_Interlock;		//-- NOT_USED
@@ -290,7 +290,7 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-{warning '#TOOD: Interlock is blocking to start buttone in MANUAL-Mode'}
+{warning '#TODO: Interlock is blocking to start buttons in MANUAL-Mode'}
 IF s_bIlckDoorOpenerToClose AND FALSE THEN
 	i_refReason := CONCAT('Cmd To Close Inner Door: Interlocked - ', s_fbIlckHandlerDoorOpenerClose.p_sReason);
 	_m_CmdCloseInnerDoor := FALSE;
@@ -337,7 +337,7 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-{warning '#TOOD: Interlock is blocking to start buttone in MANUAL-Mode'}
+{warning '#TOOD: Interlock is blocking to start buttons in MANUAL-Mode'}
 IF s_bIlckDoorShutterToOpen AND FALSE THEN
 	i_refReason := CONCAT('Cmd To Open Inner Door: Interlocked - ', s_fbIlckHandlerDoorShutterOpen.p_sReason);
 	_m_CmdOpenInnerDoor := FALSE;
@@ -1235,21 +1235,14 @@ CASE s_eSequence OF
 		
 		//Added state running before continuing the sequense (automatically)
 		IF i_eCtrlState = E_CtrlState.RUNNING THEN
-			
 			s_eSequence := s_eResumeStep;
-			
-			{warning '#TODO: Check if statup() is good to use or not?'}
-			//--IF _m_SeqStartup() AND s_fbSeqDockingInterfaceControl.q_tmStepTime > T#1S THEN
-			//--	s_eSeqDockingInterface := s_eResumeStep;
-			//--END_IF
 		END_IF
 		
 	E_SeqDockingInterface.PREPARE_READY:
 		IF s_fbSeqControl.q_bStaEntry THEN
-//--			s_cmClampsUpperHighPressure.m_Off();
-//--			s_cmClampsLowerHighPressure.m_Off();
+			;
 		END_IF
-	
+		
 		IF NOT(s_cmClampsUpperHighPressure.p_bStaIsOff) OR NOT(s_cmClampsLowerHighPressure.p_bStaIsOff) THEN
 			s_cmClampsUpperHighPressure.m_Off();
 			s_cmClampsLowerHighPressure.m_Off();
@@ -1330,18 +1323,6 @@ CASE s_eSequence OF
 		END_IF
 		
 //DOCK TB//////////////////////////////////////////////////////////////////////////////////////////
-{warning '#TODO: Not clear why this step is needed?'} //Not used at this point, if this keeps the case then delete
-	E_SeqDockingInterface.PREPAPRE_DOCK:
-		IF s_fbSeqControl.q_bStaEntry THEN
-			s_cmClampsUpperHighPressure.m_Off();
-			s_cmClampsLowerHighPressure.m_Off();
-		END_IF
-		
-		IF s_cmDockingClampsUpper.m_Off() AND s_cmDockingClampsLower.m_Off()
-			AND (s_fbSeqControl.q_tmStepTime >= T#2S) THEN
-				s_eSequence := E_SeqDockingInterface.OPEN_OUTER_CABIN_DOOR;
-		END_IF
-		
 	E_SeqDockingInterface.OPEN_OUTER_CABIN_DOOR:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmOuterCabinDoor.m_Open();
@@ -1559,8 +1540,6 @@ CASE s_eSequence OF
 		END_IF
 		
 		s_tonTimer.IN := s_cmUnlockingPinUpper.p_bStaIsOn AND s_cmUnlockingPinLower.p_bStaIsOn;
-		{warning #TODO: Nog beslissen wat te doen, trigger met entry OF METHOD RETURN?}
-//--			s_tonTimer.IN := s_cmUnlockingPinUpper.m_On() AND s_cmUnlockingPinLower.m_On();
 		
 		IF s_tonTimer.ET > i_ref_stSettings.tDelayNextStep THEN
 			s_tonTimer.IN := FALSE;

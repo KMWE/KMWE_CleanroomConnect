@@ -102,8 +102,6 @@ VAR
 	
 	s_tMaxTravelTime : TIME;
 	s_tDoorCheckTime : TIME;
-	{warning '#TODO: Not used/read in program, delete?'}
-	s_bDoorCheckTimeDisabled : BOOL := FALSE;
 	
 	//Sequencers
 	s_eSequence : E_SeqPalletConveyor;
@@ -833,14 +831,12 @@ CASE s_eSequence OF
 		*)
 		
 		IF s_bStaAtCenteringPosition THEN
-			s_bDoorCheckTimeDisabled := FALSE;
 			s_eSequence := E_SeqPalletConveyor.STOP_AT_CENTERING;
 			
 		ELSIF s_fbSeqControl.q_tmStepTime < s_tDoorCheckTime
 			AND NOT(s_bStaDoorOpened)
 			AND s_bStaAtInfeedRearPosition THEN
 			s_bWrnOuterDoorNotOpened := TRUE;
-			s_bDoorCheckTimeDisabled := TRUE; //Disable error after first occurance (to prevent invalid retriggering at reties)
 			s_eSequence := E_SeqPalletConveyor.ERROR;
 			
 		ELSIF s_fbSeqControl.q_tmStepTime > s_tMaxTravelTime THEN

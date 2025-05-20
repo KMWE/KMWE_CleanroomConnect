@@ -62,12 +62,16 @@ VAR
 	s_fbAlarmHandlerOpeningTimeout : FB_AlarmHandler;
 	s_fbAlarmHandlerClosingTimeout : FB_AlarmHandler;
 	
-	s_fbAlarmHandlerOpenInterlocked : FB_AlarmHandler;
-	s_fbAlarmHandlerCloseInterlocked : FB_AlarmHandler;
-	
 	s_errDoorController : BOOL;
 	s_errOpeningTimeout : BOOL;
 	s_errClosingTimeout : BOOL;
+	
+	//Warnings
+	s_fbAlarmHandlerOpenInterlocked : FB_AlarmHandler;
+	s_fbAlarmHandlerCloseInterlocked : FB_AlarmHandler;
+	
+	s_wrnOpenInterlocked : BOOL;
+	s_wrnCloseInterlocked : BOOL;
 	
 	//Timers
 	s_tofResetPulse : TOF;
@@ -123,6 +127,21 @@ s_errDoorController := i_bReqEnable AND (s_bStaDoorControllerError OR s_errDoorC
 s_errOpeningTimeout := (s_tonOpeningTimeout.Q OR s_errOpeningTimeout) AND NOT(i_bCmdReset);
 s_errClosingTimeout := (s_tonClosingTimeout.Q OR s_errClosingTimeout) AND NOT(i_bCmdReset);
 
+//Interlock warnings
+IF s_bReqClose AND i_bIclkClose THEN
+	//warning set in corresponding method
+	s_bReqClose := FALSE;
+ELSIF NOT(i_bIclkClose) OR i_bCmdReset THEN
+	s_wrnCloseInterlocked := FALSE;
+END_IF
+
+IF s_bReqOpen AND i_bIclkOpen THEN
+	//warning set in corresponding method
+	s_bReqOpen := FALSE;
+ELSIF NOT(i_bIclkOpen) OR i_bCmdReset THEN
+	s_wrnOpenInterlocked := FALSE;
+END_IF
+
 //Alarm Handlers
 s_fbAlarmHandlerDoorController(
 	i_bStaActive := s_errDoorController);
@@ -132,6 +151,14 @@ s_fbAlarmHandlerOpeningTimeout(
 	
 s_fbAlarmHandlerClosingTimeout(
 	i_bStaActive := s_errClosingTimeout);
+
+s_fbAlarmHandlerCloseInterlocked(
+	i_bStaActive := s_wrnCloseInterlocked,
+	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': interlocked, Reason: ', CONCAT(s_sInterlockedReasonClose, '.'))) );
+	
+s_fbAlarmHandlerOpenInterlocked(
+	i_bStaActive := s_wrnOpenInterlocked,
+	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': interlocked, Reason: ', CONCAT(s_sInterlockedReasonOpen, '.'))) );
 	
 //Alarm collector
 s_bStaError :=
@@ -140,7 +167,8 @@ s_bStaError :=
 	OR s_fbAlarmHandlerClosingTimeout.q_bStaActive;
 	
 s_bStaWarning :=
-	FALSE;
+	s_fbAlarmHandlerCloseInterlocked.q_bStaActive
+	OR s_fbAlarmHandlerOpenInterlocked.q_bStaActive;
 	
 _m_Alarms := TRUE;
 ]]></ST>
@@ -422,11 +450,22 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
+IF NOT(i_bIclkClose) THEN
+	s_bReqClose := TRUE;
+	s_bReqOpen := FALSE;
+ELSE
+	s_wrnCloseInterlocked := TRUE;
+END_IF
+
+m_Close := s_bStaDoorIsClosed;
+
+//--old code
+(*
 s_bReqClose := TRUE;
 s_bReqOpen := FALSE;
 
 m_Close := TRUE;
-]]></ST>
+*)]]></ST>
       </Implementation>
     </Method>
     <Method Name="m_Open" Id="{49abf2ba-d09f-4bfc-8f29-0007510177f3}" FolderPath="Methods\">
@@ -438,11 +477,22 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
+IF NOT(i_bIclkOpen) THEN
+	s_bReqClose := FALSE;
+	s_bReqOpen := TRUE;
+ELSE
+	s_wrnOpenInterlocked := TRUE;
+END_IF
+
+m_Open := s_bStaDoorIsOpened;
+
+//--old code
+(*
 s_bReqClose := FALSE;
 s_bReqOpen := TRUE;
 
 m_Open := TRUE;
-]]></ST>
+*)]]></ST>
       </Implementation>
     </Method>
     <Method Name="m_Reset" Id="{2b94f0b3-4541-4c9a-84a0-3021994a0458}" FolderPath="Methods\">

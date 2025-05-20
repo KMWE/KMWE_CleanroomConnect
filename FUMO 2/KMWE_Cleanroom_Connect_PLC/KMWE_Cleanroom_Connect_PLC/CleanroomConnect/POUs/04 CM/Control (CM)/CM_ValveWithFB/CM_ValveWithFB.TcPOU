@@ -124,6 +124,7 @@ ELSIF NOT(i_bIclkOff) OR i_bCmdReset THEN
 	s_wrnOffInterlocked := FALSE;
 END_IF
 
+//Alarm Handlers
 s_fbAlarmHandlerFeedbackOffTimeout(
 	i_bStaActive := i_bReqEnable AND s_errFeedbackOffTimeout,
 	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Feedback ', CONCAT(s_sCfgOffName, ' timeout.'))) );
@@ -139,7 +140,8 @@ s_fbAlarmHandlerOffInterlocked(
 s_fbAlarmHandlerOnInterlocked(
 	i_bStaActive := s_wrnOnInterlocked,
 	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': ', CONCAT(s_sCfgOnName, CONCAT(' interlocked, Reason: ', CONCAT(s_sInterlockedReasonOn, '.'))))) );
-	
+
+//Alarm collector	
 s_bStaError :=
 	s_fbAlarmHandlerFeedbackOffTimeout.q_bStaActive
 	OR s_fbAlarmHandlerFeedbackOnTimeout.q_bStaActive;

@@ -201,11 +201,11 @@ s_fbAlarmHandlerDriveError(
 	
 s_fbAlarmHandlerMotorPosInterlocked(
 	i_bStaActive := s_wrnMotorPosInterlocked,
-	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move forward, Reason: ',CONCAT(s_sInterlockedReasonPos, '.'))) );
+	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move positive, Reason: ',CONCAT(s_sInterlockedReasonPos, '.'))) );
 		
 s_fbAlarmHandlerMotorNegInterlocked(
 	i_bStaActive := s_wrnMotorNegInterlocked,
-	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move backward, Reason: ',CONCAT(s_sInterlockedReasonNeg, '.'))) );
+	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motor - interlocked to move negative, Reason: ',CONCAT(s_sInterlockedReasonNeg, '.'))) );
 	
 s_fbAlarmHandlerMoveAbsInterlocked(
 	i_bStaActive := s_wrnMoveAbsInterlocked);
@@ -732,17 +732,16 @@ s_fActTorque := i_refAxis.NcToPlc.ActTorque;
 s_bIclkPos := i_bIclkPos;
 s_bIclkNeg := i_bIclkNeg;
 
-{warning '#TODO: Not clear why this interlocks are configured here?'}
-//Local reasons, first
+//Local reasons, first (overwrite external reason)
 IF NOT(s_bStaEnabled) AND (i_eCtrlMode = E_CtrlMode.MAINTENANCE) THEN
 	s_sInterlockedReasonPos := 'Not enabled';
-ELSIF NOT(s_bStaLimitSwitchPos) THEN  
+ELSIF NOT(s_bStaLimitSwitchPos) THEN
 	s_sInterlockedReasonPos := CONCAT('Limit-switch ', s_sCfgPosName);
 ELSE
 	;//Else, allow external to write
 END_IF
 
-//Local reasons, first
+//Local reasons, first (overwrite external reason)
 IF NOT(s_bStaEnabled) AND (i_eCtrlMode = E_CtrlMode.MAINTENANCE) THEN
 	s_sInterlockedReasonNeg := 'Not enabled';
 ELSIF NOT(s_bStaLimitSwitchNeg) THEN

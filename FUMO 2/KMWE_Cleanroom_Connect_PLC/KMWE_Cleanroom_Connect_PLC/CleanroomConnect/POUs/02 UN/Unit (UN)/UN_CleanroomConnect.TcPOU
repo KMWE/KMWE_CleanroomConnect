@@ -957,11 +957,17 @@ s_sResumeStep := TO_STRING(s_eResumeStep);
 
 CASE s_eSequence OF
 	E_SeqCleanroomConnect.IDLE:
-		s_eCabinAirState := E_AirState.UNKNOWN;
-		s_eResumeStep := E_SeqCleanroomConnect.READY;
-		s_eSequence := E_SeqCleanroomConnect.START;
-		
+		IF s_fbSeqControl.q_bStaEntry THEN
+			s_eCabinAirState := E_AirState.UNKNOWN;
+			s_eResumeStep := E_SeqCleanroomConnect.READY;
+			s_eSequence := E_SeqCleanroomConnect.START;
+		END_IF
+			
 	E_SeqCleanroomConnect.START:
+		IF s_fbSeqControl.q_bStaEntry THEN
+			s_stMsgBox.bShow := FALSE;
+		END_IF
+		
 		IF s_eCtrlState = E_CtrlState.RUNNING THEN
 			s_eSequence := s_eResumeStep;
 		END_IF
@@ -1028,7 +1034,7 @@ CASE s_eSequence OF
 		END_IF
 		
 		IF GVL_Modules.g_emPalletConveyor.p_bStaTB_AtInfeed
-			AND GVL_Modules.g_emPalletConveyor.p_bStaOuterTbDoorOpened THEN
+			AND NOT(GVL_Modules.g_emPalletConveyor.p_bStaOuterTbDoorOpened) THEN
 				s_stMsgBox.bShow := TRUE;
 				s_stMsgBox.sMessageText := 'TB detected at infeed. Open outer TB door';
 				s_stMsgBox.sResponse := 'YES';
@@ -1036,13 +1042,14 @@ CASE s_eSequence OF
 //--			AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtInfeed
 //--			AND  GVL_Modules.g_emPalletConveyor.p_bStaOuterTbDoorOpened THEN
 			s_stMsgBox.bShow := TRUE;
-			s_stMsgBox.sMessageText := 'TB detected at infeed. Please confirm Inner TB-door is cleaned';
+			s_stMsgBox.sMessageText := 'Confirm Inner TB-door is cleaned';
 			s_stMsgBox.sResponse := 'YES, Inner TB-door is clean';
 		END_IF
 		
 		IF s_stMsgBox.bBtnPressed THEN
 			s_bStaInnerTbDoorClean := TRUE;
 			s_stMsgBox.bShow := FALSE;
+			s_stMsgBox.bBtnPressed := FALSE;
 			s_eSequence := E_SeqCleanroomConnect.TB_TO_CENTER;
 		END_IF
 		

@@ -886,7 +886,6 @@ CASE s_eSequence OF
 			s_eSequence := s_eResumeStep;
 		END_IF
 		
-///////////////////////////////////////////////////////////////////////////////////////////////////
 //READY////////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqLiftingTransport.READY:
 		IF s_fbSeqControl.q_bStaEntry THEN
@@ -915,7 +914,6 @@ CASE s_eSequence OF
 			s_bReqPlaceTrolleyInTB := FALSE;
 		END_IF
 		
-///////////////////////////////////////////////////////////////////////////////////////////////////
 //GO TO IDLE///////////////////////////////////////////////////////////////////////////////////////
 	E_SeqLiftingTransport.TRANSPORT_TO_IDLE:
 		IF s_fbSeqControl.q_bStaEntry THEN
@@ -947,7 +945,6 @@ CASE s_eSequence OF
 			s_eSequence := E_SeqLiftingTransport.ERROR;
 		END_IF
 		
-///////////////////////////////////////////////////////////////////////////////////////////////////
 ///PICK TROLLEY FROM TB////////////////////////////////////////////////////////////////////////////
 	E_SeqLiftingTransport.LIFT_PRE_PICK_FROM_TB:
 		IF s_fbSeqControl.q_bStaEntry THEN
@@ -1109,7 +1106,6 @@ CASE s_eSequence OF
 			s_eSequence := E_SeqLiftingTransport.ERROR;
 		END_IF
 		
-///////////////////////////////////////////////////////////////////////////////////////////////////
 ///PICK TROLLEY FROM CABIN/////////////////////////////////////////////////////////////////////////
 	E_SeqLiftingTransport.LIFT_PRE_PICK_FROM_CABIN:
 		IF s_fbSeqControl.q_bStaEntry THEN
@@ -1288,10 +1284,15 @@ CASE s_eSequence OF
 			s_eSequence := E_SeqLiftingTransport.ERROR;
 		END_IF
 		
-///////////////////////////////////////////////////////////////////////////////////////////////////
 //STOP/////////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqLiftingTransport.STOP:
 		IF s_fbSeqControl.q_bStaEntry THEN
+			IF (i_eCtrlMode = E_CtrlMode.AUTOMATIC)
+				AND (s_ePreviousStep > E_SeqLiftingTransport.START)
+				AND (s_ePreviousStep < E_SeqLiftingTransport.ERROR) THEN
+					s_eResumeStep := s_ePreviousStep;
+			END_IF
+			
 			s_cmLift.m_Stop(
 				i_fDec := i_ref_stSettings.stSettingsServoLift.fStopDec,
 				i_fJrk := i_ref_stSettings.stSettingsServoLift.fStopJrk);
@@ -1300,13 +1301,9 @@ CASE s_eSequence OF
 				i_fDec := i_ref_stSettings.stSettingsServoTransport.fStopDec,
 				i_fJrk := i_ref_stSettings.stSettingsServoTransport.fStopJrk);
 				
-			IF s_ePreviousStep > E_SeqLiftingTransport.START
-				AND s_ePreviousStep < E_SeqLiftingTransport.ERROR THEN
-					s_eResumeStep := s_ePreviousStep;
-			END_IF
 		END_IF
 		
-		IF i_eCtrlState = E_CtrlState.IDLE THEN
+		IF (i_eCtrlState = E_CtrlState.IDLE) THEN
 			s_eSequence := E_SeqLiftingTransport.START;
 		END_IF
 		
@@ -1314,10 +1311,20 @@ CASE s_eSequence OF
 //ERROR////////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqLiftingTransport.ERROR:
 		IF s_fbSeqControl.q_bStaEntry THEN
-			IF s_ePreviousStep > E_SeqLiftingTransport.START
-				AND s_ePreviousStep < E_SeqLiftingTransport.ERROR THEN
+			IF (i_eCtrlMode = E_CtrlMode.AUTOMATIC)
+				AND (s_ePreviousStep > E_SeqLiftingTransport.START)
+				AND (s_ePreviousStep < E_SeqLiftingTransport.ERROR) THEN
 					s_eResumeStep := s_ePreviousStep;
 			END_IF
+			
+			s_cmLift.m_Stop(
+				i_fDec := i_ref_stSettings.stSettingsServoLift.fStopDec,
+				i_fJrk := i_ref_stSettings.stSettingsServoLift.fStopJrk);
+				
+			s_cmTransport.m_Stop(
+				i_fDec := i_ref_stSettings.stSettingsServoTransport.fStopDec,
+				i_fJrk := i_ref_stSettings.stSettingsServoTransport.fStopJrk);
+				
 		END_IF
 		
 END_CASE

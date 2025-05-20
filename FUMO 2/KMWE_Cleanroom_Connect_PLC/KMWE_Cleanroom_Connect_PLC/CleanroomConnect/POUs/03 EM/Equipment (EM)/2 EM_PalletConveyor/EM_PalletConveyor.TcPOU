@@ -943,24 +943,26 @@ CASE s_eSequence OF
 //STOP/////////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqPalletConveyor.STOP:
 		IF s_fbSeqControl.q_bStaEntry THEN
-			IF s_ePreviousStep > E_SeqPalletConveyor.START
-				AND s_ePreviousStep < E_SeqPalletConveyor.ERROR THEN
+			IF (i_eCtrlMode = E_CtrlMode.AUTOMATIC)
+				AND (s_ePreviousStep > E_SeqPalletConveyor.START)
+				AND (s_ePreviousStep < E_SeqPalletConveyor.ERROR) THEN
 					s_eResumeStep := s_ePreviousStep;
 			END_IF
 			s_cmPalletConveyor.m_Stop();
 			s_cmCenteringUnit.m_Stop();
 		END_IF
 		
-		IF i_eCtrlState = E_CtrlState.IDLE THEN
+		IF (i_eCtrlState = E_CtrlState.IDLE) THEN
 			s_eSequence := E_SeqPalletConveyor.START;
 		END_IF
 		
 //ERROR////////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqPalletConveyor.ERROR:
 		IF s_fbSeqControl.q_bStaEntry THEN
-			IF s_ePreviousStep > E_SeqPalletConveyor.START
-				AND s_ePreviousStep < E_SeqPalletConveyor.ERROR THEN
-				s_eResumeStep := s_ePreviousStep;
+			IF (i_eCtrlMode = E_CtrlMode.AUTOMATIC)
+				AND (s_ePreviousStep > E_SeqPalletConveyor.START)
+				AND (s_ePreviousStep < E_SeqPalletConveyor.ERROR) THEN
+					s_eResumeStep := s_ePreviousStep;
 			ELSE
 				s_eResumeStep := E_SeqPalletConveyor.READY;
 			END_IF

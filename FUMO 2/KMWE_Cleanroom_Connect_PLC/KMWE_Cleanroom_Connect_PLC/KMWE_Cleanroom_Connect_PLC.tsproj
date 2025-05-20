@@ -2070,7 +2070,7 @@ External Setpoint Generation:
 		</Motion>
 		<Plc>
 			<Project GUID="{13F6CD22-9663-4738-8378-3A901949CB98}" Name="CleanroomConnect" PrjFilePath="CleanroomConnect\CleanroomConnect.plcproj" TmcFilePath="CleanroomConnect\CleanroomConnect.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" TmcPath="CleanroomConnect\CleanroomConnect.tmc" TmcHash="{EA4721CB-3591-41B3-CF1A-27FC8754A632}">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" TmcPath="CleanroomConnect\CleanroomConnect.tmc" TmcHash="{C96CC310-823B-DEB0-F364-ED701688626A}">
 					<Name>CleanroomConnect Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1">
@@ -2083,6 +2083,21 @@ External Setpoint Generation:
 						<Var>
 							<Name>GVL_KMWEGenericLib.g_IMasterAdsAdr</Name>
 							<Type GUID="{18071995-0000-0000-0000-000000000041}">AMSNETID</Type>
+						</Var>
+						<Var>
+							<Name>GVL.g_unCleanroomConnect.s_cmDoorLockCleanroomDoor.I_bPbReqToggleLock</Name>
+							<Comment><![CDATA[Request toggle lock]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL.g_unCleanroomConnect.s_cmDoorLockCleanroomDoor.I_bStaDoorIsClosed</Name>
+							<Comment><![CDATA[Door is closed]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL.g_unCleanroomConnect.s_cmDoorLockCleanroomDoor.I_bStaDoorIsOpened</Name>
+							<Comment><![CDATA[Door is opened]]></Comment>
+							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>GVL_Modules.g_emUtilities.s_diSafetyOk.I_bStaInput</Name>
@@ -2164,18 +2179,58 @@ External Setpoint Generation:
 							<Type>WORD</Type>
 						</Var>
 						<Var>
-							<Name>GVL.g_unCleanroomConnect.s_cmDoorLockCleanroomDoor.I_bPbReqToggleLock</Name>
-							<Comment><![CDATA[Request toggle lock]]></Comment>
+							<Name>GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.I_bStaReadyForOperation</Name>
+							<Comment><![CDATA[Drive is ready operation (no error)]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>GVL.g_unCleanroomConnect.s_cmDoorLockCleanroomDoor.I_bStaDoorIsClosed</Name>
-							<Comment><![CDATA[Door is closed]]></Comment>
+							<Name>GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.I_bStaMotorIsRunning</Name>
+							<Comment><![CDATA[Drive/motor is running]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>GVL.g_unCleanroomConnect.s_cmDoorLockCleanroomDoor.I_bStaDoorIsOpened</Name>
-							<Comment><![CDATA[Door is opened]]></Comment>
+							<Name>GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.I_bStaValveIsOn</Name>
+							<Comment><![CDATA[Valve is on (on = positive logic of fuction)]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.I_bStaValveIsOff</Name>
+							<Comment><![CDATA[Valve is off]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.I_bStaValveIsOn2</Name>
+							<Comment><![CDATA[Valve is on (on = positive logic of fuction)]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.I_bStaValveIsOff2</Name>
+							<Comment><![CDATA[Valve is off]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emPalletConveyor.s_diStaAtInfeedPositionRear.I_bStaInput</Name>
+							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emPalletConveyor.s_diStaAtInfeedPositionFront.I_bStaInput</Name>
+							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emPalletConveyor.s_diStaAtCenteringPosition.I_bStaInput</Name>
+							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emPalletConveyor.s_diStaAtDockingPosition.I_bStaInput</Name>
+							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emPalletConveyor.s_diStaDoorOpened.I_bStaInput</Name>
+							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
@@ -2412,64 +2467,36 @@ External Setpoint Generation:
 							<Name>GVL_Modules.g_emAirTreatment.s_fbDeltaP_CabinAmbient.I_nValue</Name>
 							<Type>INT</Type>
 						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.I_bStaReadyForOperation</Name>
-							<Comment><![CDATA[Drive is ready operation (no error)]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.I_bStaMotorIsRunning</Name>
-							<Comment><![CDATA[Drive/motor is running]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.I_bStaValveIsOn</Name>
-							<Comment><![CDATA[Valve is on (on = positive logic of fuction)]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.I_bStaValveIsOff</Name>
-							<Comment><![CDATA[Valve is off]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.I_bStaValveIsOn2</Name>
-							<Comment><![CDATA[Valve is on (on = positive logic of fuction)]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.I_bStaValveIsOff2</Name>
-							<Comment><![CDATA[Valve is off]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emPalletConveyor.s_diStaAtInfeedPositionRear.I_bStaInput</Name>
-							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emPalletConveyor.s_diStaAtInfeedPositionFront.I_bStaInput</Name>
-							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emPalletConveyor.s_diStaAtCenteringPosition.I_bStaInput</Name>
-							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emPalletConveyor.s_diStaAtDockingPosition.I_bStaInput</Name>
-							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emPalletConveyor.s_diStaDoorOpened.I_bStaInput</Name>
-							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
 					</Vars>
 					<Vars VarGrpType="2" AreaNo="1">
 						<Name>PlcTask Outputs</Name>
+						<Var>
+							<Name>GVL.g_unCleanroomConnect.s_cmCabinStateIndicator.Q_bColorRed</Name>
+							<Comment><![CDATA[Outputs]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL.g_unCleanroomConnect.s_cmCabinStateIndicator.Q_bColorGreen</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL.g_unCleanroomConnect.s_cmCabinStateIndicator.Q_bColorBlue</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL.g_unCleanroomConnect.s_cmCabinStateIndicator.Q_bColorWhite</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL.g_unCleanroomConnect.s_cmDoorLockCleanroomDoor.Q_bCmdLock</Name>
+							<Comment><![CDATA[TRUE = Lock]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL.g_unCleanroomConnect.s_cmDoorLockCleanroomDoor.Q_bSnReqStatus</Name>
+							<Comment><![CDATA[FASLE = Locked, Blink = pending, TRUE = Unlocked]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
 						<Var>
 							<Name>GVL_Modules.g_emUtilities.s_doBeaconLedGreen.Q_bStaOutput</Name>
 							<Comment><![CDATA[----------------------Outputs---------------------------//]]></Comment>
@@ -2506,30 +2533,43 @@ External Setpoint Generation:
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>GVL.g_unCleanroomConnect.s_cmCabinStateIndicator.Q_bColorRed</Name>
-							<Comment><![CDATA[Outputs]]></Comment>
+							<Name>GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdReset</Name>
+							<Comment><![CDATA[Command to reset drive.]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>GVL.g_unCleanroomConnect.s_cmCabinStateIndicator.Q_bColorGreen</Name>
+							<Name>GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdEnable</Name>
+							<Comment><![CDATA[Command to enable drive.]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>GVL.g_unCleanroomConnect.s_cmCabinStateIndicator.Q_bColorBlue</Name>
+							<Name>GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdStartCW</Name>
+							<Comment><![CDATA[Command start in clock-wise direction.]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>GVL.g_unCleanroomConnect.s_cmCabinStateIndicator.Q_bColorWhite</Name>
+							<Name>GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdStartCCW</Name>
+							<Comment><![CDATA[Command start in counter-clock-wise direction.]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>GVL.g_unCleanroomConnect.s_cmDoorLockCleanroomDoor.Q_bCmdLock</Name>
-							<Comment><![CDATA[TRUE = Lock]]></Comment>
+							<Name>GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdReleaseBrake</Name>
+							<Comment><![CDATA[Command to release brake]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>GVL.g_unCleanroomConnect.s_cmDoorLockCleanroomDoor.Q_bSnReqStatus</Name>
-							<Comment><![CDATA[FASLE = Locked, Blink = pending, TRUE = Unlocked]]></Comment>
+							<Name>GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_nSetTargetSpeed</Name>
+							<Comment><![CDATA[Target speed]]></Comment>
+							<Type>INT</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.Q_bCmdOn</Name>
+							<Comment><![CDATA[Commnad to set valve on]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.Q_bCmdOff</Name>
+							<Comment><![CDATA[Command to set valve off]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
@@ -2654,46 +2694,6 @@ External Setpoint Generation:
 							<Comment><![CDATA[----------------------Outputs---------------------------//]]></Comment>
 							<Type>INT</Type>
 						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdReset</Name>
-							<Comment><![CDATA[Command to reset drive.]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdEnable</Name>
-							<Comment><![CDATA[Command to enable drive.]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdStartCW</Name>
-							<Comment><![CDATA[Command start in clock-wise direction.]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdStartCCW</Name>
-							<Comment><![CDATA[Command start in counter-clock-wise direction.]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdReleaseBrake</Name>
-							<Comment><![CDATA[Command to release brake]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_nSetTargetSpeed</Name>
-							<Comment><![CDATA[Target speed]]></Comment>
-							<Type>INT</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.Q_bCmdOn</Name>
-							<Comment><![CDATA[Commnad to set valve on]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.Q_bCmdOff</Name>
-							<Comment><![CDATA[Command to set valve off]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
 					</Vars>
 					<UnrestoredVarLinks ImportTime="2024-06-17T15:00:21">
 						<OwnerA Name="OutputSrc" Prefix="TIPC^CleanroomConnect^CleanroomConnect Instance" Type="2">
@@ -2790,7 +2790,7 @@ External Setpoint Generation:
 				</Instance>
 			</Project>
 			<Project GUID="{E422F207-C83D-4C9F-9DAA-6F15793ED578}" Name="HardwareSimulator" PrjFilePath="HardwareSimulator\HardwareSimulator.plcproj" TmcFilePath="HardwareSimulator\HardwareSimulator.tmc" ReloadTmc="true" AmsPort="852" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502040" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="HardwareSimulator\HardwareSimulator.tmc" TmcHash="{415A98E6-CCA7-C172-EC2A-38B17A0D15CA}">
+				<Instance Id="#x08502040" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="HardwareSimulator\HardwareSimulator.tmc" TmcHash="{95C56B99-82CE-0CC3-241C-31C3F38BB446}">
 					<Name>HardwareSimulator Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1">

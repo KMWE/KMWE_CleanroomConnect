@@ -52,6 +52,33 @@
             "startOffset": 1,
             "type": "array"
         },
+        "PLC1.ARRAY_1..100_OF-KMWE_Generic_Library.ST_HmiParam": {
+            "items": {
+                "$ref": "#/definitions/PLC1.KMWE_Generic_Library.ST_HmiParam"
+            },
+            "maxItems": 100,
+            "minItems": 100,
+            "startOffset": 1,
+            "type": "array"
+        },
+        "PLC1.ARRAY_1..100_OF-POINTER-TO-KMWE_Generic_Library.ST_HmiParam": {
+            "items": {
+                "$ref": "#/definitions/PLC1.POINTER-TO-KMWE_Generic_Library.ST_HmiParam"
+            },
+            "maxItems": 100,
+            "minItems": 100,
+            "startOffset": 1,
+            "type": "array"
+        },
+        "PLC1.ARRAY_1..1_OF-ARRAY_1..100_OF-POINTER-TO-KMWE_Generic_Library.ST_HmiParam": {
+            "items": {
+                "$ref": "#/definitions/PLC1.ARRAY_1..100_OF-POINTER-TO-KMWE_Generic_Library.ST_HmiParam"
+            },
+            "maxItems": 1,
+            "minItems": 1,
+            "startOffset": 1,
+            "type": "array"
+        },
         "PLC1.ARRAY_1..1_OF-ARRAY_1..256_OF-POINTER-TO-KMWE_Generic_Library.ST_HmiParam": {
             "items": {
                 "$ref": "#/definitions/PLC1.ARRAY_1..256_OF-POINTER-TO-KMWE_Generic_Library.ST_HmiParam"
@@ -115,7 +142,10 @@
             "attributes": {
                 "generate_implicit_init_function": "",
                 "qualified_only": "",
-                "strict": ""
+                "strict": "",
+                "to_string": "",
+                "to_string_function": "__TO_STRING__164",
+                "to_wstring_function": "__TO_WSTRING__164"
             },
             "enum": [
                 0,
@@ -199,8 +229,8 @@
                 "qualified_only": "",
                 "strict": "",
                 "to_string": "",
-                "to_string_function": "__TO_STRING__153",
-                "to_wstring_function": "__TO_WSTRING__153"
+                "to_string_function": "__TO_STRING__146",
+                "to_wstring_function": "__TO_WSTRING__146"
             },
             "enum": [
                 0,
@@ -220,6 +250,7 @@
                 1012,
                 1013,
                 1014,
+                1015,
                 10000,
                 20000
             ],
@@ -237,60 +268,64 @@
                     "value": 1000
                 },
                 {
-                    "label": "TB_TO_CENTER",
+                    "label": "CLEAN_OUTER_TB_DOOR",
                     "value": 1001
                 },
                 {
-                    "label": "START_DOCK_TB",
+                    "label": "TB_TO_CENTER",
                     "value": 1002
                 },
                 {
-                    "label": "TB_TO_DOCKING",
+                    "label": "START_DOCK_TB",
                     "value": 1003
                 },
                 {
-                    "label": "FINISH_DOCK_TB",
+                    "label": "TB_TO_DOCKING",
                     "value": 1004
                 },
                 {
-                    "label": "OPEN_INNER_TB_DOOR",
+                    "label": "FINISH_DOCK_TB",
                     "value": 1005
                 },
                 {
-                    "label": "PICK_TROLLEY_FROM_TB",
+                    "label": "OPEN_INNER_TB_DOOR",
                     "value": 1006
                 },
                 {
-                    "label": "PLACE_TROLLEY_IN_TB",
+                    "label": "PICK_TROLLEY_FROM_TB",
                     "value": 1007
                 },
                 {
-                    "label": "CLOSE_INNER_TB_DOOR",
+                    "label": "PLACE_TROLLEY_IN_TB",
                     "value": 1008
                 },
                 {
-                    "label": "UNDOCK_TB",
+                    "label": "CLOSE_INNER_TB_DOOR",
                     "value": 1009
                 },
                 {
-                    "label": "TB_TO_INFEED",
+                    "label": "UNDOCK_TB",
                     "value": 1010
                 },
                 {
-                    "label": "FLUSHING",
+                    "label": "TB_TO_INFEED",
                     "value": 1011
                 },
                 {
-                    "label": "OPEN_CLEANROOM_DOOR",
+                    "label": "FLUSHING",
                     "value": 1012
                 },
                 {
-                    "label": "CLOSE_CLEANROOM_DOOR",
+                    "label": "OPEN_CLEANROOM_DOOR",
                     "value": 1013
                 },
                 {
-                    "label": "STOP",
+                    "label": "CLOSE_CLEANROOM_DOOR",
                     "value": 1014
+                },
+                {
+                    "label": "STOP",
+                    "value": 1015
                 },
                 {
                     "label": "READY",
@@ -309,8 +344,8 @@
                 "qualified_only": "",
                 "strict": "",
                 "to_string": "",
-                "to_string_function": "__TO_STRING__162",
-                "to_wstring_function": "__TO_WSTRING__162"
+                "to_string_function": "__TO_STRING__155",
+                "to_wstring_function": "__TO_WSTRING__155"
             },
             "enum": [
                 0,
@@ -343,7 +378,6 @@
                 1025,
                 1026,
                 1027,
-                1028,
                 10000,
                 20000
             ],
@@ -365,112 +399,108 @@
                     "value": 1001
                 },
                 {
-                    "label": "PREPAPRE_DOCK",
+                    "label": "OPEN_OUTER_CABIN_DOOR",
                     "value": 1002
                 },
                 {
-                    "label": "OPEN_OUTER_CABIN_DOOR",
+                    "label": "DOCK_OPEN_DOCKING_CLAMPS",
                     "value": 1003
                 },
                 {
-                    "label": "DOCK_OPEN_DOCKING_CLAMPS",
+                    "label": "WAIT_FOR_TB_PLACED",
                     "value": 1004
                 },
                 {
-                    "label": "WAIT_FOR_TB_PLACED",
+                    "label": "DOCK_CLOSE_DOCKING_CLAMPS",
                     "value": 1005
                 },
                 {
-                    "label": "DOCK_CLOSE_DOCKING_CLAMPS",
+                    "label": "COMPRESS_ALL_SEAL",
                     "value": 1006
                 },
                 {
-                    "label": "COMPRESS_ALL_SEAL",
+                    "label": "CLOSE_LOWER_DOCKING_CLAMPS",
                     "value": 1007
                 },
                 {
-                    "label": "CLOSE_LOWER_DOCKING_CLAMPS",
+                    "label": "COMPRESS_LOWER_SEAL",
                     "value": 1008
                 },
                 {
-                    "label": "COMPRESS_LOWER_SEAL",
+                    "label": "CLOSE_UPPER_DOCKING_CLAMPS",
                     "value": 1009
                 },
                 {
-                    "label": "CLOSE_UPPER_DOCKING_CLAMPS",
+                    "label": "COMPRESS_UPPER_SEAL",
                     "value": 1010
                 },
                 {
-                    "label": "COMPRESS_UPPER_SEAL",
+                    "label": "DOCK_TB_DONE",
                     "value": 1011
                 },
                 {
-                    "label": "DOCK_TB_DONE",
+                    "label": "UNDOCK_OPEN_DOCKING_CLAMPS",
                     "value": 1012
                 },
                 {
-                    "label": "UNDOCK_OPEN_DOCKING_CLAMPS",
+                    "label": "WAIT_FOR_TB_REMOVED",
                     "value": 1013
                 },
                 {
-                    "label": "WAIT_FOR_TB_REMOVED",
+                    "label": "UNDOCK_CLOSE_DOCKING_CLAMPS",
                     "value": 1014
                 },
                 {
-                    "label": "UNDOCK_CLOSE_DOCKING_CLAMPS",
+                    "label": "CLOSE_OUTER_CABIN_DOOR",
                     "value": 1015
                 },
                 {
-                    "label": "CLOSE_OUTER_CABIN_DOOR",
+                    "label": "UNDOCK_TB_DONE",
                     "value": 1016
                 },
                 {
-                    "label": "UNDOCK_TB_DONE",
+                    "label": "OPEN_INNER_CABIN_DOOR",
                     "value": 1017
                 },
                 {
-                    "label": "OPEN_INNER_CABIN_DOOR",
+                    "label": "RELEASE_UNLOCKING_PINS",
                     "value": 1018
                 },
                 {
-                    "label": "RELEASE_UNLOCKING_PINS",
+                    "label": "OPEN_DOOR_SHUTTER",
                     "value": 1019
                 },
                 {
-                    "label": "OPEN_DOOR_SHUTTER",
+                    "label": "OPEN_DOOR_OPENER",
                     "value": 1020
                 },
                 {
-                    "label": "OPEN_DOOR_OPENER",
+                    "label": "OPEN_INNER_TB_DOOR_DONE",
                     "value": 1021
                 },
                 {
-                    "label": "OPEN_INNER_TB_DOOR_DONE",
+                    "label": "CLOSE_DOOR_OPENER",
                     "value": 1022
                 },
                 {
-                    "label": "CLOSE_DOOR_OPENER",
+                    "label": "CLOSE_DOOR_SHUTTER",
                     "value": 1023
                 },
                 {
-                    "label": "CLOSE_DOOR_SHUTTER",
+                    "label": "LOCK_UNLOCKING_PINS",
                     "value": 1024
                 },
                 {
-                    "label": "LOCK_UNLOCKING_PINS",
+                    "label": "CLOSE_INNER_CABIN_DOOR",
                     "value": 1025
                 },
                 {
-                    "label": "CLOSE_INNER_CABIN_DOOR",
+                    "label": "CLOSE_INNER_TB_DOOR_DONE",
                     "value": 1026
                 },
                 {
-                    "label": "CLOSE_INNER_TB_DOOR_DONE",
-                    "value": 1027
-                },
-                {
                     "label": "STOP",
-                    "value": 1028
+                    "value": 1027
                 },
                 {
                     "label": "READY",
@@ -584,8 +614,8 @@
                 "qualified_only": "",
                 "strict": "",
                 "to_string": "",
-                "to_string_function": "__TO_STRING__165",
-                "to_wstring_function": "__TO_WSTRING__165"
+                "to_string_function": "__TO_STRING__158",
+                "to_wstring_function": "__TO_WSTRING__158"
             },
             "enum": [
                 0,
@@ -834,8 +864,8 @@
                 "qualified_only": "",
                 "strict": "",
                 "to_string": "",
-                "to_string_function": "__TO_STRING__180",
-                "to_wstring_function": "__TO_WSTRING__180"
+                "to_string_function": "__TO_STRING__173",
+                "to_wstring_function": "__TO_WSTRING__173"
             },
             "enum": [
                 0,
@@ -998,8 +1028,8 @@
                 "qualified_only": "",
                 "strict": "",
                 "to_string": "",
-                "to_string_function": "__TO_STRING__276",
-                "to_wstring_function": "__TO_WSTRING__276"
+                "to_string_function": "__TO_STRING__269",
+                "to_wstring_function": "__TO_WSTRING__269"
             },
             "enum": [
                 0,
@@ -1459,6 +1489,33 @@
                 }
             ]
         },
+        "PLC1.PROPERTY-GET-SET-STRING-96": {
+            "allOf": [
+                {
+                    "allOf": [
+                        {
+                            "maxLength": 96
+                        },
+                        {
+                            "$ref": "tchmi:general#/definitions/String"
+                        }
+                    ]
+                },
+                {
+                    "function": true,
+                    "writeValue": {
+                        "allOf": [
+                            {
+                                "maxLength": 96
+                            },
+                            {
+                                "$ref": "tchmi:general#/definitions/String"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
         "PLC1.PROPERTY-GET-SET-UDINT": {
             "allOf": [
                 {
@@ -1825,6 +1882,303 @@
             "type": "object"
         },
         "PLC1.ST_MOVITRAC_B_HMI": {
+            "properties": {
+                "bBtnApplyBrakeEnabled": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 17
+                        }
+                    ]
+                },
+                "bBtnJogBckEnabled": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 19
+                        }
+                    ]
+                },
+                "bBtnJogFwdEnabled": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 18
+                        }
+                    ]
+                },
+                "bBtnReleaseBrakeEnabled": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 16
+                        }
+                    ]
+                },
+                "bBtnResetEnabled": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 21
+                        }
+                    ]
+                },
+                "bBtnStopEnabled": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 20
+                        }
+                    ]
+                },
+                "bCmdApplyBrakePressed": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 25
+                        }
+                    ]
+                },
+                "bCmdJogBckPressed": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 27
+                        }
+                    ]
+                },
+                "bCmdJogFwdPressed": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 26
+                        }
+                    ]
+                },
+                "bCmdReleaseBrakePressed": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "comment": "From hmi",
+                            "propertyOrder": 24
+                        }
+                    ]
+                },
+                "bCmdResetPressed": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 29
+                        }
+                    ]
+                },
+                "bCmdStopPressed": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 28
+                        }
+                    ]
+                },
+                "bStaBrakeReleased": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 11
+                        }
+                    ]
+                },
+                "bStaDriveError": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 15
+                        }
+                    ]
+                },
+                "bStaMotorRunningBck": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 14
+                        }
+                    ]
+                },
+                "bStaMotorRunningFwd": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 13
+                        }
+                    ]
+                },
+                "bStaMotorStopped": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/BOOL"
+                        },
+                        {
+                            "propertyOrder": 12
+                        }
+                    ]
+                },
+                "sDescription": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                        },
+                        {
+                            "propertyOrder": 2
+                        }
+                    ]
+                },
+                "sNameApplyBrake": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                        },
+                        {
+                            "propertyOrder": 6
+                        }
+                    ]
+                },
+                "sNameBck": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                        },
+                        {
+                            "propertyOrder": 4
+                        }
+                    ]
+                },
+                "sNameFwd": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                        },
+                        {
+                            "propertyOrder": 3
+                        }
+                    ]
+                },
+                "sNameJogBck": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                        },
+                        {
+                            "propertyOrder": 8
+                        }
+                    ]
+                },
+                "sNameJogFwd": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                        },
+                        {
+                            "propertyOrder": 7
+                        }
+                    ]
+                },
+                "sNameReleaseBrake": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                        },
+                        {
+                            "propertyOrder": 5
+                        }
+                    ]
+                },
+                "sNameReset": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                        },
+                        {
+                            "propertyOrder": 10
+                        }
+                    ]
+                },
+                "sNameStop": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                        },
+                        {
+                            "propertyOrder": 9
+                        }
+                    ]
+                },
+                "sState": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                        },
+                        {
+                            "comment": "To hmi",
+                            "propertyOrder": 1
+                        }
+                    ]
+                },
+                "s_sInterlockedReasonBwd": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                        },
+                        {
+                            "propertyOrder": 23
+                        }
+                    ]
+                },
+                "s_sInterlockedReasonFwd": {
+                    "allOf": [
+                        {
+                            "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                        },
+                        {
+                            "propertyOrder": 22
+                        }
+                    ]
+                }
+            },
+            "type": "object"
+        },
+        "PLC1.ST_MoviTrac_B_HMI": {
             "properties": {
                 "bBtnApplyBrakeEnabled": {
                     "allOf": [
@@ -2578,7 +2932,7 @@
                         },
                         {
                             "comment": "Speed to move to centering position [default: 100.0 mm/s]",
-                            "propertyOrder": 3
+                            "propertyOrder": 2
                         }
                     ]
                 },
@@ -2589,7 +2943,7 @@
                         },
                         {
                             "comment": "Speed to move to docking position [default: 50.0 mm/s]",
-                            "propertyOrder": 4
+                            "propertyOrder": 3
                         }
                     ]
                 },
@@ -2600,17 +2954,6 @@
                         },
                         {
                             "comment": "Speed to move (back) to infeed position [default: 100.0 mm/s]",
-                            "propertyOrder": 2
-                        }
-                    ]
-                },
-                "fSpeedManual": {
-                    "allOf": [
-                        {
-                            "$ref": "tchmi:general#/definitions/LREAL"
-                        },
-                        {
-                            "comment": "Speed for manual control [default: 50.0 mm/s]",
                             "propertyOrder": 1
                         }
                     ]
@@ -2633,29 +2976,7 @@
                         },
                         {
                             "comment": "Centering duration",
-                            "propertyOrder": 10
-                        }
-                    ]
-                },
-                "tTimeoutCenteringToCenter": {
-                    "allOf": [
-                        {
-                            "$ref": "tchmi:general#/definitions/TIME"
-                        },
-                        {
-                            "comment": "Timeout for extracting",
-                            "propertyOrder": 11
-                        }
-                    ]
-                },
-                "tTimeoutCenteringToIdle": {
-                    "allOf": [
-                        {
-                            "$ref": "tchmi:general#/definitions/TIME"
-                        },
-                        {
-                            "comment": "Timeout for idle",
-                            "propertyOrder": 12
+                            "propertyOrder": 4
                         }
                     ]
                 }
@@ -5844,23 +6165,6 @@
             },
             "USEMAPPING": true
         },
-        "PLC1.GVL.g_stHmiMiddle.EM_Cabin": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL::g_stHmiMiddle::EM_Cabin",
-            "SCHEMA": {
-                "allOf": [
-                    {
-                        "$ref": "tchmi:general#/definitions/STRING%2880%29"
-                    },
-                    {
-                        "propertyOrder": 8
-                    }
-                ]
-            },
-            "USEMAPPING": true
-        },
         "PLC1.GVL.g_stHmiMiddle.EM_DockingInterface": {
             "ACCESS": 3,
             "DOMAIN": "ADS",
@@ -5872,24 +6176,7 @@
                         "$ref": "tchmi:general#/definitions/STRING%2880%29"
                     },
                     {
-                        "propertyOrder": 6
-                    }
-                ]
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL.g_stHmiMiddle.EM_Doors": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL::g_stHmiMiddle::EM_Doors",
-            "SCHEMA": {
-                "allOf": [
-                    {
-                        "$ref": "tchmi:general#/definitions/STRING%2880%29"
-                    },
-                    {
-                        "propertyOrder": 9
+                        "propertyOrder": 7
                     }
                 ]
             },
@@ -5906,7 +6193,7 @@
                         "$ref": "tchmi:general#/definitions/STRING%2880%29"
                     },
                     {
-                        "propertyOrder": 7
+                        "propertyOrder": 8
                     }
                 ]
             },
@@ -5923,7 +6210,7 @@
                         "$ref": "tchmi:general#/definitions/STRING%2880%29"
                     },
                     {
-                        "propertyOrder": 5
+                        "propertyOrder": 6
                     }
                 ]
             },
@@ -5941,7 +6228,7 @@
                     },
                     {
                         "comment": "Equipment Modules",
-                        "propertyOrder": 4
+                        "propertyOrder": 5
                     }
                 ]
             },
@@ -5975,7 +6262,7 @@
                         "$ref": "tchmi:general#/definitions/STRING%2880%29"
                     },
                     {
-                        "comment": "--------------------------------//\r\nGeneral Pages",
+                        "comment": "General Pages",
                         "propertyOrder": 1
                     }
                 ]
@@ -6038,8 +6325,8 @@
                         "$ref": "tchmi:general#/definitions/BOOL"
                     },
                     {
-                        "comment": "------------------------------------------//",
-                        "propertyOrder": 52
+                        "comment": "Leds",
+                        "propertyOrder": 58
                     }
                 ]
             },
@@ -6056,7 +6343,7 @@
                         "$ref": "tchmi:general#/definitions/BOOL"
                     },
                     {
-                        "propertyOrder": 53
+                        "propertyOrder": 59
                     }
                 ]
             },
@@ -6073,7 +6360,7 @@
                         "$ref": "tchmi:general#/definitions/BOOL"
                     },
                     {
-                        "propertyOrder": 54
+                        "propertyOrder": 60
                     }
                 ]
             },
@@ -6093,7 +6380,7 @@
                         "attributes": {
                             "TcAddressType": "Output"
                         },
-                        "propertyOrder": 5
+                        "propertyOrder": 6
                     }
                 ]
             },
@@ -6113,7 +6400,7 @@
                         "attributes": {
                             "TcAddressType": "Output"
                         },
-                        "propertyOrder": 4
+                        "propertyOrder": 5
                     }
                 ]
             },
@@ -6134,7 +6421,7 @@
                             "TcAddressType": "Output"
                         },
                         "comment": "Outputs",
-                        "propertyOrder": 3
+                        "propertyOrder": 4
                     }
                 ]
             },
@@ -6154,7 +6441,7 @@
                         "attributes": {
                             "TcAddressType": "Output"
                         },
-                        "propertyOrder": 6
+                        "propertyOrder": 7
                     }
                 ]
             },
@@ -6243,7 +6530,7 @@
                             "TcAddressType": "Input"
                         },
                         "comment": "Request toggle lock",
-                        "propertyOrder": 10
+                        "propertyOrder": 12
                     }
                 ]
             },
@@ -6264,7 +6551,7 @@
                             "TcAddressType": "Input"
                         },
                         "comment": "Door is closed",
-                        "propertyOrder": 11
+                        "propertyOrder": 13
                     }
                 ]
             },
@@ -6285,7 +6572,7 @@
                             "TcAddressType": "Input"
                         },
                         "comment": "Door is opened",
-                        "propertyOrder": 12
+                        "propertyOrder": 14
                     }
                 ]
             },
@@ -6306,7 +6593,7 @@
                             "TcAddressType": "Output"
                         },
                         "comment": "TRUE = Lock",
-                        "propertyOrder": 14
+                        "propertyOrder": 15
                     }
                 ]
             },
@@ -6327,7 +6614,7 @@
                             "TcAddressType": "Output"
                         },
                         "comment": "FASLE = Locked, Blink = pending, TRUE = Unlocked",
-                        "propertyOrder": 15
+                        "propertyOrder": 16
                     }
                 ]
             },
@@ -6379,7 +6666,7 @@
                     },
                     {
                         "comment": "Hmi",
-                        "propertyOrder": 36
+                        "propertyOrder": 40
                     }
                 ]
             },
@@ -6396,8 +6683,8 @@
                         "$ref": "tchmi:server#/definitions/PLC1.E_SeqCleanroomConnect"
                     },
                     {
-                        "comment": "Properties\r\nSequencers",
-                        "propertyOrder": 34
+                        "comment": "Properties\r\nnone\r\nVariables\r\nSequencers",
+                        "propertyOrder": 40
                     }
                 ]
             },
@@ -7197,7 +7484,7 @@
                 "allOf": [
                     {
                         "maxLength": 32,
-                        "propertyOrder": 42
+                        "propertyOrder": 45
                     },
                     {
                         "$ref": "tchmi:general#/definitions/String"
@@ -7214,10 +7501,11 @@
             "SCHEMA": {
                 "allOf": [
                     {
-                        "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                        "maxLength": 32,
+                        "propertyOrder": 44
                     },
                     {
-                        "propertyOrder": 35
+                        "$ref": "tchmi:general#/definitions/String"
                     }
                 ]
             },
@@ -7265,7 +7553,7 @@
             "SCHEMA": {
                 "allOf": [
                     {
-                        "maxLength": 32,
+                        "maxLength": 64,
                         "propertyOrder": 3
                     },
                     {
@@ -7317,7 +7605,7 @@
             "DYNAMIC": true,
             "MAPPING": "PLC1::GVL_KMWEGenericLib::g_aParamList",
             "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.ARRAY_1..1_OF-ARRAY_1..256_OF-POINTER-TO-KMWE_Generic_Library.ST_HmiParam"
+                "$ref": "tchmi:server#/definitions/PLC1.ARRAY_1..1_OF-ARRAY_1..100_OF-POINTER-TO-KMWE_Generic_Library.ST_HmiParam"
             },
             "USEMAPPING": true
         },
@@ -7392,7 +7680,7 @@
             "SCHEMA": {
                 "allOf": [
                     {
-                        "$ref": "tchmi:server#/definitions/PLC1.ARRAY_1..256_OF-KMWE_Generic_Library.ST_HmiParam"
+                        "$ref": "tchmi:server#/definitions/PLC1.ARRAY_1..100_OF-KMWE_Generic_Library.ST_HmiParam"
                     },
                     {
                         "comment": "Parameter list loaded into hmi, can be used to change the values",
@@ -7559,6 +7847,24 @@
             },
             "USEMAPPING": true
         },
+        "PLC1.GVL_Modules.g_emAirTreatment.s_sResumeStep": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL_Modules::g_emAirTreatment::s_sResumeStep",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "maxLength": 32,
+                        "propertyOrder": 51
+                    },
+                    {
+                        "$ref": "tchmi:general#/definitions/String"
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
         "PLC1.GVL_Modules.g_emDockingInterface.i_eCtrlMode": {
             "ACCESS": 3,
             "DOMAIN": "ADS",
@@ -7587,8 +7893,7 @@
                         "$ref": "tchmi:server#/definitions/PLC1.E_CtrlState"
                     },
                     {
-                        "comment": "??i_refITF_TB : REFERENCE TO I_Carrier;",
-                        "propertyOrder": 18
+                        "propertyOrder": 11
                     }
                 ]
             },
@@ -7622,7 +7927,8 @@
                         "$ref": "tchmi:general#/definitions/BOOL"
                     },
                     {
-                        "propertyOrder": 148
+                        "comment": "Enable force output in IO-mode",
+                        "propertyOrder": 162
                     }
                 ]
             },
@@ -7643,7 +7949,24 @@
                             "TcAddressType": "Output"
                         },
                         "comment": "Outputs",
-                        "propertyOrder": 13
+                        "propertyOrder": 12
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL_Modules.g_emDockingInterface.s_cmClampsLowerHighPressure.i_sCmName": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL_Modules::g_emDockingInterface::s_cmClampsLowerHighPressure::i_sCmName",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                    },
+                    {
+                        "propertyOrder": 4
                     }
                 ]
             },
@@ -7666,6 +7989,44 @@
             },
             "USEMAPPING": true
         },
+        "PLC1.GVL_Modules.g_emDockingInterface.s_cmClampsLowerHighPressure.s_sInterlockedReasonOff": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL_Modules::g_emDockingInterface::s_cmClampsLowerHighPressure::s_sInterlockedReasonOff",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "comment": "External interlocked reason for clarifying reason",
+                        "maxLength": 96,
+                        "propertyOrder": 15
+                    },
+                    {
+                        "$ref": "tchmi:general#/definitions/String"
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL_Modules.g_emDockingInterface.s_cmClampsLowerHighPressure.s_sInterlockedReasonOn": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL_Modules::g_emDockingInterface::s_cmClampsLowerHighPressure::s_sInterlockedReasonOn",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "comment": "External interlocked reason for clarifying reason",
+                        "maxLength": 96,
+                        "propertyOrder": 14
+                    },
+                    {
+                        "$ref": "tchmi:general#/definitions/String"
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
         "PLC1.GVL_Modules.g_emDockingInterface.s_cmClampsLowerHighPressure.s_stHmiData": {
             "ACCESS": 3,
             "DOMAIN": "ADS",
@@ -7677,7 +8038,7 @@
                         "$ref": "tchmi:server#/definitions/PLC1.ST_DigOutput_HMI"
                     },
                     {
-                        "comment": "Alarms\r\n none\r\n Hmi",
+                        "comment": "Alarms\r\nnone\r\nHmi",
                         "propertyOrder": 27
                     }
                 ]
@@ -7699,7 +8060,24 @@
                             "TcAddressType": "Output"
                         },
                         "comment": "Outputs",
-                        "propertyOrder": 13
+                        "propertyOrder": 12
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL_Modules.g_emDockingInterface.s_cmClampsUpperHighPressure.i_sCmName": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL_Modules::g_emDockingInterface::s_cmClampsUpperHighPressure::i_sCmName",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                    },
+                    {
+                        "propertyOrder": 4
                     }
                 ]
             },
@@ -7722,6 +8100,44 @@
             },
             "USEMAPPING": true
         },
+        "PLC1.GVL_Modules.g_emDockingInterface.s_cmClampsUpperHighPressure.s_sInterlockedReasonOff": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL_Modules::g_emDockingInterface::s_cmClampsUpperHighPressure::s_sInterlockedReasonOff",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "comment": "External interlocked reason for clarifying reason",
+                        "maxLength": 96,
+                        "propertyOrder": 15
+                    },
+                    {
+                        "$ref": "tchmi:general#/definitions/String"
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL_Modules.g_emDockingInterface.s_cmClampsUpperHighPressure.s_sInterlockedReasonOn": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL_Modules::g_emDockingInterface::s_cmClampsUpperHighPressure::s_sInterlockedReasonOn",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "comment": "External interlocked reason for clarifying reason",
+                        "maxLength": 96,
+                        "propertyOrder": 14
+                    },
+                    {
+                        "$ref": "tchmi:general#/definitions/String"
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
         "PLC1.GVL_Modules.g_emDockingInterface.s_cmClampsUpperHighPressure.s_stHmiData": {
             "ACCESS": 3,
             "DOMAIN": "ADS",
@@ -7733,7 +8149,7 @@
                         "$ref": "tchmi:server#/definitions/PLC1.ST_DigOutput_HMI"
                     },
                     {
-                        "comment": "Alarms\r\n none\r\n Hmi",
+                        "comment": "Alarms\r\nnone\r\nHmi",
                         "propertyOrder": 27
                     }
                 ]
@@ -7776,7 +8192,7 @@
                             "TcAddressType": "Input"
                         },
                         "comment": "Valve is off",
-                        "propertyOrder": 48
+                        "propertyOrder": 52
                     }
                 ]
             },
@@ -7818,7 +8234,7 @@
                             "TcAddressType": "Input"
                         },
                         "comment": "Valve is on (on = positive logic of fuction)",
-                        "propertyOrder": 47
+                        "propertyOrder": 51
                     }
                 ]
             },
@@ -7889,7 +8305,7 @@
             "DYNAMIC": true,
             "MAPPING": "PLC1::GVL_Modules::g_emDockingInterface::s_cmDockingClampsLower::p_sInterlockedReasonOff",
             "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-64"
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-96"
             },
             "USEMAPPING": true
         },
@@ -7899,7 +8315,7 @@
             "DYNAMIC": true,
             "MAPPING": "PLC1::GVL_Modules::g_emDockingInterface::s_cmDockingClampsLower::p_sInterlockedReasonOn",
             "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-64"
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-96"
             },
             "USEMAPPING": true
         },
@@ -7949,7 +8365,7 @@
                     },
                     {
                         "comment": "Hmi",
-                        "propertyOrder": 44
+                        "propertyOrder": 41
                     }
                 ]
             },
@@ -7991,7 +8407,7 @@
                             "TcAddressType": "Input"
                         },
                         "comment": "Valve is off",
-                        "propertyOrder": 48
+                        "propertyOrder": 52
                     }
                 ]
             },
@@ -8033,7 +8449,7 @@
                             "TcAddressType": "Input"
                         },
                         "comment": "Valve is on (on = positive logic of fuction)",
-                        "propertyOrder": 47
+                        "propertyOrder": 51
                     }
                 ]
             },
@@ -8104,7 +8520,7 @@
             "DYNAMIC": true,
             "MAPPING": "PLC1::GVL_Modules::g_emDockingInterface::s_cmDockingClampsUpper::p_sInterlockedReasonOff",
             "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-64"
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-96"
             },
             "USEMAPPING": true
         },
@@ -8114,7 +8530,7 @@
             "DYNAMIC": true,
             "MAPPING": "PLC1::GVL_Modules::g_emDockingInterface::s_cmDockingClampsUpper::p_sInterlockedReasonOn",
             "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-64"
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-96"
             },
             "USEMAPPING": true
         },
@@ -8164,7 +8580,7 @@
                     },
                     {
                         "comment": "Hmi",
-                        "propertyOrder": 44
+                        "propertyOrder": 41
                     }
                 ]
             },
@@ -8277,7 +8693,7 @@
             "DYNAMIC": true,
             "MAPPING": "PLC1::GVL_Modules::g_emDockingInterface::s_cmDoorOpener::p_sInterlockedReasonOff",
             "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-64"
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-96"
             },
             "USEMAPPING": true
         },
@@ -8287,7 +8703,7 @@
             "DYNAMIC": true,
             "MAPPING": "PLC1::GVL_Modules::g_emDockingInterface::s_cmDoorOpener::p_sInterlockedReasonOn",
             "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-64"
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-96"
             },
             "USEMAPPING": true
         },
@@ -8337,7 +8753,7 @@
                     },
                     {
                         "comment": "Hmi",
-                        "propertyOrder": 44
+                        "propertyOrder": 41
                     }
                 ]
             },
@@ -8450,7 +8866,7 @@
             "DYNAMIC": true,
             "MAPPING": "PLC1::GVL_Modules::g_emDockingInterface::s_cmDoorShutter::p_sInterlockedReasonOff",
             "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-64"
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-96"
             },
             "USEMAPPING": true
         },
@@ -8460,7 +8876,7 @@
             "DYNAMIC": true,
             "MAPPING": "PLC1::GVL_Modules::g_emDockingInterface::s_cmDoorShutter::p_sInterlockedReasonOn",
             "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-64"
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-96"
             },
             "USEMAPPING": true
         },
@@ -8510,7 +8926,7 @@
                     },
                     {
                         "comment": "Hmi",
-                        "propertyOrder": 44
+                        "propertyOrder": 41
                     }
                 ]
             },
@@ -8531,7 +8947,7 @@
                             "TcAddressType": "Input"
                         },
                         "comment": "Controller is ready (no error)",
-                        "propertyOrder": 15
+                        "propertyOrder": 14
                     }
                 ]
             },
@@ -8552,7 +8968,7 @@
                             "TcAddressType": "Input"
                         },
                         "comment": "Door is closed",
-                        "propertyOrder": 14
+                        "propertyOrder": 13
                     }
                 ]
             },
@@ -8573,7 +8989,7 @@
                             "TcAddressType": "Input"
                         },
                         "comment": "Door is opened",
-                        "propertyOrder": 13
+                        "propertyOrder": 12
                     }
                 ]
             },
@@ -8594,7 +9010,7 @@
                             "TcAddressType": "Output"
                         },
                         "comment": "Command to close door",
-                        "propertyOrder": 17
+                        "propertyOrder": 16
                     }
                 ]
             },
@@ -8615,7 +9031,7 @@
                             "TcAddressType": "Output"
                         },
                         "comment": "Command to open door",
-                        "propertyOrder": 16
+                        "propertyOrder": 15
                     }
                 ]
             },
@@ -8636,7 +9052,7 @@
                             "TcAddressType": "Output"
                         },
                         "comment": "Command to reset door (controller)",
-                        "propertyOrder": 18
+                        "propertyOrder": 17
                     }
                 ]
             },
@@ -8705,7 +9121,7 @@
                     },
                     {
                         "comment": "Hmi",
-                        "propertyOrder": 52
+                        "propertyOrder": 53
                     }
                 ]
             },
@@ -8726,7 +9142,7 @@
                             "TcAddressType": "Input"
                         },
                         "comment": "Controller is ready (no error)",
-                        "propertyOrder": 15
+                        "propertyOrder": 14
                     }
                 ]
             },
@@ -8747,7 +9163,7 @@
                             "TcAddressType": "Input"
                         },
                         "comment": "Door is closed",
-                        "propertyOrder": 14
+                        "propertyOrder": 13
                     }
                 ]
             },
@@ -8768,7 +9184,7 @@
                             "TcAddressType": "Input"
                         },
                         "comment": "Door is opened",
-                        "propertyOrder": 13
+                        "propertyOrder": 12
                     }
                 ]
             },
@@ -8789,7 +9205,7 @@
                             "TcAddressType": "Output"
                         },
                         "comment": "Command to close door",
-                        "propertyOrder": 17
+                        "propertyOrder": 16
                     }
                 ]
             },
@@ -8810,7 +9226,7 @@
                             "TcAddressType": "Output"
                         },
                         "comment": "Command to open door",
-                        "propertyOrder": 16
+                        "propertyOrder": 15
                     }
                 ]
             },
@@ -8831,7 +9247,7 @@
                             "TcAddressType": "Output"
                         },
                         "comment": "Command to reset door (controller)",
-                        "propertyOrder": 18
+                        "propertyOrder": 17
                     }
                 ]
             },
@@ -8900,7 +9316,7 @@
                     },
                     {
                         "comment": "Hmi",
-                        "propertyOrder": 52
+                        "propertyOrder": 53
                     }
                 ]
             },
@@ -9013,7 +9429,7 @@
             "DYNAMIC": true,
             "MAPPING": "PLC1::GVL_Modules::g_emDockingInterface::s_cmUnlockingPinLower::p_sInterlockedReasonOff",
             "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-64"
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-96"
             },
             "USEMAPPING": true
         },
@@ -9023,7 +9439,7 @@
             "DYNAMIC": true,
             "MAPPING": "PLC1::GVL_Modules::g_emDockingInterface::s_cmUnlockingPinLower::p_sInterlockedReasonOn",
             "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-64"
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-96"
             },
             "USEMAPPING": true
         },
@@ -9073,7 +9489,7 @@
                     },
                     {
                         "comment": "Hmi",
-                        "propertyOrder": 44
+                        "propertyOrder": 41
                     }
                 ]
             },
@@ -9186,7 +9602,7 @@
             "DYNAMIC": true,
             "MAPPING": "PLC1::GVL_Modules::g_emDockingInterface::s_cmUnlockingPinUpper::p_sInterlockedReasonOff",
             "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-64"
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-96"
             },
             "USEMAPPING": true
         },
@@ -9196,7 +9612,7 @@
             "DYNAMIC": true,
             "MAPPING": "PLC1::GVL_Modules::g_emDockingInterface::s_cmUnlockingPinUpper::p_sInterlockedReasonOn",
             "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-64"
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-96"
             },
             "USEMAPPING": true
         },
@@ -9246,7 +9662,7 @@
                     },
                     {
                         "comment": "Hmi",
-                        "propertyOrder": 44
+                        "propertyOrder": 41
                     }
                 ]
             },
@@ -9795,18 +10211,20 @@
             },
             "USEMAPPING": true
         },
-        "PLC1.GVL_Modules.g_emDockingInterface.s_sMessage": {
+        "PLC1.GVL_Modules.g_emDockingInterface.s_sReason": {
             "ACCESS": 3,
             "DOMAIN": "ADS",
             "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emDockingInterface::s_sMessage",
+            "MAPPING": "PLC1::GVL_Modules::g_emDockingInterface::s_sReason",
             "SCHEMA": {
                 "allOf": [
                     {
-                        "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                        "comment": "Alarms",
+                        "maxLength": 96,
+                        "propertyOrder": 111
                     },
                     {
-                        "propertyOrder": 71
+                        "$ref": "tchmi:general#/definitions/String"
                     }
                 ]
             },
@@ -9820,331 +10238,11 @@
             "SCHEMA": {
                 "allOf": [
                     {
-                        "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                        "maxLength": 32,
+                        "propertyOrder": 128
                     },
                     {
-                        "propertyOrder": 116
-                    }
-                ]
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emDoors.s_bHmiForceOutputEnabled": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emDoors::s_bHmiForceOutputEnabled",
-            "SCHEMA": {
-                "allOf": [
-                    {
-                        "$ref": "tchmi:general#/definitions/BOOL"
-                    },
-                    {
-                        "comment": "++\ts_fbHmiLedCleanDoorClosed\t\t\t: FB_HmiLed;\r\n++\ts_fbHmiLedCleanDoorOpened\t\t\t: FB_HmiLed;\r\n++\ts_fbHmiLedCleanroomDoorLocked\t\t: FB_HmiLed;\r\n++\ts_fbHmiLedCleanroomDoorReleased\t\t: FB_HmiLed;\r\n------------------------------------------//",
-                        "propertyOrder": 51
-                    }
-                ]
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emDoors.s_fbHmiBtnCloseInnerDoor.p_bStaEnabled": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emDoors::s_fbHmiBtnCloseInnerDoor::p_bStaEnabled",
-            "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-BOOL"
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emDoors.s_fbHmiBtnCloseInnerDoor.p_bStaVisible": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emDoors::s_fbHmiBtnCloseInnerDoor::p_bStaVisible",
-            "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-BOOL"
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emDoors.s_fbHmiBtnCloseInnerDoor.p_sBtnText": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emDoors::s_fbHmiBtnCloseInnerDoor::p_sBtnText",
-            "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-80"
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emDoors.s_fbHmiBtnCloseInnerDoor.s_bFromHmiPressed": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emDoors::s_fbHmiBtnCloseInnerDoor::s_bFromHmiPressed",
-            "SCHEMA": {
-                "allOf": [
-                    {
-                        "$ref": "tchmi:general#/definitions/BOOL"
-                    },
-                    {
-                        "propertyOrder": 1
-                    }
-                ]
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emDoors.s_fbHmiBtnCloseOuterDoor.p_bStaEnabled": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emDoors::s_fbHmiBtnCloseOuterDoor::p_bStaEnabled",
-            "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-BOOL"
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emDoors.s_fbHmiBtnCloseOuterDoor.p_bStaVisible": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emDoors::s_fbHmiBtnCloseOuterDoor::p_bStaVisible",
-            "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-BOOL"
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emDoors.s_fbHmiBtnCloseOuterDoor.p_sBtnText": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emDoors::s_fbHmiBtnCloseOuterDoor::p_sBtnText",
-            "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-80"
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emDoors.s_fbHmiBtnCloseOuterDoor.s_bFromHmiPressed": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emDoors::s_fbHmiBtnCloseOuterDoor::s_bFromHmiPressed",
-            "SCHEMA": {
-                "allOf": [
-                    {
-                        "$ref": "tchmi:general#/definitions/BOOL"
-                    },
-                    {
-                        "propertyOrder": 1
-                    }
-                ]
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emDoors.s_fbHmiBtnOpenInnerDoor.p_bStaEnabled": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emDoors::s_fbHmiBtnOpenInnerDoor::p_bStaEnabled",
-            "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-BOOL"
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emDoors.s_fbHmiBtnOpenInnerDoor.p_bStaVisible": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emDoors::s_fbHmiBtnOpenInnerDoor::p_bStaVisible",
-            "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-BOOL"
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emDoors.s_fbHmiBtnOpenInnerDoor.p_sBtnText": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emDoors::s_fbHmiBtnOpenInnerDoor::p_sBtnText",
-            "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-80"
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emDoors.s_fbHmiBtnOpenInnerDoor.s_bFromHmiPressed": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emDoors::s_fbHmiBtnOpenInnerDoor::s_bFromHmiPressed",
-            "SCHEMA": {
-                "allOf": [
-                    {
-                        "$ref": "tchmi:general#/definitions/BOOL"
-                    },
-                    {
-                        "propertyOrder": 1
-                    }
-                ]
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emDoors.s_fbHmiBtnOpenOuterDoor.p_bStaEnabled": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emDoors::s_fbHmiBtnOpenOuterDoor::p_bStaEnabled",
-            "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-BOOL"
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emDoors.s_fbHmiBtnOpenOuterDoor.p_bStaVisible": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emDoors::s_fbHmiBtnOpenOuterDoor::p_bStaVisible",
-            "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-BOOL"
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emDoors.s_fbHmiBtnOpenOuterDoor.p_sBtnText": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emDoors::s_fbHmiBtnOpenOuterDoor::p_sBtnText",
-            "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-80"
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emDoors.s_fbHmiBtnOpenOuterDoor.s_bFromHmiPressed": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emDoors::s_fbHmiBtnOpenOuterDoor::s_bFromHmiPressed",
-            "SCHEMA": {
-                "allOf": [
-                    {
-                        "$ref": "tchmi:general#/definitions/BOOL"
-                    },
-                    {
-                        "propertyOrder": 1
-                    }
-                ]
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emDoors.s_fbHmiLedInnerDoorClosed.p_bStaLed": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emDoors::s_fbHmiLedInnerDoorClosed::p_bStaLed",
-            "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-BOOL"
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emDoors.s_fbHmiLedInnerDoorClosed.p_sToHmiDescriptionLed": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emDoors::s_fbHmiLedInnerDoorClosed::p_sToHmiDescriptionLed",
-            "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-80"
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emDoors.s_fbHmiLedInnerDoorOpened.p_bStaLed": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emDoors::s_fbHmiLedInnerDoorOpened::p_bStaLed",
-            "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-BOOL"
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emDoors.s_fbHmiLedInnerDoorOpened.p_sToHmiDescriptionLed": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emDoors::s_fbHmiLedInnerDoorOpened::p_sToHmiDescriptionLed",
-            "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-80"
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emDoors.s_fbHmiLedOuterDoorClosed.p_bStaLed": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emDoors::s_fbHmiLedOuterDoorClosed::p_bStaLed",
-            "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-BOOL"
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emDoors.s_fbHmiLedOuterDoorClosed.p_sToHmiDescriptionLed": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emDoors::s_fbHmiLedOuterDoorClosed::p_sToHmiDescriptionLed",
-            "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-80"
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emDoors.s_fbHmiLedOuterDoorOpened.p_bStaLed": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emDoors::s_fbHmiLedOuterDoorOpened::p_bStaLed",
-            "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-BOOL"
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emDoors.s_fbHmiLedOuterDoorOpened.p_sToHmiDescriptionLed": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emDoors::s_fbHmiLedOuterDoorOpened::p_sToHmiDescriptionLed",
-            "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-80"
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emDoors.s_fbSeqDoorsControl.i_sStepName": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emDoors::s_fbSeqDoorsControl::i_sStepName",
-            "SCHEMA": {
-                "allOf": [
-                    {
-                        "$ref": "tchmi:general#/definitions/STRING%2880%29"
-                    },
-                    {
-                        "comment": "Actual sequence step name, used for logging only",
-                        "propertyOrder": 2
-                    }
-                ]
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emDoors.s_sMessage": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emDoors::s_sMessage",
-            "SCHEMA": {
-                "allOf": [
-                    {
-                        "$ref": "tchmi:general#/definitions/STRING%2880%29"
-                    },
-                    {
-                        "propertyOrder": 42
+                        "$ref": "tchmi:general#/definitions/String"
                     }
                 ]
             },
@@ -10195,7 +10293,7 @@
                         "$ref": "tchmi:general#/definitions/LREAL"
                     },
                     {
-                        "comment": "[mm]",
+                        "comment": "[mm] (**USED IN HMI**)",
                         "propertyOrder": 14
                     }
                 ]
@@ -10213,7 +10311,7 @@
                         "$ref": "tchmi:general#/definitions/LREAL"
                     },
                     {
-                        "comment": "[mm]",
+                        "comment": "[mm] (**USED IN HMI**)",
                         "propertyOrder": 16
                     }
                 ]
@@ -10231,7 +10329,7 @@
                         "$ref": "tchmi:general#/definitions/LREAL"
                     },
                     {
-                        "comment": "[mm]",
+                        "comment": "[mm] (**USED IN HMI**)",
                         "propertyOrder": 13
                     }
                 ]
@@ -10249,7 +10347,7 @@
                         "$ref": "tchmi:general#/definitions/LREAL"
                     },
                     {
-                        "comment": "[mm]",
+                        "comment": "[mm] (**USED IN HMI**)",
                         "propertyOrder": 15
                     }
                 ]
@@ -10284,7 +10382,24 @@
                         "$ref": "tchmi:server#/definitions/PLC1.E_CtrlState"
                     },
                     {
-                        "propertyOrder": 19
+                        "propertyOrder": 25
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.GVL_Modules.g_emLiftingTransport.i_sEmName": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL_Modules::g_emLiftingTransport::i_sEmName",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                    },
+                    {
+                        "propertyOrder": 4
                     }
                 ]
             },
@@ -10301,7 +10416,8 @@
                         "$ref": "tchmi:general#/definitions/BOOL"
                     },
                     {
-                        "propertyOrder": 92
+                        "comment": "Variables",
+                        "propertyOrder": 93
                     }
                 ]
             },
@@ -10318,7 +10434,7 @@
                         "$ref": "tchmi:general#/definitions/BOOL"
                     },
                     {
-                        "propertyOrder": 75
+                        "propertyOrder": 94
                     }
                 ]
             },
@@ -10339,7 +10455,7 @@
                             "TcAddressType": "Input"
                         },
                         "comment": "Limit switch negative-/CCW- direction",
-                        "propertyOrder": 19
+                        "propertyOrder": 18
                     }
                 ]
             },
@@ -10360,7 +10476,7 @@
                             "TcAddressType": "Input"
                         },
                         "comment": "Limit switch positive-/CW- direction",
-                        "propertyOrder": 18
+                        "propertyOrder": 17
                     }
                 ]
             },
@@ -10381,7 +10497,7 @@
                             "TcAddressType": "Input"
                         },
                         "comment": "Reference-/home switch",
-                        "propertyOrder": 20
+                        "propertyOrder": 16
                     }
                 ]
             },
@@ -10410,7 +10526,7 @@
             "DYNAMIC": true,
             "MAPPING": "PLC1::GVL_Modules::g_emLiftingTransport::s_cmLift::p_sInterlockedReasonNeg",
             "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-64"
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-96"
             },
             "USEMAPPING": true
         },
@@ -10420,7 +10536,7 @@
             "DYNAMIC": true,
             "MAPPING": "PLC1::GVL_Modules::g_emLiftingTransport::s_cmLift::p_sInterlockedReasonPos",
             "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-64"
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-96"
             },
             "USEMAPPING": true
         },
@@ -10436,7 +10552,7 @@
                     },
                     {
                         "comment": "Sequence",
-                        "propertyOrder": 89
+                        "propertyOrder": 91
                     }
                 ]
             },
@@ -10453,7 +10569,7 @@
                         "$ref": "tchmi:general#/definitions/LREAL"
                     },
                     {
-                        "propertyOrder": 72
+                        "propertyOrder": 73
                     }
                 ]
             },
@@ -10709,6 +10825,24 @@
             },
             "USEMAPPING": true
         },
+        "PLC1.GVL_Modules.g_emLiftingTransport.s_cmLift.s_fbSeqControl.i_sStepName": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::GVL_Modules::g_emLiftingTransport::s_cmLift::s_fbSeqControl::i_sStepName",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                    },
+                    {
+                        "comment": "Actual sequence step name, used for logging only",
+                        "propertyOrder": 2
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
         "PLC1.GVL_Modules.g_emLiftingTransport.s_cmLift.s_stHmiData": {
             "ACCESS": 3,
             "DOMAIN": "ADS",
@@ -10721,7 +10855,7 @@
                     },
                     {
                         "comment": "Hmi",
-                        "propertyOrder": 72
+                        "propertyOrder": 74
                     }
                 ]
             },
@@ -10742,7 +10876,7 @@
                             "TcAddressType": "Input"
                         },
                         "comment": "Limit switch negative-/CCW- direction",
-                        "propertyOrder": 19
+                        "propertyOrder": 18
                     }
                 ]
             },
@@ -10763,7 +10897,7 @@
                             "TcAddressType": "Input"
                         },
                         "comment": "Limit switch positive-/CW- direction",
-                        "propertyOrder": 18
+                        "propertyOrder": 17
                     }
                 ]
             },
@@ -10784,7 +10918,7 @@
                             "TcAddressType": "Input"
                         },
                         "comment": "Reference-/home switch",
-                        "propertyOrder": 20
+                        "propertyOrder": 16
                     }
                 ]
             },
@@ -10813,7 +10947,7 @@
             "DYNAMIC": true,
             "MAPPING": "PLC1::GVL_Modules::g_emLiftingTransport::s_cmTransport::p_sInterlockedReasonNeg",
             "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-64"
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-96"
             },
             "USEMAPPING": true
         },
@@ -10823,7 +10957,7 @@
             "DYNAMIC": true,
             "MAPPING": "PLC1::GVL_Modules::g_emLiftingTransport::s_cmTransport::p_sInterlockedReasonPos",
             "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-64"
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-96"
             },
             "USEMAPPING": true
         },
@@ -10838,7 +10972,7 @@
                         "$ref": "tchmi:general#/definitions/LREAL"
                     },
                     {
-                        "propertyOrder": 72
+                        "propertyOrder": 73
                     }
                 ]
             },
@@ -11088,7 +11222,7 @@
                     },
                     {
                         "comment": "Hmi",
-                        "propertyOrder": 72
+                        "propertyOrder": 74
                     }
                 ]
             },
@@ -11211,7 +11345,7 @@
                     },
                     {
                         "comment": "Sequencers",
-                        "propertyOrder": 96
+                        "propertyOrder": 95
                     }
                 ]
             },
@@ -11229,7 +11363,7 @@
                     },
                     {
                         "comment": "Converted to vertical movement of scissor lift [mm]",
-                        "propertyOrder": 49
+                        "propertyOrder": 63
                     }
                 ]
             },
@@ -11247,7 +11381,7 @@
                     },
                     {
                         "comment": "Converted to horizontal movement of transport unit [mm]",
-                        "propertyOrder": 50
+                        "propertyOrder": 65
                     }
                 ]
             },
@@ -11264,7 +11398,8 @@
                         "$ref": "tchmi:general#/definitions/LREAL"
                     },
                     {
-                        "propertyOrder": 49
+                        "comment": "[mm]",
+                        "propertyOrder": 62
                     }
                 ]
             },
@@ -11281,7 +11416,8 @@
                         "$ref": "tchmi:general#/definitions/LREAL"
                     },
                     {
-                        "propertyOrder": 51
+                        "comment": "[mm]",
+                        "propertyOrder": 64
                     }
                 ]
             },
@@ -11635,7 +11771,7 @@
                 "allOf": [
                     {
                         "maxLength": 32,
-                        "propertyOrder": 101
+                        "propertyOrder": 100
                     },
                     {
                         "$ref": "tchmi:general#/definitions/String"
@@ -11671,10 +11807,11 @@
             "SCHEMA": {
                 "allOf": [
                     {
-                        "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                        "maxLength": 32,
+                        "propertyOrder": 99
                     },
                     {
-                        "propertyOrder": 95
+                        "$ref": "tchmi:general#/definitions/String"
                     }
                 ]
             },
@@ -11708,7 +11845,7 @@
                         "$ref": "tchmi:server#/definitions/PLC1.E_CtrlState"
                     },
                     {
-                        "propertyOrder": 14
+                        "propertyOrder": 11
                     }
                 ]
             },
@@ -11725,7 +11862,6 @@
                         "$ref": "tchmi:server#/definitions/PLC1.REFERENCE-TO-ST_SettingsPalletConveyor"
                     },
                     {
-                        "comment": "Inputs",
                         "propertyOrder": 10
                     }
                 ]
@@ -11760,7 +11896,8 @@
                         "$ref": "tchmi:general#/definitions/BOOL"
                     },
                     {
-                        "propertyOrder": 92
+                        "comment": "Enable force output in IO-mode",
+                        "propertyOrder": 79
                     }
                 ]
             },
@@ -11777,7 +11914,7 @@
                         "$ref": "tchmi:general#/definitions/BOOL"
                     },
                     {
-                        "propertyOrder": 89
+                        "propertyOrder": 80
                     }
                 ]
             },
@@ -11819,7 +11956,7 @@
                             "TcAddressType": "Input"
                         },
                         "comment": "Valve is off",
-                        "propertyOrder": 48
+                        "propertyOrder": 52
                     }
                 ]
             },
@@ -11861,7 +11998,7 @@
                             "TcAddressType": "Input"
                         },
                         "comment": "Valve is on (on = positive logic of fuction)",
-                        "propertyOrder": 47
+                        "propertyOrder": 51
                     }
                 ]
             },
@@ -11932,7 +12069,7 @@
             "DYNAMIC": true,
             "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_cmCenteringUnit::p_sInterlockedReasonOff",
             "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-64"
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-96"
             },
             "USEMAPPING": true
         },
@@ -11942,7 +12079,7 @@
             "DYNAMIC": true,
             "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_cmCenteringUnit::p_sInterlockedReasonOn",
             "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-64"
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-96"
             },
             "USEMAPPING": true
         },
@@ -11992,7 +12129,7 @@
                     },
                     {
                         "comment": "Hmi",
-                        "propertyOrder": 44
+                        "propertyOrder": 41
                     }
                 ]
             },
@@ -12013,7 +12150,7 @@
                             "TcAddressType": "Input"
                         },
                         "comment": "Drive/motor is running",
-                        "propertyOrder": 12
+                        "propertyOrder": 13
                     }
                 ]
             },
@@ -12034,7 +12171,7 @@
                             "TcAddressType": "Input"
                         },
                         "comment": "Drive is ready operation (no error)",
-                        "propertyOrder": 11
+                        "propertyOrder": 12
                     }
                 ]
             },
@@ -12055,7 +12192,7 @@
                             "TcAddressType": "Output"
                         },
                         "comment": "Command to enable drive.",
-                        "propertyOrder": 14
+                        "propertyOrder": 15
                     }
                 ]
             },
@@ -12076,7 +12213,7 @@
                             "TcAddressType": "Output"
                         },
                         "comment": "Command to release brake",
-                        "propertyOrder": 17
+                        "propertyOrder": 18
                     }
                 ]
             },
@@ -12097,7 +12234,7 @@
                             "TcAddressType": "Output"
                         },
                         "comment": "Command to reset drive.",
-                        "propertyOrder": 13
+                        "propertyOrder": 14
                     }
                 ]
             },
@@ -12118,7 +12255,7 @@
                             "TcAddressType": "Output"
                         },
                         "comment": "Command start in counter-clock-wise direction.",
-                        "propertyOrder": 16
+                        "propertyOrder": 17
                     }
                 ]
             },
@@ -12139,7 +12276,7 @@
                             "TcAddressType": "Output"
                         },
                         "comment": "Command start in clock-wise direction.",
-                        "propertyOrder": 15
+                        "propertyOrder": 16
                     }
                 ]
             },
@@ -12160,7 +12297,7 @@
                             "TcAddressType": "Output"
                         },
                         "comment": "Target speed",
-                        "propertyOrder": 18
+                        "propertyOrder": 19
                     }
                 ]
             },
@@ -12189,7 +12326,7 @@
             "DYNAMIC": true,
             "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_cmPalletConveyor::p_sInterlockedReasonBackward",
             "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-64"
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-96"
             },
             "USEMAPPING": true
         },
@@ -12199,7 +12336,7 @@
             "DYNAMIC": true,
             "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_cmPalletConveyor::p_sInterlockedReasonForward",
             "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-64"
+                "$ref": "tchmi:server#/definitions/PLC1.PROPERTY-GET-SET-STRING-96"
             },
             "USEMAPPING": true
         },
@@ -12233,7 +12370,7 @@
                     },
                     {
                         "comment": "Target speed [mm/s]",
-                        "propertyOrder": 38
+                        "propertyOrder": 48
                     }
                 ]
             },
@@ -12547,7 +12684,7 @@
                         "$ref": "tchmi:general#/definitions/STRING%2880%29"
                     },
                     {
-                        "propertyOrder": 64
+                        "propertyOrder": 77
                     }
                 ]
             },
@@ -12561,11 +12698,11 @@
             "SCHEMA": {
                 "allOf": [
                     {
-                        "$ref": "tchmi:server#/definitions/PLC1.ST_MOVITRAC_B_HMI"
+                        "$ref": "tchmi:server#/definitions/PLC1.ST_MoviTrac_B_HMI"
                     },
                     {
                         "comment": "Hmi",
-                        "propertyOrder": 64
+                        "propertyOrder": 61
                     }
                 ]
             },
@@ -12691,24 +12828,6 @@
                         },
                         "comment": "----------------------Inputs---------------------------//",
                         "propertyOrder": 2
-                    }
-                ]
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emPalletConveyor.s_eSequence": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_eSequence",
-            "SCHEMA": {
-                "allOf": [
-                    {
-                        "$ref": "tchmi:server#/definitions/PLC1.E_SeqTransport"
-                    },
-                    {
-                        "comment": "Sequencers",
-                        "propertyOrder": 65
                     }
                 ]
             },
@@ -13019,74 +13138,6 @@
             },
             "USEMAPPING": true
         },
-        "PLC1.GVL_Modules.g_emPalletConveyor.s_fbParamDistanceOuterDoorCheck.s_stParam": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_fbParamDistanceOuterDoorCheck::s_stParam",
-            "SCHEMA": {
-                "allOf": [
-                    {
-                        "$ref": "tchmi:server#/definitions/PLC1.KMWE_Generic_Library.ST_HmiParam"
-                    },
-                    {
-                        "propertyOrder": 5
-                    }
-                ]
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emPalletConveyor.s_fbParamDistanceToCentering.s_stParam": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_fbParamDistanceToCentering::s_stParam",
-            "SCHEMA": {
-                "allOf": [
-                    {
-                        "$ref": "tchmi:server#/definitions/PLC1.KMWE_Generic_Library.ST_HmiParam"
-                    },
-                    {
-                        "propertyOrder": 5
-                    }
-                ]
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emPalletConveyor.s_fbParamDistanceToDocking.s_stParam": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_fbParamDistanceToDocking::s_stParam",
-            "SCHEMA": {
-                "allOf": [
-                    {
-                        "$ref": "tchmi:server#/definitions/PLC1.KMWE_Generic_Library.ST_HmiParam"
-                    },
-                    {
-                        "propertyOrder": 5
-                    }
-                ]
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emPalletConveyor.s_fbParamDistanceToInfeed.s_stParam": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_fbParamDistanceToInfeed::s_stParam",
-            "SCHEMA": {
-                "allOf": [
-                    {
-                        "$ref": "tchmi:server#/definitions/PLC1.KMWE_Generic_Library.ST_HmiParam"
-                    },
-                    {
-                        "propertyOrder": 5
-                    }
-                ]
-            },
-            "USEMAPPING": true
-        },
         "PLC1.GVL_Modules.g_emPalletConveyor.s_fbParamSpeedGoToCentering.s_stParam": {
             "ACCESS": 3,
             "DOMAIN": "ADS",
@@ -13173,74 +13224,6 @@
             },
             "USEMAPPING": true
         },
-        "PLC1.GVL_Modules.g_emPalletConveyor.s_fbParamSpeedManual.s_stParam": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_fbParamSpeedManual::s_stParam",
-            "SCHEMA": {
-                "allOf": [
-                    {
-                        "$ref": "tchmi:server#/definitions/PLC1.KMWE_Generic_Library.ST_HmiParam"
-                    },
-                    {
-                        "propertyOrder": 5
-                    }
-                ]
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emPalletConveyor.s_fbParamTimeoutCenteringToCenter.s_stParam": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_fbParamTimeoutCenteringToCenter::s_stParam",
-            "SCHEMA": {
-                "allOf": [
-                    {
-                        "$ref": "tchmi:server#/definitions/PLC1.KMWE_Generic_Library.ST_HmiParam"
-                    },
-                    {
-                        "propertyOrder": 5
-                    }
-                ]
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emPalletConveyor.s_fbParamTimeoutCenteringToIdle.s_stParam": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_fbParamTimeoutCenteringToIdle::s_stParam",
-            "SCHEMA": {
-                "allOf": [
-                    {
-                        "$ref": "tchmi:server#/definitions/PLC1.KMWE_Generic_Library.ST_HmiParam"
-                    },
-                    {
-                        "propertyOrder": 5
-                    }
-                ]
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.GVL_Modules.g_emPalletConveyor.s_fbParamTravelTollerance.s_stParam": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_fbParamTravelTollerance::s_stParam",
-            "SCHEMA": {
-                "allOf": [
-                    {
-                        "$ref": "tchmi:server#/definitions/PLC1.KMWE_Generic_Library.ST_HmiParam"
-                    },
-                    {
-                        "propertyOrder": 5
-                    }
-                ]
-            },
-            "USEMAPPING": true
-        },
         "PLC1.GVL_Modules.g_emPalletConveyor.s_fbSeqControl.i_sStepName": {
             "ACCESS": 3,
             "DOMAIN": "ADS",
@@ -13268,7 +13251,7 @@
                 "allOf": [
                     {
                         "maxLength": 32,
-                        "propertyOrder": 70
+                        "propertyOrder": 67
                     },
                     {
                         "$ref": "tchmi:general#/definitions/String"
@@ -13277,19 +13260,20 @@
             },
             "USEMAPPING": true
         },
-        "PLC1.GVL_Modules.g_emPalletConveyor.s_sMessage": {
+        "PLC1.GVL_Modules.g_emPalletConveyor.s_sReason": {
             "ACCESS": 3,
             "DOMAIN": "ADS",
             "DYNAMIC": true,
-            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_sMessage",
+            "MAPPING": "PLC1::GVL_Modules::g_emPalletConveyor::s_sReason",
             "SCHEMA": {
                 "allOf": [
                     {
-                        "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                        "comment": "Alarms",
+                        "maxLength": 96,
+                        "propertyOrder": 47
                     },
                     {
-                        "comment": "--\t//Tool settings\r\n--\ts_fbParamToolHardwareNr\t\t\t\t: FB_HmiParamHandler;\r\n--    s_fbParamToolSoftwareVersion\t\t: FB_HmiParamHandler;\r\n--\ts_fbParamName\t\t\t\t\t\t: FB_HmiParamHandler;\r\n--\ts_fbParamNumber\t\t\t\t\t\t: FB_HmiParamHandler;\r\n--\ts_fbParamRevision                   : FB_HmiParamHandler;\r\n--\ts_fbParamTeslaMeterIp\t\t\t\t: FB_HmiParamHandler;\r\n--\ts_fbParamTeslaMeterPort\t\t\t\t: FB_HmiParamHandler;\r\n--\t//Product settings (Maybe)\r\n--\ts_fbParamTotalStroke\t\t\t\t: FB_HmiParamHandler;\r\n--\ts_fbParamStepStroke\t\t\t\t\t: FB_HmiParamHandler;\r\n--\ts_fbParamAveragingNumberTest\t\t: FB_HmiParamHandler;\r\n--\ts_fbParamaMaxMagnitudeCriteria\t\t: FB_HmiParamHandler;\r\n--\ts_fbParamRefIduBottom\t\t\t\t: FB_HmiParamHandler;\r\n--\ts_fbParamRefItm                     : FB_HmiParamHandler;\r\n--\ts_fbParamRefCenterTpmPipe           : FB_HmiParamHandler;\r\n--\ts_fbParamRefCpValve\t\t\t\t\t: FB_HmiParamHandler;\r\n------------------------------------------//\r\n------------------------------------------//\r\nVariables\r\n--\ts_sTestResult \t\t\t\t\t\t: STRING;\r\n------------------------------------------//\r\n------------------------------------------//\r\nAlarms\r\n------------------------------------------//\r\n------------------------------------------//",
-                        "propertyOrder": 66
+                        "$ref": "tchmi:general#/definitions/String"
                     }
                 ]
             },
@@ -13303,10 +13287,11 @@
             "SCHEMA": {
                 "allOf": [
                     {
-                        "$ref": "tchmi:general#/definitions/STRING%2880%29"
+                        "maxLength": 32,
+                        "propertyOrder": 66
                     },
                     {
-                        "propertyOrder": 73
+                        "$ref": "tchmi:general#/definitions/String"
                     }
                 ]
             },
@@ -13340,7 +13325,7 @@
                         "$ref": "tchmi:server#/definitions/PLC1.E_CtrlState"
                     },
                     {
-                        "propertyOrder": 36
+                        "propertyOrder": 11
                     }
                 ]
             },
@@ -13442,7 +13427,8 @@
                         "$ref": "tchmi:general#/definitions/BOOL"
                     },
                     {
-                        "propertyOrder": 35
+                        "comment": "Enable force output in IO-mode",
+                        "propertyOrder": 103
                     }
                 ]
             },
@@ -13652,7 +13638,7 @@
                             "TcAddressType": "Output"
                         },
                         "comment": "----------------------Outputs---------------------------//",
-                        "propertyOrder": 4
+                        "propertyOrder": 3
                     }
                 ]
             },
@@ -13673,7 +13659,7 @@
                             "TcAddressType": "Output"
                         },
                         "comment": "----------------------Outputs---------------------------//",
-                        "propertyOrder": 4
+                        "propertyOrder": 3
                     }
                 ]
             },
@@ -13694,7 +13680,7 @@
                             "TcAddressType": "Output"
                         },
                         "comment": "----------------------Outputs---------------------------//",
-                        "propertyOrder": 4
+                        "propertyOrder": 3
                     }
                 ]
             },
@@ -14043,30 +14029,22 @@
         },
         "PLC1.MAIN.InitDone": {
             "ACCESS": 3,
-            "CUSTOMERDATA": "",
             "DOMAIN": "ADS",
             "DYNAMIC": true,
-            "HIDDEN": false,
             "MAPPING": "PLC1::MAIN::InitDone",
-            "OPTIONS": {},
             "SCHEMA": {
                 "$ref": "tchmi:general#/definitions/BOOL"
             },
-            "SUBSYMBOL_MAPPING": "",
             "USEMAPPING": true
         },
         "PLC1.MAIN.Shutdown": {
             "ACCESS": 3,
-            "CUSTOMERDATA": "",
             "DOMAIN": "ADS",
             "DYNAMIC": true,
-            "HIDDEN": false,
             "MAPPING": "PLC1::MAIN::Shutdown",
-            "OPTIONS": {},
             "SCHEMA": {
                 "$ref": "tchmi:general#/definitions/BOOL"
             },
-            "SUBSYMBOL_MAPPING": "",
             "USEMAPPING": true
         },
         "PLC1.MAIN.SoftwareVersion": {
@@ -14086,43 +14064,6 @@
             "MAPPING": "PLC1::MAIN::User",
             "SCHEMA": {
                 "$ref": "tchmi:general#/definitions/STRING%2880%29"
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.MAIN.fTestValue": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::MAIN::fTestValue",
-            "SCHEMA": {
-                "$ref": "tchmi:general#/definitions/LREAL"
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.MAIN.stMsgBox": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::MAIN::stMsgBox",
-            "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.ST_MsgBox"
-            },
-            "USEMAPPING": true
-        },
-        "PLC1.MAIN.stMsgBox.bBtnPressed": {
-            "ACCESS": 3,
-            "DOMAIN": "ADS",
-            "DYNAMIC": true,
-            "MAPPING": "PLC1::MAIN::stMsgBox::bBtnPressed",
-            "SCHEMA": {
-                "allOf": [
-                    {
-                        "$ref": "tchmi:general#/definitions/BOOL"
-                    },
-                    {
-                        "propertyOrder": 2
-                    }
-                ]
             },
             "USEMAPPING": true
         },
@@ -16053,16 +15994,23 @@
                 "PLC1.GVL_KMWEGenericLib.g_fbParamManager.s_nFromHmiFileSelected": 3,
                 "PLC1.GVL_KMWEGenericLib.g_fbParamManager.s_sFromHmiExportName": 3,
                 "PLC1.GVL_KMWEGenericLib.g_fbParamManager.s_sToHmiLoadedFile": 3,
+                "PLC1.GVL_Modules.g_emAirTreatment.s_sResumeStep": 3,
                 "PLC1.GVL_Modules.g_emDockingInterface.i_eCtrlMode": 3,
                 "PLC1.GVL_Modules.g_emDockingInterface.i_eCtrlState": 3,
                 "PLC1.GVL_Modules.g_emDockingInterface.i_sEmName": 3,
                 "PLC1.GVL_Modules.g_emDockingInterface.s_bHmiForceOutputEnabled": 3,
                 "PLC1.GVL_Modules.g_emDockingInterface.s_cmClampsLowerHighPressure.Q_bStaOutput": 3,
+                "PLC1.GVL_Modules.g_emDockingInterface.s_cmClampsLowerHighPressure.i_sCmName": 3,
                 "PLC1.GVL_Modules.g_emDockingInterface.s_cmClampsLowerHighPressure.s_fbForceCmdOutput.i_eForceValue": 3,
+                "PLC1.GVL_Modules.g_emDockingInterface.s_cmClampsLowerHighPressure.s_sInterlockedReasonOff": 3,
+                "PLC1.GVL_Modules.g_emDockingInterface.s_cmClampsLowerHighPressure.s_sInterlockedReasonOn": 3,
                 "PLC1.GVL_Modules.g_emDockingInterface.s_cmClampsLowerHighPressure.s_stHmiData": 3,
                 "PLC1.GVL_Modules.g_emDockingInterface.s_cmClampsLowerHighPressure.stHmiData": 3,
                 "PLC1.GVL_Modules.g_emDockingInterface.s_cmClampsUpperHighPressure.Q_bStaOutput": 3,
+                "PLC1.GVL_Modules.g_emDockingInterface.s_cmClampsUpperHighPressure.i_sCmName": 3,
                 "PLC1.GVL_Modules.g_emDockingInterface.s_cmClampsUpperHighPressure.s_fbForceCmdOutput.i_eForceValue": 3,
+                "PLC1.GVL_Modules.g_emDockingInterface.s_cmClampsUpperHighPressure.s_sInterlockedReasonOff": 3,
+                "PLC1.GVL_Modules.g_emDockingInterface.s_cmClampsUpperHighPressure.s_sInterlockedReasonOn": 3,
                 "PLC1.GVL_Modules.g_emDockingInterface.s_cmClampsUpperHighPressure.s_stHmiData": 3,
                 "PLC1.GVL_Modules.g_emDockingInterface.s_cmClampsUpperHighPressure.stHmiData": 3,
                 "PLC1.GVL_Modules.g_emDockingInterface.s_cmDockingClampsLower.I_bStaValveIsOff": 3,
@@ -16227,6 +16175,7 @@
                 "PLC1.GVL_Modules.g_emDockingInterface.s_fbSeqDockingInterfaceControl.i_sStepName": 3,
                 "PLC1.GVL_Modules.g_emDockingInterface.s_sLastStepPersistent": 3,
                 "PLC1.GVL_Modules.g_emDockingInterface.s_sMessage": 3,
+                "PLC1.GVL_Modules.g_emDockingInterface.s_sReason": 3,
                 "PLC1.GVL_Modules.g_emDockingInterface.s_sResumeStep": 3,
                 "PLC1.GVL_Modules.g_emDoors.s_bHmiForceOutputEnabled": 3,
                 "PLC1.GVL_Modules.g_emDoors.s_cmInnerSpeedDoor.I_bStaControllerIsReady": 3,
@@ -16285,6 +16234,7 @@
                 "PLC1.GVL_Modules.g_emLiftingTransport.c_fMIN_TRANSPORT_TARGET": 3,
                 "PLC1.GVL_Modules.g_emLiftingTransport.i_eCtrlMode": 3,
                 "PLC1.GVL_Modules.g_emLiftingTransport.i_eCtrlState": 3,
+                "PLC1.GVL_Modules.g_emLiftingTransport.i_sEmName": 3,
                 "PLC1.GVL_Modules.g_emLiftingTransport.s_bActionDone": 3,
                 "PLC1.GVL_Modules.g_emLiftingTransport.s_bNextStep": 3,
                 "PLC1.GVL_Modules.g_emLiftingTransport.s_cmLift.I_bDetLimitSwitchNeg": 3,
@@ -16547,6 +16497,7 @@
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_fbSeqTransportControl.i_sStepName": 3,
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_sLastStepPersistent": 3,
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_sMessage": 3,
+                "PLC1.GVL_Modules.g_emPalletConveyor.s_sReason": 3,
                 "PLC1.GVL_Modules.g_emPalletConveyor.s_sResumeStep": 3,
                 "PLC1.GVL_Modules.g_emUtilities.Q_bStaBeaconLedGreen": 3,
                 "PLC1.GVL_Modules.g_emUtilities.Q_bStaBeaconLedRed": 3,

@@ -1211,21 +1211,41 @@ CASE s_eSequence OF
 		END_IF
 		
 	E_SeqLiftingTransport.CHECK_TROLLEY_LOCKED:
-		IF (s_fbSeqControl.q_tmStepTime > T#3S)
-			AND s_bStaTrolleyLocked AND (s_bNextStep OR s_bDontWait) THEN
-			s_bNextStep := FALSE;
-			s_bStaTrolleyPlacedInTB := TRUE; //Note can be resetted
-			s_eSequence := E_SeqLiftingTransport.TRANSPORT_RETURN_IN_CABIN;
-			
-		ELSIF s_fbSeqControl.q_tmStepTime > T#10S THEN
-			IF i_ref_stSettings.bAutoRecoveryToIdle THEN
-			s_eSequence := E_SeqLiftingTransport.RECOVERY_LOCKED_FAILED;
-			ELSE
-				s_bErrLockTrolleyFailed := TRUE;
-				s_eSequence := E_SeqLiftingTransport.ERROR;
+	
+		IF s_bDontWait THEN
+			IF (s_fbSeqControl.q_tmStepTime > T#3S)
+			AND s_bStaTrolleyLocked THEN
+				s_bStaTrolleyPlacedInTB := TRUE; //Note can be resetted
+				s_eSequence := E_SeqLiftingTransport.TRANSPORT_RETURN_IN_CABIN;
+				
+			ELSIF (s_fbSeqControl.q_tmStepTime > T#10S) THEN
+				IF i_ref_stSettings.bAutoRecoveryToIdle THEN
+					s_eSequence := E_SeqLiftingTransport.RECOVERY_LOCKED_FAILED;
+				ELSE
+					s_bErrLockTrolleyFailed := TRUE;
+					s_eSequence := E_SeqLiftingTransport.ERROR;
+				END_IF
 			END_IF
-		END_IF
 		
+		ELSE //wait for Next step button to be pressed
+			IF (s_fbSeqControl.q_tmStepTime > T#3S)
+				AND s_bStaTrolleyLocked AND s_bNextStep THEN
+					s_bNextStep := FALSE;
+					s_bStaTrolleyPlacedInTB := TRUE; //Note can be resetted
+					s_eSequence := E_SeqLiftingTransport.TRANSPORT_RETURN_IN_CABIN;
+			
+			ELSIF (s_fbSeqControl.q_tmStepTime > T#10S)
+				AND NOT(s_bStaTrolleyLocked) AND s_bNextStep THEN
+			
+				IF i_ref_stSettings.bAutoRecoveryToIdle THEN
+					s_eSequence := E_SeqLiftingTransport.RECOVERY_LOCKED_FAILED;
+				ELSE
+					s_bErrLockTrolleyFailed := TRUE;
+					s_eSequence := E_SeqLiftingTransport.ERROR;
+				END_IF
+			END_IF	
+		END_IF
+			
 	E_SeqLiftingTransport.RECOVERY_LOCKED_FAILED:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			s_cmLift.m_MoveAbsolute(_m_ConvLiftToMotorPos(i_ref_stSettings.arr_stLiftPositioningProfile[8]));

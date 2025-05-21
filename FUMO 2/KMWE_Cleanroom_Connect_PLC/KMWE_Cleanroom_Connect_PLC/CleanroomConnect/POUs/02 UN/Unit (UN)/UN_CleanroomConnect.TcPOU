@@ -323,13 +323,26 @@ IF (s_eCtrlMode <> s_eCtrlModePrevious) THEN
 END_IF
 
 //EM Selection 0 = none >1 selection
-IF s_fbHmiBtnEmPlus.p_osrBtnPress THEN s_nEMSelection := s_nEMSelection + 1;
-ELSIF s_fbHmiBtnEmMinus.p_osrBtnPress THEN s_nEMSelection := s_nEMSelection - 1;
+IF s_fbHmiBtnEmPlus.p_osrBtnPress THEN
+	IF (s_nEMSelection < 4) THEN
+		s_nEMSelection := s_nEMSelection + 1;
+	ELSE
+		s_nEMSelection := 1;
+	END_IF
 END_IF
-s_nEMSelection := LIMIT(1, s_nEMSelection, 4);
 
-IF (s_nEMSelection <> s_nEMSelectionPrevious) THEN 
-	IF s_nEMSelection = 1 THEN
+IF s_fbHmiBtnEmMinus.p_osrBtnPress THEN
+	IF (s_nEMSelection > 1) THEN
+		s_nEMSelection := s_nEMSelection - 1;
+	ELSE
+		s_nEMSelection := 4;
+	END_IF
+END_IF
+
+IF (s_nEMSelection <> s_nEMSelectionPrevious) THEN
+	IF s_nEMSelection = 0 THEN
+		GVL.g_sToHmiBottomContent := GVL.g_stHmiBottomBar.General_ReturnToStart;
+	ELSIF s_nEMSelection = 1 THEN
 		GVL.g_sToHmiMiddleContent := GVL.g_stHmiMiddle.EM_Utilities;
 	ELSIF s_nEMSelection = 2 THEN
 		GVL.g_sToHmiMiddleContent := GVL.g_stHmiMiddle.EM_PalletConveyor;
@@ -337,10 +350,12 @@ IF (s_nEMSelection <> s_nEMSelectionPrevious) THEN
 		GVL.g_sToHmiMiddleContent := GVL.g_stHmiMiddle.EM_DockingInterface;
 	ELSIF s_nEMSelection = 4 THEN
 		GVL.g_sToHmiMiddleContent := GVL.g_stHmiMiddle.EM_LiftingTransport;
+	{warning '#FUMO3: Add later'}
 	//++ELSIF s_nEMSelection = 5 THEN
 	//++	GVL.g_sToHmiMiddleContent := GVL.g_stHmiMiddle.EM_AirTreatment;
 	END_IF
 	s_nEMSelectionPrevious := s_nEMSelection;
+	GVL.g_sToHmiBottomContent := GVL.g_stHmiBottomBar.General_ReturnToStart;
 END_IF
 
 //Hmi Buttons
@@ -722,12 +737,12 @@ s_fbHmiBtnPlaceTrolleyInTB.p_sBtnText := 'Place Trolley In TB';
 s_fbHmiBtnEmPlus.p_bStaVisible := TRUE;
 s_fbHmiBtnEmPlus.p_bStaEnabled := TRUE;
 s_fbHmiBtnEmPlus.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-s_fbHmiBtnEmPlus.p_sBtnText := 'Next EM';
+s_fbHmiBtnEmPlus.p_sBtnText := '>';
 
 s_fbHmiBtnEmMinus.p_bStaVisible := TRUE;
 s_fbHmiBtnEmMinus.p_bStaEnabled := TRUE;
 s_fbHmiBtnEmMinus.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-s_fbHmiBtnEmMinus.p_sBtnText := 'Prev EM';
+s_fbHmiBtnEmMinus.p_sBtnText := '<';
 
 GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible := FALSE;
 GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled := FALSE;

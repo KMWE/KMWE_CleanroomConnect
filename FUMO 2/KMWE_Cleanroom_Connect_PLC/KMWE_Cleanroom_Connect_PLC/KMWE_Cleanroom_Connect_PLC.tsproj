@@ -2070,7 +2070,7 @@ External Setpoint Generation:
 		</Motion>
 		<Plc>
 			<Project GUID="{13F6CD22-9663-4738-8378-3A901949CB98}" Name="CleanroomConnect" PrjFilePath="CleanroomConnect\CleanroomConnect.plcproj" TmcFilePath="CleanroomConnect\CleanroomConnect.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" TmcPath="CleanroomConnect\CleanroomConnect.tmc" TmcHash="{395556A7-6070-A2E3-BDEE-07D0CB1A5FAA}">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" TmcPath="CleanroomConnect\CleanroomConnect.tmc" TmcHash="{340C8F47-54C1-1B68-BDD1-D54B42C98717}">
 					<Name>CleanroomConnect Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1">
@@ -2083,6 +2083,21 @@ External Setpoint Generation:
 						<Var>
 							<Name>GVL_KMWEGenericLib.g_IMasterAdsAdr</Name>
 							<Type GUID="{18071995-0000-0000-0000-000000000041}">AMSNETID</Type>
+						</Var>
+						<Var>
+							<Name>GVL.g_unCleanroomConnect.s_cmDoorLockCleanroomDoor.I_bPbReqToggleLock</Name>
+							<Comment><![CDATA[Request toggle lock]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL.g_unCleanroomConnect.s_cmDoorLockCleanroomDoor.I_bStaDoorIsClosed</Name>
+							<Comment><![CDATA[Door is closed]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL.g_unCleanroomConnect.s_cmDoorLockCleanroomDoor.I_bStaDoorIsOpened</Name>
+							<Comment><![CDATA[Door is opened]]></Comment>
+							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>GVL_Modules.g_emUtilities.s_diSafetyOk.I_bStaInput</Name>
@@ -2162,140 +2177,6 @@ External Setpoint Generation:
 							<Name>GVL_Modules.g_emUtilities.I_nTwinSATE_ProjectCrc</Name>
 							<Comment><![CDATA[Cyclic Redundancy Check (check if TwinSAFE code is still the same)]]></Comment>
 							<Type>WORD</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emLiftingTransport.s_cmLift.I_bEnable</Name>
-							<Comment><![CDATA[Enable from safety controller]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emLiftingTransport.s_cmLift.I_bDetReferenceSwitch</Name>
-							<Comment><![CDATA[Reference-/home switch]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emLiftingTransport.s_cmLift.I_bDetLimitSwitchPos</Name>
-							<Comment><![CDATA[Limit switch positive-/CW- direction]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emLiftingTransport.s_cmLift.I_bDetLimitSwitchNeg</Name>
-							<Comment><![CDATA[Limit switch negative-/CCW- direction]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emLiftingTransport.s_cmTransport.I_bEnable</Name>
-							<Comment><![CDATA[Enable from safety controller]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emLiftingTransport.s_cmTransport.I_bDetReferenceSwitch</Name>
-							<Comment><![CDATA[Reference-/home switch]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emLiftingTransport.s_cmTransport.I_bDetLimitSwitchPos</Name>
-							<Comment><![CDATA[Limit switch positive-/CW- direction]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emLiftingTransport.s_cmTransport.I_bDetLimitSwitchNeg</Name>
-							<Comment><![CDATA[Limit switch negative-/CCW- direction]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emLiftingTransport.axisLift.NcToPlc</Name>
-							<Type GUID="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" Namespace="MC">NCTOPLC_AXIS_REF</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emLiftingTransport.axisTransport.NcToPlc</Name>
-							<Type GUID="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" Namespace="MC">NCTOPLC_AXIS_REF</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emLiftingTransport.s_diStaTrolleyOnPositionLeft.I_bStaInput</Name>
-							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emLiftingTransport.s_diStaTrolleyOnPositionRight.I_bStaInput</Name>
-							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emLiftingTransport.s_diStaCabinAreaOccupied.I_bStaInput</Name>
-							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emLiftingTransport.s_diStaCollisionAvoidanceSensor.I_bStaInput</Name>
-							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emLiftingTransport.s_diStaTrolleyLocked.I_bStaInput</Name>
-							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emLiftingTransport.I_nInfoDataInputLevel</Name>
-							<Comment><![CDATA[Bit8: STO Input Level (UINT8)]]></Comment>
-							<Type>UINT</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emAirTreatment.s_fbFanThermal.I_bStaInput</Name>
-							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emAirTreatment.s_fbDeltaP_CleanroomAmbient.I_bStaOverRange</Name>
-							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emAirTreatment.s_fbDeltaP_CleanroomAmbient.I_bStaUnderRange</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emAirTreatment.s_fbDeltaP_CleanroomAmbient.I_bStaError</Name>
-							<Comment><![CDATA[Set to true when the over and under range bits are true so no designated alarm for this]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emAirTreatment.s_fbDeltaP_CleanroomAmbient.I_nValue</Name>
-							<Type>INT</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emAirTreatment.s_fbDeltaP_CabinAmbient.I_bStaOverRange</Name>
-							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emAirTreatment.s_fbDeltaP_CabinAmbient.I_bStaUnderRange</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emAirTreatment.s_fbDeltaP_CabinAmbient.I_bStaError</Name>
-							<Comment><![CDATA[Set to true when the over and under range bits are true so no designated alarm for this]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emAirTreatment.s_fbDeltaP_CabinAmbient.I_nValue</Name>
-							<Type>INT</Type>
-						</Var>
-						<Var>
-							<Name>GVL.g_unCleanroomConnect.s_cmDoorLockCleanroomDoor.I_bPbReqToggleLock</Name>
-							<Comment><![CDATA[Request toggle lock]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL.g_unCleanroomConnect.s_cmDoorLockCleanroomDoor.I_bStaDoorIsClosed</Name>
-							<Comment><![CDATA[Door is closed]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL.g_unCleanroomConnect.s_cmDoorLockCleanroomDoor.I_bStaDoorIsOpened</Name>
-							<Comment><![CDATA[Door is opened]]></Comment>
-							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.I_bStaReadyForOperation</Name>
@@ -2467,9 +2348,155 @@ External Setpoint Generation:
 							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emLiftingTransport.s_cmLift.I_bEnable</Name>
+							<Comment><![CDATA[Enable from safety controller]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emLiftingTransport.s_cmLift.I_bDetReferenceSwitch</Name>
+							<Comment><![CDATA[Reference-/home switch]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emLiftingTransport.s_cmLift.I_bDetLimitSwitchPos</Name>
+							<Comment><![CDATA[Limit switch positive-/CW- direction]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emLiftingTransport.s_cmLift.I_bDetLimitSwitchNeg</Name>
+							<Comment><![CDATA[Limit switch negative-/CCW- direction]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emLiftingTransport.s_cmTransport.I_bEnable</Name>
+							<Comment><![CDATA[Enable from safety controller]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emLiftingTransport.s_cmTransport.I_bDetReferenceSwitch</Name>
+							<Comment><![CDATA[Reference-/home switch]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emLiftingTransport.s_cmTransport.I_bDetLimitSwitchPos</Name>
+							<Comment><![CDATA[Limit switch positive-/CW- direction]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emLiftingTransport.s_cmTransport.I_bDetLimitSwitchNeg</Name>
+							<Comment><![CDATA[Limit switch negative-/CCW- direction]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emLiftingTransport.axisLift.NcToPlc</Name>
+							<Type GUID="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" Namespace="MC">NCTOPLC_AXIS_REF</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emLiftingTransport.axisTransport.NcToPlc</Name>
+							<Type GUID="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" Namespace="MC">NCTOPLC_AXIS_REF</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emLiftingTransport.s_diStaTrolleyOnPositionLeft.I_bStaInput</Name>
+							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emLiftingTransport.s_diStaTrolleyOnPositionRight.I_bStaInput</Name>
+							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emLiftingTransport.s_diStaCabinAreaOccupied.I_bStaInput</Name>
+							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emLiftingTransport.s_diStaCollisionAvoidanceSensor.I_bStaInput</Name>
+							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emLiftingTransport.s_diStaTrolleyLocked.I_bStaInput</Name>
+							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emLiftingTransport.I_nInfoDataInputLevel</Name>
+							<Comment><![CDATA[Bit8: STO Input Level (UINT8)]]></Comment>
+							<Type>UINT</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emAirTreatment.s_fbFanThermal.I_bStaInput</Name>
+							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emAirTreatment.s_fbDeltaP_CleanroomAmbient.I_bStaOverRange</Name>
+							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emAirTreatment.s_fbDeltaP_CleanroomAmbient.I_bStaUnderRange</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emAirTreatment.s_fbDeltaP_CleanroomAmbient.I_bStaError</Name>
+							<Comment><![CDATA[Set to true when the over and under range bits are true so no designated alarm for this]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emAirTreatment.s_fbDeltaP_CleanroomAmbient.I_nValue</Name>
+							<Type>INT</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emAirTreatment.s_fbDeltaP_CabinAmbient.I_bStaOverRange</Name>
+							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emAirTreatment.s_fbDeltaP_CabinAmbient.I_bStaUnderRange</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emAirTreatment.s_fbDeltaP_CabinAmbient.I_bStaError</Name>
+							<Comment><![CDATA[Set to true when the over and under range bits are true so no designated alarm for this]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emAirTreatment.s_fbDeltaP_CabinAmbient.I_nValue</Name>
+							<Type>INT</Type>
+						</Var>
 					</Vars>
 					<Vars VarGrpType="2" AreaNo="1">
 						<Name>PlcTask Outputs</Name>
+						<Var>
+							<Name>GVL.g_unCleanroomConnect.s_cmCabinStateIndicator.Q_bColorRed</Name>
+							<Comment><![CDATA[Outputs]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL.g_unCleanroomConnect.s_cmCabinStateIndicator.Q_bColorGreen</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL.g_unCleanroomConnect.s_cmCabinStateIndicator.Q_bColorBlue</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL.g_unCleanroomConnect.s_cmCabinStateIndicator.Q_bColorWhite</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL.g_unCleanroomConnect.s_cmDoorLockCleanroomDoor.Q_bCmdLock</Name>
+							<Comment><![CDATA[TRUE = Lock]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL.g_unCleanroomConnect.s_cmDoorLockCleanroomDoor.Q_bSnReqStatus</Name>
+							<Comment><![CDATA[FASLE = Locked, Blink = pending, TRUE = Unlocked]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
 						<Var>
 							<Name>GVL_Modules.g_emUtilities.s_doBeaconLedGreen.Q_bStaOutput</Name>
 							<Comment><![CDATA[----------------------Outputs---------------------------//]]></Comment>
@@ -2503,55 +2530,6 @@ External Setpoint Generation:
 						<Var>
 							<Name>GVL_Modules.g_emUtilities.Q_bCmdRestartSafety</Name>
 							<Comment><![CDATA[Restart/reset safety blocks (reset Estop-safety-relay)]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emLiftingTransport.axisLift.PlcToNc</Name>
-							<Type GUID="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" Namespace="MC">PLCTONC_AXIS_REF</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emLiftingTransport.axisTransport.PlcToNc</Name>
-							<Type GUID="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" Namespace="MC">PLCTONC_AXIS_REF</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emLiftingTransport.Q_bDriveStateSTO</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emAirTreatment.s_cmFanMotor.Q_bStaOutput</Name>
-							<Comment><![CDATA[Outputs]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL_Modules.g_emAirTreatment.s_fbFanSpeed.Q_nValue</Name>
-							<Comment><![CDATA[----------------------Outputs---------------------------//]]></Comment>
-							<Type>INT</Type>
-						</Var>
-						<Var>
-							<Name>GVL.g_unCleanroomConnect.s_cmCabinStateIndicator.Q_bColorRed</Name>
-							<Comment><![CDATA[Outputs]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL.g_unCleanroomConnect.s_cmCabinStateIndicator.Q_bColorGreen</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL.g_unCleanroomConnect.s_cmCabinStateIndicator.Q_bColorBlue</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL.g_unCleanroomConnect.s_cmCabinStateIndicator.Q_bColorWhite</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL.g_unCleanroomConnect.s_cmDoorLockCleanroomDoor.Q_bCmdLock</Name>
-							<Comment><![CDATA[TRUE = Lock]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL.g_unCleanroomConnect.s_cmDoorLockCleanroomDoor.Q_bSnReqStatus</Name>
-							<Comment><![CDATA[FASLE = Locked, Blink = pending, TRUE = Unlocked]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
@@ -2694,6 +2672,28 @@ External Setpoint Generation:
 							<Comment><![CDATA[Command to reset door (controller)]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emLiftingTransport.axisLift.PlcToNc</Name>
+							<Type GUID="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" Namespace="MC">PLCTONC_AXIS_REF</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emLiftingTransport.axisTransport.PlcToNc</Name>
+							<Type GUID="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" Namespace="MC">PLCTONC_AXIS_REF</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emLiftingTransport.Q_bDriveStateSTO</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emAirTreatment.s_cmFanMotor.Q_bStaOutput</Name>
+							<Comment><![CDATA[Outputs]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emAirTreatment.s_fbFanSpeed.Q_nValue</Name>
+							<Comment><![CDATA[----------------------Outputs---------------------------//]]></Comment>
+							<Type>INT</Type>
+						</Var>
 					</Vars>
 					<UnrestoredVarLinks ImportTime="2024-06-17T15:00:21">
 						<OwnerA Name="OutputSrc" Prefix="TIPC^CleanroomConnect^CleanroomConnect Instance" Type="2">
@@ -2790,7 +2790,7 @@ External Setpoint Generation:
 				</Instance>
 			</Project>
 			<Project GUID="{E422F207-C83D-4C9F-9DAA-6F15793ED578}" Name="HardwareSimulator" PrjFilePath="HardwareSimulator\HardwareSimulator.plcproj" TmcFilePath="HardwareSimulator\HardwareSimulator.tmc" ReloadTmc="true" AmsPort="852" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502040" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="HardwareSimulator\HardwareSimulator.tmc" TmcHash="{CB69012A-37CF-7463-A1FE-22CE45C57BA0}">
+				<Instance Id="#x08502040" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="HardwareSimulator\HardwareSimulator.tmc" TmcHash="{0C01EEBD-613F-0A54-5554-A04E66255A47}">
 					<Name>HardwareSimulator Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1">

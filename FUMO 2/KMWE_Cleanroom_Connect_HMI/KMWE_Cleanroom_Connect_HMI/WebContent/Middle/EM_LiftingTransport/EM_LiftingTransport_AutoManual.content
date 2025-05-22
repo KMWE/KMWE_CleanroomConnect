@@ -1,5 +1,5 @@
 <div id="EM_LiftingTransport_Auto" data-tchmi-type="TcHmi.Controls.System.TcHmiContent" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width="100" data-tchmi-height="100" data-tchmi-left-unit="%" data-tchmi-top-unit="%" data-tchmi-width-unit="%" data-tchmi-height-unit="%" data-tchmi-zindex="2">
-<div id="LiftingTransport_Auto_Auto_GridControlModules" data-tchmi-type="TcHmi.Controls.System.TcHmiGrid" data-tchmi-height="15" data-tchmi-height-unit="%" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-top="10" data-tchmi-top-unit="%" data-tchmi-width="40" data-tchmi-width-unit="%" data-tchmi-zindex="2">
+<div id="LiftingTransport_Auto_Auto_GridControlModules" data-tchmi-type="TcHmi.Controls.System.TcHmiGrid" data-tchmi-height="15" data-tchmi-height-unit="%" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-top="13" data-tchmi-top-unit="%" data-tchmi-width="40" data-tchmi-width-unit="%" data-tchmi-zindex="2">
 <script data-tchmi-target-attribute="data-tchmi-column-options" type="application/json">
 [
   {
@@ -276,7 +276,7 @@
 </div>
 <div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="ucHmiLed_CabinAreaOccupied_30" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="3" data-tchmi-height-unit="%" data-tchmi-left="49.7" data-tchmi-left-unit="%" data-tchmi-sdescription="%s%PLC1.GVL_Modules.g_emLiftingTransport.s_fbHmiLedTrolleyPlacedInTB.p_sToHmiDescriptionLed%/s%" data-tchmi-target-user-control="UserControl/ucHmiLed.usercontrol" data-tchmi-top="58.9" data-tchmi-top-unit="%" data-tchmi-width="12" data-tchmi-width-unit="%" data-tchmi-bstateon="%s%PLC1.GVL_Modules.g_emLiftingTransport.s_fbHmiLedTrolleyPlacedInTB.p_bStaLed%/s%" data-tchmi-creator-locked="False" data-tchmi-zindex="2">
 </div>
-<div id="TcHmiButton_71" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="1240" data-tchmi-left-unit="px" data-tchmi-text="Next Step (position)" data-tchmi-top="532" data-tchmi-top-unit="px" data-tchmi-width="100" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-zindex="2" data-tchmi-text-font-weight="Bold" data-tchmi-text-font-size-unit="%" data-tchmi-text-font-size="150">
+<div id="TcHmiButton_71" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="5" data-tchmi-height-unit="%" data-tchmi-left="79.2" data-tchmi-left-unit="%" data-tchmi-text="Next Step (position)" data-tchmi-top="4.9" data-tchmi-top-unit="%" data-tchmi-width="5" data-tchmi-width-unit="%" data-tchmi-word-wrap="true" data-tchmi-zindex="2" data-tchmi-text-font-weight="Bold" data-tchmi-text-font-size-unit="%" data-tchmi-text-font-size="125" data-tchmi-is-enabled="%s%PLC1.GVL_Modules.g_emLiftingTransport.s_bActionDone%/s%">
 
 <script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
 [
@@ -284,14 +284,44 @@
     "event": "TcHmiButton_71.onStatePressed",
     "actions": [
       {
-        "objectType": "WriteToSymbol",
+        "objectType": "Condition",
         "active": true,
-        "symbolExpression": "%s%PLC1.GVL_Modules.g_emLiftingTransport.s_bNextStep%/s%",
-        "value": {
-          "objectType": "StaticValue",
-          "valueType": "tchmi:general#/definitions/BOOL",
-          "value": true
-        },
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%s%PLC1.GVL_Modules.g_emLiftingTransport.s_bActionDone%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/BOOL",
+                  "value": true
+                },
+                "compareOperator": "==",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%s%PLC1.GVL_Modules.g_emLiftingTransport.s_bNextStep%/s%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/BOOL",
+                  "value": true
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": []
+          }
+        ],
         "asyncWait": true
       }
     ]
@@ -421,131 +451,7 @@
 </div>
 <div id="TcHmiTextblock_344" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="3" data-tchmi-height-unit="%" data-tchmi-left="72.2" data-tchmi-left-unit="%" data-tchmi-text="Tool" data-tchmi-top="12.5" data-tchmi-top-unit="%" data-tchmi-width="4.5" data-tchmi-width-unit="%" data-tchmi-word-wrap="true" data-tchmi-text-font-size-unit="%" data-tchmi-text-font-size="100" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-vertical-alignment="Center">
 </div>
-<div id="TcHmiButton_72" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="1240" data-tchmi-left-unit="px" data-tchmi-text="Position step by step" data-tchmi-top="474" data-tchmi-top-unit="px" data-tchmi-width="100" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-zindex="2" data-tchmi-text-font-style="Auto" data-tchmi-text-font-weight="Bold" data-tchmi-text-font-size-unit="%" data-tchmi-text-font-size="150">
-<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
-[
-  {
-    "event": "TcHmiButton_72.onStatePressed",
-    "actions": [
-      {
-        "objectType": "Condition",
-        "active": true,
-        "parts": [
-          {
-            "if": [
-              {
-                "compare1": {
-                  "objectType": "Symbol",
-                  "valueType": "tchmi:general#/definitions/String",
-                  "symbolExpression": "%s%PLC1.GVL.g_unCleanroomConnect.s_stSettings.stLiftingTransport.bWaitForNextStep%/s%"
-                },
-                "compare2": {
-                  "objectType": "StaticValue",
-                  "valueType": "tchmi:general#/definitions/BOOL",
-                  "value": "False"
-                },
-                "compareOperator": "==",
-                "logic": null
-              }
-            ],
-            "then": [
-              {
-                "objectType": "WriteToSymbol",
-                "active": true,
-                "symbolExpression": "%s%PLC1.GVL.g_unCleanroomConnect.s_stSettings.stLiftingTransport.bWaitForNextStep%/s%",
-                "value": {
-                  "objectType": "StaticValue",
-                  "valueType": "tchmi:general#/definitions/BOOL",
-                  "value": true
-                },
-                "asyncWait": true
-              }
-            ]
-          },
-          {
-            "else": [
-              {
-                "objectType": "WriteToSymbol",
-                "active": true,
-                "symbolExpression": "%s%PLC1.GVL.g_unCleanroomConnect.s_stSettings.stLiftingTransport.bWaitForNextStep%/s%",
-                "value": {
-                  "objectType": "StaticValue",
-                  "valueType": "tchmi:general#/definitions/BOOL",
-                  "value": false
-                },
-                "asyncWait": true
-              }
-            ]
-          }
-        ],
-        "asyncWait": true
-      }
-    ]
-  },
-  {
-    "event": "%s%PLC1.GVL.g_unCleanroomConnect.s_stSettings.stLiftingTransport.bWaitForNextStep%/s%",
-    "actions": [
-      {
-        "objectType": "Condition",
-        "active": true,
-        "parts": [
-          {
-            "if": [
-              {
-                "compare1": {
-                  "objectType": "Symbol",
-                  "valueType": "tchmi:general#/definitions/String",
-                  "symbolExpression": "%s%PLC1.GVL.g_unCleanroomConnect.s_stSettings.stLiftingTransport.bWaitForNextStep%/s%"
-                },
-                "compare2": {
-                  "objectType": "StaticValue",
-                  "valueType": "tchmi:general#/definitions/BOOL",
-                  "value": true
-                },
-                "compareOperator": "==",
-                "logic": null
-              }
-            ],
-            "then": [
-              {
-                "objectType": "WriteToSymbol",
-                "active": true,
-                "symbolExpression": "%ctrl%TcHmiButton_72::BackgroundColor%/ctrl%",
-                "value": {
-                  "objectType": "StaticValue",
-                  "valueType": "tchmi:framework#/definitions/Color",
-                  "value": {
-                    "color": "rgba(214, 0, 255, 1)"
-                  }
-                },
-                "asyncWait": true
-              }
-            ]
-          },
-          {
-            "else": [
-              {
-                "objectType": "WriteToSymbol",
-                "active": true,
-                "symbolExpression": "%ctrl%TcHmiButton_72::BackgroundColor%/ctrl%",
-                "value": {
-                  "objectType": "StaticValue",
-                  "valueType": "tchmi:framework#/definitions/Color",
-                  "value": null
-                },
-                "asyncWait": true
-              }
-            ]
-          }
-        ],
-        "asyncWait": true
-      }
-    ]
-  }
-]
-</script>
-</div>
-<div id="LiftingTransportControl_Auto_EM_Grid" data-tchmi-type="TcHmi.Controls.System.TcHmiGrid" data-tchmi-height="6" data-tchmi-height-unit="%" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-top="1" data-tchmi-top-unit="%" data-tchmi-width="40" data-tchmi-width-unit="%">
+<div id="LiftingTransportControl_Auto_EM_Grid" data-tchmi-type="TcHmi.Controls.System.TcHmiGrid" data-tchmi-height="9" data-tchmi-height-unit="%" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-top="1" data-tchmi-top-unit="%" data-tchmi-width="40" data-tchmi-width-unit="%">
 <script data-tchmi-target-attribute="data-tchmi-column-options" type="application/json">
 [
   {
@@ -574,13 +480,13 @@
   }
 ]
 </script>
-<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="LiftingTransportControl_Auto_EM_Grid_HeaderCol1" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="100" data-tchmi-height-unit="%" data-tchmi-left="1" data-tchmi-left-unit="%" data-tchmi-text="Equipment Module" data-tchmi-top="0" data-tchmi-top-unit="%" data-tchmi-width="98" data-tchmi-width-unit="%" data-tchmi-word-wrap="true" data-tchmi-text-font-size="100" data-tchmi-text-font-size-unit="%" data-tchmi-text-horizontal-alignment="Left" data-tchmi-text-vertical-alignment="Center">
+<div data-tchmi-grid-row-index="1" data-tchmi-grid-column-index="0" id="LiftingTransportControl_Auto_EM_Grid_HeaderRow1" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="100" data-tchmi-height-unit="%" data-tchmi-left="1" data-tchmi-left-unit="%" data-tchmi-text="Actual Step" data-tchmi-top="0" data-tchmi-top-unit="%" data-tchmi-width="98" data-tchmi-width-unit="%" data-tchmi-word-wrap="true" data-tchmi-text-font-size="100" data-tchmi-text-font-size-unit="%" data-tchmi-text-horizontal-alignment="Left" data-tchmi-text-vertical-alignment="Center">
 </div>
 <div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="1" id="LiftingTransportControl_Auto_EM_Grid_HeaderCol2" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="100" data-tchmi-height-unit="%" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-text="Sequencer Actual Step:" data-tchmi-top="0" data-tchmi-top-unit="%" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-word-wrap="true" data-tchmi-text-font-size="100" data-tchmi-text-font-size-unit="%" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-vertical-alignment="Center" data-tchmi-background-image-horizontal-alignment="Center">
 </div>
 <div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="2" id="LiftingTransportControl_Auto_EM_Grid_HeaderCol3" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="100" data-tchmi-height-unit="%" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-text="Interlock Reason" data-tchmi-top="0" data-tchmi-top-unit="%" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-word-wrap="true" data-tchmi-text-font-size="100" data-tchmi-text-font-size-unit="%" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-vertical-alignment="Center">
 </div>
-<div data-tchmi-grid-row-index="1" data-tchmi-grid-column-index="0" id="LiftingTransportControl_Auto_EM_Grid_Name" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="100" data-tchmi-height-unit="%" data-tchmi-left="1" data-tchmi-left-unit="%" data-tchmi-text="%s%PLC1.GVL_Modules.g_emLiftingTransport.i_sEmName%/s%" data-tchmi-top="0" data-tchmi-top-unit="%" data-tchmi-width="98" data-tchmi-width-unit="%" data-tchmi-word-wrap="true" data-tchmi-text-font-size="100" data-tchmi-text-font-size-unit="%" data-tchmi-text-horizontal-alignment="Left" data-tchmi-text-vertical-alignment="Center">
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="LiftingTransportControl_Auto_EM_Grid_Name" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="100" data-tchmi-height-unit="%" data-tchmi-left="1" data-tchmi-left-unit="%" data-tchmi-text="%s%PLC1.GVL_Modules.g_emLiftingTransport.i_sEmName%/s%" data-tchmi-top="0" data-tchmi-top-unit="%" data-tchmi-width="98" data-tchmi-width-unit="%" data-tchmi-word-wrap="true" data-tchmi-text-font-size="100" data-tchmi-text-font-size-unit="%" data-tchmi-text-horizontal-alignment="Left" data-tchmi-text-vertical-alignment="Center">
 </div>
 <div data-tchmi-grid-row-index="1" data-tchmi-grid-column-index="1" id="LiftingTransportControl_Auto_EM_Grid_SeqState" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextbox" data-tchmi-height="100" data-tchmi-height-unit="%" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-text="%s%PLC1.GVL_Modules.g_emLiftingTransport.s_fbSeqControl.i_sStepName%/s%" data-tchmi-top="0" data-tchmi-top-unit="%" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-text-horizontal-alignment="Center">
 <script data-tchmi-target-attribute="data-tchmi-content-padding" type="application/json">
@@ -611,6 +517,14 @@
     "maxHeightUnit": "px",
     "minHeightUnit": "px",
     "overflow": false
+  },
+  {
+    "height": 1.0,
+    "heightUnit": "factor",
+    "heightMode": "Value",
+    "maxHeightUnit": "px",
+    "minHeightUnit": "px",
+    "overflow": false
   }
 ]
 </script>
@@ -624,6 +538,41 @@
 }
 </script>
 
+</div>
+<div data-tchmi-grid-row-index="2" data-tchmi-grid-column-index="1" id="LiftingTransportControl_Auto_EM_Grid_SeqState_1" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextbox" data-tchmi-height="100" data-tchmi-height-unit="%" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-text="%s%PLC1.GVL_Modules.g_emLiftingTransport.s_sResumeStep%/s%" data-tchmi-top="0" data-tchmi-top-unit="%" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-text-horizontal-alignment="Center">
+<script data-tchmi-target-attribute="data-tchmi-content-padding" type="application/json">
+{
+  "top": 3,
+  "right": 3,
+  "bottom": 3,
+  "left": 3
+}
+</script>
+
+</div>
+<div data-tchmi-grid-row-index="2" data-tchmi-grid-column-index="0" id="LiftingTransportControl_Auto_EM_Grid_HeaderRow1_1" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="100" data-tchmi-height-unit="%" data-tchmi-left="1" data-tchmi-left-unit="%" data-tchmi-text="Resume Step" data-tchmi-top="0" data-tchmi-top-unit="%" data-tchmi-width="98" data-tchmi-width-unit="%" data-tchmi-word-wrap="true" data-tchmi-text-font-size="100" data-tchmi-text-font-size-unit="%" data-tchmi-text-horizontal-alignment="Left" data-tchmi-text-vertical-alignment="Center">
+</div>
+<div id="TcHmiButton_81" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-grid-column-index="2" data-tchmi-grid-row-index="2" data-tchmi-height="100" data-tchmi-height-unit="%" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-text="Abort" data-tchmi-top="0" data-tchmi-top-unit="%" data-tchmi-width="100" data-tchmi-width-unit="%" data-tchmi-word-wrap="true">
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "TcHmiButton_81.onPressed",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%s%PLC1.GVL_Modules.g_emLiftingTransport.s_eSequence%/s%",
+        "value": {
+          "objectType": "StaticValue",
+          "valueType": "tchmi:server#/definitions/PLC1.E_SeqLiftingTransport",
+          "value": 10000
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
 </div>
 </div>
 </div>

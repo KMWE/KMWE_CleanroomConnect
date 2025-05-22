@@ -31,11 +31,11 @@ VAR_INPUT
 	i_eCtrlState : E_CtrlState;
 	
 	//External interlocks (from outside this EM)
-	{warning '#TODO: Delete unused (not written external) inputs'}
-	i_stExtIlckLiftUp : ST_Interlock;			//-- NOT_USED
-	i_stExtIlckLiftDown : ST_Interlock;			//-- NOT_USED
+	{warning '#TODO: Delete unused (not written external) inputs?'}
+	i_stExtIlckLiftUp : ST_Interlock;			// #NOT_USED#
+	i_stExtIlckLiftDown : ST_Interlock;			// #NOT_USED#
 	i_stExtIlckTransportExtract : ST_Interlock;
-	i_stExtIlckTransportRetract : ST_Interlock;	//-- NOT_USED
+	i_stExtIlckTransportRetract : ST_Interlock;	// #NOT_USED#
 	
 END_VAR
 
@@ -269,12 +269,16 @@ s_bErrCmdNotAllowed := TRUE;
 
 IF s_bIlckLiftDown THEN
 	i_refReason := CONCAT('Cmd Go To Idle: Lift Interlocked - ', s_fbIlckHandlerLiftDown.p_sReason);
+ELSIF s_bIlckLiftUp THEN
+	i_refReason := CONCAT('Cmd Go To Idle: Lift Interlocked - ', s_fbIlckHandlerLiftUp.p_sReason);
 //--ELSIF s_bIlckLiftUp THEN
-//--	i_refReason := CONCAT('Cmd Go To Idle: Lift Interlocked - ', fbIlckHandlerLiftUp.p_sReason);
+//--	i_refReason := CONCAT('Cmd Go To Idle: Lift Interlocked - ', s_fbIlckHandlerLiftUp.p_sReason);
 ELSIF s_bIlckTransportRetract THEN
 	i_refReason := CONCAT('Cmd Go To Idle: Transpoort Interlocked - ', s_fbIlckHandlerTransportRetract.p_sReason);
+ELSIF s_bIlckTransportExtract THEN
+	i_refReason := CONCAT('Cmd Go To Idle: Transport Interlocked - ', s_fbIlckHandlerTransportExtract.p_sReason);
 //--ELSIF s_bIlckTransportExtract THEN
-//--	i_refReason := CONCAT('Cmd Go To Idle: Transport Interlocked - ', fbIlckHandlerTransportExtract.p_sReason);
+//--	i_refReason := CONCAT('Cmd Go To Idle: Transport Interlocked - ', s_fbIlckHandlerTransportExtract.p_sReason);
 ELSE
 	i_refReason := '-';
 	_m_CmdGoToIdle := TRUE;	
@@ -341,10 +345,14 @@ ELSIF s_bIlckLiftDown THEN
 	i_refReason := CONCAT('Cmd Place Trolley In TB: Lift Interlocked - ', s_fbIlckHandlerLiftDown.p_sReason);
 ELSIF s_bIlckLiftUp THEN
 	i_refReason := CONCAT('Cmd Place Trolley In TB: Lift Interlocked - ', s_fbIlckHandlerLiftUp.p_sReason);
+ELSIF s_bIlckTransportRetract THEN
+	i_refReason := CONCAT('Cmd Place Trolley In TB: Transpoort Interlocked - ', s_fbIlckHandlerTransportRetract.p_sReason);
 //--ELSIF s_bIlckTransportRetract THEN
-//--	i_refReason := CONCAT('Cmd Place Trolley In TB: Transpoort Interlocked - ', fbIlckHandlerTransportRetract.p_sReason);
+//--	i_refReason := CONCAT('Cmd Place Trolley In TB: Transpoort Interlocked - ', s_fbIlckHandlerTransportRetract.p_sReason);
+ELSIF s_bIlckTransportExtract THEN
+	i_refReason := CONCAT('Cmd Place Trolley In TB: Transport Interlocked - ', s_fbIlckHandlerTransportExtract.p_sReason);
 //--ELSIF s_bIlckTransportExtract THEN
-//--	i_refReason := CONCAT('Cmd Place Trolley In TB: Transport Interlocked - ', fbIlckHandlerTransportExtract.p_sReason);
+//--	i_refReason := CONCAT('Cmd Place Trolley In TB: Transport Interlocked - ', s_fbIlckHandlerTransportExtract.p_sReason);
 ELSE
 	i_refReason := '-';
 	_m_CmdPlaceTrolleyInTB := TRUE;
@@ -460,7 +468,7 @@ IF NOT SUPER^._m_Devices() THEN
 END_IF
 
 {warning '#TODO: Not clear if this is the right way to correct the lift speed'}
-//??s_cmLift.p_fSetOverride := (s_cmLift.p_fPosition / s_fActLiftPosition) * 100;
+//s_cmLift.p_fSetOverride := (s_cmLift.p_fPosition / s_fActLiftPosition) * 100;
 
 //Control module
 s_cmLift(
@@ -874,9 +882,11 @@ CASE s_eSequence OF
 			s_sReason := 'start';
 		
 {warning 'TODO: Not clear if it'S always safe TO retrun TO idle position'}
-//??			IF (i_eCtrlState = E_CtrlState.IDLE) AND NOT(s_bStaAtIdlePosition) THEN
-//??				s_eSequence := E_SeqLiftingTransport.TRANSPORT_TO_IDLE;
-//??			END_IF
+(*
+			IF (i_eCtrlState = E_CtrlState.IDLE) AND NOT(s_bStaAtIdlePosition) THEN
+				s_eSequence := E_SeqLiftingTransport.TRANSPORT_TO_IDLE;
+			END_IF
+*)
 		END_IF
 		
 		IF i_eCtrlState = E_CtrlState.RUNNING THEN
@@ -1336,26 +1346,31 @@ IF i_bReqEnable AND (i_eCtrlMode = E_CtrlMode.MANUAL) AND (i_eCtrlState = E_Ctrl
 	
 	//Lift/Transport
 	s_fbHmiBtnGoToIdle.p_bStaEnabled :=
-		//**NOT(s_bIlckLiftDown)
+		//--NOT(s_bIlckLiftDown)
 		//--AND NOT(s_bIlckLiftUp)
-		//**AND NOT(s_bIlckTransportRetract)
+		//--AND NOT(s_bIlckTransportRetract)
 		//--AND NOT(s_bIlckTransportExtract)
 		NOT(s_cmLift.p_bStaError)
 		AND NOT(s_cmTransport.p_bStaError);
 		
 	s_fbHmiBtnPickTrolleyFromTB.p_bStaEnabled :=
-		//--NOT(s_bIlckLiftDown)
-		NOT(s_bIlckLiftUp)
-		//--AND NOT(s_bIlckTransportRetract)
+	//--NOT(s_bIlckLiftDown)
+		NOT(s_bIlckLiftDown)
+		AND NOT(s_bIlckLiftUp)
+	//--AND NOT(s_bIlckTransportRetract)
+		AND NOT(s_bIlckTransportRetract)
 		AND NOT(s_bIlckTransportExtract)
 		AND NOT(s_cmLift.p_bStaError)
 		AND NOT(s_cmTransport.p_bStaError);
 		
 	s_fbHmiBtnPlaceTrolleyInTB.p_bStaEnabled :=
-		//--NOT(s_bIlckLiftDown)
-		NOT(s_bIlckLiftUp)
-		//--AND NOT(s_bIlckTransportRetract)
-		//--AND NOT(s_bIlckTransportExtract)
+	//--NOT(s_bIlckLiftDown)
+		NOT(s_bIlckLiftDown)
+		AND NOT(s_bIlckLiftUp)
+	//--AND NOT(s_bIlckTransportRetract)
+		AND NOT(s_bIlckTransportRetract)
+	//--AND NOT(s_bIlckTransportExtract)
+		AND NOT(s_bIlckTransportExtract)
 		AND NOT(s_cmLift.p_bStaError)
 		AND NOT(s_cmTransport.p_bStaError);
 		

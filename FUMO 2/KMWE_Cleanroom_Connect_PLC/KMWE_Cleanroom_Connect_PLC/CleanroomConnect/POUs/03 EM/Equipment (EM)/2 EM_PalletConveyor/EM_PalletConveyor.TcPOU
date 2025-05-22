@@ -549,15 +549,21 @@ _m_Inputs := TRUE;
 s_fbIlckHandlerConveyorBackward.i_stInterlockList.arr_Interlocks[0] := i_stExtIlckConvBwd;
 s_fbIlckHandlerConveyorBackward.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
 s_fbIlckHandlerConveyorBackward.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_bStaCenteringIdle);
-//??fbIlckHandlerConveyorBackward.i_stInterlockList.arr_Interlocks[3].bState := s_bStaAtInfeedRearPosition;	//Not sure if this is really a interlock?
+{warning '#TODO: Not sure if this is an interlock'}
+(*
+fbIlckHandlerConveyorBackward.i_stInterlockList.arr_Interlocks[3].bState := s_bStaAtInfeedRearPosition;
+*)
 s_fbIlckHandlerConveyorBackward();
 
 s_fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[0] := i_stExtIlckConvFwd;
 s_fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[1].bState := NOT(i_bReqEnable);
 s_fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[2].bState := NOT(s_bStaCenteringIdle);
 s_fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[3].bState := NOT(s_bStaDoorOpened) AND s_bStaAtInfeedRearPosition;
-s_fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[4].bState := s_bStaAtCenteringPosition AND (s_bStaAtInfeedFrontPosition OR s_bStaAtInfeedRearPosition); //Not sure if this is really a interlock?
-s_fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[5].bState := s_bStaAtDockingPosition AND FALSE; //Not sure if this is really a interlock?
+s_fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[4].bState := s_bStaAtCenteringPosition AND (s_bStaAtInfeedFrontPosition OR s_bStaAtInfeedRearPosition);
+{warning '#TODO: Not sure if this is really a interlock?'}
+(*
+s_fbIlckHandlerConveyorForward.i_stInterlockList.arr_Interlocks[5].bState := s_bStaAtDockingPosition;
+*)
 s_fbIlckHandlerConveyorForward();
 
 s_bIlckConveyorBackward := s_fbIlckHandlerConveyorBackward.p_bInterlocked;
@@ -771,7 +777,7 @@ CASE s_eSequence OF
 			s_cmPalletConveyor.m_StartBackward(i_rTargetSpeed := i_ref_stSettings.fSpeedGoToInfeed);
 		END_IF
 		
-		//??
+		{warning '#2HC: Consider adding 2-hand-control later'}
 		(*
 		IF i_bSta2HC_Active THEN
 			IF s_fbSeqTransportControl.q_bStaEntry THEN
@@ -780,7 +786,7 @@ CASE s_eSequence OF
 			END_IF
 		ELSE
 			s_eSeqTransport := E_SeqTransport.STOP;
-			//--s_cmPalletConveyor.m_Stop();
+			//s_cmPalletConveyor.m_Stop();
 		END_IF
 		*)
 		
@@ -816,7 +822,7 @@ CASE s_eSequence OF
 			s_cmPalletConveyor.m_StartForward(i_rTargetSpeed := i_ref_stSettings.fSpeedGoToCentering);
 		END_IF
 		
-		//??
+		{warning '#2HC: Consider adding 2-hand-control later'}
 		(*
 		IF i_bSta2HC_Active THEN
 			IF s_fbSeqTransportControl.q_bStaEntry THEN
@@ -826,7 +832,7 @@ CASE s_eSequence OF
 			END_IF
 		ELSE
 			s_eSeqTransport := E_SeqTransport.STOP;
-			//--s_cmPalletConveyor.m_Stop();
+			//s_cmPalletConveyor.m_Stop();
 		END_IF
 		*)
 		
@@ -893,7 +899,7 @@ CASE s_eSequence OF
 			s_cmPalletConveyor.m_StartForward(i_rTargetSpeed := i_ref_stSettings.fSpeedGoToDocking);
 		END_IF
 		
-		//??
+		{warning '#2HC: Consider adding 2-hand-control later'}
 		(*
 		IF i_bSta2HC_Active THEN
 			IF s_fbSeqTransportControl.q_bStaEntry THEN
@@ -902,7 +908,7 @@ CASE s_eSequence OF
 			END_IF
 		ELSE
 			s_eSeqTransport := E_SeqTransport.STOP;
-			//--s_cmPalletConveyor.m_Stop();
+			//s_cmPalletConveyor.m_Stop();
 		END_IF
 		*)
 		
@@ -981,7 +987,6 @@ CASE i_eCtrlMode OF
 		
 		//Store the selected action (so it could be rstart / resumed if two-hand-control is activated)
 		{warning '#2HC: Could be omitted if 2HCtrl is not used'}
-		//--
 		(*
 		IF s_fbHmiBtnTB_ToInfeed.p_osrBtnPress THEN
 			s_eActionSelection := E_ActionSelection.MOVE_TO_INFEED;

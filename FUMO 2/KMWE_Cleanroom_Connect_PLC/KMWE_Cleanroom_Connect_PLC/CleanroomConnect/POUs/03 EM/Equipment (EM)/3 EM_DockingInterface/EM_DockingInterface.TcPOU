@@ -13,19 +13,19 @@ VAR_INPUT
 	i_bStaDockingPositionFree : BOOL;
 	
 	//External interlocks (from outside this EM)
-	{warning '#TODO: Delete unused (not written external) inputs'}
+	{warning '#TODO: Delete unused (not written external) inputs?'}
 	i_stExtIlckDockingClampsToClose : ST_Interlock;
 	i_stExtIlckDockingClampsToOpen : ST_Interlock;
-	i_stExtIlckUnlockingPinsToLock : ST_Interlock;		//-- NOT_USED
-	i_stExtIlckUnlockingPinsToRelease : ST_Interlock;	//-- NOT_USED
+	i_stExtIlckUnlockingPinsToLock : ST_Interlock;		// #NOT_USED#
+	i_stExtIlckUnlockingPinsToRelease : ST_Interlock;	// #NOT_USED#
 	i_stExtIlckDoorOpenerToClose : ST_Interlock;
 	i_stExtIlckDoorOpenerToOpen : ST_Interlock;
 	i_stExtIlckDoorShutterToClose : ST_Interlock;
 	i_stExtIlckDoorShutterToOpen : ST_Interlock;
 	i_stExtIlckOuterCabinDoorToClose : ST_Interlock;
-	i_stExtIlckOuterCabinDoorToOpen : ST_Interlock;		//-- NOT_USED
+	i_stExtIlckOuterCabinDoorToOpen : ST_Interlock;		// #NOT_USED#
 	i_stExtIlckInnerCabinDoorToClose : ST_Interlock;
-	i_stExtIlckInnerCabinDoorToOpen : ST_Interlock;		//-- NOT_USED
+	i_stExtIlckInnerCabinDoorToOpen : ST_Interlock;		// #NOT_USED#
 END_VAR
 
 VAR_OUTPUT
@@ -291,7 +291,8 @@ IF NOT i_bReqEnable THEN
 END_IF
 
 {warning '#TODO: Interlock is blocking to start buttons in MANUAL-Mode'}
-IF s_bIlckDoorOpenerToClose AND FALSE THEN
+//commented "AND FALSE" if okay then this can be deleted permenetly
+IF s_bIlckDoorOpenerToClose (*AND FALSE*) THEN
 	i_refReason := CONCAT('Cmd To Close Inner Door: Interlocked - ', s_fbIlckHandlerDoorOpenerClose.p_sReason);
 	_m_CmdCloseInnerDoor := FALSE;
 	s_bErrCmdNotAllowed := TRUE;
@@ -338,7 +339,8 @@ IF NOT i_bReqEnable THEN
 END_IF
 
 {warning '#TOOD: Interlock is blocking to start buttons in MANUAL-Mode'}
-IF s_bIlckDoorShutterToOpen AND FALSE THEN
+//commented "AND FALSE" if okay then this can be deleted permenetly
+IF s_bIlckDoorShutterToOpen (*AND FALSE*) THEN
 	i_refReason := CONCAT('Cmd To Open Inner Door: Interlocked - ', s_fbIlckHandlerDoorShutterOpen.p_sReason);
 	_m_CmdOpenInnerDoor := FALSE;
 	s_bErrCmdNotAllowed := TRUE;
@@ -1562,8 +1564,6 @@ CASE s_eSequence OF
 	E_SeqDockingInterface.OPEN_INNER_TB_DOOR_DONE:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			;
-//--			s_bStaInnerDoorOpenedAndReleased := TRUE;
-//--			s_bStaInnerDoorClosedAndLocked := FALSE;
 		END_IF
 		
 		IF (s_fbSeqControl.q_tmStepTime > T#2S) THEN
@@ -1619,8 +1619,6 @@ CASE s_eSequence OF
 	E_SeqDockingInterface.CLOSE_INNER_TB_DOOR_DONE:
 		IF s_fbSeqControl.q_bStaEntry THEN
 			;
-//--			s_bStaInnerDoorOpenedAndReleased := FALSE;
-//--			s_bStaInnerDoorClosedAndLocked := TRUE;
 		END_IF
 		
 		IF (s_fbSeqControl.q_tmStepTime > T#2S) THEN
@@ -1649,7 +1647,6 @@ CASE s_eSequence OF
 				AND (s_ePreviousStep < E_SeqDockingInterface.ERROR) THEN
 					s_eResumeStep := s_ePreviousStep;
 			ELSE
-//--				s_eResumeStep := E_SeqDockingInterface.PREPARE_READY;
 				s_eResumeStep := E_SeqDockingInterface.READY;
 			END_IF
 			

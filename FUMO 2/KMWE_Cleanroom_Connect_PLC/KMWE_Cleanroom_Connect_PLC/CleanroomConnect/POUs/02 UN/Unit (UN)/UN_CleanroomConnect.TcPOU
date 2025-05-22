@@ -15,7 +15,10 @@ VAR
 	s_tonTimer : TON;
 	
 	//Inputs
-//??	s_diTwoHandControl : FB_DigInput;
+	{warning '#2HC: Consider adding 2-hand-control later'}
+	(*
+	s_diTwoHandControl : FB_DigInput;
+	*)
 	
 	//Output
 	//none
@@ -101,6 +104,7 @@ VAR
 	s_fbHmiBtnPickTrolleyFromTB : FB_HmiBtn;
 	s_fbHmiBtnPlaceTrolleyInTB : FB_HmiBtn;
 	
+	s_fbHmiBtnUnit : FB_HmiBtn;
 	s_fbHmiBtnEmPlus : FB_HmiBtn;
 	s_fbHmiBtnEmMinus : FB_HmiBtn;
 	
@@ -323,36 +327,56 @@ IF (s_eCtrlMode <> s_eCtrlModePrevious) THEN
 END_IF
 
 //EM Selection 0 = none >1 selection
+// 0 = start screen
+// 1 = UNIT cleanroom connect
+// 11 = EM utilities
+// 12 = EM pallet conveyors
+// 13 = EM docking interface
+// 14 = EM lifting transport
+// 15 = EM air treatment
+
+IF s_fbHmiBtnUnit.p_osrBtnPress THEN
+	s_nEMSelection := 1;
+END_IF
+
 IF s_fbHmiBtnEmPlus.p_osrBtnPress THEN
-	IF (s_nEMSelection < 4) THEN
+	IF (s_nEMSelection < 14) THEN
 		s_nEMSelection := s_nEMSelection + 1;
 	ELSE
-		s_nEMSelection := 1;
+		s_nEMSelection := 11;
 	END_IF
 END_IF
 
 IF s_fbHmiBtnEmMinus.p_osrBtnPress THEN
-	IF (s_nEMSelection > 1) THEN
+	IF (s_nEMSelection > 11) THEN
 		s_nEMSelection := s_nEMSelection - 1;
 	ELSE
-		s_nEMSelection := 4;
+		s_nEMSelection := 14;
 	END_IF
+END_IF
+
+IF (s_nEMSelection > 1) AND (s_nEMSelection < 11) THEN
+	s_nEMSelection := 11;
 END_IF
 
 IF (s_nEMSelection <> s_nEMSelectionPrevious) THEN
 	IF s_nEMSelection = 0 THEN
 		GVL.g_sToHmiBottomContent := GVL.g_stHmiBottomBar.General_ReturnToStart;
 	ELSIF s_nEMSelection = 1 THEN
+		GVL.g_sToHmiMiddleContent := GVL.g_stHmiMiddle.UN_CleanroomConnect;
+	ELSIF s_nEMSelection = 11 THEN
 		GVL.g_sToHmiMiddleContent := GVL.g_stHmiMiddle.EM_Utilities;
-	ELSIF s_nEMSelection = 2 THEN
+	ELSIF s_nEMSelection = 12 THEN
 		GVL.g_sToHmiMiddleContent := GVL.g_stHmiMiddle.EM_PalletConveyor;
-	ELSIF s_nEMSelection = 3 THEN
+	ELSIF s_nEMSelection = 13 THEN
 		GVL.g_sToHmiMiddleContent := GVL.g_stHmiMiddle.EM_DockingInterface;
-	ELSIF s_nEMSelection = 4 THEN
+	ELSIF s_nEMSelection = 14 THEN
 		GVL.g_sToHmiMiddleContent := GVL.g_stHmiMiddle.EM_LiftingTransport;
 	{warning '#FUMO3: Add later'}
-	//++ELSIF s_nEMSelection = 5 THEN
-	//++	GVL.g_sToHmiMiddleContent := GVL.g_stHmiMiddle.EM_AirTreatment;
+	(*
+	ELSIF s_nEMSelection = 15 THEN
+		GVL.g_sToHmiMiddleContent := GVL.g_stHmiMiddle.EM_AirTreatment;
+	*)
 	END_IF
 	s_nEMSelectionPrevious := s_nEMSelection;
 	GVL.g_sToHmiBottomContent := GVL.g_stHmiBottomBar.General_ReturnToStart;
@@ -734,6 +758,11 @@ s_fbHmiBtnPlaceTrolleyInTB.p_bStaEnabled := TRUE;
 s_fbHmiBtnPlaceTrolleyInTB.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 s_fbHmiBtnPlaceTrolleyInTB.p_sBtnText := 'Place Trolley In TB';
 
+s_fbHmiBtnUnit.p_bStaVisible := TRUE;
+s_fbHmiBtnUnit.p_bStaEnabled := TRUE;
+s_fbHmiBtnUnit.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnUnit.p_sBtnText := '^';
+
 s_fbHmiBtnEmPlus.p_bStaVisible := TRUE;
 s_fbHmiBtnEmPlus.p_bStaEnabled := TRUE;
 s_fbHmiBtnEmPlus.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
@@ -747,7 +776,10 @@ s_fbHmiBtnEmMinus.p_sBtnText := '<';
 GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaVisible := FALSE;
 GVL_KMWEGenericLib.g_fbHmiBtnReturn.p_bStaEnabled := FALSE;
 
-//??s_diTwoHandControl.i_stSettings.tmInputDelay := T#2S;
+{warning '#2HC: Consider adding 2-hand-control later'}
+(*
+s_diTwoHandControl.i_stSettings.tmInputDelay := T#2S;
+*)
 
 _m_Init := TRUE;
 ]]></ST>
@@ -821,7 +853,9 @@ s_fbIlckHandlerClampsToClose.i_stInterlockList.arr_Interlocks[0].bState := FALSE
 s_fbIlckHandlerClampsToClose();
 
 {warning '#FUMO3: ADD cleanroom door status'}
-s_fbIlckHandlerClampsToOpen.i_stInterlockList.arr_Interlocks[0].bState := FALSE; //++ NOT(GVL_Modules.g_emDoors.p_bStaCleanroomDoorNotClosedAndLocked);
+(*
+s_fbIlckHandlerClampsToOpen.i_stInterlockList.arr_Interlocks[0].bState := NOT(GVL_Modules.g_emDoors.p_bStaCleanroomDoorNotClosedAndLocked);
+*)
 s_fbIlckHandlerClampsToOpen();
 
 s_fbIlckInnerTbDoorToCloseAndOpen.i_stInterlockList.arr_Interlocks[0].bState := NOT(GVL_Modules.g_emLiftingTransport.p_bStaAtIdlePosition);
@@ -914,7 +948,10 @@ IF (s_eCtrlState = E_CtrlState.STOPPING) THEN
 END_IF
 
 s_sResumeStep := TO_STRING(s_eResumeStep);
-//++s_sLastStepPersistent := TO_STRING(s_eLastStepPersistent);
+{warning '#TODO: Not clear is storing last step in persistent data area is okay'}
+(*
+s_sLastStepPersistent := TO_STRING(s_eLastStepPersistent);
+*)
 
 CASE s_eSequence OF
 	E_SeqCleanroomConnect.IDLE:
@@ -1340,6 +1377,7 @@ s_fbHmiBtnOpenInnerTBDoor.p_bStaEnabled := s_bStaReady AND NOT(GVL_Modules.g_emD
 s_fbHmiBtnCloseInnerTBDoor.p_bStaEnabled := s_bStaReady AND NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosed);
 s_fbHmiBtnPickTrolleyFromTB.p_bStaEnabled := s_bStaReady AND GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpened;
 s_fbHmiBtnPlaceTrolleyInTB.p_bStaEnabled := s_bStaReady AND GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpened;
+s_fbHmiBtnUnit.p_bStaEnabled := TRUE;
 s_fbHmiBtnEmPlus.p_bStaEnabled := TRUE;
 s_fbHmiBtnEmMinus.p_bStaEnabled := TRUE;
 

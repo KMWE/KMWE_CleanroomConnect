@@ -467,8 +467,10 @@ IF NOT SUPER^._m_Devices() THEN
 	RETURN;
 END_IF
 
-{warning '#TODO: Not clear if this is the right way to correct the lift speed'}
-//s_cmLift.p_fSetOverride := (s_cmLift.p_fPosition / s_fActLiftPosition) * 100;
+//Using override to compensate for the Sciccor effect
+IF s_cmLift.p_fPosition > 0 THEN
+	s_cmLift.p_fSetOverride := (s_cmLift.p_fPosition / ( SQRT( ( EXPT(c_fLEG_LENGTH, 2) - EXPT((c_fLEG_LENGTH - s_cmLift.p_fPosition), 2) ) ) ) )* 365;
+END_IF
 
 //Control module
 s_cmLift(

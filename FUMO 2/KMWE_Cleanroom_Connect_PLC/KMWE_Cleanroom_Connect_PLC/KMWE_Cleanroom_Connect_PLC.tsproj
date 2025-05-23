@@ -1451,7 +1451,7 @@ External Setpoint Generation:
 			</ArrayInfo>
 		</DataType>
 		<DataType>
-			<Name GUID="{18071995-0000-0000-0000-00200000000D}" IecBaseType="true" BitType="true" AutoDeleteType="true" HideSubItems="true">ARRAY [0..12] OF BIT</Name>
+			<Name GUID="{18071995-0000-0000-0000-00200000000D}" IecBaseType="true" AutoDeleteType="true" HideSubItems="true">ARRAY [0..12] OF BIT</Name>
 			<BitSize>13</BitSize>
 			<BaseType GUID="{18071995-0000-0000-0000-000000000010}">BIT</BaseType>
 			<ArrayInfo>
@@ -5176,7 +5176,7 @@ Bit 8 - 15 : reserved]]></Comment>
 								<Entry Name="TwinSafeGroup1.FB_Err_24" Index="#x7000" Sub="#x01">
 									<Type>BIT</Type>
 								</Entry>
-								<Entry Name="TwinSafeGroup1.ScissorLift_EnableNC_26" Index="#x7000" Sub="#x02">
+								<Entry Name="TwinSafeGroup1.ScissorLift_EnableNC_26" Index="#x7000" Sub="#x02" Flags="#x00008000">
 									<Type>BIT</Type>
 								</Entry>
 								<Entry Name="TwinSafeGroup1.TransportUnit_EnableNC_27" Index="#x7000" Sub="#x03">
@@ -5193,10 +5193,10 @@ Bit 8 - 15 : reserved]]></Comment>
 								<Entry Name="TwinSafeGroup1.ErrorAcknowledgement_1" Index="#x6000" Sub="#x01">
 									<Type>BIT</Type>
 								</Entry>
-								<Entry Name="TwinSafeGroup1.Run_2" Index="#x6000" Sub="#x02">
+								<Entry Name="TwinSafeGroup1.Run_2" Index="#x6000" Sub="#x02" Flags="#x00008000">
 									<Type>BIT</Type>
 								</Entry>
-								<Entry Name="TwinSafeGroup1.RestartSafety_5" Index="#x6000" Sub="#x03">
+								<Entry Name="TwinSafeGroup1.RestartSafety_5" Index="#x6000" Sub="#x03" Flags="#x00008000">
 									<Type>BIT</Type>
 								</Entry>
 								<Entry Name="TwinSafeGroup1.FbTransportUnit_STO_28" Index="#x6000" Sub="#x04">
@@ -5706,7 +5706,6 @@ Bit 8 - 15 : reserved]]></Comment>
 		</Io>
 	</Project>
 	<Mappings>
-		<MappingInfo Identifier="{08502001-2041-0850-0020-500840205008}" Id="#x02030020" Watchdog="04000000040000000400000004000000"/>
 		<MappingInfo Identifier="{05000010-2001-0850-3000-040300205008}" Id="#x02030010" Watchdog="14000000040000000400000004000000"/>
 		<OwnerA Name="TIID^Master (EtherCAT)">
 			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K11 (EL2904)">
@@ -5720,11 +5719,110 @@ Bit 8 - 15 : reserved]]></Comment>
 		</OwnerA>
 		<OwnerA Name="TIPC^CleanroomConnect^CleanroomConnect Instance">
 			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K12 (EL1918 + TwinSAFE Logic)">
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmLift.I_bEnable" VarB="StandardInputs^TwinSafeGroup1.ScissorLift_EnableNC_26"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmTransport.I_bEnable" VarB="StandardInputs^TwinSafeGroup1.TransportUnit_EnableNC_27"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_bStaTwinSAFE_DoorGuardCleanroomChA" VarB="FSoE Inputs^FSOE^FSIN Module 7.Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_bStaTwinSAFE_DoorGuardCleanroomChB" VarB="FSoE Inputs^FSOE^FSIN Module 8.Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_bStaTwinSAFE_Estop1ChA" VarB="FSoE Inputs^FSOE^FSIN Module 1.Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_bStaTwinSAFE_Estop1ChB" VarB="FSoE Inputs^FSOE^FSIN Module 2.Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_bStaTwinSAFE_Estop2ChA" VarB="FSoE Inputs^FSOE^FSIN Module 3.Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_bStaTwinSAFE_Estop2ChB" VarB="FSoE Inputs^FSOE^FSIN Module 4.Input"/>
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_nTwinSATE_ProjectCrc" VarB="Device Info Data^Project CRC"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diSafetyFbErr.I_bStaInput" VarB="StandardInputs^TwinSafeGroup1.FB_Err_24"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diSafetyOk.I_bStaInput" VarB="StandardInputs^TwinSafeGroup1.SafetyOK_29"/>
 				<Link VarA="PlcTask Outputs^GVL_Modules.g_emLiftingTransport.Q_bDriveStateSTO" VarB="StandardOutputs^TwinSafeGroup1.FbTransportUnit_STO_28"/>
 				<Link VarA="PlcTask Outputs^GVL_Modules.g_emUtilities.Q_bCmdErrAck" VarB="StandardOutputs^TwinSafeGroup1.ErrorAcknowledgement_1"/>
 				<Link VarA="PlcTask Outputs^GVL_Modules.g_emUtilities.Q_bCmdRestartSafety" VarB="StandardOutputs^TwinSafeGroup1.RestartSafety_5"/>
 				<Link VarA="PlcTask Outputs^GVL_Modules.g_emUtilities.Q_bCmdRun" VarB="StandardOutputs^TwinSafeGroup1.Run_2"/>
+			</OwnerB>
+			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K20 (EL9110)">
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diPowerPotentialGroup24VdcOk.I_bStaInput" VarB="PowerOK^Input"/>
+			</OwnerB>
+			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K21 (EL2809)">
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmClampsLowerHighPressure.Q_bStaOutput" VarB="Channel 8^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmClampsUpperHighPressure.Q_bStaOutput" VarB="Channel 7^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsLower.Q_bCmdOff" VarB="Channel 6^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsLower.Q_bCmdOn" VarB="Channel 5^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsUpper.Q_bCmdOff" VarB="Channel 4^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsUpper.Q_bCmdOn" VarB="Channel 3^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDoorOpener.Q_bCmdOff" VarB="Channel 14^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDoorOpener.Q_bCmdOn" VarB="Channel 13^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDoorShutter.Q_bCmdOff" VarB="Channel 16^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDoorShutter.Q_bCmdOn" VarB="Channel 15^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinLower.Q_bCmdOff" VarB="Channel 12^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinLower.Q_bCmdOn" VarB="Channel 11^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinUpper.Q_bCmdOff" VarB="Channel 10^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinUpper.Q_bCmdOn" VarB="Channel 9^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.Q_bCmdOff" VarB="Channel 2^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.Q_bCmdOn" VarB="Channel 1^Output"/>
+			</OwnerB>
+			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K3 (EL1809)">
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diAirPressureOk.I_bStaInput" VarB="Channel 7^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diCabinetTemperatureOk.I_bStaInput" VarB="Channel 8^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diPower230VacOk.I_bStaInput" VarB="Channel 3^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diPower230VacSocketsOk.I_bStaInput" VarB="Channel 4^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diPower400VacOk.I_bStaInput" VarB="Channel 2^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diPower48VdcOk.I_bStaInput" VarB="Channel 5^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diRestartSafety.I_bStaInput" VarB="Channel 1^Input"/>
+			</OwnerB>
+			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K4 (EL1809)">
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsLower.I_bStaValveIsOff" VarB="Channel 16^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsUpper.I_bStaValveIsOff" VarB="Channel 12^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsUpper.I_bStaValveIsOff2" VarB="Channel 14^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsUpper.I_bStaValveIsOn" VarB="Channel 13^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsUpper.I_bStaValveIsOn2" VarB="Channel 15^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.I_bStaValveIsOff" VarB="Channel 8^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.I_bStaValveIsOff2" VarB="Channel 10^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.I_bStaValveIsOn" VarB="Channel 9^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.I_bStaValveIsOn2" VarB="Channel 11^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.I_bStaMotorIsRunning" VarB="Channel 7^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.I_bStaReadyForOperation" VarB="Channel 6^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_diStaAtCenteringPosition.I_bStaInput" VarB="Channel 3^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_diStaAtDockingPosition.I_bStaInput" VarB="Channel 4^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_diStaAtInfeedPositionFront.I_bStaInput" VarB="Channel 2^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_diStaAtInfeedPositionRear.I_bStaInput" VarB="Channel 1^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_diStaDoorOpened.I_bStaInput" VarB="Channel 5^Input"/>
+			</OwnerB>
+			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K5 (EL1809)">
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsLower.I_bStaValveIsOff2" VarB="Channel 2^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsLower.I_bStaValveIsOn" VarB="Channel 1^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsLower.I_bStaValveIsOn2" VarB="Channel 3^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDoorOpener.I_bStaValveIsOff" VarB="Channel 8^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDoorOpener.I_bStaValveIsOn" VarB="Channel 9^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDoorShutter.I_bStaValveIsOff" VarB="Channel 11^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDoorShutter.I_bStaValveIsOn" VarB="Channel 12^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinLower.I_bStaValveIsOff" VarB="Channel 6^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinLower.I_bStaValveIsOn" VarB="Channel 7^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinUpper.I_bStaValveIsOff" VarB="Channel 4^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinUpper.I_bStaValveIsOn" VarB="Channel 5^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_diStaDoorAlmostClosed.I_bStaInput" VarB="Channel 10^Input"/>
+			</OwnerB>
+			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K6 (EL1809)">
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmLift.I_bDetLimitSwitchNeg" VarB="Channel 1^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmLift.I_bDetLimitSwitchPos" VarB="Channel 2^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmLift.I_bDetReferenceSwitch" VarB="Channel 3^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmTransport.I_bDetLimitSwitchNeg" VarB="Channel 9^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmTransport.I_bDetLimitSwitchPos" VarB="Channel 10^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmTransport.I_bDetReferenceSwitch" VarB="Channel 11^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_diStaCabinAreaOccupied.I_bStaInput" VarB="Channel 12^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_diStaCollisionAvoidanceSensor.I_bStaInput" VarB="Channel 6^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_diStaTrolleyLocked.I_bStaInput" VarB="Channel 13^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_diStaTrolleyOnPositionLeft.I_bStaInput" VarB="Channel 4^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_diStaTrolleyOnPositionRight.I_bStaInput" VarB="Channel 5^Input"/>
+			</OwnerB>
+			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K7 (EL2809)">
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdEnable" VarB="Channel 6^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdReleaseBrake" VarB="Channel 9^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdReset" VarB="Channel 5^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdStartCCW" VarB="Channel 8^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdStartCW" VarB="Channel 7^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emUtilities.s_doBeaconLedGreen.Q_bStaOutput" VarB="Channel 3^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emUtilities.s_doBeaconLedRed.Q_bStaOutput" VarB="Channel 1^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emUtilities.s_doBeaconLedYellow.Q_bStaOutput" VarB="Channel 2^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emUtilities.s_doSnRestartSafety.Q_bStaOutput" VarB="Channel 10^Output"/>
+			</OwnerB>
+			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K8 (EL4024)">
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_nSetTargetSpeed" VarB="AO Outputs Channel 1^Analog output"/>
 			</OwnerB>
 			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K9 (EL7211-9014)">
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.I_nInfoDataInputLevel" VarB="DRV Info data 1^Info data 1"/>
@@ -5736,81 +5834,6 @@ Bit 8 - 15 : reserved]]></Comment>
 			<OwnerB Name="TINC^NC-Task 1 SAF^Axes^TransportUnit">
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.axisTransport.NcToPlc" VarB="Outputs^ToPlc"/>
 				<Link VarA="PlcTask Outputs^GVL_Modules.g_emLiftingTransport.axisTransport.PlcToNc" VarB="Inputs^FromPlc"/>
-			</OwnerB>
-			<OwnerB Name="TIPC^HardwareSimulator^HardwareSimulator Instance">
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsLower.I_bStaValveIsOff" VarB="PlcTask Outputs^MAIN.simDockingClampLower.Q_bStaFeedbackOff"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsLower.I_bStaValveIsOff2" VarB="PlcTask Outputs^MAIN.simDockingClampLower.Q_bStaFeedbackOff2"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsLower.I_bStaValveIsOn" VarB="PlcTask Outputs^MAIN.simDockingClampLower.Q_bStaFeedbackOn"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsLower.I_bStaValveIsOn2" VarB="PlcTask Outputs^MAIN.simDockingClampLower.Q_bStaFeedbackOn2"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsUpper.I_bStaValveIsOff" VarB="PlcTask Outputs^MAIN.simDockingClampUpper.Q_bStaFeedbackOff"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsUpper.I_bStaValveIsOff2" VarB="PlcTask Outputs^MAIN.simDockingClampUpper.Q_bStaFeedbackOff2"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsUpper.I_bStaValveIsOn" VarB="PlcTask Outputs^MAIN.simDockingClampUpper.Q_bStaFeedbackOn"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsUpper.I_bStaValveIsOn2" VarB="PlcTask Outputs^MAIN.simDockingClampUpper.Q_bStaFeedbackOn2"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDoorOpener.I_bStaValveIsOff" VarB="PlcTask Outputs^MAIN.simDoorOpener.Q_bStaFeedbackOff"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDoorOpener.I_bStaValveIsOn" VarB="PlcTask Outputs^MAIN.simDoorOpener.Q_bStaFeedbackOn"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDoorShutter.I_bStaValveIsOff" VarB="PlcTask Outputs^MAIN.simDoorShutter.Q_bStaFeedbackOff"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDoorShutter.I_bStaValveIsOn" VarB="PlcTask Outputs^MAIN.simDoorShutter.Q_bStaFeedbackOn"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmInnerCabinDoor.I_bStaControllerIsReady" VarB="PlcTask Outputs^MAIN.simInnerCabinDoor.Q_bStaDoorIsReady"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmInnerCabinDoor.I_bStaDoorIsClosed" VarB="PlcTask Outputs^MAIN.simInnerCabinDoor.Q_bStaDoorIsClosed"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmInnerCabinDoor.I_bStaDoorIsOpened" VarB="PlcTask Outputs^MAIN.simInnerCabinDoor.Q_bStaDoorIsOpened"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmOuterCabinDoor.I_bStaControllerIsReady" VarB="PlcTask Outputs^MAIN.simOuterCabinDoor.Q_bStaDoorIsReady"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmOuterCabinDoor.I_bStaDoorIsClosed" VarB="PlcTask Outputs^MAIN.simOuterCabinDoor.Q_bStaDoorIsClosed"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmOuterCabinDoor.I_bStaDoorIsOpened" VarB="PlcTask Outputs^MAIN.simOuterCabinDoor.Q_bStaDoorIsOpened"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinLower.I_bStaValveIsOff" VarB="PlcTask Outputs^MAIN.simUnlockPinLower.Q_bStaFeedbackOff"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinLower.I_bStaValveIsOn" VarB="PlcTask Outputs^MAIN.simUnlockPinLower.Q_bStaFeedbackOn"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinUpper.I_bStaValveIsOff" VarB="PlcTask Outputs^MAIN.simUnlockPinUpper.Q_bStaFeedbackOff"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinUpper.I_bStaValveIsOn" VarB="PlcTask Outputs^MAIN.simUnlockPinUpper.Q_bStaFeedbackOn"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_diStaDoorAlmostClosed.I_bStaInput" VarB="PlcTask Outputs^MAIN.simDoorOpenerAlmostClosed"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmLift.I_bDetLimitSwitchNeg" VarB="PlcTask Outputs^MAIN.simLiftLimitNeg"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmLift.I_bDetLimitSwitchPos" VarB="PlcTask Outputs^MAIN.simLiftLimitPos"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmLift.I_bEnable" VarB="PlcTask Outputs^MAIN.simLiftEnable"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmTransport.I_bDetLimitSwitchNeg" VarB="PlcTask Outputs^MAIN.simTransportLimitNeg"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmTransport.I_bDetLimitSwitchPos" VarB="PlcTask Outputs^MAIN.simTransportLimitPos"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmTransport.I_bEnable" VarB="PlcTask Outputs^MAIN.simTransportEnable"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.I_bStaValveIsOff" VarB="PlcTask Outputs^MAIN.simCentering.Q_bStaFeedbackOff"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.I_bStaValveIsOff2" VarB="PlcTask Outputs^MAIN.simCentering.Q_bStaFeedbackOff2"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.I_bStaValveIsOn" VarB="PlcTask Outputs^MAIN.simCentering.Q_bStaFeedbackOn"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.I_bStaValveIsOn2" VarB="PlcTask Outputs^MAIN.simCentering.Q_bStaFeedbackOn2"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.I_bStaMotorIsRunning" VarB="PlcTask Outputs^MAIN.simMOVITRAC_B.Q_bStaMotorIsRunning"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.I_bStaReadyForOperation" VarB="PlcTask Outputs^MAIN.simMOVITRAC_B.Q_bStaReadyForOperation"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_bStaTwinSAFE_DoorGuardCleanroomChA" VarB="PlcTask Outputs^MAIN.simSafetyOK"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_bStaTwinSAFE_DoorGuardCleanroomChB" VarB="PlcTask Outputs^MAIN.simSafetyOK"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_bStaTwinSAFE_Estop1ChA" VarB="PlcTask Outputs^MAIN.simSafetyOK"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_bStaTwinSAFE_Estop1ChB" VarB="PlcTask Outputs^MAIN.simSafetyOK"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_bStaTwinSAFE_Estop2ChA" VarB="PlcTask Outputs^MAIN.simSafetyOK"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_bStaTwinSAFE_Estop2ChB" VarB="PlcTask Outputs^MAIN.simSafetyOK"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diAirPressureOk.I_bStaInput" VarB="PlcTask Outputs^MAIN.simAirPressureOK"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diCabinetTemperatureOk.I_bStaInput" VarB="PlcTask Outputs^MAIN.simCabinetTemperatureOK"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diPower230VacOk.I_bStaInput" VarB="PlcTask Outputs^MAIN.simPower230VacOK"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diPower230VacSocketsOk.I_bStaInput" VarB="PlcTask Outputs^MAIN.simPower230VacSocketsOK"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diPower400VacOk.I_bStaInput" VarB="PlcTask Outputs^MAIN.simPower400VacOK"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diPower48VdcOk.I_bStaInput" VarB="PlcTask Outputs^MAIN.simPower48VdcOK"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diPowerPotentialGroup24VdcOk.I_bStaInput" VarB="PlcTask Outputs^MAIN.simPowerPotentialGroupOK"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diSafetyOk.I_bStaInput" VarB="PlcTask Outputs^MAIN.simSafetyOK"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsLower.Q_bCmdOff" VarB="PlcTask Inputs^MAIN.simDockingClampLower.I_bCmdValveOff"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsLower.Q_bCmdOn" VarB="PlcTask Inputs^MAIN.simDockingClampLower.I_bCmdValveOn"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsUpper.Q_bCmdOff" VarB="PlcTask Inputs^MAIN.simDockingClampUpper.I_bCmdValveOff"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsUpper.Q_bCmdOn" VarB="PlcTask Inputs^MAIN.simDockingClampUpper.I_bCmdValveOn"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDoorOpener.Q_bCmdOff" VarB="PlcTask Inputs^MAIN.simDoorOpener.I_bCmdValveOff"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDoorOpener.Q_bCmdOn" VarB="PlcTask Inputs^MAIN.simDoorOpener.I_bCmdValveOn"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDoorShutter.Q_bCmdOff" VarB="PlcTask Inputs^MAIN.simDoorShutter.I_bCmdValveOff"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDoorShutter.Q_bCmdOn" VarB="PlcTask Inputs^MAIN.simDoorShutter.I_bCmdValveOn"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmInnerCabinDoor.Q_bCmdClose" VarB="PlcTask Inputs^MAIN.simInnerCabinDoor.I_bCmdDoorClose"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmInnerCabinDoor.Q_bCmdOpen" VarB="PlcTask Inputs^MAIN.simInnerCabinDoor.I_bCmdDoorOpen"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmInnerCabinDoor.Q_bCmdReset" VarB="PlcTask Inputs^MAIN.simInnerCabinDoor.I_bCmdReset"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmOuterCabinDoor.Q_bCmdClose" VarB="PlcTask Inputs^MAIN.simOuterCabinDoor.I_bCmdDoorClose"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmOuterCabinDoor.Q_bCmdOpen" VarB="PlcTask Inputs^MAIN.simOuterCabinDoor.I_bCmdDoorOpen"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmOuterCabinDoor.Q_bCmdReset" VarB="PlcTask Inputs^MAIN.simOuterCabinDoor.I_bCmdReset"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinLower.Q_bCmdOff" VarB="PlcTask Inputs^MAIN.simUnlockPinLower.I_bCmdValveOff"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinLower.Q_bCmdOn" VarB="PlcTask Inputs^MAIN.simUnlockPinLower.I_bCmdValveOn"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinUpper.Q_bCmdOff" VarB="PlcTask Inputs^MAIN.simUnlockPinUpper.I_bCmdValveOff"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinUpper.Q_bCmdOn" VarB="PlcTask Inputs^MAIN.simUnlockPinUpper.I_bCmdValveOn"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.Q_bCmdOff" VarB="PlcTask Inputs^MAIN.simCentering.I_bCmdValveOff"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.Q_bCmdOn" VarB="PlcTask Inputs^MAIN.simCentering.I_bCmdValveOn"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdEnable" VarB="PlcTask Inputs^MAIN.simMOVITRAC_B.I_bCmdEnable"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdReset" VarB="PlcTask Inputs^MAIN.simMOVITRAC_B.I_bCmdReset"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdStartCCW" VarB="PlcTask Inputs^MAIN.simMOVITRAC_B.I_bCmdStartCCW"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdStartCW" VarB="PlcTask Inputs^MAIN.simMOVITRAC_B.I_bCmdStartCW"/>
 			</OwnerB>
 		</OwnerA>
 	</Mappings>

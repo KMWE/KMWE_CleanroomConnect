@@ -105,6 +105,7 @@ VAR
 	s_fbHmiBtnPlaceTrolleyInTB : FB_HmiBtn;
 	
 	s_fbHmiBtnUnit : FB_HmiBtn;
+	s_fbHmiBtnEm : FB_HmiBtn;
 	s_fbHmiBtnEmPlus : FB_HmiBtn;
 	s_fbHmiBtnEmMinus : FB_HmiBtn;
 	
@@ -112,6 +113,9 @@ VAR
 	s_bHmiForceOutputEnabled : BOOL;
 	s_bHmiForceOutputRGBEnabled : BOOL;
 	s_bHmiForceOutputWEnabled : BOOL;
+	
+	s_nEMSelection : USINT := 1;
+	s_nEMSelectionPrevious : USINT;
 	
 	//Message box
 	s_stMsgBox : ST_MsgBox;
@@ -282,8 +286,6 @@ VAR_INST
 	
 	s_sCompanySelectionVisible	: STRING;
 	
-	s_nEMSelection : USINT;
-	s_nEMSelectionPrevious : USINT;
 END_VAR
 ]]></Declaration>
       <Implementation>
@@ -335,10 +337,17 @@ END_IF
 // 14 = EM lifting transport
 // 15 = EM air treatment
 
+//UN level
 IF s_fbHmiBtnUnit.p_osrBtnPress THEN
 	s_nEMSelection := 1;
 END_IF
 
+//EM level
+IF s_fbHmiBtnEm.p_osrBtnPress THEN
+	s_nEMSelection := 11;
+END_IF
+
+//EM ++
 IF s_fbHmiBtnEmPlus.p_osrBtnPress THEN
 	IF (s_nEMSelection < 14) THEN
 		s_nEMSelection := s_nEMSelection + 1;
@@ -347,6 +356,7 @@ IF s_fbHmiBtnEmPlus.p_osrBtnPress THEN
 	END_IF
 END_IF
 
+//EM --
 IF s_fbHmiBtnEmMinus.p_osrBtnPress THEN
 	IF (s_nEMSelection > 11) THEN
 		s_nEMSelection := s_nEMSelection - 1;
@@ -355,27 +365,58 @@ IF s_fbHmiBtnEmMinus.p_osrBtnPress THEN
 	END_IF
 END_IF
 
-IF (s_nEMSelection > 1) AND (s_nEMSelection < 11) THEN
-	s_nEMSelection := 11;
-END_IF
-
+//Visibility
 IF (s_nEMSelection <> s_nEMSelectionPrevious) THEN
 	IF s_nEMSelection = 0 THEN
 		GVL.g_sToHmiBottomContent := GVL.g_stHmiBottomBar.General_ReturnToStart;
+		s_fbHmiBtnUnit.p_bStaVisible := TRUE;
+		s_fbHmiBtnEm.p_bStaVisible := FALSE;
+		s_fbHmiBtnEmPlus.p_bStaVisible := TRUE;
+		s_fbHmiBtnEmMinus.p_bStaVisible := TRUE;
+		
 	ELSIF s_nEMSelection = 1 THEN
 		GVL.g_sToHmiMiddleContent := GVL.g_stHmiMiddle.UN_CleanroomConnect;
+		s_fbHmiBtnUnit.p_bStaVisible := FALSE;
+		s_fbHmiBtnEm.p_bStaVisible := TRUE;
+		s_fbHmiBtnEmPlus.p_bStaVisible := FALSE;
+		s_fbHmiBtnEmMinus.p_bStaVisible := FALSE;
+		
 	ELSIF s_nEMSelection = 11 THEN
 		GVL.g_sToHmiMiddleContent := GVL.g_stHmiMiddle.EM_Utilities;
+		s_fbHmiBtnUnit.p_bStaVisible := TRUE;
+		s_fbHmiBtnEm.p_bStaVisible := FALSE;
+		s_fbHmiBtnEmPlus.p_bStaVisible := TRUE;
+		s_fbHmiBtnEmMinus.p_bStaVisible := TRUE;
+		
 	ELSIF s_nEMSelection = 12 THEN
 		GVL.g_sToHmiMiddleContent := GVL.g_stHmiMiddle.EM_PalletConveyor;
+		s_fbHmiBtnUnit.p_bStaVisible := TRUE;
+		s_fbHmiBtnEm.p_bStaVisible := FALSE;
+		s_fbHmiBtnEmPlus.p_bStaVisible := TRUE;
+		s_fbHmiBtnEmMinus.p_bStaVisible := TRUE;
+		
 	ELSIF s_nEMSelection = 13 THEN
 		GVL.g_sToHmiMiddleContent := GVL.g_stHmiMiddle.EM_DockingInterface;
+		s_fbHmiBtnUnit.p_bStaVisible := TRUE;
+		s_fbHmiBtnEm.p_bStaVisible := FALSE;
+		s_fbHmiBtnEmPlus.p_bStaVisible := TRUE;
+		s_fbHmiBtnEmMinus.p_bStaVisible := TRUE;
+		
 	ELSIF s_nEMSelection = 14 THEN
 		GVL.g_sToHmiMiddleContent := GVL.g_stHmiMiddle.EM_LiftingTransport;
+		s_fbHmiBtnUnit.p_bStaVisible := TRUE;
+		s_fbHmiBtnEm.p_bStaVisible := FALSE;
+		s_fbHmiBtnEmPlus.p_bStaVisible := TRUE;
+		s_fbHmiBtnEmMinus.p_bStaVisible := TRUE;
+		
 	{warning '#FUMO3: Add later'}
 	(*
 	ELSIF s_nEMSelection = 15 THEN
 		GVL.g_sToHmiMiddleContent := GVL.g_stHmiMiddle.EM_AirTreatment;
+		s_fbHmiBtnUnit.p_bStaVisible := TRUE;
+		s_fbHmiBtnEm.p_bStaVisible := FALSE;
+		s_fbHmiBtnEmPlus.p_bStaVisible := TRUE;
+		s_fbHmiBtnEmMinus.p_bStaVisible := TRUE;
 	*)
 	END_IF
 	s_nEMSelectionPrevious := s_nEMSelection;
@@ -394,6 +435,9 @@ s_fbHmiBtnOpenInnerTBDoor();
 s_fbHmiBtnCloseInnerTBDoor();
 s_fbHmiBtnPickTrolleyFromTB();
 s_fbHmiBtnPlaceTrolleyInTB();
+
+s_fbHmiBtnUnit();
+s_fbHmiBtnEm();
 s_fbHmiBtnEmPlus();
 s_fbHmiBtnEmMinus();
 ]]></ST>
@@ -762,6 +806,11 @@ s_fbHmiBtnUnit.p_bStaVisible := TRUE;
 s_fbHmiBtnUnit.p_bStaEnabled := TRUE;
 s_fbHmiBtnUnit.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
 s_fbHmiBtnUnit.p_sBtnText := '^';
+
+s_fbHmiBtnEm.p_bStaVisible := TRUE;
+s_fbHmiBtnEm.p_bStaEnabled := TRUE;
+s_fbHmiBtnEm.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+s_fbHmiBtnEm.p_sBtnText := 'v';
 
 s_fbHmiBtnEmPlus.p_bStaVisible := TRUE;
 s_fbHmiBtnEmPlus.p_bStaEnabled := TRUE;
@@ -1378,6 +1427,7 @@ s_fbHmiBtnCloseInnerTBDoor.p_bStaEnabled := s_bStaReady AND NOT(GVL_Modules.g_em
 s_fbHmiBtnPickTrolleyFromTB.p_bStaEnabled := s_bStaReady AND GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpened;
 s_fbHmiBtnPlaceTrolleyInTB.p_bStaEnabled := s_bStaReady AND GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpened;
 s_fbHmiBtnUnit.p_bStaEnabled := TRUE;
+s_fbHmiBtnEm.p_bStaEnabled := TRUE;
 s_fbHmiBtnEmPlus.p_bStaEnabled := TRUE;
 s_fbHmiBtnEmMinus.p_bStaEnabled := TRUE;
 

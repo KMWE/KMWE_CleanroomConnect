@@ -460,6 +460,10 @@ _m_ConvTranspToMotorPos.fJrk := i_stPosProf.fJrk * s_fConvFactor;
     </Method>
     <Method Name="_m_Devices" Id="{b95b1090-f72e-49a8-b75a-87fbc22bb2f7}" FolderPath="Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Devices : BOOL
+
+VAR
+	s_fSpindlePosition : LREAL;
+END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
@@ -468,9 +472,19 @@ IF NOT SUPER^._m_Devices() THEN
 END_IF
 
 //Using override to compensate for the Sciccor effect
-IF s_cmLift.p_fPosition > 0 THEN
-	s_cmLift.p_fSetOverride := (s_cmLift.p_fPosition / ( SQRT( ( EXPT(c_fLEG_LENGTH, 2) - EXPT((c_fLEG_LENGTH - s_cmLift.p_fPosition), 2) ) ) ) )* 365;
+//--IF s_cmLift.p_fPosition > 0 THEN
+//--	s_cmLift.p_fSetOverride := (s_cmLift.p_fPosition / ( SQRT( ( EXPT(c_fLEG_LENGTH, 2) - EXPT((c_fLEG_LENGTH - s_cmLift.p_fPosition), 2) ) ) ) )* 365;
+//--END_IF
+
+//Read spindle position from motor and limit to prevent misscalculations
+s_fSpindlePosition := s_cmLift.p_fPosition;
+s_fSpindlePosition := LIMIT(1, s_fSpindlePosition, 200.0);
+
+//Using override to compensate for the Sciccor effect
+IF s_fSpindlePosition > 0 THEN
+	s_cmLift.p_fSetOverride := (s_fSpindlePosition / ( SQRT( ( EXPT(c_fLEG_LENGTH, 2) - EXPT((c_fLEG_LENGTH - s_fSpindlePosition), 2) ) ) ) )* 365;
 END_IF
+
 
 //Control module
 s_cmLift(

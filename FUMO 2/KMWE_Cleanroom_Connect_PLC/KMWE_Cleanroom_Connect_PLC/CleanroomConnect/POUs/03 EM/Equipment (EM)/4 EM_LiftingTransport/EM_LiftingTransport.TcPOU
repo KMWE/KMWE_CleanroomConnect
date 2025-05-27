@@ -62,6 +62,13 @@ VAR
 	s_diStaCollisionAvoidanceSensor : FB_DigInput;
 	s_diStaTrolleyLocked : FB_DigInput;
 	
+	I_bErrTerminalOvertemperature AT %I* : BOOL;
+	I_bErrI2Terror AT %I* : BOOL;
+	I_bwrnI2Twarning AT %I* : BOOL;
+	I_bErrOvervoltage AT %I* : BOOL;
+	I_bwrnUndervoltage AT %I* : BOOL;
+	I_berrOvercurrentProtection AT %I* : BOOL;
+	
 	//Outputs
 	//none
 	
@@ -96,6 +103,13 @@ VAR
 	s_bStaCollisionAvoidanceSensor : BOOL;
 	s_bStaTrolleyLocked : BOOL;
 	
+	s_bErrTerminalOvertemperature : BOOL;
+	s_bErrI2Terror : BOOL;
+	s_bwrnI2Twarning : BOOL;
+	s_bErrOvervoltage : BOOL;
+	s_bwrnUndervoltage : BOOL;
+	s_berrOvercurrentProtection : BOOL;
+	
 	s_fSetLiftPosition : LREAL; //[mm]
 	s_fActLiftPosition : LREAL; //Converted to vertical movement of scissor lift [mm]
 	
@@ -117,6 +131,7 @@ VAR
 	s_fbAlarmHandlerNoTrolleyPlaced : FB_AlarmHandler;
 	s_fbAlarmHandlerCabinNotEmpty : FB_AlarmHandler;
 	s_fbAlarmHandlerCmdNotAllowed : FB_AlarmHandler;
+	s_fbAlarmHandlerErrBrakeChopper : FB_AlarmHandler;
 	
 	s_bErrLiftDrive : BOOL;
 	s_bErrTransportDrive : BOOL;
@@ -125,11 +140,15 @@ VAR
 	s_bErrNoTrolleyPlaced : BOOL;
 	s_bErrCabinNotEmpty : BOOL;
 	s_bErrCmdNotAllowed : BOOL;
+	s_bErrBrakeChopper : BOOL;
+	
 	
 	//Warnings
 	s_fbAlarmHandlerSafetyDoorNotClosed : FB_AlarmHandler;
+	s_fbAlarmHandlerWrnBrakeChopper : FB_AlarmHandler;
 	
 	s_bWrnSafetyDoorNotClosed : BOOL;
+	s_bWrnBrakeChopper : BOOL;
 	
 	s_bStaWarning : BOOL;
 	
@@ -188,7 +207,10 @@ SUPER^();
     <Folder Name="Base" Id="{aa880d32-2da2-45ff-bcea-b6be34b0a44b}" />
     <Method Name="_m_Alarms" Id="{77ac2c1c-b354-4acb-9f0d-e0fd9e0a3a94}" FolderPath="Base\">
       <Declaration><![CDATA[METHOD PROTECTED _m_Alarms : BOOL
-]]></Declaration>
+
+VAR
+	s_sString : STRING;
+END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[
 IF NOT SUPER^._m_Alarms() THEN
@@ -229,6 +251,36 @@ s_fbAlarmHandlerCabinNotEmpty(
 s_fbAlarmHandlerCmdNotAllowed(
 	i_bStaActive := s_bErrCmdNotAllowed,
 	i_sAlarmText := CONCAT(i_sEmName, CONCAT(': ', s_sReason)) );
+
+IF s_bErrTerminalOvertemperature THEN
+	s_sString := 'Overtemperature';
+	s_bErrBrakeChopper := TRUE;
+ELSIF s_bErrI2Terror THEN
+	s_sString := 'I2T Error';
+	s_bErrBrakeChopper := TRUE;
+ELSIF s_bErrOvervoltage THEN
+	s_sString := 'Overvoltage';
+	s_bErrBrakeChopper := TRUE;
+ELSIF s_bwrnUndervoltage THEN
+	s_sString := 'Undervoltage';
+	s_bErrBrakeChopper := TRUE;
+ELSIF s_berrOvercurrentProtection THEN
+	s_sString := 'Overcurrent';
+	s_bErrBrakeChopper := TRUE;
+END_IF
+	
+s_fbAlarmHandlerErrBrakeChopper(
+	i_bStaActive := s_bErrBrakeChopper,
+	i_sAlarmText := CONCAT(i_sEmName, CONCAT('Brake Chopper: ', s_sString)) );
+	
+IF s_bwrnI2Twarning THEN
+	s_sString := 'I2T Warning';
+	s_bWrnBrakeChopper := TRUE;
+END_IF
+
+s_fbAlarmHandlerWrnBrakeChopper(
+	i_bStaActive := s_bWrnBrakeChopper,
+	i_sAlarmText := CONCAT(i_sEmName, CONCAT('Brake Chopper: ', s_sString)) );
 	
 //Reset warnings
 IF i_bCmdReset THEN
@@ -240,6 +292,8 @@ IF i_bCmdReset THEN
 	s_bErrNoTrolleyPlaced := FALSE;
 	s_bErrCabinNotEmpty := FALSE;
 	s_bErrCmdNotAllowed := FALSE;
+	s_bErrBrakeChopper := FALSE;
+	s_bWrnBrakeChopper := FALSE;
 END_IF
 
 s_bStaError :=
@@ -670,6 +724,8 @@ s_fbAlarmHandlerUnlockTRolleyFailed.i_eAlarmLevel := E_AlarmLevel.Alarm;
 s_fbAlarmHandlerNoTrolleyPlaced.i_eAlarmLevel := E_AlarmLevel.Alarm;
 s_fbAlarmHandlerCabinNotEmpty.i_eAlarmLevel := E_AlarmLevel.Alarm;
 s_fbAlarmHandlerCmdNotAllowed.i_eAlarmLevel := E_AlarmLevel.Alarm;
+s_fbAlarmHandlerErrBrakeChopper.i_eAlarmLevel := E_AlarmLevel.Alarm;
+s_fbAlarmHandlerWrnBrakeChopper.i_eAlarmLevel := E_AlarmLevel.Warning;
 
 //Hmi
 s_fbHmiBtnGoToIdle.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
@@ -736,6 +792,14 @@ s_cmTransport.p_fSetTargetPosition := s_fSetTransportPosition * 0.5;
 
 //Interlocks
 _m_Interlocks();
+
+//Brake chopper
+s_bErrTerminalOvertemperature := I_bErrTerminalOvertemperature;
+s_bErrI2Terror := s_bErrI2Terror;
+s_bwrnI2Twarning := s_bwrnI2Twarning;
+s_bErrOvervoltage := s_bErrOvervoltage;
+s_bwrnUndervoltage := s_bwrnUndervoltage;
+s_berrOvercurrentProtection := s_berrOvercurrentProtection;
 
 _m_Inputs := TRUE;
 ]]></ST>

@@ -1451,7 +1451,7 @@ External Setpoint Generation:
 			</ArrayInfo>
 		</DataType>
 		<DataType>
-			<Name GUID="{18071995-0000-0000-0000-00200000000D}" IecBaseType="true" BitType="true" AutoDeleteType="true" HideSubItems="true">ARRAY [0..12] OF BIT</Name>
+			<Name GUID="{18071995-0000-0000-0000-00200000000D}" IecBaseType="true" AutoDeleteType="true" HideSubItems="true">ARRAY [0..12] OF BIT</Name>
 			<BitSize>13</BitSize>
 			<BaseType GUID="{18071995-0000-0000-0000-000000000010}">BIT</BaseType>
 			<ArrayInfo>
@@ -1717,7 +1717,7 @@ External Setpoint Generation:
 			<Licenses CacheOrCheckLicensesOnStartup="true">
 				<Target>
 					<ManualSelect>{796D380F-D49E-4C0C-A05F-500052FAC883}</ManualSelect>
-					<LicenseDevice Disabled="true" DongleHardwareId="2" DongleDevice="#x0302000e" DongleLevel="92" DongleSerialNumber="000bsn9m"/>
+					<LicenseDevice DongleHardwareId="2" DongleDevice="#x0302000e" DongleLevel="92" DongleSerialNumber="000bsn9m"/>
 				</Target>
 			</Licenses>
 			<Tasks>
@@ -1746,16 +1746,16 @@ External Setpoint Generation:
 				<SvbTask Priority="8" CycleTime="100000" AmsPort="511">
 					<Name>NC-Task 1 SVB</Name>
 				</SvbTask>
-				<Axis Id="1" CreateSymbols="true" AxisType="1">
-					<Name>ScissorLift</Name>
+				<Axis Id="1" Disabled="true" CreateSymbols="true" AxisType="1">
+					<Name>ScissorLift_old</Name>
 					<AxisPara>
 						<Dynamic AccelerationMaximum="5" DecelerationMaximum="5" Acceleration="2.5" Deceleration="2.5" Jerk="25"/>
 						<Velo RefSearch="1" RefSync="0.1" SlowManual="1" FastManual="2" Maximum="5"/>
 						<PositionAreaControl Range="1"/>
 						<OtherSettings AllowMotionCmdToSlave="true" PulseDistancePos="10" PulseDistanceNeg="10"/>
 					</AxisPara>
-					<Encoder Name="Enc" EncType="1">
-						<EncPara>
+					<Encoder Name="Enc" EncType="8">
+						<EncPara MaxCount="#x0036ee7f">
 							<SoftEndMinControl Enable="true"/>
 							<SoftEndMaxControl Enable="true" Range="140"/>
 							<Inc RefSearchInverse="true" RefSyncInverse="false"/>
@@ -1816,8 +1816,8 @@ External Setpoint Generation:
 							</Var>
 						</Vars>
 					</Encoder>
-					<Drive Name="Drive" DrvType="5">
-						<DrvPara>
+					<Drive Name="Drive" DrvType="9">
+						<DrvPara MaxCount="#xffffffff">
 							<Analog VeloReferenz="6.25" TorqueSetpointScale="10" ScaleFactorActTorque="0.1"/>
 							<TimeComp TaskDelayCycles="1"/>
 						</DrvPara>
@@ -1856,22 +1856,6 @@ External Setpoint Generation:
 								</SubVar>
 								<SubVar TypeFormatIndex="2">
 									<Name>nDataOut2</Name>
-								</SubVar>
-								<SubVar>
-									<Name>nCtrl2</Name>
-									<Comment><![CDATA[Digital Outputs Setpoint Generator:
-0x41 (0100 0001) = Minus (0x42 for inverse motor polarity)
-0x42 (0100 0010) = Plus (0x41 for inverse motor polarity)
-0x80 (1000 0000) = Stop
-]]></Comment>
-								</SubVar>
-								<SubVar>
-									<Name>nCtrl3</Name>
-									<Comment><![CDATA[Digital Outputs (Setpoint Generator + Position Controller):
-0x41 (0100 0001) = Minus (0x42 for inverse motor polarity)
-0x42 (0100 0010) = Plus (0x41 for inverse motor polarity)
-0x80 (1000 0000) = Stop
-]]></Comment>
 								</SubVar>
 								<SubVar TypeFormatIndex="2">
 									<Name>nDataOut3</Name>
@@ -1916,8 +1900,8 @@ External Setpoint Generation:
 						<PositionAreaControl Range="1"/>
 						<OtherSettings AllowMotionCmdToSlave="true"/>
 					</AxisPara>
-					<Encoder Name="Enc" EncType="1">
-						<EncPara ScaleFactorNumerator="174.358392" ScaleFactorDenominator="52428800">
+					<Encoder Name="Enc" EncType="19">
+						<EncPara ScaleFactorNumerator="174.358392" ScaleFactorDenominator="52428800" MaxCount="#xffffffff">
 							<SoftEndMinControl Enable="true" Range="-10"/>
 							<SoftEndMaxControl Enable="true" Range="860"/>
 							<Inc RefSearchInverse="true" RefSyncInverse="false"/>
@@ -1978,8 +1962,8 @@ External Setpoint Generation:
 							</Var>
 						</Vars>
 					</Encoder>
-					<Drive Name="Drive" DrvType="5">
-						<DrvPara>
+					<Drive Name="Drive" DrvType="16">
+						<DrvPara MaxCount="#xffffffff" DriveControlDWord="#x00020100">
 							<Analog VeloReferenz="100" TorqueSetpointScale="10" ScaleFactorActTorque="0.1"/>
 							<TimeComp TaskDelayCycles="1"/>
 						</DrvPara>
@@ -2019,22 +2003,6 @@ External Setpoint Generation:
 								<SubVar TypeFormatIndex="2">
 									<Name>nDataOut2</Name>
 								</SubVar>
-								<SubVar>
-									<Name>nCtrl2</Name>
-									<Comment><![CDATA[Digital Outputs Setpoint Generator:
-0x41 (0100 0001) = Minus (0x42 for inverse motor polarity)
-0x42 (0100 0010) = Plus (0x41 for inverse motor polarity)
-0x80 (1000 0000) = Stop
-]]></Comment>
-								</SubVar>
-								<SubVar>
-									<Name>nCtrl3</Name>
-									<Comment><![CDATA[Digital Outputs (Setpoint Generator + Position Controller):
-0x41 (0100 0001) = Minus (0x42 for inverse motor polarity)
-0x42 (0100 0010) = Plus (0x41 for inverse motor polarity)
-0x80 (1000 0000) = Stop
-]]></Comment>
-								</SubVar>
 								<SubVar TypeFormatIndex="2">
 									<Name>nDataOut3</Name>
 								</SubVar>
@@ -2070,11 +2038,12 @@ External Setpoint Generation:
 						</Var>
 					</Vars>
 				</Axis>
+				<Axis File="ScissorLift.xti" Id="3"/>
 			</NC>
 		</Motion>
 		<Plc>
 			<Project GUID="{13F6CD22-9663-4738-8378-3A901949CB98}" Name="CleanroomConnect" PrjFilePath="CleanroomConnect\CleanroomConnect.plcproj" TmcFilePath="CleanroomConnect\CleanroomConnect.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" TmcPath="CleanroomConnect\CleanroomConnect.tmc" TmcHash="{4B3537F2-D72C-BD9C-0300-2461E86A3AA3}">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" TmcPath="CleanroomConnect\CleanroomConnect.tmc" TmcHash="{971290BE-553A-5063-630E-DFE56349011E}">
 					<Name>CleanroomConnect Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1">
@@ -2423,6 +2392,30 @@ External Setpoint Generation:
 						<Var>
 							<Name>GVL_Modules.g_emLiftingTransport.s_diStaTrolleyLocked.I_bStaInput</Name>
 							<Comment><![CDATA[----------------------Inputs---------------------------//]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emLiftingTransport.I_bErrTerminalOvertemperature</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emLiftingTransport.I_bErrI2Terror</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emLiftingTransport.I_bwrnI2Twarning</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emLiftingTransport.I_bErrOvervoltage</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emLiftingTransport.I_bwrnUndervoltage</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL_Modules.g_emLiftingTransport.I_berrOvercurrentProtection</Name>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
@@ -2793,8 +2786,8 @@ External Setpoint Generation:
 					</TaskPouOids>
 				</Instance>
 			</Project>
-			<Project GUID="{E422F207-C83D-4C9F-9DAA-6F15793ED578}" Name="HardwareSimulator" PrjFilePath="HardwareSimulator\HardwareSimulator.plcproj" TmcFilePath="HardwareSimulator\HardwareSimulator.tmc" ReloadTmc="true" AmsPort="852" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502040" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="HardwareSimulator\HardwareSimulator.tmc" TmcHash="{CB69012A-37CF-7463-A1FE-22CE45C57BA0}">
+			<Project Disabled="true" GUID="{E422F207-C83D-4C9F-9DAA-6F15793ED578}" Name="HardwareSimulator" PrjFilePath="HardwareSimulator\HardwareSimulator.plcproj" TmcFilePath="HardwareSimulator\HardwareSimulator.tmc" ReloadTmc="true" AmsPort="852" FileArchiveSettings="#x000e" SymbolicMapping="true">
+				<Instance Id="#x08502040" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="HardwareSimulator\HardwareSimulator.tmc" TmcHash="{0C01EEBD-613F-0A54-5554-A04E66255A47}">
 					<Name>HardwareSimulator Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1">
@@ -3140,7 +3133,7 @@ External Setpoint Generation:
 			</Project>
 		</Safety>
 		<Io>
-			<Device Id="3" Disabled="true" DevType="111" DevFlags="#x0003" AmsPort="28675" AmsNetId="10.130.4.120.4.1" RemoteName="Master (EtherCAT)" InfoImageId="7">
+			<Device Id="3" DevType="111" DevFlags="#x0003" AmsPort="28675" AmsNetId="5.152.40.20.4.1" RemoteName="Master (EtherCAT)" InfoImageId="7">
 				<Name>Master (EtherCAT)</Name>
 				<AddressInfo>
 					<Ccat>
@@ -3169,6 +3162,9 @@ External Setpoint Generation:
 				</AddressInfo>
 				<Image Id="6" AddrType="9" ImageType="3">
 					<Name>Image</Name>
+				</Image>
+				<Image Id="4" AddrType="10" ImageType="3">
+					<Name>Image-2</Name>
 				</Image>
 				<Box Id="13" BoxType="9099">
 					<Name>K1 (EK1200)</Name>
@@ -5366,242 +5362,10 @@ Bit 8 - 15 : reserved]]></Comment>
 							</Slot>
 						</EtherCAT>
 					</Box>
-					<Box Id="36" BoxType="9099" BoxFlags="#x00000020">
-						<Name>U9 (AX5805)</Name>
-						<ImageId>118</ImageId>
-						<EtherCAT SlaveType="2" PdiType="#x0005" MboxDataLinkLayer="true" StateMBoxPolling="true" CycleMBoxPollingTime="0" CoeType="43" FoeType="1" VendorId="#x00000002" ProductCode="#x16ad6012" RevisionNo="#x00120000" InfoDataAddr="true" TimeoutMailbox2="2000" CheckRevisionNoType="3" PortPhys="51" MaxSlotCount="2" Type="AX5805 (Safety Drive Option)" Desc="AX5805" PortABoxInfo="#x01000023">
-							<SyncMan>001000012600010001000000400000010001001026010000</SyncMan>
-							<SyncMan>001100012200010002000000400000010001001122010000</SyncMan>
-							<SyncMan>00120f002400010003000000000000001b00001224010000</SyncMan>
-							<SyncMan>00190f002000010004000000000000001b00001920010000</SyncMan>
-							<Fmmu>0000000000000000001200020100000001000000000000000000000000000000</Fmmu>
-							<Fmmu>0000000000000000001900010100000002000000000000000000000000000000</Fmmu>
-							<Fmmu>00000000000000000d0800010100000003000000000000000000000000000000</Fmmu>
-							<BootStrapData>0010f400f410f400</BootStrapData>
-							<MBoxUserCmdData>020003000a00000017000000000040000000000000000000000000000000000030002000020000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003002a00000017000000000040000000000000000000000000000000000030012000220000001000530063006900730073006f0072004c0069006600740000000000000000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003000a00000017000000000040000000000000000000000000000000000030022000020000000400646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003000c000000170000000000400000000000000000000000000000000000301020000400000000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>0200030009000000170000000000400000000000000000000000000000000000301120000100000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003000c000000170000000000400000000000000000000000000000000000301220000400000000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003000c000000170000000000400000000000000000000000000000000000301320000400000000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003000c000000170000000000400000000000000000000000000000000000301420000400000000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003000c0000001700000000004000000000000000000000000000000000003020200004000000b4000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003000c000000170000000000400000000000000000000000000000000000302120000400000014000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003000900000017000000000040000000000000000000000000000000000030222000010000000a646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003000a00000017000000000040000000000000000000000000000000000030302000020000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003000a00000017000000000040000000000000000000000000000000000030402000020000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>0200030009000000170000000000400000000000000000000000000000000000304120000100000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>0200030009000000170000000000400000000000000000000000000000000000304320000100000064646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003000900000017000000000040000000000000000000000000000000000030002f000100000001646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003000900000017000000000040000000000000000000000000000000000030012f000100000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003000900000017000000000040000000000000000000000000000000000030022f000100000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003000900000017000000000040000000000000000000000000000000000030032f000100000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>0200030009000000170000000000400000000000000000000000000000000000304266000100000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003001a0000001700000000004000000000000000000000000000000000003051660012000000080000000000000000000000000000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003002a000000170000000000400000000000000000000000000000000000305366002200000008000000000000000000000000000000000000000000000000000000000000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003001a0000001700000000004000000000000000000000000000000000003054660012000000080000000000000000000000000000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003002a000000170000000000400000000000000000000000000000000000306a66002200000008000000000000000000000000000000000000000000000000000000000000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003001a0000001700000000004000000000000000000000000000000000003071660012000000080000000000000000000000000000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003001a0000001700000000004000000000000000000000000000000000003072660012000000080000000000000000000000000000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003000b0000001700000000004000000000000000000000000000000000003076660003000000080000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003002a000000170000000000400000000000000000000000000000000000307966002200000008000000000000000000000000000000000000000000000000000000000000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003001a0000001700000000004000000000000000000000000000000000003081660012000000080000000000000000000000000000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003002a000000170000000000400000000000000000000000000000000000308366002200000008000000000000000000000000000000000000000000000000000000000000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003002a000000170000000000400000000000000000000000000000000000308566002200000008000000000000000000000000000000000000000000000000000000000000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003001a0000001700000000004000000000000000000000000000000000003086660012000000080000000000000000000000000000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003002a000000170000000000400000000000000000000000000000000000308a66002200000008000100406601004066010040660100406601004066010040660100406601004066646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003001a0000001700000000004000000000000000000000000000000000003091660012000000080000000000000000000000000000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003002a000000170000000000400000000000000000000000000000000000309366002200000008000000000000000000000000000000000000000000000000000000000000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003001a0000001700000000004000000000000000000000000000000000003094660012000000080000000000000000000000000000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003002a000000170000000000400000000000000000000000000000000000309866002200000008000100406601004066010040660100406601004066010040660100406601004066646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003002a00000017000000000040000000000000000000000000000000000030a266002200000008000000000000000000000000000000000000000000000000000000000000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003002a00000017000000000040000000000000000000000000000000000030a466002200000008000000000000000000000000000000000000000000000000000000000000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003002a00000017000000000040000000000000000000000000000000000030a566002200000008000100406601004066010040660100406601004066010040660100406601004066646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003000c00000017000000000040000000000000000000000000000000000030aa66000400000000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003000c00000017000000000040000000000000000000000000000000000030ac66000400000000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003000c00000017000000000040000000000000000000000000000000000030ad66000400000001004066646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003002a00000017000000000040000000000000000000000000000000000030ba66002200000008000000000000000000000000000000000000000000000000000000000000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003002a00000017000000000040000000000000000000000000000000000030bc66002200000008000000000000000000000000000000000000000000000000000000000000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003002a00000017000000000040000000000000000000000000000000000030bd66002200000008000100406601004066010040660100406601004066010040660100406601004066646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003002a00000017000000000040000000000000000000000000000000000030c266002200000008000000000000000000000000000000000000000000000000000000000000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003002a00000017000000000040000000000000000000000000000000000030c466002200000008000000000000000000000000000000000000000000000000000000000000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003002a00000017000000000040000000000000000000000000000000000030c566002200000008000100406601004066010040660100406601004066010040660100406601004066646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003000c00000017000000000040000000000000000000000000000000000030ca66000400000000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003000c00000017000000000040000000000000000000000000000000000030cc66000400000000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003000c00000017000000000040000000000000000000000000000000000030cd66000400000001004066646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003000c00000017000000000040000000000000000000000000000000000030d366000400000000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003002a00000017000000000040000000000000000000000000000000000030e266002200000008000000000000000000000000000000000000000000000000000000000000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003002a00000017000000000040000000000000000000000000000000000030e466002200000008000000000000000000000000000000000000000000000000000000000000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003002a00000017000000000040000000000000000000000000000000000030ea66002200000008000000000000000000000000000000000000000000000000000000000000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>020003002a00000017000000000040000000000000000000000000000000000030ec66002200000008000000000000000000000000000000000000000000000000000000000000000000646f776e6c6f6164205361666520506172616d6574657200</MBoxUserCmdData>
-							<MBoxUserCmdData>004003000c00000000000000000000000800090300000000000000000000000020102f00040000001703010000</MBoxUserCmdData>
-							<Pdo Name="Inputs (Statusword)" Index="#x1a00" Flags="#x00c1" SyncMan="3">
-								<Entry Name="FSOE__FSOE Command" BitLen="8" Index="#xe600" Sub="#x01">
-									<Type>USINT</Type>
-								</Entry>
-								<Entry Name="FSOE__Axis 1 STO" BitLen="1" Index="#x6640">
-									<Type>BIT</Type>
-								</Entry>
-								<Entry Name="FSOE__Axis 1 SSM(1)" BitLen="1" Index="#x66e0" Sub="#x01">
-									<Type>BIT</Type>
-								</Entry>
-								<Entry Name="FSOE__Axis 1 SSM(2)" BitLen="1" Index="#x66e0" Sub="#x02">
-									<Type>BIT</Type>
-								</Entry>
-								<Entry Name="FSOE__Axis 1 SOS(1)" BitLen="1" Index="#x6668" Sub="#x01">
-									<Type>BIT</Type>
-								</Entry>
-								<Entry Name="FSOE__Axis 1 SSR(1)" BitLen="1" Index="#x6680" Sub="#x01">
-									<Type>BIT</Type>
-								</Entry>
-								<Entry Name="FSOE__Axis 1 SDI_p" BitLen="1" Index="#x66d0">
-									<Type>BIT</Type>
-								</Entry>
-								<Entry Name="FSOE__Axis 1 SDI_n" BitLen="1" Index="#x66d1">
-									<Type>BIT</Type>
-								</Entry>
-								<Entry Name="FSOE__Axis 1 Error" BitLen="1" Index="#x6632">
-									<Type>BIT</Type>
-								</Entry>
-								<Entry BitLen="1">
-									<Type GUID="{18071995-0000-0000-0000-002000000001}">ARRAY [0..0] OF BIT</Type>
-								</Entry>
-								<Entry BitLen="1">
-									<Type GUID="{18071995-0000-0000-0000-002000000001}">ARRAY [0..0] OF BIT</Type>
-								</Entry>
-								<Entry BitLen="1">
-									<Type GUID="{18071995-0000-0000-0000-002000000001}">ARRAY [0..0] OF BIT</Type>
-								</Entry>
-								<Entry BitLen="1">
-									<Type GUID="{18071995-0000-0000-0000-002000000001}">ARRAY [0..0] OF BIT</Type>
-								</Entry>
-								<Entry BitLen="1">
-									<Type GUID="{18071995-0000-0000-0000-002000000001}">ARRAY [0..0] OF BIT</Type>
-								</Entry>
-								<Entry BitLen="1">
-									<Type GUID="{18071995-0000-0000-0000-002000000001}">ARRAY [0..0] OF BIT</Type>
-								</Entry>
-								<Entry BitLen="1">
-									<Type GUID="{18071995-0000-0000-0000-002000000001}">ARRAY [0..0] OF BIT</Type>
-								</Entry>
-								<Entry BitLen="1">
-									<Type GUID="{18071995-0000-0000-0000-002000000001}">ARRAY [0..0] OF BIT</Type>
-								</Entry>
-								<Entry Name="FSOE__FSOE Slave CRC_0" BitLen="16" Index="#xe600" Sub="#x03">
-									<Type>UINT</Type>
-								</Entry>
-								<Entry Name="FSOE__FSOE ConnID" BitLen="16" Index="#xe600" Sub="#x02">
-									<Type>UINT</Type>
-								</Entry>
-							</Pdo>
-							<Pdo Name="Outputs (Controlword)" Index="#x1600" InOut="1" Flags="#x00c1" SyncMan="2">
-								<Entry Name="FSOE__FSOE Command" BitLen="8" Index="#xe700" Sub="#x01">
-									<Type>USINT</Type>
-								</Entry>
-								<Entry Name="FSOE__Axis 1 STO" BitLen="1" Index="#x6640">
-									<Type>BIT</Type>
-								</Entry>
-								<Entry Name="FSOE__Axis 1 SS1(1)" BitLen="1" Index="#x6650" Sub="#x01">
-									<Type>BIT</Type>
-								</Entry>
-								<Entry Name="FSOE__Axis 1 SS2(1)" BitLen="1" Index="#x6670" Sub="#x01">
-									<Type>BIT</Type>
-								</Entry>
-								<Entry Name="FSOE__Axis 1 SOS(1)" BitLen="1" Index="#x6668" Sub="#x01">
-									<Type>BIT</Type>
-								</Entry>
-								<Entry Name="FSOE__Axis 1 SSR(1)" BitLen="1" Index="#x6680" Sub="#x01">
-									<Type>BIT</Type>
-								</Entry>
-								<Entry Name="FSOE__Axis 1 SDI_p" BitLen="1" Index="#x66d0">
-									<Type>BIT</Type>
-								</Entry>
-								<Entry Name="FSOE__Axis 1 SDI_n" BitLen="1" Index="#x66d1">
-									<Type>BIT</Type>
-								</Entry>
-								<Entry Name="FSOE__Axis 1 Error_Ack" BitLen="1" Index="#x6632">
-									<Type>BIT</Type>
-								</Entry>
-								<Entry BitLen="1">
-									<Type GUID="{18071995-0000-0000-0000-002000000001}">ARRAY [0..0] OF BIT</Type>
-								</Entry>
-								<Entry BitLen="1">
-									<Type GUID="{18071995-0000-0000-0000-002000000001}">ARRAY [0..0] OF BIT</Type>
-								</Entry>
-								<Entry BitLen="1">
-									<Type GUID="{18071995-0000-0000-0000-002000000001}">ARRAY [0..0] OF BIT</Type>
-								</Entry>
-								<Entry BitLen="1">
-									<Type GUID="{18071995-0000-0000-0000-002000000001}">ARRAY [0..0] OF BIT</Type>
-								</Entry>
-								<Entry BitLen="1">
-									<Type GUID="{18071995-0000-0000-0000-002000000001}">ARRAY [0..0] OF BIT</Type>
-								</Entry>
-								<Entry BitLen="1">
-									<Type GUID="{18071995-0000-0000-0000-002000000001}">ARRAY [0..0] OF BIT</Type>
-								</Entry>
-								<Entry BitLen="1">
-									<Type GUID="{18071995-0000-0000-0000-002000000001}">ARRAY [0..0] OF BIT</Type>
-								</Entry>
-								<Entry BitLen="1">
-									<Type GUID="{18071995-0000-0000-0000-002000000001}">ARRAY [0..0] OF BIT</Type>
-								</Entry>
-								<Entry Name="FSOE__FSOE Master CRC_0" BitLen="16" Index="#xe700" Sub="#x03">
-									<Type>UINT</Type>
-								</Entry>
-								<Entry Name="FSOE__FSOE ConnID" BitLen="16" Index="#xe700" Sub="#x02">
-									<Type>UINT</Type>
-								</Entry>
-							</Pdo>
-							<Pdo Name="Standard Inputs Channel 1" Index="#x1a01" Flags="#x0091" SyncMan="3">
-								<Entry Name="Position Actual Value" BitLen="32" Index="#x6611">
-									<Type>DINT</Type>
-								</Entry>
-								<Entry Name="Velocity Actual Value" BitLen="32" Index="#x6613">
-									<Type>DINT</Type>
-								</Entry>
-							</Pdo>
-							<Pdo Name="Standard Outputs Channel 1" Index="#x1601" InOut="1" Flags="#x0091" SyncMan="2">
-								<Entry Name="Position Actual Value" BitLen="32" Index="#x2050">
-									<Type>DINT</Type>
-								</Entry>
-								<Entry Name="Velocity Actual Value" BitLen="32" Index="#x2051">
-									<Type>DINT</Type>
-								</Entry>
-							</Pdo>
-							<CoeProfile ProfileNo="8389010"/>
-							<Slot Name="Select Safety Process Data">
-								<SlotData>0000000001000400000000000000000000000000000000000000000000000000</SlotData>
-								<ModuleIdent>66327</ModuleIdent>
-								<ModuleIdent>131863</ModuleIdent>
-								<Module Id="#x03090005" Type="Safety Process Data, 1 axis" Class="">
-									<Name>Module 1 (Safety Process Data, 1 axis)</Name>
-									<ImageId>118</ImageId>
-									<ModuleData>020000001703010000000c000000000000000000000000000000000000000000</ModuleData>
-									<PdoIndex>6656</PdoIndex>
-									<PdoIndex>5632</PdoIndex>
-									<CoeProfile ProfileNo="#x00800192"/>
-								</Module>
-							</Slot>
-							<Slot Name="Select Standard Process Data">
-								<SlotData>0000000001000400000000000000000000000000000000000000000000000000</SlotData>
-								<ModuleIdent>66331</ModuleIdent>
-								<ModuleIdent>131867</ModuleIdent>
-								<Module Id="#x03090008" Type="Standard Process Data, 1 axis" Class="">
-									<Name>Module 2 (Standard Process Data, 1 axis)</Name>
-									<ImageId>118</ImageId>
-									<ModuleData>020000001b030100000004000000000000000000000000000000000000000000</ModuleData>
-									<PdoIndex>6657</PdoIndex>
-									<PdoIndex>5633</PdoIndex>
-								</Module>
-							</Slot>
-						</EtherCAT>
-					</Box>
 					<Box Id="29" BoxType="9099">
 						<Name>K20 (EL9110)</Name>
 						<ImageId>1005</ImageId>
-						<EtherCAT SlaveType="1" PdiType="#x0104" CycleMBoxPollingTime="0" VendorId="#x00000002" ProductCode="#x23963052" RevisionNo="#x00120000" RepeatSupport="true" PortPhys="51" MaxSlotCount="256" MaxSlotGroupCount="1" SlotPdoIncrement="1" SlotIndexIncrement="16" Type="EL9110 Power Supplier with LED (24V, Diagnostics)" Desc="EL9110" PortABoxInfo="#x01000024">
+						<EtherCAT SlaveType="1" PdiType="#x0104" CycleMBoxPollingTime="0" VendorId="#x00000002" ProductCode="#x23963052" RevisionNo="#x00120000" RepeatSupport="true" PortPhys="51" MaxSlotCount="256" MaxSlotGroupCount="1" SlotPdoIncrement="1" SlotIndexIncrement="16" Type="EL9110 Power Supplier with LED (24V, Diagnostics)" Desc="EL9110" PortABoxInfo="#x01000023">
 							<SyncMan>001001000000010004000000000000000000001000000000</SyncMan>
 							<Fmmu>0000000000000000001000010100000002000000000000000000000000000000</Fmmu>
 							<Pdo Name="PowerOK" Index="#x1a00" Flags="#x0011" SyncMan="0">
@@ -5701,18 +5465,26 @@ Bit 8 - 15 : reserved]]></Comment>
 						</EtherCAT>
 					</Box>
 					<Box Id="31" BoxType="9099">
-						<Name>K22 (EL9012)</Name>
+						<Name>K22 (EL9011)</Name>
 						<ImageId>1007</ImageId>
-						<EtherCAT CycleMBoxPollingTime="0" VendorId="#x00000002" ProductCode="#x23343050" InfoDataState="false" MaxSlotCount="256" MaxSlotGroupCount="1" SlotPdoIncrement="1" SlotIndexIncrement="16" Type="EL9012 End Terminal" Desc="EL9012" PortABoxInfo="#x0100001e"/>
+						<EtherCAT CycleMBoxPollingTime="0" VendorId="#x00000002" ProductCode="#x23333050" InfoDataState="false" MaxSlotCount="256" MaxSlotGroupCount="1" SlotPdoIncrement="1" SlotIndexIncrement="16" Type="EL9011 End Terminal" Desc="EL9011" PortABoxInfo="#x0100001e"/>
 					</Box>
 				</Box>
 				<EtherCAT DcSyncMode="3"/>
 			</Device>
+			<Device File="Master Field (EtherCAT).xti" Id="4"/>
 		</Io>
 	</Project>
 	<Mappings>
-		<MappingInfo Identifier="{08502001-2041-0850-0020-500840205008}" Id="#x02030020" Watchdog="04000000040000000400000004000000"/>
+		<MappingInfo Identifier="{00000000-2001-0850-0020-500841000403}" Id="#x02030070"/>
+		<MappingInfo Identifier="{00000000-0010-0304-3000-040310000403}" Id="#x02030040"/>
+		<MappingInfo Identifier="{00000000-0020-0304-3000-040321000403}" Id="#x02030050"/>
+		<MappingInfo Identifier="{00000000-0060-0304-3000-040360000403}" Id="#x02030020"/>
+		<MappingInfo Identifier="{00000000-0070-0304-3000-040372000403}" Id="#x02030080"/>
+		<MappingInfo Identifier="{08502001-0060-0304-0020-500860000403}" Id="#x02030030" Watchdog="00000000000000000000000000000000"/>
 		<MappingInfo Identifier="{05000010-2001-0850-3000-040300205008}" Id="#x02030010" Watchdog="14000000040000000400000004000000"/>
+		<MappingInfo Identifier="{03040040-0010-0304-4000-040310000403}" Id="#x02030090" Watchdog="04000000140000000400000004000000"/>
+		<MappingInfo Identifier="{03040040-0040-0304-4000-040340000403}" Id="#x02030060" Watchdog="04000000040000000400000004000000"/>
 		<OwnerA Name="TIID^Master (EtherCAT)">
 			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K11 (EL2904)">
 				<Link VarA="K1 (EK1200)^K12 (EL1918 + TwinSAFE Logic)^ConnectionOutputs^TwinSafeGroup1.EL2904, 4 digital outputs_1_22 RxPDO" VarB="Module 1 (FSOES)^TxPDO^FSOE"/>
@@ -5720,18 +5492,141 @@ Bit 8 - 15 : reserved]]></Comment>
 			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K12 (EL1918 + TwinSAFE Logic)">
 				<Link VarA="K1 (EK1200)^K11 (EL2904)^Module 1 (FSOES)^RxPDO^FSOE" VarB="ConnectionInputs^TwinSafeGroup1.EL2904, 4 digital outputs_1_22 TxPDO"/>
 			</OwnerB>
-			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^U9 (AX5805)">
-				<Link VarA="K1 (EK1200)^K12 (EL1918 + TwinSAFE Logic)^ConnectionInputs^TwinSafeGroup1.AX 5805 Drive Option Card (1 axis, FW 5)_1_20 TxPDO" VarB="Module 1 (Safety Process Data, 1 axis)^Outputs (Controlword)^FSOE"/>
+			<OwnerB Name="TIID^Master Field (EtherCAT)^U9 (AX5103-0000-0215)^Term 3 (AX5805)">
 				<Link VarA="K1 (EK1200)^K12 (EL1918 + TwinSAFE Logic)^ConnectionOutputs^TwinSafeGroup1.AX 5805 Drive Option Card (1 axis, FW 5)_1_20 RxPDO" VarB="Module 1 (Safety Process Data, 1 axis)^Inputs (Statusword)^FSOE"/>
 			</OwnerB>
 		</OwnerA>
-		<OwnerA Name="TIPC^CleanroomConnect^CleanroomConnect Instance">
+		<OwnerA Name="TIID^Master Field (EtherCAT)">
 			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K12 (EL1918 + TwinSAFE Logic)">
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_nTwinSATE_ProjectCrc" VarB="Device Info Data^Project CRC"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emLiftingTransport.Q_bDriveStateSTO" VarB="StandardOutputs^TwinSafeGroup1.FbTransportUnit_STO_28"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emUtilities.Q_bCmdErrAck" VarB="StandardOutputs^TwinSafeGroup1.ErrorAcknowledgement_1"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emUtilities.Q_bCmdRestartSafety" VarB="StandardOutputs^TwinSafeGroup1.RestartSafety_5"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emUtilities.Q_bCmdRun" VarB="StandardOutputs^TwinSafeGroup1.Run_2"/>
+				<Link VarA="U9 (AX5103-0000-0215)^Term 3 (AX5805)^Module 1 (Safety Process Data, 1 axis)^Outputs (Controlword)^FSOE" VarB="ConnectionInputs^TwinSafeGroup1.AX 5805 Drive Option Card (1 axis, FW 5)_1_20 TxPDO"/>
+			</OwnerB>
+		</OwnerA>
+		<OwnerA Name="TINC^NC-Task 1 SAF^Axes^TransportUnit">
+			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K9 (EL7211-9014)">
+				<Link VarA="Drive^Inputs^In^nDataIn1" VarB="DRV Following error actual value^Following error actual value"/>
+				<Link VarA="Drive^Inputs^In^nDcOutputTime" VarB="InfoData^DcOutputShift"/>
+				<Link VarA="Drive^Inputs^In^nState1" VarB="DRV Statusword^Statusword"/>
+				<Link VarA="Drive^Inputs^In^nState2" VarB="DRV Statusword^Statusword" Size="8" OffsB="8"/>
+				<Link VarA="Drive^Inputs^In^nState4" VarB="WcState^InputToggle" Size="1" OffsA="1"/>
+				<Link VarA="Drive^Inputs^In^nState4" VarB="WcState^WcState"/>
+				<Link VarA="Drive^Outputs^Out^nCtrl1" VarB="DRV Controlword^Controlword"/>
+				<Link VarA="Drive^Outputs^Out^nCtrl2" VarB="DRV Controlword^Controlword" Size="8" OffsB="8"/>
+				<Link VarA="Drive^Outputs^Out^nDataOut1" VarB="DRV Target position^Target position"/>
+				<Link VarA="Drive^Outputs^Out^nDataOut2" VarB="DRV Target velocity^Target velocity"/>
+				<Link VarA="Enc^Inputs^In^nDataIn1" VarB="FB Position^Position"/>
+				<Link VarA="Enc^Inputs^In^nDcInputTime" VarB="InfoData^DcInputShift"/>
+				<Link VarA="Enc^Inputs^In^nState4" VarB="WcState^InputToggle" Size="1" OffsA="1"/>
+				<Link VarA="Enc^Inputs^In^nState4" VarB="WcState^WcState"/>
+			</OwnerB>
+		</OwnerA>
+		<OwnerA Name="TIPC^CleanroomConnect^CleanroomConnect Instance">
+			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K10 (EL9576)">
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.I_bErrI2Terror" VarB="BCT Inputs^I2T error"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.I_bErrOvervoltage" VarB="BCT Inputs^Overvoltage"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.I_bErrTerminalOvertemperature" VarB="BCT Inputs^Terminal Overtemperature"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.I_berrOvercurrentProtection" VarB="BCT Inputs^Overcurrent Protection"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.I_bwrnI2Twarning" VarB="BCT Inputs^I2T warning"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.I_bwrnUndervoltage" VarB="BCT Inputs^Undervoltage"/>
+			</OwnerB>
+			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K12 (EL1918 + TwinSAFE Logic)">
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_bStaTwinSAFE_DoorGuardCleanroomChA" VarB="FSoE Inputs^FSOE^FSIN Module 7.Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_bStaTwinSAFE_DoorGuardCleanroomChB" VarB="FSoE Inputs^FSOE^FSIN Module 8.Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_bStaTwinSAFE_Estop1ChA" VarB="FSoE Inputs^FSOE^FSIN Module 1.Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_bStaTwinSAFE_Estop1ChB" VarB="FSoE Inputs^FSOE^FSIN Module 2.Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_bStaTwinSAFE_Estop2ChA" VarB="FSoE Inputs^FSOE^FSIN Module 3.Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_bStaTwinSAFE_Estop2ChB" VarB="FSoE Inputs^FSOE^FSIN Module 4.Input"/>
+			</OwnerB>
+			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K20 (EL9110)">
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diPowerPotentialGroup24VdcOk.I_bStaInput" VarB="PowerOK^Input"/>
+			</OwnerB>
+			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K21 (EL2809)">
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmClampsLowerHighPressure.Q_bStaOutput" VarB="Channel 8^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmClampsUpperHighPressure.Q_bStaOutput" VarB="Channel 7^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsLower.Q_bCmdOff" VarB="Channel 6^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsLower.Q_bCmdOn" VarB="Channel 5^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsUpper.Q_bCmdOff" VarB="Channel 4^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsUpper.Q_bCmdOn" VarB="Channel 3^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDoorOpener.Q_bCmdOff" VarB="Channel 14^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDoorOpener.Q_bCmdOn" VarB="Channel 13^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDoorShutter.Q_bCmdOff" VarB="Channel 16^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDoorShutter.Q_bCmdOn" VarB="Channel 15^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinLower.Q_bCmdOff" VarB="Channel 12^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinLower.Q_bCmdOn" VarB="Channel 11^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinUpper.Q_bCmdOff" VarB="Channel 10^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinUpper.Q_bCmdOn" VarB="Channel 9^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.Q_bCmdOff" VarB="Channel 2^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.Q_bCmdOn" VarB="Channel 1^Output"/>
+			</OwnerB>
+			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K3 (EL1809)">
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diAirPressureOk.I_bStaInput" VarB="Channel 7^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diCabinetTemperatureOk.I_bStaInput" VarB="Channel 8^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diPower230VacOk.I_bStaInput" VarB="Channel 3^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diPower230VacSocketsOk.I_bStaInput" VarB="Channel 4^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diPower400VacOk.I_bStaInput" VarB="Channel 2^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diPower48VdcOk.I_bStaInput" VarB="Channel 5^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diRestartSafety.I_bStaInput" VarB="Channel 1^Input"/>
+			</OwnerB>
+			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K4 (EL1809)">
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsLower.I_bStaValveIsOff" VarB="Channel 16^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsUpper.I_bStaValveIsOff" VarB="Channel 12^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsUpper.I_bStaValveIsOff2" VarB="Channel 14^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsUpper.I_bStaValveIsOn" VarB="Channel 13^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsUpper.I_bStaValveIsOn2" VarB="Channel 15^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.I_bStaValveIsOff" VarB="Channel 8^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.I_bStaValveIsOff2" VarB="Channel 10^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.I_bStaValveIsOn" VarB="Channel 9^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.I_bStaValveIsOn2" VarB="Channel 11^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.I_bStaMotorIsRunning" VarB="Channel 7^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.I_bStaReadyForOperation" VarB="Channel 6^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_diStaAtCenteringPosition.I_bStaInput" VarB="Channel 3^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_diStaAtDockingPosition.I_bStaInput" VarB="Channel 4^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_diStaAtInfeedPositionFront.I_bStaInput" VarB="Channel 2^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_diStaAtInfeedPositionRear.I_bStaInput" VarB="Channel 1^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_diStaDoorOpened.I_bStaInput" VarB="Channel 5^Input"/>
+			</OwnerB>
+			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K5 (EL1809)">
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsLower.I_bStaValveIsOff2" VarB="Channel 2^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsLower.I_bStaValveIsOn" VarB="Channel 1^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsLower.I_bStaValveIsOn2" VarB="Channel 3^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDoorOpener.I_bStaValveIsOff" VarB="Channel 8^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDoorOpener.I_bStaValveIsOn" VarB="Channel 9^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDoorShutter.I_bStaValveIsOff" VarB="Channel 11^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDoorShutter.I_bStaValveIsOn" VarB="Channel 12^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinLower.I_bStaValveIsOff" VarB="Channel 6^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinLower.I_bStaValveIsOn" VarB="Channel 7^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinUpper.I_bStaValveIsOff" VarB="Channel 4^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinUpper.I_bStaValveIsOn" VarB="Channel 5^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_diStaDoorAlmostClosed.I_bStaInput" VarB="Channel 10^Input"/>
+			</OwnerB>
+			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K6 (EL1809)">
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmLift.I_bDetLimitSwitchNeg" VarB="Channel 1^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmLift.I_bDetLimitSwitchPos" VarB="Channel 2^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmLift.I_bDetReferenceSwitch" VarB="Channel 3^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmTransport.I_bDetLimitSwitchNeg" VarB="Channel 9^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmTransport.I_bDetLimitSwitchPos" VarB="Channel 10^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmTransport.I_bDetReferenceSwitch" VarB="Channel 11^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_diStaCabinAreaOccupied.I_bStaInput" VarB="Channel 12^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_diStaCollisionAvoidanceSensor.I_bStaInput" VarB="Channel 6^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_diStaTrolleyLocked.I_bStaInput" VarB="Channel 13^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_diStaTrolleyOnPositionLeft.I_bStaInput" VarB="Channel 4^Input"/>
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_diStaTrolleyOnPositionRight.I_bStaInput" VarB="Channel 5^Input"/>
+			</OwnerB>
+			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K7 (EL2809)">
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdEnable" VarB="Channel 6^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdReleaseBrake" VarB="Channel 9^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdReset" VarB="Channel 5^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdStartCCW" VarB="Channel 8^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdStartCW" VarB="Channel 7^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emUtilities.s_doBeaconLedGreen.Q_bStaOutput" VarB="Channel 3^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emUtilities.s_doBeaconLedRed.Q_bStaOutput" VarB="Channel 1^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emUtilities.s_doBeaconLedYellow.Q_bStaOutput" VarB="Channel 2^Output"/>
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emUtilities.s_doSnRestartSafety.Q_bStaOutput" VarB="Channel 10^Output"/>
+			</OwnerB>
+			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K8 (EL4024)">
+				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_nSetTargetSpeed" VarB="AO Outputs Channel 1^Analog output"/>
+			</OwnerB>
+			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K9 (EL7211-9014)">
+				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.I_nInfoDataInputLevel" VarB="DRV Info data 1^Info data 1"/>
 			</OwnerB>
 			<OwnerB Name="TINC^NC-Task 1 SAF^Axes^ScissorLift">
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.axisLift.NcToPlc" VarB="Outputs^ToPlc"/>
@@ -5740,81 +5635,6 @@ Bit 8 - 15 : reserved]]></Comment>
 			<OwnerB Name="TINC^NC-Task 1 SAF^Axes^TransportUnit">
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.axisTransport.NcToPlc" VarB="Outputs^ToPlc"/>
 				<Link VarA="PlcTask Outputs^GVL_Modules.g_emLiftingTransport.axisTransport.PlcToNc" VarB="Inputs^FromPlc"/>
-			</OwnerB>
-			<OwnerB Name="TIPC^HardwareSimulator^HardwareSimulator Instance">
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsLower.I_bStaValveIsOff" VarB="PlcTask Outputs^MAIN.simDockingClampLower.Q_bStaFeedbackOff"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsLower.I_bStaValveIsOff2" VarB="PlcTask Outputs^MAIN.simDockingClampLower.Q_bStaFeedbackOff2"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsLower.I_bStaValveIsOn" VarB="PlcTask Outputs^MAIN.simDockingClampLower.Q_bStaFeedbackOn"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsLower.I_bStaValveIsOn2" VarB="PlcTask Outputs^MAIN.simDockingClampLower.Q_bStaFeedbackOn2"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsUpper.I_bStaValveIsOff" VarB="PlcTask Outputs^MAIN.simDockingClampUpper.Q_bStaFeedbackOff"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsUpper.I_bStaValveIsOff2" VarB="PlcTask Outputs^MAIN.simDockingClampUpper.Q_bStaFeedbackOff2"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsUpper.I_bStaValveIsOn" VarB="PlcTask Outputs^MAIN.simDockingClampUpper.Q_bStaFeedbackOn"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsUpper.I_bStaValveIsOn2" VarB="PlcTask Outputs^MAIN.simDockingClampUpper.Q_bStaFeedbackOn2"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDoorOpener.I_bStaValveIsOff" VarB="PlcTask Outputs^MAIN.simDoorOpener.Q_bStaFeedbackOff"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDoorOpener.I_bStaValveIsOn" VarB="PlcTask Outputs^MAIN.simDoorOpener.Q_bStaFeedbackOn"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDoorShutter.I_bStaValveIsOff" VarB="PlcTask Outputs^MAIN.simDoorShutter.Q_bStaFeedbackOff"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmDoorShutter.I_bStaValveIsOn" VarB="PlcTask Outputs^MAIN.simDoorShutter.Q_bStaFeedbackOn"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmInnerCabinDoor.I_bStaControllerIsReady" VarB="PlcTask Outputs^MAIN.simInnerCabinDoor.Q_bStaDoorIsReady"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmInnerCabinDoor.I_bStaDoorIsClosed" VarB="PlcTask Outputs^MAIN.simInnerCabinDoor.Q_bStaDoorIsClosed"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmInnerCabinDoor.I_bStaDoorIsOpened" VarB="PlcTask Outputs^MAIN.simInnerCabinDoor.Q_bStaDoorIsOpened"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmOuterCabinDoor.I_bStaControllerIsReady" VarB="PlcTask Outputs^MAIN.simOuterCabinDoor.Q_bStaDoorIsReady"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmOuterCabinDoor.I_bStaDoorIsClosed" VarB="PlcTask Outputs^MAIN.simOuterCabinDoor.Q_bStaDoorIsClosed"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmOuterCabinDoor.I_bStaDoorIsOpened" VarB="PlcTask Outputs^MAIN.simOuterCabinDoor.Q_bStaDoorIsOpened"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinLower.I_bStaValveIsOff" VarB="PlcTask Outputs^MAIN.simUnlockPinLower.Q_bStaFeedbackOff"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinLower.I_bStaValveIsOn" VarB="PlcTask Outputs^MAIN.simUnlockPinLower.Q_bStaFeedbackOn"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinUpper.I_bStaValveIsOff" VarB="PlcTask Outputs^MAIN.simUnlockPinUpper.Q_bStaFeedbackOff"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinUpper.I_bStaValveIsOn" VarB="PlcTask Outputs^MAIN.simUnlockPinUpper.Q_bStaFeedbackOn"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emDockingInterface.s_diStaDoorAlmostClosed.I_bStaInput" VarB="PlcTask Outputs^MAIN.simDoorOpenerAlmostClosed"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmLift.I_bDetLimitSwitchNeg" VarB="PlcTask Outputs^MAIN.simLiftLimitNeg"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmLift.I_bDetLimitSwitchPos" VarB="PlcTask Outputs^MAIN.simLiftLimitPos"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmLift.I_bEnable" VarB="PlcTask Outputs^MAIN.simLiftEnable"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmTransport.I_bDetLimitSwitchNeg" VarB="PlcTask Outputs^MAIN.simTransportLimitNeg"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmTransport.I_bDetLimitSwitchPos" VarB="PlcTask Outputs^MAIN.simTransportLimitPos"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmTransport.I_bEnable" VarB="PlcTask Outputs^MAIN.simTransportEnable"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.I_bStaValveIsOff" VarB="PlcTask Outputs^MAIN.simCentering.Q_bStaFeedbackOff"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.I_bStaValveIsOff2" VarB="PlcTask Outputs^MAIN.simCentering.Q_bStaFeedbackOff2"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.I_bStaValveIsOn" VarB="PlcTask Outputs^MAIN.simCentering.Q_bStaFeedbackOn"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.I_bStaValveIsOn2" VarB="PlcTask Outputs^MAIN.simCentering.Q_bStaFeedbackOn2"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.I_bStaMotorIsRunning" VarB="PlcTask Outputs^MAIN.simMOVITRAC_B.Q_bStaMotorIsRunning"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.I_bStaReadyForOperation" VarB="PlcTask Outputs^MAIN.simMOVITRAC_B.Q_bStaReadyForOperation"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_bStaTwinSAFE_DoorGuardCleanroomChA" VarB="PlcTask Outputs^MAIN.simSafetyOK"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_bStaTwinSAFE_DoorGuardCleanroomChB" VarB="PlcTask Outputs^MAIN.simSafetyOK"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_bStaTwinSAFE_Estop1ChA" VarB="PlcTask Outputs^MAIN.simSafetyOK"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_bStaTwinSAFE_Estop1ChB" VarB="PlcTask Outputs^MAIN.simSafetyOK"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_bStaTwinSAFE_Estop2ChA" VarB="PlcTask Outputs^MAIN.simSafetyOK"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_bStaTwinSAFE_Estop2ChB" VarB="PlcTask Outputs^MAIN.simSafetyOK"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diAirPressureOk.I_bStaInput" VarB="PlcTask Outputs^MAIN.simAirPressureOK"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diCabinetTemperatureOk.I_bStaInput" VarB="PlcTask Outputs^MAIN.simCabinetTemperatureOK"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diPower230VacOk.I_bStaInput" VarB="PlcTask Outputs^MAIN.simPower230VacOK"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diPower230VacSocketsOk.I_bStaInput" VarB="PlcTask Outputs^MAIN.simPower230VacSocketsOK"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diPower400VacOk.I_bStaInput" VarB="PlcTask Outputs^MAIN.simPower400VacOK"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diPower48VdcOk.I_bStaInput" VarB="PlcTask Outputs^MAIN.simPower48VdcOK"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diPowerPotentialGroup24VdcOk.I_bStaInput" VarB="PlcTask Outputs^MAIN.simPowerPotentialGroupOK"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diSafetyOk.I_bStaInput" VarB="PlcTask Outputs^MAIN.simSafetyOK"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsLower.Q_bCmdOff" VarB="PlcTask Inputs^MAIN.simDockingClampLower.I_bCmdValveOff"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsLower.Q_bCmdOn" VarB="PlcTask Inputs^MAIN.simDockingClampLower.I_bCmdValveOn"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsUpper.Q_bCmdOff" VarB="PlcTask Inputs^MAIN.simDockingClampUpper.I_bCmdValveOff"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDockingClampsUpper.Q_bCmdOn" VarB="PlcTask Inputs^MAIN.simDockingClampUpper.I_bCmdValveOn"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDoorOpener.Q_bCmdOff" VarB="PlcTask Inputs^MAIN.simDoorOpener.I_bCmdValveOff"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDoorOpener.Q_bCmdOn" VarB="PlcTask Inputs^MAIN.simDoorOpener.I_bCmdValveOn"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDoorShutter.Q_bCmdOff" VarB="PlcTask Inputs^MAIN.simDoorShutter.I_bCmdValveOff"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmDoorShutter.Q_bCmdOn" VarB="PlcTask Inputs^MAIN.simDoorShutter.I_bCmdValveOn"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmInnerCabinDoor.Q_bCmdClose" VarB="PlcTask Inputs^MAIN.simInnerCabinDoor.I_bCmdDoorClose"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmInnerCabinDoor.Q_bCmdOpen" VarB="PlcTask Inputs^MAIN.simInnerCabinDoor.I_bCmdDoorOpen"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmInnerCabinDoor.Q_bCmdReset" VarB="PlcTask Inputs^MAIN.simInnerCabinDoor.I_bCmdReset"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmOuterCabinDoor.Q_bCmdClose" VarB="PlcTask Inputs^MAIN.simOuterCabinDoor.I_bCmdDoorClose"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmOuterCabinDoor.Q_bCmdOpen" VarB="PlcTask Inputs^MAIN.simOuterCabinDoor.I_bCmdDoorOpen"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmOuterCabinDoor.Q_bCmdReset" VarB="PlcTask Inputs^MAIN.simOuterCabinDoor.I_bCmdReset"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinLower.Q_bCmdOff" VarB="PlcTask Inputs^MAIN.simUnlockPinLower.I_bCmdValveOff"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinLower.Q_bCmdOn" VarB="PlcTask Inputs^MAIN.simUnlockPinLower.I_bCmdValveOn"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinUpper.Q_bCmdOff" VarB="PlcTask Inputs^MAIN.simUnlockPinUpper.I_bCmdValveOff"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emDockingInterface.s_cmUnlockingPinUpper.Q_bCmdOn" VarB="PlcTask Inputs^MAIN.simUnlockPinUpper.I_bCmdValveOn"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.Q_bCmdOff" VarB="PlcTask Inputs^MAIN.simCentering.I_bCmdValveOff"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmCenteringUnit.Q_bCmdOn" VarB="PlcTask Inputs^MAIN.simCentering.I_bCmdValveOn"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdEnable" VarB="PlcTask Inputs^MAIN.simMOVITRAC_B.I_bCmdEnable"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdReset" VarB="PlcTask Inputs^MAIN.simMOVITRAC_B.I_bCmdReset"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdStartCCW" VarB="PlcTask Inputs^MAIN.simMOVITRAC_B.I_bCmdStartCCW"/>
-				<Link VarA="PlcTask Outputs^GVL_Modules.g_emPalletConveyor.s_cmPalletConveyor.Q_bCmdStartCW" VarB="PlcTask Inputs^MAIN.simMOVITRAC_B.I_bCmdStartCW"/>
 			</OwnerB>
 		</OwnerA>
 	</Mappings>

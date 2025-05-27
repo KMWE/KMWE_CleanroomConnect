@@ -10,9 +10,13 @@ VAR CONSTANT
 	
 	c_fMIN_LIFT_TARGET : LREAL := 0.0; //[mm] (**USED IN HMI**)
 	c_fMAX_LIFT_TARGET : LREAL := 410.0; //[mm] (**USED IN HMI**)
+	c_fMIN_SPINDEL_POS : LREAL := 0.0; //[mm]
+	c_fMAX_SPINDEL_POS : LREAL := 150.0; //[mm]
 	
 	c_fMIN_TRANSPORT_TARGET : LREAL := 0.0; //[mm] (**USED IN HMI**)
 	c_fMAX_TRANSPORT_TARGET : LREAL := 1720.0; //[mm] (**USED IN HMI**)
+	c_fMIN_MOTOR_POS : LREAL := 0.0; //[mm]
+	c_fMAX_MOTOR_POS : LREAL := 860.0; //[mm]
 	
 	c_fMIN_LIFT_HEIGHT_TO_EXTRACT_TRANSPORT : LREAL := 305.0; //[mm]
 	c_fMAX_LIFT_HEIGHT_TO_EXTRACT_TRANSPORT : LREAL := 405.0; //[mm]
@@ -421,6 +425,11 @@ END_VAR
 //b = s_fScissorBase
 //c = c_fLEG_LENGTH
 
+IF (i_fActSpindPos < c_fMIN_SPINDEL_POS) OR (i_fActSpindPos > c_fMAX_SPINDEL_POS) THEN
+	_m_ConvSpindPosToLiftHeight := c_fMIN_SPINDEL_POS;
+	RETURN;
+END_IF
+
 //Calculate Lift Target
 //b = SQRT( c^2 - a^2 )
 s_fScissorBase := c_fLEG_LENGTH - (i_fActSpindPos - c_fSPINDLE_OFFSET);
@@ -481,10 +490,13 @@ s_fSpindlePosition := s_cmLift.p_fPosition;
 s_fSpindlePosition := LIMIT(1, s_fSpindlePosition, 200.0);
 
 //Using override to compensate for the Sciccor effect
-IF s_fSpindlePosition > 0 THEN
-	s_cmLift.p_fSetOverride := (s_fSpindlePosition / ( SQRT( ( EXPT(c_fLEG_LENGTH, 2) - EXPT((c_fLEG_LENGTH - s_fSpindlePosition), 2) ) ) ) )* 365;
+IF s_cmLift.p_bHomed THEN
+	IF s_fSpindlePosition > 0 THEN
+		s_cmLift.p_fSetOverride := (s_fSpindlePosition / ( SQRT( ( EXPT(c_fLEG_LENGTH, 2) - EXPT((c_fLEG_LENGTH - s_fSpindlePosition), 2) ) ) ) )* 365;
+	END_IF
+ELSE	
+	s_cmLift.p_fSetOverride := 100.0;
 END_IF
-
 
 //Control module
 s_cmLift(
@@ -587,8 +599,7 @@ s_cmLift.i_bReqEnable := FALSE;
 s_cmLift.i_eCtrlMode := E_CtrlMode.IDLE;
 s_cmLift.i_sCmName := 'CM Lift';
 s_cmLift.i_refAxis REF= axisLift;
-{warning '#FUMO2: Replace homing, during test om real machine'}
-s_cmLift.i_mcHomingMode := Tc2_MC2.MC_HomingMode.MC_Direct; //++Tc2_MC2.MC_HomingMode.MC_DefaultHoming;
+s_cmLift.i_mcHomingMode := Tc2_MC2.MC_HomingMode.MC_DefaultHoming;
 s_cmLift.p_sCfgPosName := 'Up';
 s_cmLift.p_sCfgNegName := 'Down';
 
@@ -596,8 +607,7 @@ s_cmTransport.i_bReqEnable := FALSE;
 s_cmTransport.i_eCtrlMode := E_CtrlMode.IDLE;
 s_cmTransport.i_sCmName := 'CM Transport Unit';
 s_cmTransport.i_refAxis REF= axisTransport;
-{warning '#FUMO2: Replace homing, during test om real machine'}
-s_cmTransport.i_mcHomingMode := Tc2_MC2.MC_HomingMode.MC_Direct; //++Tc2_MC2.MC_HomingMode.MC_DefaultHoming;
+s_cmTransport.i_mcHomingMode := Tc2_MC2.MC_HomingMode.MC_DefaultHoming;
 s_cmTransport.p_sCfgPosName := 'Extract';
 s_cmTransport.p_sCfgNegName := 'Retract';
 
@@ -735,6 +745,7 @@ _m_Inputs := TRUE;
 //Lift/////////////////////////////////////////////////////////////////////////////////////////////
 s_fbIlckHandlerLiftDown.i_stInterlockList.arr_Interlocks[0] := i_stExtIlckLiftDown;
 s_fbIlckHandlerLiftDown.i_stInterlockList.arr_Interlocks[1].bState := //Transport not at retracter positon + starts at min level
+	s_cmLift.p_bHomed AND
 	( (s_fActTransportPosition < c_fMIN_TRANSPORT_POSITION_TO_LOWER_LIFT) OR (s_fActTransportPosition > c_fMAX_TRANSPORT_POSITION_TO_LOWER_LIFT) )
 	AND (s_fActLiftPosition < c_fMIN_LIFT_POSITION_TO_CHECK_INTERLOCK );
 s_fbIlckHandlerLiftDown();
@@ -762,14 +773,23 @@ ELSE
 END_IF
 
 //Transport////////////////////////////////////////////////////////////////////////////////////////
-s_fbIlckHandlerTransportRetract.i_stInterlockList.arr_Interlocks[0] := i_stExtIlckTransportRetract;
+IF s_cmTransport.p_bHomed THEN
+	s_fbIlckHandlerTransportRetract.i_stInterlockList.arr_Interlocks[0] := i_stExtIlckTransportRetract;
+ELSE //Ignore extarnal interlock during homing
+	s_fbIlckHandlerTransportRetract.i_stInterlockList.arr_Interlocks[0].bState := FALSE;
+END_IF
 s_fbIlckHandlerTransportRetract.i_stInterlockList.arr_Interlocks[1].bState := FALSE;
 s_fbIlckHandlerTransportRetract();
 
-s_fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[0] := i_stExtIlckTransportExtract;
+IF s_cmTransport.p_bHomed THEN
+	s_fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[0] := i_stExtIlckTransportExtract;
+ELSE //Ignore extarnal interlock during homing
+	s_fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[0].bState := FALSE;
+END_IF
 s_fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[1].bState := //Lift not at correct position
-	(i_eCtrlMode <> E_CtrlMode.AUTOMATIC) AND (i_eCtrlMode <> E_CtrlMode.MANUAL) AND
-	((s_fActLiftPosition < c_fMIN_LIFT_HEIGHT_TO_EXTRACT_TRANSPORT) OR (s_fActLiftPosition > c_fMAX_LIFT_HEIGHT_TO_EXTRACT_TRANSPORT) );
+	(i_eCtrlMode <> E_CtrlMode.AUTOMATIC) AND (i_eCtrlMode <> E_CtrlMode.MANUAL) AND s_cmTransport.p_bHomed AND
+	((s_fActLiftPosition < c_fMIN_LIFT_HEIGHT_TO_EXTRACT_TRANSPORT) OR (s_fActLiftPosition > c_fMAX_LIFT_HEIGHT_TO_EXTRACT_TRANSPORT) )
+	AND s_fActTransportPosition > 0;
 s_fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[2].bState := s_bStaCollisionAvoidanceSensor AND (s_fActTransportPosition < c_fEND_TRANSPORT_POSITION_COLLISION_CHECK) AND FALSE;
 s_fbIlckHandlerTransportExtract();
 
@@ -801,7 +821,12 @@ END_IF
 
 //Calculate actual positions of Lift and Transport
 s_fActLiftPosition := _m_ConvSpindPosToLiftHeight(s_cmLift.p_fPosition);
-s_fActTransportPosition := s_cmTransport.p_fPosition * 2.0;
+
+IF (s_cmTransport.p_fPosition > c_fMIN_MOTOR_POS) AND (s_cmTransport.p_fPosition < c_fMAX_MOTOR_POS) THEN
+	s_fActTransportPosition := s_cmTransport.p_fPosition * 2.0;
+ELSE
+	s_fActTransportPosition := 0.0;
+END_IF
 
 //Get STO-input-state from transport servo drive
 Q_bDriveStateSTO := I_nInfoDataInputLevel.8; //bit8 is the state of the STO input of the servo drive terminal

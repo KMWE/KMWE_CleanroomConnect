@@ -76,6 +76,7 @@ VAR
 	
 	//Alarms
 	s_fbAlarmHandlerDriveError : FB_AlarmHandler;
+	s_fbAlarmHandlerMcError : FB_AlarmHandler;
 	s_fbAlarmHandlerMotorPosInterlocked : FB_AlarmHandler;
 	s_fbAlarmHandlerMotorNegInterlocked : FB_AlarmHandler;
 	s_fbAlarmHandlerNotEnabled : FB_AlarmHandler;
@@ -87,6 +88,8 @@ VAR
 	s_fbAlarmHandlerMotorNotHomed : FB_AlarmHandler;
 	
 	s_errDriveError : BOOL;
+	s_errMcError : BOOL;
+	s_nMcErrorId : UDINT;
 	s_wrnMotorPosInterlocked : BOOL;
 	s_wrnMotorNegInterlocked : BOOL;
 	s_wrnMoveAbsInterlocked : BOOL;
@@ -154,8 +157,7 @@ SUPER^();
       <Declaration><![CDATA[METHOD PROTECTED _m_Alarms : BOOL
 VAR
 	s_bPositiveDirection : BOOL;
-END_VAR
-]]></Declaration>
+END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[
 IF NOT SUPER^._m_Alarms() THEN
@@ -164,6 +166,26 @@ END_IF
 
 //Set error bits
 s_errDriveError := (i_bReqEnable AND s_bStaDriveError) AND NOT(i_bCmdReset);
+
+IF s_fbMcHome.ErrorID <> 0 THEN
+	s_nMcErrorId := s_fbMcHome.ErrorID;
+	s_errMcError := TRUE;
+ELSIF s_fbMcJog.ErrorID <> 0 THEN
+	s_nMcErrorId := s_fbMcJog.ErrorID;
+	s_errMcError := TRUE;
+ELSIF s_fbMcMoveAbs.ErrorID <> 0 THEN
+	s_nMcErrorId := s_fbMcMoveAbs.ErrorID;
+	s_errMcError := TRUE;
+ELSIF s_fbMcPower.ErrorID <> 0 THEN
+	s_nMcErrorId := s_fbMcPower.ErrorID;
+	s_errMcError := TRUE;
+ELSIF s_fbMcReset.ErrorID <> 0 THEN
+	s_nMcErrorId := s_fbMcReset.ErrorID;
+	s_errMcError := TRUE;
+ELSIF s_fbMcStop.ErrorID <> 0 THEN
+	s_nMcErrorId := s_fbMcStop.ErrorID;
+	s_errMcError := TRUE;
+END_IF
 
 //Interlock warnings
 s_bPositiveDirection := (i_refAxis.NcToPlc.ActVelo > 0);
@@ -191,6 +213,7 @@ ELSIF NOT(s_bIclkNeg) OR i_bCmdReset THEN
 END_IF
 
 IF i_bCmdReset THEN
+	s_errMcError := FALSE;
 	s_wrnMoveAbsInterlocked := FALSE;
 END_IF
 
@@ -198,6 +221,10 @@ END_IF
 s_fbAlarmHandlerDriveError(
 	i_bStaActive := s_errDriveError,
 	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Drive - has error: ', UDINT_TO_STRING(i_refAxis.NcToPlc.ErrorCode))) );
+	
+s_fbAlarmHandlerMcError(
+	i_bStaActive := s_errMcError,
+	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motion - error ID: ', UDINT_TO_STRING(s_nMcErrorId))) );
 	
 s_fbAlarmHandlerMotorPosInterlocked(
 	i_bStaActive := s_wrnMotorPosInterlocked,
@@ -224,7 +251,8 @@ s_fbAlarmHandlerMotorNotHomed(
 	
 //Alarm collector
 s_bStaError :=
-	s_fbAlarmHandlerDriveError.q_bStaActive;
+	s_fbAlarmHandlerDriveError.q_bStaActive
+	OR s_fbAlarmHandlerMcError.q_bStaActive;
 	
 //Warning collector
 s_bStaWarning :=
@@ -612,6 +640,8 @@ END_IF
 //Alarm Config
 //Alarm Handlers
 s_fbAlarmHandlerDriveError.i_eAlarmLevel := E_AlarmLevel.Alarm;
+
+s_fbAlarmHandlerMcError.i_eAlarmLevel := E_AlarmLevel.Alarm;
 
 s_fbAlarmHandlerMotorPosInterlocked.i_eAlarmLevel := E_AlarmLevel.Warning;
 

@@ -89,7 +89,6 @@ VAR
 	
 	s_errDriveError : BOOL;
 	s_errMcError : BOOL;
-	s_nMcErrorId : UDINT;
 	s_wrnMotorPosInterlocked : BOOL;
 	s_wrnMotorNegInterlocked : BOOL;
 	s_wrnMoveAbsInterlocked : BOOL;
@@ -144,7 +143,7 @@ s_fbMcPower(
 	Busy => s_bBusy,
 	Active => s_bActive,
 	Error => s_bError,
-	ErrorID => s_nErrorID);
+	ErrorID => );
 	
 SUPER^();
 ]]></ST>
@@ -168,22 +167,22 @@ END_IF
 s_errDriveError := (i_bReqEnable AND s_bStaDriveError) AND NOT(i_bCmdReset);
 
 IF s_fbMcHome.ErrorID <> 0 THEN
-	s_nMcErrorId := s_fbMcHome.ErrorID;
+	s_nErrorID := s_fbMcHome.ErrorID;
 	s_errMcError := TRUE;
 ELSIF s_fbMcJog.ErrorID <> 0 THEN
-	s_nMcErrorId := s_fbMcJog.ErrorID;
+	s_nErrorID := s_fbMcJog.ErrorID;
 	s_errMcError := TRUE;
 ELSIF s_fbMcMoveAbs.ErrorID <> 0 THEN
-	s_nMcErrorId := s_fbMcMoveAbs.ErrorID;
+	s_nErrorID := s_fbMcMoveAbs.ErrorID;
 	s_errMcError := TRUE;
 ELSIF s_fbMcPower.ErrorID <> 0 THEN
-	s_nMcErrorId := s_fbMcPower.ErrorID;
+	s_nErrorID := s_fbMcPower.ErrorID;
 	s_errMcError := TRUE;
 ELSIF s_fbMcReset.ErrorID <> 0 THEN
-	s_nMcErrorId := s_fbMcReset.ErrorID;
+	s_nErrorID := s_fbMcReset.ErrorID;
 	s_errMcError := TRUE;
 ELSIF s_fbMcStop.ErrorID <> 0 THEN
-	s_nMcErrorId := s_fbMcStop.ErrorID;
+	s_nErrorID := s_fbMcStop.ErrorID;
 	s_errMcError := TRUE;
 END_IF
 
@@ -224,7 +223,7 @@ s_fbAlarmHandlerDriveError(
 	
 s_fbAlarmHandlerMcError(
 	i_bStaActive := s_errMcError,
-	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motion - error ID: ', UDINT_TO_STRING(s_nMcErrorId))) );
+	i_sAlarmText := CONCAT(i_sCmName, CONCAT(': Motion - error ID: ', UDINT_TO_STRING(s_nErrorID))) );
 	
 s_fbAlarmHandlerMotorPosInterlocked(
 	i_bStaActive := s_wrnMotorPosInterlocked,
@@ -369,7 +368,7 @@ s_fbMcStop(
 	Active => s_bActive,
 	CommandAborted => s_bCommandAborted,
 	Error => s_bError,
-	ErrorID => s_nErrorID);
+	ErrorID => );
 	
 s_fbMcHome(
 	Axis := i_refAxis,
@@ -384,7 +383,7 @@ s_fbMcHome(
 	Active => s_bActive,
 	CommandAborted => s_bCommandAborted,
 	Error => s_bError,
-	ErrorID => s_nErrorID);
+	ErrorID => );
 	
 s_fbMcJog(
 	Axis := i_refAxis,
@@ -401,7 +400,7 @@ s_fbMcJog(
 	Active => s_bActive,
 	CommandAborted => s_bCommandAborted,
 	Error => s_bError,
-	ErrorID => s_nErrorID);
+	ErrorID => );
 	
 IF (i_eCtrlMode <> E_CtrlMode.AUTOMATIC) AND (i_eCtrlMode <> E_CtrlMode.MANUAL) THEN
 	s_fbMcMoveAbs.Position := s_fSetTargetPosition;
@@ -428,7 +427,7 @@ s_fbMcMoveAbs(
 	Active => s_bActive,
 	CommandAborted => s_bCommandAborted,
 	Error => s_bError,
-	ErrorID => s_nErrorID);
+	ErrorID => );
 	
 s_fbMcReset(
 	Axis := i_refAxis,
@@ -436,7 +435,7 @@ s_fbMcReset(
 	Done => s_bDone,
 	Busy => s_bBusy,
 	Error => s_bError,
-	ErrorID => s_nErrorID);
+	ErrorID => );
 
 _m_Devices := TRUE;
 ]]></ST>

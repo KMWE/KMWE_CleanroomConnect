@@ -200,10 +200,12 @@ s_bErrLiftDrive S= s_cmLift.p_bError;
 s_bErrTransportDrive S= s_cmTransport.p_bError;
 
 //Alarm Handlers
+IF (s_cmLift.p_nErrorID <> 0) THEN s_sReason := UDINT_TO_STRING(s_cmLift.p_nErrorID); END_IF
 s_fbAlarmHandlerLiftDrive(
 	i_bStaActive := s_bErrLiftDrive,
 	i_sAlarmText := CONCAT(i_sEmName, CONCAT( ': Scissor Lift Drive error: ', s_sReason)) );
 	
+IF (s_cmTransport.p_nErrorID <> 0) THEN s_sReason := UDINT_TO_STRING(s_cmTransport.p_nErrorID); END_IF
 s_fbAlarmHandlerTransportDrive(
 	i_bStaActive := s_bErrTransportDrive,
 	i_sAlarmText := CONCAT(i_sEmName, CONCAT( ': Transport Unit Drive error: ', s_sReason)) );
@@ -230,6 +232,8 @@ s_fbAlarmHandlerCmdNotAllowed(
 	
 //Reset warnings
 IF i_bCmdReset THEN
+	s_bErrLiftDrive := FALSE;
+	s_bErrTransportDrive := FALSE;
 	s_bWrnSafetyDoorNotClosed := FALSE;
 	s_bErrLockTrolleyFailed := FALSE;
 	s_bErrUnlockTrolleyFailed := FALSE;

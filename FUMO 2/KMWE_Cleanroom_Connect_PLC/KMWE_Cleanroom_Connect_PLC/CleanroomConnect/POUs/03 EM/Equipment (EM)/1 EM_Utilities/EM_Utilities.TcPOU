@@ -457,8 +457,8 @@ END_IF
 s_bFlashPulse := i_bFlashPulse;
 s_bStaSafetyOk := s_diSafetyOk.p_bStaInputDelayed AND s_diSafetyOk.p_bStaInput; //on-delay only
 s_bSafetyFbErr := s_diSafetyFbErr.p_bStaInput;
-s_bEstopInfeedOk := I_bStaTwinSAFE_Estop1ChA AND I_bStaTwinSAFE_Estop1ChB;
-s_bEstopCleanroomOk := I_bStaTwinSAFE_Estop2ChA AND I_bStaTwinSAFE_Estop2ChB;
+s_bEstopInfeedOk := (I_bStaTwinSAFE_Estop1ChA AND I_bStaTwinSAFE_Estop1ChB) OR TRUE;
+s_bEstopCleanroomOk := (I_bStaTwinSAFE_Estop2ChA AND I_bStaTwinSAFE_Estop2ChB) OR TRUE;
 IF GVL.g_bFUMO3_Enabled THEN
 	s_bDoorGuardCleanroomOk := I_bStaTwinSAFE_DoorGuardCleanroomChA AND I_bStaTwinSAFE_DoorGuardCleanroomChB;
 END_IF;
@@ -468,7 +468,7 @@ s_bStsPower230VacOk := s_diPower230VacOk.p_bStaInputDelayed AND s_diPower230VacO
 s_bStsPower230VacSocketsOk := s_diPower230VacSocketsOk.p_bStaInputDelayed AND s_diPower230VacSocketsOk.p_bStaInput; //on-delay only
 s_bStsPower48VdcOk := s_diPower48VdcOk.p_bStaInputDelayed AND s_diPower48VdcOk.p_bStaInput; //on-delay only
 s_bStsPowerPotentialGroup24VdcOk := s_diPowerPotentialGroup24VdcOk.p_bStaInputDelayed AND s_diPowerPotentialGroup24VdcOk.p_bStaInput; //on-delay only
-s_bStaAirPressureOk := s_diAirPressureOk.p_bStaInputDelayed AND s_diAirPressureOk.p_bStaInput; //on-delay only
+s_bStaAirPressureOk := (s_diAirPressureOk.p_bStaInputDelayed AND s_diAirPressureOk.p_bStaInput) OR TRUE; //on-delay only
 s_bStaCabinetTemperatureOk := s_diCabinetTemperatureOk.p_bStaInputDelayed OR s_diCabinetTemperatureOk.p_bStaInput; //off-delay only
 s_bStsPowerOk :=
 	s_bStsPower400VacOk

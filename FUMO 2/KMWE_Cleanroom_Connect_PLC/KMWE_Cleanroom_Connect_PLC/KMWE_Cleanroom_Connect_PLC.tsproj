@@ -1612,152 +1612,6 @@ External Setpoint Generation:
 				<SvbTask Priority="8" CycleTime="100000" AmsPort="511">
 					<Name>NC-Task 1 SVB</Name>
 				</SvbTask>
-				<Axis Id="1" Disabled="true" CreateSymbols="true" AxisType="1">
-					<Name>ScissorLift_old</Name>
-					<AxisPara>
-						<Dynamic AccelerationMaximum="5" DecelerationMaximum="5" Acceleration="2.5" Deceleration="2.5" Jerk="25"/>
-						<Velo RefSearch="1" RefSync="0.1" SlowManual="1" FastManual="2" Maximum="5"/>
-						<PositionAreaControl Range="1"/>
-						<OtherSettings AllowMotionCmdToSlave="true" PulseDistancePos="10" PulseDistanceNeg="10"/>
-					</AxisPara>
-					<Encoder Name="Enc" EncType="8">
-						<EncPara MaxCount="#x0036ee7f">
-							<SoftEndMinControl Enable="true"/>
-							<SoftEndMaxControl Enable="true" Range="140"/>
-							<Inc RefSearchInverse="true" RefSyncInverse="false"/>
-						</EncPara>
-						<Vars VarGrpType="1">
-							<Name>Inputs</Name>
-							<Var>
-								<Name>In</Name>
-								<Type GUID="{901C2423-655B-45CE-B7E3-21F174F0F99F}" Namespace="MC">NCENCODERSTRUCT_IN2B</Type>
-								<SubVar TypeFormatIndex="2">
-									<Name>nDataIn1</Name>
-								</SubVar>
-								<SubVar TypeFormatIndex="2">
-									<Name>nDataIn2</Name>
-								</SubVar>
-								<SubVar TypeFormatIndex="2">
-									<Name>nDataIn3</Name>
-								</SubVar>
-								<SubVar TypeFormatIndex="2">
-									<Name>nDataIn4</Name>
-								</SubVar>
-								<SubVar TypeFormatIndex="2">
-									<Name>nDataIn5</Name>
-								</SubVar>
-								<SubVar TypeFormatIndex="2">
-									<Name>nDataIn6</Name>
-								</SubVar>
-								<SubVar TypeFormatIndex="2">
-									<Name>nDataIn7</Name>
-									<Comment><![CDATA[Drive Velocity Actual Value
-]]></Comment>
-								</SubVar>
-							</Var>
-						</Vars>
-						<Vars VarGrpType="2">
-							<Name>Outputs</Name>
-							<Var>
-								<Name>Out</Name>
-								<Type GUID="{9CC50AB2-5D79-4869-A3C2-1FA7761BAFEA}" Namespace="MC">NCENCODERSTRUCT_OUT2</Type>
-								<SubVar TypeFormatIndex="2">
-									<Name>nDataOut1</Name>
-								</SubVar>
-								<SubVar TypeFormatIndex="2">
-									<Name>nDataOut2</Name>
-								</SubVar>
-								<SubVar TypeFormatIndex="2">
-									<Name>nDataOut3</Name>
-								</SubVar>
-								<SubVar TypeFormatIndex="2">
-									<Name>nDataOut4</Name>
-								</SubVar>
-								<SubVar TypeFormatIndex="2">
-									<Name>nDataOut5</Name>
-								</SubVar>
-								<SubVar TypeFormatIndex="2">
-									<Name>nDataOut6</Name>
-								</SubVar>
-							</Var>
-						</Vars>
-					</Encoder>
-					<Drive Name="Drive" DrvType="9">
-						<DrvPara MaxCount="#xffffffff">
-							<Analog VeloReferenz="6.25" TorqueSetpointScale="10" ScaleFactorActTorque="0.1"/>
-							<TimeComp TaskDelayCycles="1"/>
-						</DrvPara>
-						<Vars VarGrpType="1">
-							<Name>Inputs</Name>
-							<Var>
-								<Name>In</Name>
-								<Type GUID="{F95C7C69-0C87-46C4-9559-1285CCA5B23A}" Namespace="MC">NCDRIVESTRUCT_IN2</Type>
-								<SubVar TypeFormatIndex="2">
-									<Name>nDataIn1</Name>
-								</SubVar>
-								<SubVar TypeFormatIndex="2">
-									<Name>nDataIn2</Name>
-								</SubVar>
-								<SubVar TypeFormatIndex="2">
-									<Name>nDataIn3</Name>
-								</SubVar>
-								<SubVar TypeFormatIndex="2">
-									<Name>nDataIn4</Name>
-								</SubVar>
-								<SubVar TypeFormatIndex="2">
-									<Name>nDataIn5</Name>
-								</SubVar>
-								<SubVar TypeFormatIndex="2">
-									<Name>nDataIn6</Name>
-								</SubVar>
-							</Var>
-						</Vars>
-						<Vars VarGrpType="2">
-							<Name>Outputs</Name>
-							<Var>
-								<Name>Out</Name>
-								<Type GUID="{644DC4BD-3D15-4DCB-94C7-24F3A5D579AA}" Namespace="MC">NCDRIVESTRUCT_OUT2</Type>
-								<SubVar TypeFormatIndex="2">
-									<Name>nDataOut1</Name>
-								</SubVar>
-								<SubVar TypeFormatIndex="2">
-									<Name>nDataOut2</Name>
-								</SubVar>
-								<SubVar TypeFormatIndex="2">
-									<Name>nDataOut3</Name>
-								</SubVar>
-								<SubVar TypeFormatIndex="2">
-									<Name>nDataOut4</Name>
-								</SubVar>
-								<SubVar TypeFormatIndex="2">
-									<Name>nDataOut5</Name>
-								</SubVar>
-								<SubVar TypeFormatIndex="2">
-									<Name>nDataOut6</Name>
-								</SubVar>
-							</Var>
-						</Vars>
-					</Drive>
-					<Controller Name="Ctrl" CtrType="1">
-						<CtrPara PriorControlFactor="1">
-							<Observer BandWidth="20"/>
-						</CtrPara>
-					</Controller>
-					<Vars VarGrpType="1" InsertType="1">
-						<Name>Inputs</Name>
-						<Var>
-							<Name>FromPlc</Name>
-							<Type GUID="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" Namespace="MC">PLCTONC_AXIS_REF</Type>
-						</Var>
-					</Vars>
-					<Vars VarGrpType="2" InsertType="1">
-						<Name>Outputs</Name>
-						<Var>
-							<Name>ToPlc</Name>
-							<Type GUID="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" Namespace="MC">NCTOPLC_AXIS_REF</Type>
-						</Var>
-					</Vars>
-				</Axis>
 				<Axis Id="2" CreateSymbols="true" AxisType="1">
 					<Name>TransportUnit</Name>
 					<AxisPara>
@@ -1830,7 +1684,7 @@ External Setpoint Generation:
 					</Encoder>
 					<Drive Name="Drive" DrvType="16">
 						<DrvPara MaxCount="#xffffffff" DriveControlDWord="#x00020100">
-							<Analog VeloReferenz="135.7686" VeloScale="32" TorqueSetpointScale="10" ScaleFactorActTorque="0.1"/>
+							<Analog VeloReferenz="135.7686" TorqueSetpointScale="10" ScaleFactorActTorque="0.1"/>
 							<TimeComp TaskDelayCycles="1"/>
 						</DrvPara>
 						<Vars VarGrpType="1">
@@ -5073,20 +4927,22 @@ Bit 8 - 15 : reserved]]></Comment>
 		<MappingInfo Identifier="{00000000-0020-0304-3000-040321000403}" Id="#x02030050"/>
 		<MappingInfo Identifier="{00000000-0060-0304-3000-040360000403}" Id="#x02030020"/>
 		<MappingInfo Identifier="{00000000-0070-0304-3000-040372000403}" Id="#x02030080"/>
-		<MappingInfo Identifier="{08502001-0060-0304-0020-500860000403}" Id="#x02030030" Watchdog="00000000000000000000000000000000"/>
+		<MappingInfo Identifier="{08502001-0060-0304-0020-500860000403}" Id="#x02030090" Watchdog="00000000000000000000000000000000"/>
 		<MappingInfo Identifier="{05000010-2001-0850-3000-040300205008}" Id="#x02030010" Watchdog="14000000040000000400000004000000"/>
-		<MappingInfo Identifier="{03040040-0010-0304-4000-040310000403}" Id="#x02030090" Watchdog="04000000140000000400000004000000"/>
-		<MappingInfo Identifier="{03040040-0040-0304-4000-040340000403}" Id="#x02030060" Watchdog="04000000040000000400000004000000"/>
+		<MappingInfo Identifier="{03040040-0010-0304-4000-040310000403}" Id="#x02030060" Watchdog="04000000140000000400000004000000"/>
+		<MappingInfo Identifier="{03040040-0040-0304-4000-040340000403}" Id="#x02030030" Watchdog="04000000040000000400000004000000"/>
 		<OwnerA Name="TIID^Master (EtherCAT)">
+			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K11 (EL2904)">
+				<Link VarA="K1 (EK1200)^K12 (EL1918 + TwinSAFE Logic)^ConnectionInputs^TwinSafeGroup1.EL2904, 4 digital outputs_1_22 TxPDO" VarB="Module 1 (FSOES)^RxPDO^FSOE"/>
+			</OwnerB>
 			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K12 (EL1918 + TwinSAFE Logic)">
-				<Link VarA="K1 (EK1200)^K11 (EL2904)^Module 1 (FSOES)^RxPDO^FSOE" VarB="ConnectionInputs^TwinSafeGroup1.EL2904, 4 digital outputs_1_22 TxPDO"/>
 				<Link VarA="K1 (EK1200)^K11 (EL2904)^Module 1 (FSOES)^TxPDO^FSOE" VarB="ConnectionOutputs^TwinSafeGroup1.EL2904, 4 digital outputs_1_22 RxPDO"/>
 			</OwnerB>
 		</OwnerA>
 		<OwnerA Name="TIID^Master Field (EtherCAT)">
 			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K12 (EL1918 + TwinSAFE Logic)">
-				<Link VarA="U9 (AX5103-0000-0215)^Term 3 (AX5805)^Module 1 (Safety Process Data, 1 axis)^Inputs (Statusword)^FSOE" VarB="ConnectionOutputs^TwinSafeGroup1.AX5805, 1 axis_36 RxPDO"/>
-				<Link VarA="U9 (AX5103-0000-0215)^Term 3 (AX5805)^Module 1 (Safety Process Data, 1 axis)^Outputs (Controlword)^FSOE" VarB="ConnectionInputs^TwinSafeGroup1.AX5805, 1 axis_36 TxPDO"/>
+				<Link VarA="U9 (AX5103-0000-0215)^Term 3 (AX5805)^Module 1 (Safety Process Data, 1 axis)^Inputs (Statusword)^FSOE" VarB="ConnectionOutputs^TwinSafeGroup1.AX5805, Safety Process Data 1 axis_37 RxPDO"/>
+				<Link VarA="U9 (AX5103-0000-0215)^Term 3 (AX5805)^Module 1 (Safety Process Data, 1 axis)^Outputs (Controlword)^FSOE" VarB="ConnectionInputs^TwinSafeGroup1.AX5805, Safety Process Data 1 axis_37 TxPDO"/>
 			</OwnerB>
 		</OwnerA>
 		<OwnerA Name="TINC^NC-Task 1 SAF^Axes^TransportUnit">
@@ -5119,7 +4975,6 @@ Bit 8 - 15 : reserved]]></Comment>
 			<OwnerB Name="TIID^Master (EtherCAT)^K1 (EK1200)^K12 (EL1918 + TwinSAFE Logic)">
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmLift.I_bEnable" VarB="StandardInputs^TwinSafeGroup1.ScissorLift_EnableNC_26"/>
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emLiftingTransport.s_cmTransport.I_bEnable" VarB="StandardInputs^TwinSafeGroup1.TransportUnit_EnableNC_27"/>
-				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.I_nTwinSATE_ProjectCrc" VarB="Device Info Data^Project CRC"/>
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diSafetyFbErr.I_bStaInput" VarB="StandardInputs^TwinSafeGroup1.FB_Err_24"/>
 				<Link VarA="PlcTask Inputs^GVL_Modules.g_emUtilities.s_diSafetyOk.I_bStaInput" VarB="StandardInputs^TwinSafeGroup1.SafetyOK_29"/>
 				<Link VarA="PlcTask Outputs^GVL_Modules.g_emLiftingTransport.Q_bDriveStateSTO" VarB="StandardOutputs^TwinSafeGroup1.FbTransportUnit_STO_28"/>

@@ -556,6 +556,9 @@ ELSE
 	s_cmLift.p_fSetOverride := 100.0;
 END_IF
 
+{warning '#TODO: Temp force speed to max 25%'}
+s_cmLift.p_fSetOverride := 25.0;
+
 //Control module
 s_cmLift(
 	i_bReqEnable := i_bReqEnable,
@@ -823,6 +826,7 @@ s_fbIlckHandlerLiftUp.i_stInterlockList.arr_Interlocks[1].bState := //Trolley no
 	NOT(s_bStaCabinAreaFree)
 	AND NOT (s_bStaTrolleyAtLiftPos)
 	AND (s_fActLiftPosition < c_fMAX_LIFT_POSITION_TO_CHECK_TROLLEY )
+{warning '#TODO: Temp. disabled interlock'}
 AND FALSE;
 s_fbIlckHandlerLiftUp();
 
@@ -859,6 +863,7 @@ s_fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[1].bState := //
 	(i_eCtrlMode <> E_CtrlMode.AUTOMATIC) AND (i_eCtrlMode <> E_CtrlMode.MANUAL) AND s_cmTransport.p_bHomed AND
 	((s_fActLiftPosition < c_fMIN_LIFT_HEIGHT_TO_EXTRACT_TRANSPORT) OR (s_fActLiftPosition > c_fMAX_LIFT_HEIGHT_TO_EXTRACT_TRANSPORT) )
 	AND s_fActTransportPosition > 0;
+{warning '#TODO: Temp. disabled interlock'}
 s_fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[2].bState := s_bStaCollisionAvoidanceSensor AND (s_fActTransportPosition < c_fEND_TRANSPORT_POSITION_COLLISION_CHECK) AND FALSE;
 s_fbIlckHandlerTransportExtract();
 

@@ -906,7 +906,7 @@ s_fbIlckHandlerClampsToOpen.i_stInterlockList.arr_Interlocks[0].bState := NOT(GV
 *)
 s_fbIlckHandlerClampsToOpen();
 
-s_fbIlckInnerTbDoorToCloseAndOpen.i_stInterlockList.arr_Interlocks[0].bState := NOT(GVL_Modules.g_emLiftingTransport.p_bStaAtIdlePosition) AND FALSE;
+s_fbIlckInnerTbDoorToCloseAndOpen.i_stInterlockList.arr_Interlocks[0].bState := NOT(GVL_Modules.g_emLiftingTransport.p_bStaAtIdlePosition);
 s_fbIlckInnerTbDoorToCloseAndOpen();
 
 IF GVL.g_bFUMO3_Enabled THEN
@@ -936,7 +936,7 @@ GVL_Modules.g_emDockingInterface(
 	i_stExtIlckInnerCabinDoorToClose := s_fbIlckHandlerInnerCabinDoorClose.p_stInterlock);
 	
 //EM_LiftingTransport//////////////////////////////////////////////////////////////////////////////
-s_fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[0].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDoorOpenerOpened) AND FALSE;
+s_fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[0].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDoorOpenerOpened);
 s_fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[1].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDoorShutterOpened);
 s_fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[2].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaOuterDoorOpened) AND GVL.g_bFUMO3_Enabled;
 s_fbIlckHandlerTranportExtract.i_stInterlockList.arr_Interlocks[3].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpened) AND GVL.g_bFUMO3_Enabled;

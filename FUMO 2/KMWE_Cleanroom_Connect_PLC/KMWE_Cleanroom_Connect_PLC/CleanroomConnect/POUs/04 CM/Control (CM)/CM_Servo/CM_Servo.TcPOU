@@ -355,6 +355,14 @@ CASE s_eSequence OF
 			s_eSequence := E_SeqServo.RESET;
 		END_IF
 		
+		{warning '#TODO: Reset all request, teset if this works correctly. This to prevent multiple request keep true'}
+		// Of kijken of dit ook zou kunnen plaatsvinden onderaan deze method, elke cycle
+		s_bReqNcStop := FALSE;
+		s_bReqNcReset := FALSE;
+		s_bReqNcHome := FALSE;
+		s_bReqNcJog := FALSE;
+		s_bReqNcMoveAbs := FALSE;
+		
 END_CASE
 
 s_fbMcStop(
@@ -436,6 +444,14 @@ s_fbMcReset(
 	Busy => s_bBusy,
 	Error => s_bError,
 	ErrorID => );
+
+{warning '#TODO: Reset all request, teset if this works correctly. This to prevent multiple request keep true'}
+// Of kijken of dit ook zou kunnen plaatsvinden onderaan deze method, elke cycle
+s_bReqNcStop := FALSE;
+s_bReqNcReset := FALSE;
+s_bReqNcHome := FALSE;
+s_bReqNcJog := FALSE;
+s_bReqNcMoveAbs := FALSE;
 
 _m_Devices := TRUE;
 ]]></ST>

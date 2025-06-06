@@ -44,12 +44,17 @@ VAR
 	Q_bCmdErrAck AT %Q* : BOOL; //Reset errors in TwinSAFE logic
 	Q_bCmdRestartSafety AT %Q* : BOOL; //Restart/reset safety blocks (reset Estop-safety-relay)
 	
+	I_nStaInputSafeDataByte0 AT %I* : BYTE;
+	I_nStaInputSafeDataByte1 AT %I* : BYTE;
+	{warning '#TODO: Variables below is replaced be variables direcly above'}
+	(*
 	I_bStaTwinSAFE_Estop1ChA AT %I* : BOOL;
 	I_bStaTwinSAFE_Estop1ChB AT %I* : BOOL;
 	I_bStaTwinSAFE_Estop2ChA AT %I* : BOOL;
 	I_bStaTwinSAFE_Estop2ChB AT %I* : BOOL;
 	I_bStaTwinSAFE_DoorGuardCleanroomChA AT %I* : BOOL;
 	I_bStaTwinSAFE_DoorGuardCleanroomChB AT %I* : BOOL;
+	*)
 	
 	I_nTwinSATE_ProjectCrc AT %I* : WORD; //Cyclic Redundancy Check (check if TwinSAFE code is still the same)
 	s_nVerified_Crc : WORD := 16#0000;
@@ -457,18 +462,29 @@ END_IF
 s_bFlashPulse := i_bFlashPulse;
 s_bStaSafetyOk := s_diSafetyOk.p_bStaInputDelayed AND s_diSafetyOk.p_bStaInput; //on-delay only
 s_bSafetyFbErr := s_diSafetyFbErr.p_bStaInput;
+
+s_bEstopInfeedOk := I_nStaInputSafeDataByte0.0 AND I_nStaInputSafeDataByte0.2;
+s_bEstopCleanroomOk := I_nStaInputSafeDataByte0.4 AND I_nStaInputSafeDataByte0.6;
+IF GVL.g_bFUMO3_Enabled THEN
+	s_bDoorGuardCleanroomOk := I_nStaInputSafeDataByte1.0 AND I_nStaInputSafeDataByte1.2;
+END_IF;
+
+{warning '#TODO: Code below is replaced be code direcly above'}
+(*
 s_bEstopInfeedOk := (I_bStaTwinSAFE_Estop1ChA AND I_bStaTwinSAFE_Estop1ChB) OR TRUE;
 s_bEstopCleanroomOk := (I_bStaTwinSAFE_Estop2ChA AND I_bStaTwinSAFE_Estop2ChB) OR TRUE;
 IF GVL.g_bFUMO3_Enabled THEN
 	s_bDoorGuardCleanroomOk := I_bStaTwinSAFE_DoorGuardCleanroomChA AND I_bStaTwinSAFE_DoorGuardCleanroomChB;
 END_IF;
+*)
+
 s_bRestartSafety := s_diRestartSafety.p_bStaInput;
 s_bStsPower400VacOk := s_diPower400VacOk.p_bStaInputDelayed AND s_diPower400VacOk.p_bStaInput; //on-delay only
 s_bStsPower230VacOk := s_diPower230VacOk.p_bStaInputDelayed AND s_diPower230VacOk.p_bStaInput; //on-delay only
 s_bStsPower230VacSocketsOk := s_diPower230VacSocketsOk.p_bStaInputDelayed AND s_diPower230VacSocketsOk.p_bStaInput; //on-delay only
 s_bStsPower48VdcOk := s_diPower48VdcOk.p_bStaInputDelayed AND s_diPower48VdcOk.p_bStaInput; //on-delay only
 s_bStsPowerPotentialGroup24VdcOk := s_diPowerPotentialGroup24VdcOk.p_bStaInputDelayed AND s_diPowerPotentialGroup24VdcOk.p_bStaInput; //on-delay only
-s_bStaAirPressureOk := (s_diAirPressureOk.p_bStaInputDelayed AND s_diAirPressureOk.p_bStaInput) OR TRUE; //on-delay only
+s_bStaAirPressureOk := s_diAirPressureOk.p_bStaInputDelayed AND s_diAirPressureOk.p_bStaInput; //on-delay only
 s_bStaCabinetTemperatureOk := s_diCabinetTemperatureOk.p_bStaInputDelayed OR s_diCabinetTemperatureOk.p_bStaInput; //off-delay only
 s_bStsPowerOk :=
 	s_bStsPower400VacOk

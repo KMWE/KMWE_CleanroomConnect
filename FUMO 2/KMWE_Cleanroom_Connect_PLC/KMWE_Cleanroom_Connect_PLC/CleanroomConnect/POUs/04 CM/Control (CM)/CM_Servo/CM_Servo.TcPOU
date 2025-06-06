@@ -100,6 +100,8 @@ VAR
 	s_fbMcJog : Tc2_MC2.MC_Jog;
 	s_fbMcMoveAbs : Tc2_MC2.MC_MoveAbsolute;
 	s_fbMcStop : Tc2_MC2.MC_Stop;
+	s_fbWriteParameterPersistent : Tc2_MC2.MC_WriteParameterPersistent;
+	
 	s_fOverride : LREAL := 100.0;
 	
 	//Hmi
@@ -130,8 +132,7 @@ VAR
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[
-s_fbMcPower(
+      <ST><![CDATA[s_fbMcPower(
 	Axis := i_refAxis,
 	Enable := I_bEnable,
 	Enable_Positive := I_bDetLimitSwitchPos,
@@ -143,6 +144,16 @@ s_fbMcPower(
 	Busy => s_bBusy,
 	Active => s_bActive,
 	Error => s_bError,
+	ErrorID => );
+	
+s_fbWriteParameterPersistent(
+	Axis := i_refAxis,
+	Execute := ,
+	ParameterNumber := MC_AxisParameter.AxisEncoderOffset,
+	Value := ,
+	Done => ,
+	Busy => ,
+	Error => ,
 	ErrorID => );
 	
 SUPER^();

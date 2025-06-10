@@ -530,6 +530,7 @@ _m_ConvTranspToMotorPos.fJrk := i_stPosProf.fJrk * s_fConvFactor;
 
 VAR
 	s_fSpindlePosition : LREAL;
+	s_fOverride : LREAL;
 END_VAR
 ]]></Declaration>
       <Implementation>
@@ -550,14 +551,14 @@ s_fSpindlePosition := LIMIT(1, s_fSpindlePosition, 200.0);
 //Using override to compensate for the Sciccor effect
 IF s_cmLift.p_bHomed THEN
 	IF s_fSpindlePosition > 0 THEN
-		s_cmLift.p_fSetOverride := (s_fSpindlePosition / ( SQRT( ( EXPT(c_fLEG_LENGTH, 2) - EXPT((c_fLEG_LENGTH - s_fSpindlePosition), 2) ) ) ) )* 365;
+		s_fOverride := (s_fSpindlePosition / ( SQRT( ( EXPT(c_fLEG_LENGTH, 2) - EXPT((c_fLEG_LENGTH - s_fSpindlePosition), 2) ) ) ) )* 365;
 	END_IF
-ELSE	
-	s_cmLift.p_fSetOverride := 100.0;
+ELSE
+	s_fOverride := 100.0;
 END_IF
 
-{warning '#TODO: Temp force speed to max 25%'}
-//--s_cmLift.p_fSetOverride := 100.0;
+s_fOverride := LIMIT(0, s_fOverride, 100);
+s_cmLift.p_fSetOverride := s_fOverride;
 
 //Control module
 s_cmLift(
@@ -818,7 +819,8 @@ s_fbIlckHandlerLiftDown.i_stInterlockList.arr_Interlocks[0] := i_stExtIlckLiftDo
 s_fbIlckHandlerLiftDown.i_stInterlockList.arr_Interlocks[1].bState := //Transport not at retracter positon + starts at min level
 	s_cmLift.p_bHomed AND
 	( (s_fActTransportPosition < c_fMIN_TRANSPORT_POSITION_TO_LOWER_LIFT) OR (s_fActTransportPosition > c_fMAX_TRANSPORT_POSITION_TO_LOWER_LIFT) )
-	AND (s_fActLiftPosition < c_fMIN_LIFT_POSITION_TO_CHECK_INTERLOCK );
+	AND (s_fActLiftPosition < c_fMIN_LIFT_POSITION_TO_CHECK_INTERLOCK )
+	AND FALSE;
 s_fbIlckHandlerLiftDown();
 
 s_fbIlckHandlerLiftUp.i_stInterlockList.arr_Interlocks[0] := i_stExtIlckLiftUp;
@@ -861,7 +863,8 @@ END_IF
 s_fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[1].bState := //Lift not at correct position
 	(i_eCtrlMode <> E_CtrlMode.AUTOMATIC) AND (i_eCtrlMode <> E_CtrlMode.MANUAL) AND s_cmTransport.p_bHomed AND
 	((s_fActLiftPosition < c_fMIN_LIFT_HEIGHT_TO_EXTRACT_TRANSPORT) OR (s_fActLiftPosition > c_fMAX_LIFT_HEIGHT_TO_EXTRACT_TRANSPORT) )
-	AND s_fActTransportPosition > 0;
+	AND s_fActTransportPosition > 0
+	AND FALSE;
 s_fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[2].bState := s_bStaCollisionAvoidanceSensor AND (s_fActTransportPosition < c_fEND_TRANSPORT_POSITION_COLLISION_CHECK);
 s_fbIlckHandlerTransportExtract();
 

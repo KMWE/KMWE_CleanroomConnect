@@ -593,7 +593,7 @@ s_diStaTrolleyLocked();
 
 s_bStaTrolleyOnPositionLeft := s_diStaTrolleyOnPositionLeft.p_bStaInputDelayed;
 s_bStaTrolleyOnPositionRight := s_diStaTrolleyOnPositionRight.p_bStaInputDelayed;
-s_bStaCabinAreaOccupied := s_diStaCabinAreaOccupied.p_bStaInputDelayed;
+s_bStaCabinAreaOccupied := NOT(s_diStaCabinAreaOccupied.p_bStaInputDelayed);
 
 s_bStaCabinAreaFree :=
 	NOT(s_diStaCabinAreaOccupied.p_bStaInputDelayed
@@ -605,7 +605,7 @@ s_bStaTrolleyAtLiftPos :=
 	AND s_diStaTrolleyOnPositionLeft.p_bStaInputDelayed
 	AND s_diStaTrolleyOnPositionRight.p_bStaInputDelayed;
 	
-s_bStaCollisionAvoidanceSensor := s_diStaCollisionAvoidanceSensor.p_bStaInputDelayed;
+s_bStaCollisionAvoidanceSensor := NOT(s_diStaCollisionAvoidanceSensor.p_bStaInputDelayed);
 s_bStaTrolleyLocked := s_diStaTrolleyLocked.p_bStaInputDelayed;
 
 //Statusses written to TRUE by sequencer
@@ -1121,7 +1121,7 @@ CASE s_eSequence OF
 			AND NOT(s_bStaTrolleyLocked) AND (s_bNextStep OR s_bDontWait) THEN
 				s_bNextStep := FALSE;
 				s_eSequence := E_SeqLiftingTransport.LIFT_RAISE_FROM_TB;
-			
+				
 		ELSIF (s_fbSeqControl.q_tmStepTime > i_ref_stSettings.tTrolleyUnLockCheckMaxTime)
 			AND (s_bNextStep OR s_bDontWait) THEN
 				s_bNextStep := FALSE;

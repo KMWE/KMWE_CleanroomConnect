@@ -130,6 +130,8 @@ VAR
 	s_eSequence : E_SeqServo;
 	s_fbSeqControl : FB_SeqControl;
 	s_mcDirection : Tc2_MC2.MC_Direction;
+	
+	s_eInit : E_SeqInit;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -386,12 +388,13 @@ s_fbMcHome(
 	CommandAborted => s_bCommandAborted,
 	Error => s_bError,
 	ErrorID => );
-	
+
+//Only called by forcing execute 
 s_fbWriteParameterPersistent(
 	Axis := i_refAxis,
 	Execute := ,
 	ParameterNumber := MC_AxisParameter.AxisEncoderOffset,
-	Value := ,
+	Value := i_ref_setting.fPositionBias,
 	Done => ,
 	Busy => ,
 	Error => ,
@@ -667,92 +670,144 @@ IF NOT SUPER^._m_Init() THEN
 	RETURN;
 END_IF
 
-//Alarm Config
-//Alarm Handlers
-s_fbAlarmHandlerDriveError.i_eAlarmLevel := E_AlarmLevel.Alarm;
-
-s_fbAlarmHandlerMcError.i_eAlarmLevel := E_AlarmLevel.Alarm;
-
-s_fbAlarmHandlerMotorPosInterlocked.i_eAlarmLevel := E_AlarmLevel.Warning;
-
-s_fbAlarmHandlerMotorNegInterlocked.i_eAlarmLevel := E_AlarmLevel.Warning;
-
-s_fbAlarmHandlerMoveAbsInterlocked.i_eAlarmLevel := E_AlarmLevel.Warning;
-s_fbAlarmHandlerMoveAbsInterlocked.i_sAlarmText := CONCAT(i_sCmName, ': Motor - interlocked move absolute, Reason: Not Homed');
-
-s_fbAlarmHandlerNotEnabled.i_eAlarmLevel := E_AlarmLevel.Warning;
-s_fbAlarmHandlerNotEnabled.i_sAlarmText := CONCAT(i_sCmName, ' - Not Enabled');
-
-s_fbAlarmHandlerLimitPositiveReached.i_eAlarmLevel := E_AlarmLevel.Warning;
-s_fbAlarmHandlerLimitPositiveReached.i_sAlarmText := CONCAT(i_sCmName, CONCAT(' - Limit Switch Reached: ', s_sCfgPosName));
-
-s_fbAlarmHandlerLimitNegativeReached.i_eAlarmLevel := E_AlarmLevel.Warning;
-s_fbAlarmHandlerLimitNegativeReached.i_sAlarmText := CONCAT(i_sCmName, CONCAT(' - Limit Switch Reached: ', s_sCfgNegName));
-
-s_fbAlarmHandlerMotorNotHomed.i_eAlarmLevel := E_AlarmLevel.Warning;
-s_fbAlarmHandlerMotorNotHomed.i_sAlarmText := CONCAT(i_sCmName, ' - Not Homed');
-
-//Hmi 
-	//Buttons
-	s_fbHmiBtnHome.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnHome.p_bStaVisible := FALSE;
-	s_fbHmiBtnHome.p_bStaEnabled := FALSE;
-	s_fbHmiBtnHome.p_sBtnText := 'Home';
+CASE s_eInit OF
 	
-	s_fbHmiBtnJogPos.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnJogPos.p_bStaVisible := FALSE;
-	s_fbHmiBtnJogPos.p_bStaEnabled := FALSE;
-	s_fbHmiBtnJogPos.p_sBtnText := CONCAT('Jog ', s_sCfgPosName);
-	
-	s_fbHmiBtnJogNeg.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnJogNeg.p_bStaVisible := FALSE;
-	s_fbHmiBtnJogNeg.p_bStaEnabled := FALSE;
-	s_fbHmiBtnJogNeg.p_sBtnText := CONCAT('Jog ', s_sCfgNegName);
-	
-	s_fbHmiBtnMoveAbs.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnMoveAbs.p_bStaVisible := FALSE;
-	s_fbHmiBtnMoveAbs.p_bStaEnabled := FALSE;
-	s_fbHmiBtnMoveAbs.p_sBtnText := 'Move Absolute';
-	
-	s_fbHmiBtnReset.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnReset.p_bStaVisible := FALSE;
-	s_fbHmiBtnReset.p_bStaEnabled := FALSE;
-	s_fbHmiBtnReset.p_sBtnText := 'Reset';
-	
-	s_fbHmiBtnStop.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
-	s_fbHmiBtnStop.p_bStaVisible := FALSE;
-	s_fbHmiBtnStop.p_bStaEnabled := FALSE;
-	s_fbHmiBtnStop.p_sBtnText := 'Stop';
-	
-	//Leds
-	s_fbHmiLedEnabledControl.p_bStaVisible := FALSE;
-	s_fbHmiLedEnabledControl.p_sToHmiDescriptionLed := 'Enabled Control';
-	
-	s_fbHmiLedEnabledPos.p_bStaVisible := FALSE;
-	s_fbHmiLedEnabledPos.p_sToHmiDescriptionLed := CONCAT('Enabled ', s_sCfgPosName);
-	
-	s_fbHmiLedEnabledNeg.p_bStaVisible := FALSE;
-	s_fbHmiLedEnabledNeg.p_sToHmiDescriptionLed := CONCAT('Enabled ', s_sCfgNegName);
-	
-	s_fbHmiLedReady.p_bStaVisible := FALSE;
-	s_fbHmiLedReady.p_sToHmiDescriptionLed := 'Ready';
-	
-	s_fbHmiLedHomed.p_bStaVisible := FALSE;
-	s_fbHmiLedHomed.p_sToHmiDescriptionLed := 'Homed';
-	
-	s_fbHmiLedStandstill.p_bStaVisible := FALSE;
-	s_fbHmiLedStandstill.p_sToHmiDescriptionLed := 'Standstill';
-	
-	s_fbHmiLedMoving.p_bStaVisible := FALSE;
-	s_fbHmiLedMoving.p_sToHmiDescriptionLed := 'Moving';
-	
-	s_fbHmiLedAtPosition.p_bStaVisible := FALSE;
-	s_fbHmiLedAtPosition.p_sToHmiDescriptionLed := 'At Position';
-	
-	s_fbHmiLedDriveError.p_bStaVisible := FALSE;
-	s_fbHmiLedDriveError.p_sToHmiDescriptionLed := 'Drive Error';
-	
-_m_Init := TRUE;
+	E_SeqInit.GENERAL:
+		//Drive Config
+		s_fbWriteParameterPersistent.Execute := FALSE;
+		s_fbMcHome.Execute := FALSE;
+		
+		//Alarm Config
+		//Alarm Handlers
+		s_fbAlarmHandlerDriveError.i_eAlarmLevel := E_AlarmLevel.Alarm;
+		
+		s_fbAlarmHandlerMcError.i_eAlarmLevel := E_AlarmLevel.Alarm;
+		
+		s_fbAlarmHandlerMotorPosInterlocked.i_eAlarmLevel := E_AlarmLevel.Warning;
+		
+		s_fbAlarmHandlerMotorNegInterlocked.i_eAlarmLevel := E_AlarmLevel.Warning;
+		
+		s_fbAlarmHandlerMoveAbsInterlocked.i_eAlarmLevel := E_AlarmLevel.Warning;
+		s_fbAlarmHandlerMoveAbsInterlocked.i_sAlarmText := CONCAT(i_sCmName, ': Motor - interlocked move absolute, Reason: Not Homed');
+		
+		s_fbAlarmHandlerNotEnabled.i_eAlarmLevel := E_AlarmLevel.Warning;
+		s_fbAlarmHandlerNotEnabled.i_sAlarmText := CONCAT(i_sCmName, ' - Not Enabled');
+		
+		s_fbAlarmHandlerLimitPositiveReached.i_eAlarmLevel := E_AlarmLevel.Warning;
+		s_fbAlarmHandlerLimitPositiveReached.i_sAlarmText := CONCAT(i_sCmName, CONCAT(' - Limit Switch Reached: ', s_sCfgPosName));
+		
+		s_fbAlarmHandlerLimitNegativeReached.i_eAlarmLevel := E_AlarmLevel.Warning;
+		s_fbAlarmHandlerLimitNegativeReached.i_sAlarmText := CONCAT(i_sCmName, CONCAT(' - Limit Switch Reached: ', s_sCfgNegName));
+		
+		s_fbAlarmHandlerMotorNotHomed.i_eAlarmLevel := E_AlarmLevel.Warning;
+		s_fbAlarmHandlerMotorNotHomed.i_sAlarmText := CONCAT(i_sCmName, ' - Not Homed');
+		
+		//Hmi 
+		//Buttons
+		s_fbHmiBtnHome.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+		s_fbHmiBtnHome.p_bStaVisible := FALSE;
+		s_fbHmiBtnHome.p_bStaEnabled := FALSE;
+		s_fbHmiBtnHome.p_sBtnText := 'Home';
+		
+		s_fbHmiBtnJogPos.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+		s_fbHmiBtnJogPos.p_bStaVisible := FALSE;
+		s_fbHmiBtnJogPos.p_bStaEnabled := FALSE;
+		s_fbHmiBtnJogPos.p_sBtnText := CONCAT('Jog ', s_sCfgPosName);
+		
+		s_fbHmiBtnJogNeg.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+		s_fbHmiBtnJogNeg.p_bStaVisible := FALSE;
+		s_fbHmiBtnJogNeg.p_bStaEnabled := FALSE;
+		s_fbHmiBtnJogNeg.p_sBtnText := CONCAT('Jog ', s_sCfgNegName);
+		
+		s_fbHmiBtnMoveAbs.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+		s_fbHmiBtnMoveAbs.p_bStaVisible := FALSE;
+		s_fbHmiBtnMoveAbs.p_bStaEnabled := FALSE;
+		s_fbHmiBtnMoveAbs.p_sBtnText := 'Move Absolute';
+		
+		s_fbHmiBtnReset.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+		s_fbHmiBtnReset.p_bStaVisible := FALSE;
+		s_fbHmiBtnReset.p_bStaEnabled := FALSE;
+		s_fbHmiBtnReset.p_sBtnText := 'Reset';
+		
+		s_fbHmiBtnStop.p_eButtontype := E_HmiButtonType.PUSHBUTTON;
+		s_fbHmiBtnStop.p_bStaVisible := FALSE;
+		s_fbHmiBtnStop.p_bStaEnabled := FALSE;
+		s_fbHmiBtnStop.p_sBtnText := 'Stop';
+		
+		//Leds
+		s_fbHmiLedEnabledControl.p_bStaVisible := FALSE;
+		s_fbHmiLedEnabledControl.p_sToHmiDescriptionLed := 'Enabled Control';
+		
+		s_fbHmiLedEnabledPos.p_bStaVisible := FALSE;
+		s_fbHmiLedEnabledPos.p_sToHmiDescriptionLed := CONCAT('Enabled ', s_sCfgPosName);
+		
+		s_fbHmiLedEnabledNeg.p_bStaVisible := FALSE;
+		s_fbHmiLedEnabledNeg.p_sToHmiDescriptionLed := CONCAT('Enabled ', s_sCfgNegName);
+		
+		s_fbHmiLedReady.p_bStaVisible := FALSE;
+		s_fbHmiLedReady.p_sToHmiDescriptionLed := 'Ready';
+		
+		s_fbHmiLedHomed.p_bStaVisible := FALSE;
+		s_fbHmiLedHomed.p_sToHmiDescriptionLed := 'Homed';
+		
+		s_fbHmiLedStandstill.p_bStaVisible := FALSE;
+		s_fbHmiLedStandstill.p_sToHmiDescriptionLed := 'Standstill';
+		
+		s_fbHmiLedMoving.p_bStaVisible := FALSE;
+		s_fbHmiLedMoving.p_sToHmiDescriptionLed := 'Moving';
+		
+		s_fbHmiLedAtPosition.p_bStaVisible := FALSE;
+		s_fbHmiLedAtPosition.p_sToHmiDescriptionLed := 'At Position';
+		
+		s_fbHmiLedDriveError.p_bStaVisible := FALSE;
+		s_fbHmiLedDriveError.p_sToHmiDescriptionLed := 'Drive Error';
+		
+		s_eInit := E_SeqInit.BIAS;
+		
+	E_SeqInit.BIAS:
+		//Set "Position Bias" of the absolute encoder
+		s_fbWriteParameterPersistent(
+			Axis := i_refAxis,
+			Execute := TRUE,
+			ParameterNumber := MC_AxisParameter.AxisEncoderOffset,
+			Value := i_ref_setting.fPositionBias,
+			Done => ,
+			Busy => ,
+			Error => ,
+			ErrorID => );
+			
+		IF s_fbWriteParameterPersistent.Done THEN
+			s_eInit := E_SeqInit.CALIBRATED;
+		END_IF
+		
+	E_SeqInit.CALIBRATED:
+		//Set "Force Calibration" of the system
+		s_fbMcHome(
+			Axis := i_refAxis,
+			Execute := TRUE,
+			Position := ,
+			HomingMode := Tc2_MC2.MC_HomingMode.MC_ForceCalibration,
+			BufferMode := Tc2_MC2.MC_BufferMode.MC_Aborting,
+			Options := ,
+			bCalibrationCam := ,
+			Done => ,
+			Busy => ,
+			Active => ,
+			CommandAborted => ,
+			Error => s_bError,
+			ErrorID => );
+			
+		IF s_fbMcHome.Done THEN
+			s_eInit := E_SeqInit.DONE;
+		END_IF
+			
+	E_SeqInit.DONE:
+		s_fbWriteParameterPersistent.Execute := FALSE;
+		s_fbMcHome.Execute := FALSE;
+		
+		_m_Init := TRUE;
+		
+END_CASE
 ]]></ST>
       </Implementation>
     </Method>

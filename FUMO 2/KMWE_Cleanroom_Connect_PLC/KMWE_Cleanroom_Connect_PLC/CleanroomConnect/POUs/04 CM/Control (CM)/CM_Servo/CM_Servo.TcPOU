@@ -766,7 +766,7 @@ CASE s_eInit OF
 		
 	E_SeqInit.BIAS:
 		//Set "Position Bias" of the absolute encoder
-		s_fbWriteParameterPersistent(
+(*		s_fbWriteParameterPersistent(
 			Axis := i_refAxis,
 			Execute := TRUE,
 			ParameterNumber := MC_AxisParameter.AxisEncoderOffset,
@@ -775,14 +775,14 @@ CASE s_eInit OF
 			Busy => ,
 			Error => ,
 			ErrorID => );
-			
-		IF s_fbWriteParameterPersistent.Done THEN
+*)			
+//		IF s_fbWriteParameterPersistent.Done THEN
 			s_eInit := E_SeqInit.CALIBRATED;
-		END_IF
+//		END_IF
 		
 	E_SeqInit.CALIBRATED:
 		//Set "Force Calibration" of the system
-		s_fbMcHome(
+(*(		s_fbMcHome(
 			Axis := i_refAxis,
 			Execute := TRUE,
 			Position := ,
@@ -796,10 +796,10 @@ CASE s_eInit OF
 			CommandAborted => ,
 			Error => s_bError,
 			ErrorID => );
-			
-		IF s_fbMcHome.Done THEN
+*)			
+//		IF s_fbMcHome.Done THEN
 			s_eInit := E_SeqInit.DONE;
-		END_IF
+//		END_IF
 			
 	E_SeqInit.DONE:
 		s_fbWriteParameterPersistent.Execute := FALSE;

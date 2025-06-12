@@ -11,7 +11,7 @@ VAR CONSTANT
 	c_fMIN_LIFT_TARGET : LREAL := 0.0; //[mm] (**USED IN HMI**)
 	c_fMAX_LIFT_TARGET : LREAL := 470.0; //[mm] (**USED IN HMI**)
 	c_fMIN_SPINDEL_POS : LREAL := 0.0; //[mm]
-	c_fMAX_SPINDEL_POS : LREAL := 178.27; //[mm]
+	c_fMAX_SPINDEL_POS : LREAL := 180.0; //[mm]
 	
 	c_fMIN_TRANSPORT_TARGET : LREAL := 0.0; //[mm] (**USED IN HMI**)
 	c_fMAX_TRANSPORT_TARGET : LREAL := 1720.0; //[mm] (**USED IN HMI**)
@@ -551,7 +551,7 @@ s_fSpindlePosition := LIMIT(1, s_fSpindlePosition, 200.0);
 //Using override to compensate for the Sciccor effect
 IF s_cmLift.p_bHomed THEN
 	IF s_fSpindlePosition > 0 THEN
-		s_fOverride := (s_fSpindlePosition / ( SQRT( ( EXPT(c_fLEG_LENGTH, 2) - EXPT((c_fLEG_LENGTH - s_fSpindlePosition), 2) ) ) ) )* 365;
+		s_fOverride := (s_fSpindlePosition / ( SQRT( ( EXPT(c_fLEG_LENGTH, 2) - EXPT((c_fLEG_LENGTH - s_fSpindlePosition), 2) ) ) ) )* 320;
 	END_IF
 ELSE
 	s_fOverride := 100.0;

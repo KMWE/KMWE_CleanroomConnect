@@ -1617,8 +1617,8 @@ External Setpoint Generation:
 					<AxisPara>
 						<Dynamic AccelerationMaximum="500" DecelerationMaximum="500" Acceleration="90.006" Deceleration="90.006" Jerk="270.018"/>
 						<Velo RefSearch="0.60004" RefSync="0.60004" SlowManual="0.5" FastManual="3" Fast="60.004" Maximum="60.004"/>
-						<PositionAreaControl Range="1"/>
-						<TargetPosControl Range="0.5"/>
+						<PositionAreaControl Range="0.1"/>
+						<TargetPosControl Range="0.1"/>
 						<OtherSettings AllowMotionCmdToSlave="true"/>
 					</AxisPara>
 					<Encoder Name="Enc" EncType="19">
@@ -1741,6 +1741,7 @@ External Setpoint Generation:
 					</Drive>
 					<Controller Name="Ctrl" CtrType="1">
 						<CtrPara PriorControlFactor="1">
+							<PosDiffControl Range="0.01"/>
 							<Observer BandWidth="20"/>
 						</CtrPara>
 					</Controller>
@@ -1764,7 +1765,7 @@ External Setpoint Generation:
 		</Motion>
 		<Plc>
 			<Project GUID="{13F6CD22-9663-4738-8378-3A901949CB98}" Name="CleanroomConnect" PrjFilePath="CleanroomConnect\CleanroomConnect.plcproj" TmcFilePath="CleanroomConnect\CleanroomConnect.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" TmcPath="CleanroomConnect\CleanroomConnect.tmc" TmcHash="{35A4C9D9-35C0-7005-8BA3-4A2FD1B40EE7}">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" TmcPath="CleanroomConnect\CleanroomConnect.tmc" TmcHash="{FAA47E7D-8DD0-35B0-0983-96709C01419A}">
 					<Name>CleanroomConnect Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1">
@@ -4021,6 +4022,7 @@ External Setpoint Generation:
 							<MBoxUserCmdData>02000300090000001d000000000000000000000000000000000000000000000020008012010000001446422053657474696e6773202f2053696e676c657475726e206269747300</MBoxUserCmdData>
 							<MBoxUserCmdData>02000300090000001c000000000000000000000000000000000000000000000020008013010000000c46422053657474696e6773202f204d756c74697475726e206269747300</MBoxUserCmdData>
 							<MBoxUserCmdData>02000300090000003100000000000000000000000000000000000000000000002000800d010000000146422053657474696e6773202f204f666673657420706f736974696f6e2061637475616c2076616c756520736f7572636500</MBoxUserCmdData>
+							<MBoxUserCmdData>020003000c00000038000000000000000000000000000000000000000000000020108017040000000a00000044525620416d706c69666965722053657474696e6773202f20506f736974696f6e206c6f6f702070726f706f7274696f6e616c206761696e00</MBoxUserCmdData>
 							<Pdo Name="FB Position" Index="#x1a00" Flags="#x0010" SyncMan="3">
 								<Entry Name="Position" BitLen="32" Index="#x6000" Sub="#x11">
 									<Type>UDINT</Type>

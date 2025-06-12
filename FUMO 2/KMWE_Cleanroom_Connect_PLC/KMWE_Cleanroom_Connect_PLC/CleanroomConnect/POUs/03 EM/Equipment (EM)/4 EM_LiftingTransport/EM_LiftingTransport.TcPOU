@@ -819,16 +819,14 @@ s_fbIlckHandlerLiftDown.i_stInterlockList.arr_Interlocks[0] := i_stExtIlckLiftDo
 s_fbIlckHandlerLiftDown.i_stInterlockList.arr_Interlocks[1].bState := //Transport not at retracter positon + starts at min level
 	s_cmLift.p_bHomed AND
 	( (s_fActTransportPosition < c_fMIN_TRANSPORT_POSITION_TO_LOWER_LIFT) OR (s_fActTransportPosition > c_fMAX_TRANSPORT_POSITION_TO_LOWER_LIFT) )
-	AND (s_fActLiftPosition < c_fMIN_LIFT_POSITION_TO_CHECK_INTERLOCK )
-	AND FALSE;
+	AND (s_fActLiftPosition < c_fMIN_LIFT_POSITION_TO_CHECK_INTERLOCK );
 s_fbIlckHandlerLiftDown();
 
 s_fbIlckHandlerLiftUp.i_stInterlockList.arr_Interlocks[0] := i_stExtIlckLiftUp;
 s_fbIlckHandlerLiftUp.i_stInterlockList.arr_Interlocks[1].bState := //Trolley not placed correctly at lift
 	NOT(s_bStaCabinAreaFree)
 	AND NOT (s_bStaTrolleyAtLiftPos)
-	AND (s_fActLiftPosition < c_fMAX_LIFT_POSITION_TO_CHECK_TROLLEY )
-	AND FALSE;
+	AND (s_fActLiftPosition < c_fMAX_LIFT_POSITION_TO_CHECK_TROLLEY );
 s_fbIlckHandlerLiftUp();
 
 s_bIlckLiftDown := s_fbIlckHandlerLiftDown.p_bInterlocked;
@@ -863,8 +861,7 @@ END_IF
 s_fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[1].bState := //Lift not at correct position
 	(i_eCtrlMode <> E_CtrlMode.AUTOMATIC) AND (i_eCtrlMode <> E_CtrlMode.MANUAL) AND s_cmTransport.p_bHomed AND
 	((s_fActLiftPosition < c_fMIN_LIFT_HEIGHT_TO_EXTRACT_TRANSPORT) OR (s_fActLiftPosition > c_fMAX_LIFT_HEIGHT_TO_EXTRACT_TRANSPORT) )
-	AND s_fActTransportPosition > 0
-	AND FALSE;
+	AND s_fActTransportPosition > 0;
 s_fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[2].bState := s_bStaCollisionAvoidanceSensor AND (s_fActTransportPosition < c_fEND_TRANSPORT_POSITION_COLLISION_CHECK);
 s_fbIlckHandlerTransportExtract();
 

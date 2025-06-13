@@ -37,6 +37,7 @@ VAR
 	s_bReqNcHome : BOOL;
 	s_bReqNcJog : BOOL;
 	s_bReqNcMoveAbs : BOOL;
+	s_bReqWriteParamPers : BOOL;
 	
 	//States
 	s_bStaEnabled : BOOL;
@@ -100,8 +101,11 @@ VAR
 	s_fbMcJog : Tc2_MC2.MC_Jog;
 	s_fbMcMoveAbs : Tc2_MC2.MC_MoveAbsolute;
 	s_fbMcStop : Tc2_MC2.MC_Stop;
+	s_fbReadParameter : Tc2_MC2.MC_ReadParameter;
 	s_fbWriteParameterPersistent : Tc2_MC2.MC_WriteParameterPersistent;
 	s_fbMcSetPosition : Tc2_MC2.MC_SetPosition;
+	
+	s_tempBool : BOOL;
 	
 	s_fOverride : LREAL := 100.0;
 	
@@ -137,7 +141,7 @@ END_VAR
     <Implementation>
       <ST><![CDATA[s_fbMcPower(
 	Axis := i_refAxis,
-	Enable := I_bEnable,
+	Enable := I_bEnable AND NOT(s_bReqWriteParamPers), //Drive must be disabled to write paramter persistently
 	Enable_Positive := I_bDetLimitSwitchPos,
 	Enable_Negative := I_bDetLimitSwitchNeg,
 	Override := s_fOverride,
@@ -302,12 +306,15 @@ CASE s_eSequence OF
 		IF s_bReqNcStop THEN
 			s_eSequence := E_SeqServo.STOP;
 		ELSIF s_bReqNcHome THEN
-			s_eSequence := E_SeqServo.HOME;
+//--			s_eSequence := E_SeqServo.HOME;
+			s_eSequence := E_SeqServo.HOME_SET_POSITION;
 		ELSIF s_bReqNcJog THEN
 			s_eSequence := E_SeqServo.JOG;
 		ELSIF s_bReqNcMoveAbs THEN
 			s_eSequence := E_SeqServo.MOVE_ABS;
 		END_IF
+		
+		s_bReqWriteParamPers := FALSE;
 		
 	E_SeqServo.STOP:
 		IF s_fbMcStop.Done THEN
@@ -333,6 +340,55 @@ CASE s_eSequence OF
 			s_eSequence := E_SeqServo.IDLE;
 		ELSIF s_fbMcHome.ERROR THEN
 			s_bReqNcHome := FALSE;
+			s_eSequence := E_SeqServo.ERROR;
+		END_IF
+		
+	E_SeqServo.HOME_SET_POSITION:
+		s_fbMcSetPosition(
+			Axis := i_refAxis,
+			Execute := s_fbSeqControl.q_bStaEntry,
+			Position := s_fSetTargetPosition,
+			Mode := FALSE,// FALSE = Absolute (Default), TRUE = Relative
+			Options := );
+			
+		IF s_fbMcSetPosition.Done AND s_tempBool THEN
+			s_tempBool := FALSE;
+			s_eSequence := E_SeqServo.HOME_DISABLE_DRIVE;
+		ELSIF s_fbMcSetPosition.Error THEN
+			s_eSequence := E_SeqServo.ERROR;
+		END_IF
+		
+	E_SeqServo.HOME_DISABLE_DRIVE:
+		s_bReqWriteParamPers := TRUE;
+		
+		IF NOT(s_fbMcPower.Status) AND s_tempBool THEN
+			s_tempBool := FALSE;
+			s_eSequence := E_SeqServo.HOME_WRITE_PARM_PERS;
+		ELSIF s_fbMcPower.Error THEN
+			s_eSequence := E_SeqServo.ERROR;
+		END_IF
+		
+	E_SeqServo.HOME_WRITE_PARM_PERS:
+		s_fbWriteParameterPersistent(
+			Axis := i_refAxis,
+			Execute := s_fbSeqControl.q_bStaEntry,
+			ParameterNumber := MC_AxisParameter.AxisEncoderOffset,
+			Value := i_refAxis.NcToPlc.ActPos);
+			
+		IF s_fbWriteParameterPersistent.Done AND s_tempBool THEN
+			s_tempBool := FALSE;
+			s_eSequence := E_SeqServo.HOME_ENABLE_DRIVE;
+		ELSIF s_fbWriteParameterPersistent.Error THEN
+			s_eSequence := E_SeqServo.ERROR;
+		END_IF
+			
+	E_SeqServo.HOME_ENABLE_DRIVE:
+		s_bReqWriteParamPers := FALSE;
+		
+		IF s_fbMcPower.Status AND s_tempBool THEN
+			s_tempBool := FALSE;
+			s_eSequence := E_SeqServo.IDLE;
+		ELSIF s_fbMcPower.Error THEN
 			s_eSequence := E_SeqServo.ERROR;
 		END_IF
 		
@@ -373,7 +429,9 @@ s_fbMcStop(
 	CommandAborted => s_bCommandAborted,
 	Error => s_bError,
 	ErrorID => );
-	
+
+(*
+//--
 s_fbMcHome(
 	Axis := i_refAxis,
 	Execute := s_bReqNcHome,
@@ -388,8 +446,11 @@ s_fbMcHome(
 	CommandAborted => s_bCommandAborted,
 	Error => s_bError,
 	ErrorID => );
+*)
 
-//Only called by forcing execute 
+(*
+//--
+//Only called by forcing execute
 s_fbWriteParameterPersistent(
 	Axis := i_refAxis,
 	Execute := ,
@@ -399,7 +460,10 @@ s_fbWriteParameterPersistent(
 	Busy => ,
 	Error => ,
 	ErrorID => );
+*)
 
+(*
+//--
 s_fbMcSetPosition(
 	Axis := i_refAxis,
 	Execute := ,
@@ -410,6 +474,7 @@ s_fbMcSetPosition(
 	Busy => ,
 	Error => ,
 	ErrorID => );
+*)
 	
 s_fbMcJog(
 	Axis := i_refAxis,
@@ -463,8 +528,13 @@ s_fbMcReset(
 	Error => s_bError,
 	ErrorID => );
 
-{warning '#TODO: Reset all request, teset if this works correctly. This to prevent multiple request keep true'}
-// Of kijken of dit ook zou kunnen plaatsvinden onderaan deze method, elke cycle
+s_fbReadParameter(
+	Axis := i_refAxis,
+	Enable := ,
+	ParameterNumber := MC_AxisParameter.AxisEncoderOffset,
+	ReadMode := );
+	
+//Rest all requests
 s_bReqNcStop := FALSE;
 s_bReqNcReset := FALSE;
 s_bReqNcHome := FALSE;

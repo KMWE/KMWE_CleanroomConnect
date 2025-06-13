@@ -105,7 +105,6 @@ VAR
 	s_fbWriteParameterPersistent : Tc2_MC2.MC_WriteParameterPersistent;
 	s_fbMcSetPosition : Tc2_MC2.MC_SetPosition;
 	
-	s_tempBool : BOOL;
 	s_fParamValue : LREAL;
 	
 	s_fOverride : LREAL := 100.0;
@@ -352,8 +351,7 @@ CASE s_eSequence OF
 			Mode := FALSE,// FALSE = Absolute (Default), TRUE = Relative
 			Options := );
 			
-		IF s_fbMcSetPosition.Done AND s_tempBool THEN
-			s_tempBool := FALSE;
+		IF s_fbMcSetPosition.Done THEN
 			s_eSequence := E_SeqServo.HOME_READ_PARM;
 		ELSIF s_fbMcSetPosition.Error THEN
 			s_eSequence := E_SeqServo.ERROR;
@@ -367,18 +365,17 @@ CASE s_eSequence OF
 			ReadMode := ,
 			Value => s_fParamValue);
 			
-		IF s_fbReadParameter.Valid AND s_tempBool THEN
-			s_tempBool := FALSE;
+		IF s_fbReadParameter.Valid THEN
 			s_eSequence := E_SeqServo.HOME_DISABLE_DRIVE;
 		ELSIF s_fbReadParameter.Error THEN
 			s_eSequence := E_SeqServo.ERROR;
 		END_IF
 		
+		
 	E_SeqServo.HOME_DISABLE_DRIVE:
 		s_bReqWriteParamPers := TRUE;
 		
-		IF NOT(s_fbMcPower.Status) AND s_tempBool THEN
-			s_tempBool := FALSE;
+		IF NOT(s_fbMcPower.Status) THEN
 			s_eSequence := E_SeqServo.HOME_WRITE_PARM_PERS;
 		ELSIF s_fbMcPower.Error THEN
 			s_eSequence := E_SeqServo.ERROR;
@@ -391,8 +388,7 @@ CASE s_eSequence OF
 			ParameterNumber := MC_AxisParameter.AxisEncoderOffset,
 			Value := s_fParamValue);
 			
-		IF s_fbWriteParameterPersistent.Done AND s_tempBool THEN
-			s_tempBool := FALSE;
+		IF s_fbWriteParameterPersistent.Done THEN
 			s_eSequence := E_SeqServo.HOME_ENABLE_DRIVE;
 		ELSIF s_fbWriteParameterPersistent.Error THEN
 			s_eSequence := E_SeqServo.ERROR;
@@ -401,8 +397,7 @@ CASE s_eSequence OF
 	E_SeqServo.HOME_ENABLE_DRIVE:
 		s_bReqWriteParamPers := FALSE;
 		
-		IF s_fbMcPower.Status AND s_tempBool THEN
-			s_tempBool := FALSE;
+		IF s_fbMcPower.Status THEN
 			s_eSequence := E_SeqServo.IDLE;
 		ELSIF s_fbMcPower.Error THEN
 			s_eSequence := E_SeqServo.ERROR;

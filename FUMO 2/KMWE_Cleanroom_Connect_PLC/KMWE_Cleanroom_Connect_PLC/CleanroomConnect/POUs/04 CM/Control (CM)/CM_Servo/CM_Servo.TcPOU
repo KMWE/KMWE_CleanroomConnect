@@ -38,6 +38,7 @@ VAR
 	s_bReqNcJog : BOOL;
 	s_bReqNcMoveAbs : BOOL;
 	s_bReqWriteParamPers : BOOL;
+	s_bReqPower : BOOL;
 	
 	//States
 	s_bStaEnabled : BOOL;
@@ -141,7 +142,7 @@ END_VAR
     <Implementation>
       <ST><![CDATA[s_fbMcPower(
 	Axis := i_refAxis,
-	Enable := I_bEnable AND NOT(s_bReqWriteParamPers), //Drive must be disabled to write paramter persistently
+	Enable := I_bEnable AND NOT(s_bReqWriteParamPers) AND s_bReqPower, //Drive must be disabled to write paramter persistently
 	Enable_Positive := I_bDetLimitSwitchPos,
 	Enable_Negative := I_bDetLimitSwitchNeg,
 	Override := s_fOverride,
@@ -309,12 +310,18 @@ CASE s_eSequence OF
 //--			s_eSequence := E_SeqServo.HOME;
 			s_eSequence := E_SeqServo.HOME_SET_POSITION;
 		ELSIF s_bReqNcJog THEN
-			s_eSequence := E_SeqServo.JOG;
+//--			s_eSequence := E_SeqServo.JOG;
+			s_eSequence := E_SeqServo.POWER_ON;
 		ELSIF s_bReqNcMoveAbs THEN
-			s_eSequence := E_SeqServo.MOVE_ABS;
+//--			s_eSequence := E_SeqServo.MOVE_ABS;
+			s_eSequence := E_SeqServo.POWER_ON;
 		END_IF
 		
 		s_bReqWriteParamPers := FALSE;
+		
+//++		IF s_fbSeqControl.q_tmStepTime > T#1S THEN
+//++			s_bReqPower := FALSE;
+//++		END_IF
 		
 	E_SeqServo.STOP:
 		IF s_fbMcStop.Done THEN
@@ -371,7 +378,6 @@ CASE s_eSequence OF
 			s_eSequence := E_SeqServo.ERROR;
 		END_IF
 		
-		
 	E_SeqServo.HOME_DISABLE_DRIVE:
 		s_bReqWriteParamPers := TRUE;
 		
@@ -401,6 +407,17 @@ CASE s_eSequence OF
 			s_eSequence := E_SeqServo.IDLE;
 		ELSIF s_fbMcPower.Error THEN
 			s_eSequence := E_SeqServo.ERROR;
+		END_IF
+		
+	E_SeqServo.POWER_ON:
+		s_bReqPower := TRUE;
+		
+		IF s_fbMcPower.Status AND (s_fbHmiBtnJogPos.p_bStaBtn OR s_fbHmiBtnJogNeg.p_bStaBtn) THEN
+			s_eSequence := E_SeqServo.JOG;
+		ELSIF s_fbMcPower.Status AND s_bReqNcMoveAbs THEN
+			s_eSequence := E_SeqServo.MOVE_ABS;
+		ELSIF s_fbSeqControl.q_tmStepTime > T#5S THEN
+			s_eSequence := E_SeqServo.IDLE;
 		END_IF
 		
 	E_SeqServo.JOG:
@@ -489,8 +506,8 @@ s_fbMcSetPosition(
 	
 s_fbMcJog(
 	Axis := i_refAxis,
-	JogForward := s_fbHmiBtnJogPos.p_bStaBtn,
-	JogBackwards := s_fbHmiBtnJogNeg.p_bStaBtn,
+	JogForward := s_fbHmiBtnJogPos.p_bStaBtn AND (s_eSequence = E_SeqServo.JOG),
+	JogBackwards := s_fbHmiBtnJogNeg.p_bStaBtn AND (s_eSequence = E_SeqServo.JOG),
 	Mode := MC_JOGMODE_STANDARD_FAST,
 	Position := ,
 	Velocity := i_ref_setting.fJogVel,
@@ -516,7 +533,7 @@ END_IF
 	
 s_fbMcMoveAbs(
 	Axis := i_refAxis,
-	Execute := s_bReqNcMoveAbs,
+	Execute := (* s_bReqNcMoveAbs AND *) (s_eSequence = E_SeqServo.MOVE_ABS),
 	Position := ,
 	Velocity := ,
 	Acceleration := ,
@@ -544,7 +561,7 @@ s_bReqNcStop := FALSE;
 s_bReqNcReset := FALSE;
 s_bReqNcHome := FALSE;
 s_bReqNcJog := FALSE;
-s_bReqNcMoveAbs := FALSE;
+//s_bReqNcMoveAbs := FALSE;
 
 _m_Devices := TRUE;
 ]]></ST>

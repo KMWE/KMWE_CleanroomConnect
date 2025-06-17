@@ -193,6 +193,7 @@ VAR
 	//Enable force output in IO-mode
 	s_bHmiForceOutputEnabled : BOOL;
 	
+	s_bTestwIgnoreSensors : BOOL;
 END_VAR
 
 VAR PERSISTENT //Variables below will be returned during: Power Cycle, Active Configuration, Download, Cold Restart
@@ -329,22 +330,24 @@ END_IF
 _m_CmdGoToIdle := FALSE;
 s_bErrCmdNotAllowed := TRUE;
 
-IF s_bIlckLiftDown THEN
-	i_refReason := CONCAT('Cmd Go To Idle: Lift Interlocked - ', s_fbIlckHandlerLiftDown.p_sReason);
-ELSIF s_bIlckLiftUp THEN
-	i_refReason := CONCAT('Cmd Go To Idle: Lift Interlocked - ', s_fbIlckHandlerLiftUp.p_sReason);
-//--ELSIF s_bIlckLiftUp THEN
-//--	i_refReason := CONCAT('Cmd Go To Idle: Lift Interlocked - ', s_fbIlckHandlerLiftUp.p_sReason);
-ELSIF s_bIlckTransportRetract THEN
-	i_refReason := CONCAT('Cmd Go To Idle: Transpoort Interlocked - ', s_fbIlckHandlerTransportRetract.p_sReason);
-ELSIF s_bIlckTransportExtract THEN
-	i_refReason := CONCAT('Cmd Go To Idle: Transport Interlocked - ', s_fbIlckHandlerTransportExtract.p_sReason);
-//--ELSIF s_bIlckTransportExtract THEN
-//--	i_refReason := CONCAT('Cmd Go To Idle: Transport Interlocked - ', s_fbIlckHandlerTransportExtract.p_sReason);
-ELSE
-	i_refReason := '-';
-	_m_CmdGoToIdle := TRUE;	
-	s_bErrCmdNotAllowed := FALSE;
+IF __ISVALIDREF(i_refReason) THEN
+	IF s_bIlckLiftDown THEN
+		i_refReason := CONCAT('Cmd Go To Idle: Lift Interlocked - ', s_fbIlckHandlerLiftDown.p_sReason);
+	ELSIF s_bIlckLiftUp THEN
+		i_refReason := CONCAT('Cmd Go To Idle: Lift Interlocked - ', s_fbIlckHandlerLiftUp.p_sReason);
+	//--ELSIF s_bIlckLiftUp THEN
+	//--	i_refReason := CONCAT('Cmd Go To Idle: Lift Interlocked - ', s_fbIlckHandlerLiftUp.p_sReason);
+	ELSIF s_bIlckTransportRetract THEN
+		i_refReason := CONCAT('Cmd Go To Idle: Transpoort Interlocked - ', s_fbIlckHandlerTransportRetract.p_sReason);
+	ELSIF s_bIlckTransportExtract THEN
+		i_refReason := CONCAT('Cmd Go To Idle: Transport Interlocked - ', s_fbIlckHandlerTransportExtract.p_sReason);
+	//--ELSIF s_bIlckTransportExtract THEN
+	//--	i_refReason := CONCAT('Cmd Go To Idle: Transport Interlocked - ', s_fbIlckHandlerTransportExtract.p_sReason);
+	ELSE
+		i_refReason := '-';
+		_m_CmdGoToIdle := TRUE;	
+		s_bErrCmdNotAllowed := FALSE;
+	END_IF
 END_IF
 ]]></ST>
       </Implementation>
@@ -364,22 +367,24 @@ END_IF
 _m_CmdPickTrolleyFromTB := FALSE;
 s_bErrCmdNotAllowed := TRUE;
 
-IF NOT(s_bStaCabinAreaFree) THEN
-	i_refReason := 'Cmd Pick Trolley From TB: Interlocked - Cabin Position Not Free';
-ELSIF NOT(s_bStaCollisionAvoidanceSensor) THEN
-	i_refReason := 'Cmd Pick Trolley From TB: Interlocked - No Trolley Detected In TB';
-ELSIF s_bIlckLiftDown THEN
-	i_refReason := CONCAT('Cmd Pick Trolley From TB: Lift Interlocked - ', s_fbIlckHandlerLiftDown.p_sReason);
-ELSIF s_bIlckLiftUp THEN
-	i_refReason := CONCAT('Cmd Pick Trolley From TB: Lift Interlocked - ', s_fbIlckHandlerLiftUp.p_sReason);
-ELSIF s_bIlckTransportRetract THEN
-	i_refReason := CONCAT('Cmd Pick Trolley From TB: Transpoort Interlocked - ', s_fbIlckHandlerTransportRetract.p_sReason);
-ELSIF s_bIlckTransportExtract THEN
-	i_refReason := CONCAT('Cmd Pick Trolley From TB: Transport Interlocked - ', s_fbIlckHandlerTransportExtract.p_sReason);
-ELSE
-	i_refReason := '-';
-	_m_CmdPickTrolleyFromTB := TRUE;
-	s_bErrCmdNotAllowed := FALSE;
+IF __ISVALIDREF(i_refReason) THEN
+	IF NOT(s_bStaCabinAreaFree) AND NOT(s_bTestwIgnoreSensors) THEN
+		i_refReason := 'Cmd Pick Trolley From TB: Interlocked - Cabin Position Not Free';
+	ELSIF NOT(s_bStaCollisionAvoidanceSensor) AND NOT(s_bTestwIgnoreSensors) THEN
+		i_refReason := 'Cmd Pick Trolley From TB: Interlocked - No Trolley Detected In TB';
+	ELSIF s_bIlckLiftDown THEN
+		i_refReason := CONCAT('Cmd Pick Trolley From TB: Lift Interlocked - ', s_fbIlckHandlerLiftDown.p_sReason);
+	ELSIF s_bIlckLiftUp THEN
+		i_refReason := CONCAT('Cmd Pick Trolley From TB: Lift Interlocked - ', s_fbIlckHandlerLiftUp.p_sReason);
+	ELSIF s_bIlckTransportRetract THEN
+		i_refReason := CONCAT('Cmd Pick Trolley From TB: Transpoort Interlocked - ', s_fbIlckHandlerTransportRetract.p_sReason);
+	ELSIF s_bIlckTransportExtract THEN
+		i_refReason := CONCAT('Cmd Pick Trolley From TB: Transport Interlocked - ', s_fbIlckHandlerTransportExtract.p_sReason);
+	ELSE
+		i_refReason := '-';
+		_m_CmdPickTrolleyFromTB := TRUE;
+		s_bErrCmdNotAllowed := FALSE;
+	END_IF
 END_IF
 ]]></ST>
       </Implementation>
@@ -399,26 +404,28 @@ END_IF
 _m_CmdPlaceTrolleyInTB := FALSE;
 s_bErrCmdNotAllowed := TRUE;
 
-IF NOT(s_bStaTrolleyAtLiftPos) THEN
-	i_refReason := 'Cmd Place Trolley In TB: Interlocked - Trolley Not Place (correctly) At Cabin';
-ELSIF s_bStaCollisionAvoidanceSensor THEN
-	i_refReason := 'Cmd Place Trolley In TB: Interlocked - TB Not Free, or Entrance Blocked';
-ELSIF s_bIlckLiftDown THEN
-	i_refReason := CONCAT('Cmd Place Trolley In TB: Lift Interlocked - ', s_fbIlckHandlerLiftDown.p_sReason);
-ELSIF s_bIlckLiftUp THEN
-	i_refReason := CONCAT('Cmd Place Trolley In TB: Lift Interlocked - ', s_fbIlckHandlerLiftUp.p_sReason);
-ELSIF s_bIlckTransportRetract THEN
-	i_refReason := CONCAT('Cmd Place Trolley In TB: Transpoort Interlocked - ', s_fbIlckHandlerTransportRetract.p_sReason);
-//--ELSIF s_bIlckTransportRetract THEN
-//--	i_refReason := CONCAT('Cmd Place Trolley In TB: Transpoort Interlocked - ', s_fbIlckHandlerTransportRetract.p_sReason);
-ELSIF s_bIlckTransportExtract THEN
-	i_refReason := CONCAT('Cmd Place Trolley In TB: Transport Interlocked - ', s_fbIlckHandlerTransportExtract.p_sReason);
-//--ELSIF s_bIlckTransportExtract THEN
-//--	i_refReason := CONCAT('Cmd Place Trolley In TB: Transport Interlocked - ', s_fbIlckHandlerTransportExtract.p_sReason);
-ELSE
-	i_refReason := '-';
-	_m_CmdPlaceTrolleyInTB := TRUE;
-	s_bErrCmdNotAllowed := FALSE;
+IF __ISVALIDREF(i_refReason) THEN
+	IF NOT(s_bStaTrolleyAtLiftPos) AND NOT(s_bTestwIgnoreSensors) THEN
+		i_refReason := 'Cmd Place Trolley In TB: Interlocked - Trolley Not Place (correctly) At Cabin';
+	ELSIF s_bStaCollisionAvoidanceSensor AND NOT(s_bTestwIgnoreSensors) THEN
+		i_refReason := 'Cmd Place Trolley In TB: Interlocked - TB Not Free, or Entrance Blocked';
+	ELSIF s_bIlckLiftDown THEN
+		i_refReason := CONCAT('Cmd Place Trolley In TB: Lift Interlocked - ', s_fbIlckHandlerLiftDown.p_sReason);
+	ELSIF s_bIlckLiftUp THEN
+		i_refReason := CONCAT('Cmd Place Trolley In TB: Lift Interlocked - ', s_fbIlckHandlerLiftUp.p_sReason);
+	ELSIF s_bIlckTransportRetract THEN
+		i_refReason := CONCAT('Cmd Place Trolley In TB: Transpoort Interlocked - ', s_fbIlckHandlerTransportRetract.p_sReason);
+	//--ELSIF s_bIlckTransportRetract THEN
+	//--	i_refReason := CONCAT('Cmd Place Trolley In TB: Transpoort Interlocked - ', s_fbIlckHandlerTransportRetract.p_sReason);
+	ELSIF s_bIlckTransportExtract THEN
+		i_refReason := CONCAT('Cmd Place Trolley In TB: Transport Interlocked - ', s_fbIlckHandlerTransportExtract.p_sReason);
+	//--ELSIF s_bIlckTransportExtract THEN
+	//--	i_refReason := CONCAT('Cmd Place Trolley In TB: Transport Interlocked - ', s_fbIlckHandlerTransportExtract.p_sReason);
+	ELSE
+		i_refReason := '-';
+		_m_CmdPlaceTrolleyInTB := TRUE;
+		s_bErrCmdNotAllowed := FALSE;
+	END_IF
 END_IF
 ]]></ST>
       </Implementation>
@@ -948,6 +955,10 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
+IF NOT __ISVALIDREF(i_ref_stSettings) THEN
+	RETURN;
+END_IF
+
 //Register previous step
 IF s_eSequence <> s_ePreviousStep
 	AND s_eSequence <> E_SeqLiftingTransport.STOP
@@ -1117,7 +1128,7 @@ CASE s_eSequence OF
 		END_IF
 		
 		IF (s_fbSeqControl.q_tmStepTime > i_ref_stSettings.tTrolleyUnLockCheckMinTime)
-			AND NOT(s_bStaTrolleyLocked) AND (s_bNextStep OR s_bDontWait) THEN
+			AND (NOT(s_bStaTrolleyLocked) OR s_bTestwIgnoreSensors) AND (s_bNextStep OR s_bDontWait) THEN
 				s_bNextStep := FALSE;
 				s_eSequence := E_SeqLiftingTransport.LIFT_RAISE_FROM_TB;
 				
@@ -1192,7 +1203,7 @@ CASE s_eSequence OF
 		END_IF
 		
 	E_SeqLiftingTransport.CHECK_TROLLEY_PLACED:
-		IF s_bStaTrolleyAtLiftPos AND (s_fbSeqControl.q_tmStepTime > i_ref_stSettings.tTrolleyAtCabinCheckMinTime) THEN
+		IF (s_bStaTrolleyAtLiftPos OR s_bTestwIgnoreSensors) AND (s_fbSeqControl.q_tmStepTime > i_ref_stSettings.tTrolleyAtCabinCheckMinTime) THEN
 			s_bStaTrolleyPickedFromTB := TRUE;												/////////////////////
 			s_eSequence := E_SeqLiftingTransport.READY;
 		ELSIF (s_fbSeqControl.q_tmStepTime > i_ref_stSettings.tTrolleyAtCabinCheckMaxTime) THEN
@@ -1292,7 +1303,7 @@ CASE s_eSequence OF
 		END_IF
 		
 		IF (s_fbSeqControl.q_tmStepTime > i_ref_stSettings.tTrolleyUnLockCheckMinTime)
-			AND s_bStaTrolleyLocked AND (s_bNextStep OR s_bDontWait) THEN
+			AND (s_bStaTrolleyLocked OR s_bTestwIgnoreSensors) AND (s_bNextStep OR s_bDontWait) THEN
 				s_bNextStep := FALSE;
 				s_bStaTrolleyPlacedInTB := TRUE; //Note can be resetted
 				s_eSequence := E_SeqLiftingTransport.TRANSPORT_RETURN_IN_CABIN;

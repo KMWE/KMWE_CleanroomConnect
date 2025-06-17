@@ -305,11 +305,14 @@ CASE s_eSequence OF
 	E_SeqServo.IDLE:
 		
 		IF s_bReqNcStop THEN
+			s_bReqNcMoveAbs := FALSE;
 			s_eSequence := E_SeqServo.STOP;
 		ELSIF s_bReqNcHome THEN
+			s_bReqNcMoveAbs := FALSE;
 //--			s_eSequence := E_SeqServo.HOME;
 			s_eSequence := E_SeqServo.HOME_SET_POSITION;
 		ELSIF s_bReqNcJog THEN
+			s_bReqNcMoveAbs := FALSE;
 //--			s_eSequence := E_SeqServo.JOG;
 			s_eSequence := E_SeqServo.POWER_ON;
 		ELSIF s_bReqNcMoveAbs THEN
@@ -439,6 +442,13 @@ CASE s_eSequence OF
 		END_IF
 		
 	E_SeqServo.ERROR:
+		//Rest all requests
+		s_bReqNcStop := FALSE;
+		s_bReqNcReset := FALSE;
+		s_bReqNcHome := FALSE;
+		s_bReqNcJog := FALSE;
+		s_bReqNcMoveAbs := FALSE;
+		
 		IF s_bReqNcReset THEN
 			s_eSequence := E_SeqServo.RESET;
 		END_IF
@@ -457,52 +467,6 @@ s_fbMcStop(
 	CommandAborted => s_bCommandAborted,
 	Error => s_bError,
 	ErrorID => );
-
-(*
-//--
-s_fbMcHome(
-	Axis := i_refAxis,
-	Execute := s_bReqNcHome,
-	Position := i_ref_setting.fHomeOffset,
-	HomingMode := i_mcHomingMode,
-	BufferMode := i_mcBufferMode,
-	Options := ,
-	bCalibrationCam := I_bDetReferenceSwitch,
-	Done => s_bDone,
-	Busy => s_bBusy,
-	Active => s_bActive,
-	CommandAborted => s_bCommandAborted,
-	Error => s_bError,
-	ErrorID => );
-*)
-
-(*
-//--
-//Only called by forcing execute
-s_fbWriteParameterPersistent(
-	Axis := i_refAxis,
-	Execute := ,
-	ParameterNumber := MC_AxisParameter.AxisEncoderOffset,
-	Value := i_ref_setting.fPositionBias,
-	Done => ,
-	Busy => ,
-	Error => ,
-	ErrorID => );
-*)
-
-(*
-//--
-s_fbMcSetPosition(
-	Axis := i_refAxis,
-	Execute := ,
-	Position := ,
-	Mode := FALSE,// FALSE = Absolute (Default), TRUE = Relative
-	Options := ,
-	Done => ,
-	Busy => ,
-	Error => ,
-	ErrorID => );
-*)
 	
 s_fbMcJog(
 	Axis := i_refAxis,

@@ -290,15 +290,21 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-{warning '#TODO: Interlock is blocking to start buttons in MANUAL-Mode'}
-//commented "AND FALSE" if okay then this can be deleted permenetly
-IF s_bIlckDoorOpenerToClose (*AND FALSE*) THEN
-	i_refReason := CONCAT('Cmd To Close Inner Door: Interlocked - ', s_fbIlckHandlerDoorOpenerClose.p_sReason);
+IF __ISVALIDREF(i_refReason) THEN
+	{warning '#TODO: Interlock is blocking to start buttons in MANUAL-Mode'}
+	//commented "AND FALSE" if okay then this can be deleted permenetly
+	IF s_bIlckDoorOpenerToClose (*AND FALSE*) THEN
+		i_refReason := CONCAT('Cmd To Close Inner Door: Interlocked - ', s_fbIlckHandlerDoorOpenerClose.p_sReason);
+		_m_CmdCloseInnerDoor := FALSE;
+		s_bErrCmdNotAllowed := TRUE;
+	ELSE
+		i_refReason := '-';
+		_m_CmdCloseInnerDoor := TRUE;
+	END_IF
+ELSE
+	i_refReason := 'Reference not valid';
 	_m_CmdCloseInnerDoor := FALSE;
 	s_bErrCmdNotAllowed := TRUE;
-ELSE
-	i_refReason := '-';
-	_m_CmdCloseInnerDoor := TRUE;
 END_IF
 ]]></ST>
       </Implementation>
@@ -315,13 +321,19 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-IF s_bIlckDockingClampsToClose THEN
-	i_refReason := CONCAT('Cmd To Dock: Interlocked - ', s_fbIlckHandlerDockingClampsClose.p_sReason);
+IF __ISVALIDREF(i_refReason) THEN
+	IF s_bIlckDockingClampsToClose THEN
+		i_refReason := CONCAT('Cmd To Dock: Interlocked - ', s_fbIlckHandlerDockingClampsClose.p_sReason);
+		_m_CmdDockTB := FALSE;
+		s_bErrCmdNotAllowed := TRUE;
+	ELSE
+		i_refReason := '-';
+		_m_CmdDockTB := TRUE;
+	END_IF
+ELSE
+	i_refReason := 'Reference not valid';
 	_m_CmdDockTB := FALSE;
 	s_bErrCmdNotAllowed := TRUE;
-ELSE
-	i_refReason := '-';
-	_m_CmdDockTB := TRUE;
 END_IF
 ]]></ST>
       </Implementation>
@@ -338,15 +350,21 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-{warning '#TOOD: Interlock is blocking to start buttons in MANUAL-Mode'}
-//commented "AND FALSE" if okay then this can be deleted permenetly
-IF s_bIlckDoorShutterToOpen (*AND FALSE*) THEN
-	i_refReason := CONCAT('Cmd To Open Inner Door: Interlocked - ', s_fbIlckHandlerDoorShutterOpen.p_sReason);
+IF __ISVALIDREF(i_refReason) THEN
+	{warning '#TOOD: Interlock is blocking to start buttons in MANUAL-Mode'}
+	//commented "AND FALSE" if okay then this can be deleted permenetly
+	IF s_bIlckDoorShutterToOpen (*AND FALSE*) THEN
+		i_refReason := CONCAT('Cmd To Open Inner Door: Interlocked - ', s_fbIlckHandlerDoorShutterOpen.p_sReason);
+		_m_CmdOpenInnerDoor := FALSE;
+		s_bErrCmdNotAllowed := TRUE;
+	ELSE
+		i_refReason := '-';
+		_m_CmdOpenInnerDoor := TRUE;
+	END_IF
+ELSE
+	i_refReason := 'Reference not valid';
 	_m_CmdOpenInnerDoor := FALSE;
 	s_bErrCmdNotAllowed := TRUE;
-ELSE
-	i_refReason := '-';
-	_m_CmdOpenInnerDoor := TRUE;
 END_IF
 ]]></ST>
       </Implementation>
@@ -363,13 +381,19 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-IF s_bIlckDockingClampsToOpen THEN
-	i_refReason := CONCAT('Cmd To UnDock: Interlocked - ', s_fbIlckHandlerDockingClampsOpen.p_sReason);
+IF __ISVALIDREF(i_refReason) THEN
+	IF s_bIlckDockingClampsToOpen THEN
+		i_refReason := CONCAT('Cmd To UnDock: Interlocked - ', s_fbIlckHandlerDockingClampsOpen.p_sReason);
+		_m_CmdUndockTB := FALSE;
+		s_bErrCmdNotAllowed := TRUE;
+	ELSE
+		i_refReason := '-';
+		_m_CmdUndockTB := TRUE;
+	END_IF
+ELSE
+	i_refReason := 'Reference not valid';
 	_m_CmdUndockTB := FALSE;
 	s_bErrCmdNotAllowed := TRUE;
-ELSE
-	i_refReason := '-';
-	_m_CmdUndockTB := TRUE;
 END_IF
 ]]></ST>
       </Implementation>
@@ -1157,11 +1181,13 @@ s_fbParamCloseClampsAfterEachOther();
 s_fbParamCompressSealDuration();
 
 //Write to settings
-i_ref_stSettings.bOpenClampsAfterClosingTimeout := LREAL_TO_BOOL(s_fbParamOpenClampsAfterClosingTimeout.p_fValue);
-i_ref_stSettings.bCloseClampsAfterEachOther := LREAL_TO_BOOL(s_fbParamCloseClampsAfterEachOther.p_fValue);
-i_ref_stSettings.tCompressSealDuration := LREAL_TO_TIME(s_fbParamCompressSealDuration.p_fValue);
-
-_m_Params := TRUE;
+IF __ISVALIDREF(i_ref_stSettings) THEN
+	i_ref_stSettings.bOpenClampsAfterClosingTimeout := LREAL_TO_BOOL(s_fbParamOpenClampsAfterClosingTimeout.p_fValue);
+	i_ref_stSettings.bCloseClampsAfterEachOther := LREAL_TO_BOOL(s_fbParamCloseClampsAfterEachOther.p_fValue);
+	i_ref_stSettings.tCompressSealDuration := LREAL_TO_TIME(s_fbParamCompressSealDuration.p_fValue);
+	
+	_m_Params := TRUE;
+END_IF
 ]]></ST>
       </Implementation>
     </Method>
@@ -1170,6 +1196,10 @@ _m_Params := TRUE;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
+IF NOT __ISVALIDREF(i_ref_stSettings) THEN
+	RETURN;
+END_IF
+
 //Register previous step
 IF s_eSequence <> s_ePreviousStep
 	AND s_eSequence <> E_SeqDockingInterface.STOP

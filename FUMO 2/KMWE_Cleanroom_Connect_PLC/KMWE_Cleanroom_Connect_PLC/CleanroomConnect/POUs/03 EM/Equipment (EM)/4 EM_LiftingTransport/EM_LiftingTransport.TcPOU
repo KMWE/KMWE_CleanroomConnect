@@ -348,6 +348,8 @@ IF __ISVALIDREF(i_refReason) THEN
 		_m_CmdGoToIdle := TRUE;	
 		s_bErrCmdNotAllowed := FALSE;
 	END_IF
+ELSE
+	i_refReason := 'Reference not valid';
 END_IF
 ]]></ST>
       </Implementation>
@@ -385,6 +387,8 @@ IF __ISVALIDREF(i_refReason) THEN
 		_m_CmdPickTrolleyFromTB := TRUE;
 		s_bErrCmdNotAllowed := FALSE;
 	END_IF
+ELSE
+	i_refReason := 'Reference not valid';
 END_IF
 ]]></ST>
       </Implementation>
@@ -426,6 +430,8 @@ IF __ISVALIDREF(i_refReason) THEN
 		_m_CmdPlaceTrolleyInTB := TRUE;
 		s_bErrCmdNotAllowed := FALSE;
 	END_IF
+ELSE
+	i_refReason := 'Reference not valid';
 END_IF
 ]]></ST>
       </Implementation>
@@ -543,6 +549,10 @@ END_VAR
       <Implementation>
         <ST><![CDATA[
 IF NOT SUPER^._m_Devices() THEN
+	RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(i_ref_stSettings) THEN
 	RETURN;
 END_IF
 
@@ -935,15 +945,17 @@ s_fbParamTrolleyAtCabinCheckMinTime();
 s_fbParamTrolleyAtCabinCheckMaxTime();
 s_fbParamWaitForNextStep();
 
-//Write to settings
-i_ref_stSettings.bAutoRecoveryToIdle := LREAL_TO_BOOL(s_fbParamAutoRecoveryToIdle.p_fValue);
-i_ref_stSettings.tTrolleyUnLockCheckMinTime := LREAL_TO_TIME(s_fbParamTrolleyUnLockCheckMin.p_fValue);
-i_ref_stSettings.tTrolleyUnLockCheckMaxTime := LREAL_TO_TIME(s_fbParamTrolleyUnLockCheckMax.p_fValue);
-i_ref_stSettings.tTrolleyAtCabinCheckMinTime := LREAL_TO_TIME(s_fbParamTrolleyAtCabinCheckMinTime.p_fValue);
-i_ref_stSettings.tTrolleyAtCabinCheckMaxTime := LREAL_TO_TIME(s_fbParamTrolleyAtCabinCheckMaxTime.p_fValue);
-i_ref_stSettings.bWaitForNextStep := LREAL_TO_BOOL(s_fbParamWaitForNextStep.p_fValue);
-
-_m_Params := TRUE;
+IF __ISVALIDREF(i_ref_stSettings) THEN
+	//Write to settings
+	i_ref_stSettings.bAutoRecoveryToIdle := LREAL_TO_BOOL(s_fbParamAutoRecoveryToIdle.p_fValue);
+	i_ref_stSettings.tTrolleyUnLockCheckMinTime := LREAL_TO_TIME(s_fbParamTrolleyUnLockCheckMin.p_fValue);
+	i_ref_stSettings.tTrolleyUnLockCheckMaxTime := LREAL_TO_TIME(s_fbParamTrolleyUnLockCheckMax.p_fValue);
+	i_ref_stSettings.tTrolleyAtCabinCheckMinTime := LREAL_TO_TIME(s_fbParamTrolleyAtCabinCheckMinTime.p_fValue);
+	i_ref_stSettings.tTrolleyAtCabinCheckMaxTime := LREAL_TO_TIME(s_fbParamTrolleyAtCabinCheckMaxTime.p_fValue);
+	i_ref_stSettings.bWaitForNextStep := LREAL_TO_BOOL(s_fbParamWaitForNextStep.p_fValue);
+	
+	_m_Params := TRUE;
+END_IF
 ]]></ST>
       </Implementation>
     </Method>
@@ -1411,6 +1423,10 @@ END_CASE
       <Implementation>
         <ST><![CDATA[
 IF NOT SUPER^.m_Main() THEN
+	RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(i_ref_stSettings) THEN
 	RETURN;
 END_IF
 

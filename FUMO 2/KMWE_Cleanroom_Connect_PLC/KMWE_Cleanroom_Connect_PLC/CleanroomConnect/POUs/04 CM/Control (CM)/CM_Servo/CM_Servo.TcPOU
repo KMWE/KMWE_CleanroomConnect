@@ -139,7 +139,13 @@ VAR
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[s_fbMcPower(
+      <ST><![CDATA[
+IF NOT __ISVALIDREF(i_refAxis) THEN
+	RETURN;
+END_IF
+
+
+s_fbMcPower(
 	Axis := i_refAxis,
 	Enable := I_bEnable AND s_bReqPower, //Drive must be disabled to write paramter persistently
 	Enable_Positive := I_bDetLimitSwitchPos,
@@ -168,6 +174,11 @@ END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[
 IF NOT SUPER^._m_Alarms() THEN
+	RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(i_refAxis)
+OR NOT __ISVALIDREF(i_ref_setting) THEN
 	RETURN;
 END_IF
 
@@ -283,6 +294,12 @@ _m_Alarms := TRUE;
 IF NOT SUPER^._m_Devices() THEN
 	RETURN;
 END_IF
+
+IF NOT __ISVALIDREF(i_refAxis)
+OR NOT __ISVALIDREF(i_ref_setting) THEN
+	RETURN;
+END_IF
+
 
 s_fbSeqControl(
 	i_nSeqStep := s_eSequence,
@@ -930,6 +947,10 @@ END_CASE
       <Implementation>
         <ST><![CDATA[
 IF NOT SUPER^._m_Inputs() THEN
+	RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(i_refAxis) THEN
 	RETURN;
 END_IF
 

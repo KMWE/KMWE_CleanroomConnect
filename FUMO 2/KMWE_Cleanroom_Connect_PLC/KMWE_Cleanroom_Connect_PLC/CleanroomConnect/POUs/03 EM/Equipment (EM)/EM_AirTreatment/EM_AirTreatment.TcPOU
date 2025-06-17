@@ -159,6 +159,10 @@ IF NOT SUPER^._m_Devices() THEN
 	RETURN;
 END_IF
 
+IF NOT __ISVALIDREF(i_ref_stSettings) THEN
+	RETURN;
+END_IF
+
 s_fbPIDPressCtrl(
 	fSetpointValue := s_fSetPressure, //[Pa]
 	fActualValue := s_fCalcDeltaP_CleanroomCabin, //[Pa]
@@ -383,15 +387,17 @@ s_fbParamFlushingTime();
 s_fbParamEqualizingPress();
 s_fbParamPressureRange();
 
-//Write to settings
-i_ref_stSettings.fPressurizingPress := s_fbParamPressurizingPress.p_fValue;
-i_ref_stSettings.fDockingPress := s_fbParamDockingPress.p_fValue;
-i_ref_stSettings.fFlushingPress := s_fbParamFlushingPress.p_fValue;
-i_ref_stSettings.tFlushingTime := LREAL_TO_TIME(s_fbParamFlushingTime.p_fValue);
-i_ref_stSettings.fEqualizingPress := s_fbParamEqualizingPress.p_fValue;
-i_ref_stSettings.fPressureRange := s_fbParamPressureRange.p_fValue;
-
-_m_Params := TRUE;
+IF __ISVALIDREF(i_ref_stSettings) THEN
+	//Write to settings
+	i_ref_stSettings.fPressurizingPress := s_fbParamPressurizingPress.p_fValue;
+	i_ref_stSettings.fDockingPress := s_fbParamDockingPress.p_fValue;
+	i_ref_stSettings.fFlushingPress := s_fbParamFlushingPress.p_fValue;
+	i_ref_stSettings.tFlushingTime := LREAL_TO_TIME(s_fbParamFlushingTime.p_fValue);
+	i_ref_stSettings.fEqualizingPress := s_fbParamEqualizingPress.p_fValue;
+	i_ref_stSettings.fPressureRange := s_fbParamPressureRange.p_fValue;
+	
+	_m_Params := TRUE;
+END_IF
 ]]></ST>
       </Implementation>
     </Method>
@@ -400,6 +406,10 @@ _m_Params := TRUE;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
+IF NOT __ISVALIDREF(i_ref_stSettings) THEN
+	RETURN;
+END_IF
+
 s_fbSeqControl(
 	i_nSeqStep := s_eSequence,
 	i_sStepName := TO_STRING(s_eSequence),

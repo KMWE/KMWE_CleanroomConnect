@@ -233,13 +233,19 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-IF s_bIlckCenteringToCenter THEN
-	i_refReason := CONCAT('Cmd Centering: Interlocked - ', s_cmCenteringUnit.p_sInterlockedReasonOn);
+IF __ISVALIDREF(i_refReason) THEN
+	IF s_bIlckCenteringToCenter THEN
+		i_refReason := CONCAT('Cmd Centering: Interlocked - ', s_cmCenteringUnit.p_sInterlockedReasonOn);
+		_m_CmdCenteringTB := FALSE;
+		s_bErrCmdNotAllowed := TRUE;
+	ELSE
+		i_refReason := '-';
+		_m_CmdCenteringTB := TRUE;
+	END_IF
+ELSE
+	i_refReason := 'Reference not valid';
 	_m_CmdCenteringTB := FALSE;
 	s_bErrCmdNotAllowed := TRUE;
-ELSE
-	i_refReason := '-';
-	_m_CmdCenteringTB := TRUE;
 END_IF
 ]]></ST>
       </Implementation>
@@ -256,13 +262,19 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-IF s_bIlckConveyorForward THEN
-	i_refReason := CONCAT('Cmd To Center: Interlocked - ', s_fbIlckHandlerConveyorForward.p_sReason);
+IF __ISVALIDREF(i_refReason) THEN
+	IF s_bIlckConveyorForward THEN
+		i_refReason := CONCAT('Cmd To Center: Interlocked - ', s_fbIlckHandlerConveyorForward.p_sReason);
+		_m_CmdTB_ToCenter := FALSE;
+		s_bErrCmdNotAllowed := TRUE;
+	ELSE
+		i_refReason := '-';
+		_m_CmdTB_ToCenter := TRUE;
+	END_IF
+ELSE
+	i_refReason := 'Reference not valid';
 	_m_CmdTB_ToCenter := FALSE;
 	s_bErrCmdNotAllowed := TRUE;
-ELSE
-	i_refReason := '-';
-	_m_CmdTB_ToCenter := TRUE;
 END_IF
 ]]></ST>
       </Implementation>
@@ -279,13 +291,19 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-IF s_bIlckConveyorForward THEN
-	i_refReason := CONCAT('Cmd To Docking: Interlocked - ', s_fbIlckHandlerConveyorForward.p_sReason);
+IF __ISVALIDREF(i_refReason) THEN
+	IF s_bIlckConveyorForward THEN
+		i_refReason := CONCAT('Cmd To Docking: Interlocked - ', s_fbIlckHandlerConveyorForward.p_sReason);
+		_m_CmdTB_ToDocking := FALSE;
+		s_bErrCmdNotAllowed := TRUE;
+	ELSE
+		i_refReason := '-';
+		_m_CmdTB_ToDocking := TRUE;
+	END_IF
+ELSE
+	i_refReason := 'Reference not valid';
 	_m_CmdTB_ToDocking := FALSE;
 	s_bErrCmdNotAllowed := TRUE;
-ELSE
-	i_refReason := '-';
-	_m_CmdTB_ToDocking := TRUE;
 END_IF
 ]]></ST>
       </Implementation>
@@ -302,13 +320,19 @@ IF NOT i_bReqEnable THEN
 	RETURN;
 END_IF
 
-IF s_bIlckConveyorBackward THEN
-	i_refReason := CONCAT('Cmd To Infeed: Interlocked - ', s_fbIlckHandlerConveyorBackward.p_sReason);
+IF __ISVALIDREF(i_refReason) THEN
+	IF s_bIlckConveyorBackward THEN
+		i_refReason := CONCAT('Cmd To Infeed: Interlocked - ', s_fbIlckHandlerConveyorBackward.p_sReason);
+		_m_CmdTB_ToInfeed := FALSE;
+		s_bErrCmdNotAllowed := TRUE;
+	ELSE
+		i_refReason := '-';
+		_m_CmdTB_ToInfeed := TRUE;
+	END_IF
+ELSE
+	i_refReason := 'Reference not valid';
 	_m_CmdTB_ToInfeed := FALSE;
 	s_bErrCmdNotAllowed := TRUE;
-ELSE
-	i_refReason := '-';
-	_m_CmdTB_ToInfeed := TRUE;
 END_IF
 ]]></ST>
       </Implementation>
@@ -638,12 +662,14 @@ s_fbParamSpeedGoToDocking();
 s_fbParamCenteringDuration();
 
 //Write to settings
-i_ref_stSettings.fSpeedGoToInfeed := s_fbParamSpeedGoToInfeed.p_fValue;
-i_ref_stSettings.fSpeedGoToCentering := s_fbParamSpeedGoToCentering.p_fValue;
-i_ref_stSettings.fSpeedGoToDocking := s_fbParamSpeedGoToDocking.p_fValue;
-i_ref_stSettings.tCenteringDuration := LREAL_TO_TIME(s_fbParamCenteringDuration.p_fValue);
-
-_m_Params := TRUE;
+IF __ISVALIDREF(i_ref_stSettings) THEN
+	i_ref_stSettings.fSpeedGoToInfeed := s_fbParamSpeedGoToInfeed.p_fValue;
+	i_ref_stSettings.fSpeedGoToCentering := s_fbParamSpeedGoToCentering.p_fValue;
+	i_ref_stSettings.fSpeedGoToDocking := s_fbParamSpeedGoToDocking.p_fValue;
+	i_ref_stSettings.tCenteringDuration := LREAL_TO_TIME(s_fbParamCenteringDuration.p_fValue);
+	
+	_m_Params := TRUE;
+END_IF
 ]]></ST>
       </Implementation>
     </Method>
@@ -652,6 +678,10 @@ _m_Params := TRUE;
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
+IF NOT __ISVALIDREF(i_ref_stSettings) THEN
+	RETURN;
+END_IF
+
 //Register previous step
 IF s_eSequence <> s_ePreviousStep
 	AND s_eSequence <> E_SeqPalletConveyor.STOP

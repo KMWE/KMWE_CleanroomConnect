@@ -145,7 +145,6 @@ IF NOT __ISVALIDREF(i_refAxis) THEN
 	RETURN;
 END_IF
 
-
 s_fbMcPower(
 	Axis := i_refAxis,
 	Enable := I_bEnable AND s_bReqPower, //Drive must be disabled to write paramter persistently
@@ -351,10 +350,8 @@ CASE s_eSequence OF
 			ErrorID => s_nErrorID);
 			
 		IF s_fbMcStop.Done THEN
-//--			s_bReqNcStop := FALSE;
 			s_eSequence := E_SeqServo.IDLE;
 		ELSIF s_fbMcStop.Error THEN
-//--			s_bReqNcStop := FALSE;
 			s_eSequence := E_SeqServo.ERROR;
 		END_IF
 		
@@ -368,19 +365,15 @@ CASE s_eSequence OF
 			ErrorID => s_nErrorID);
 			
 		IF s_fbMcReset.Done THEN
-//--			s_bReqNcReset := FALSE;
 			s_eSequence := E_SeqServo.IDLE;
 		ELSIF s_fbMcReset.Error THEN
-//--			s_bReqNcReset := FALSE;
 			s_eSequence := E_SeqServo.ERROR;
 		END_IF
 		
 	E_SeqServo.HOME:
 		IF s_fbMcHome.Done THEN
-//--			s_bReqNcHome := FALSE;
 			s_eSequence := E_SeqServo.IDLE;
 		ELSIF s_fbMcHome.ERROR THEN
-//--			s_bReqNcHome := FALSE;
 			s_eSequence := E_SeqServo.ERROR;
 		END_IF
 		
@@ -485,15 +478,12 @@ CASE s_eSequence OF
 			ErrorID => s_nErrorID);
 			
 		IF (NOT(s_fbHmiBtnJogPos.p_bStaBtn OR s_fbHmiBtnJogNeg.p_bStaBtn) AND NOT(s_fbMcJog.Busy)) OR s_fbMcJog.CommandAborted THEN
-//--			s_bReqNcJog := FALSE;
 			s_eSequence := E_SeqServo.IDLE;
 		ELSIF s_fbMcJog.Error THEN
-//--			s_bReqNcJog := FALSE;
 			s_eSequence := E_SeqServo.ERROR;
 		END_IF
 		
 	E_SeqServo.MOVE_ABS:
-//--		s_bReqNcMoveAbs := FALSE;
 		
 		IF (i_eCtrlMode <> E_CtrlMode.AUTOMATIC) AND (i_eCtrlMode <> E_CtrlMode.MANUAL) THEN
 			s_fbMcMoveAbs.Position := s_fSetTargetPosition;
@@ -522,11 +512,9 @@ CASE s_eSequence OF
 			Error => s_bError,
 			ErrorID => s_nErrorID);
 		
-		IF s_fbMcMoveAbs.Done (*OR s_fbMcMoveAbs.CommandAborted*) THEN
-//--			s_bReqNcMoveAbs := FALSE;
+		IF s_fbMcMoveAbs.Done OR s_fbMcMoveAbs.CommandAborted THEN
 			s_eSequence := E_SeqServo.IDLE;
-		ELSIF s_fbMcMoveAbs.Error OR s_fbMcMoveAbs.CommandAborted THEN
-//--			s_bReqNcMoveAbs := FALSE;
+		ELSIF s_fbMcMoveAbs.Error THEN
 			s_eSequence := E_SeqServo.ERROR;
 		END_IF
 		
@@ -548,14 +536,7 @@ CASE s_eSequence OF
 			CommandAborted => s_bCommandAborted,
 			Error => s_bError,
 			ErrorID => s_nErrorID);
-		
-		//Rest all requests
-//--		s_bReqNcStop := FALSE;
-//--		s_bReqNcReset := FALSE;
-//--		s_bReqNcHome := FALSE;
-//--		s_bReqNcJog := FALSE;
-//--		s_bReqNcMoveAbs := FALSE;
-		
+			
 		IF s_bReqNcReset THEN
 			s_eSequence := E_SeqServo.RESET;
 		END_IF

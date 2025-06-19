@@ -154,11 +154,11 @@ s_fbMcPower(
 	BufferMode := TC2_MC2.MC_BufferMode.MC_Aborting,
 	Options := ,
 	Status => s_bStatus,
-	Busy => s_bBusy,
-	Active => s_bActive,
-	Error => s_bError,
+	Busy => ,
+	Active => ,
+	Error => ,
 	ErrorID => );
-
+	
 SUPER^();
 ]]></ST>
     </Implementation>
@@ -186,29 +186,6 @@ END_IF
 //Set error bits
 s_errDriveError := (i_bReqEnable AND s_bStaDriveError) AND NOT(i_bCmdReset);
 s_errMcError := s_bError;
-
-//--
-(*
-IF s_fbMcHome.ErrorID <> 0 THEN
-	s_nErrorID := s_fbMcHome.ErrorID;
-	s_errMcError := TRUE;
-ELSIF s_fbMcJog.ErrorID <> 0 THEN
-	s_nErrorID := s_fbMcJog.ErrorID;
-	s_errMcError := TRUE;
-ELSIF s_fbMcMoveAbs.ErrorID <> 0 THEN
-	s_nErrorID := s_fbMcMoveAbs.ErrorID;
-	s_errMcError := TRUE;
-ELSIF s_fbMcPower.ErrorID <> 0 THEN
-	s_nErrorID := s_fbMcPower.ErrorID;
-	s_errMcError := TRUE;
-ELSIF s_fbMcReset.ErrorID <> 0 THEN
-	s_nErrorID := s_fbMcReset.ErrorID;
-	s_errMcError := TRUE;
-ELSIF s_fbMcStop.ErrorID <> 0 THEN
-	s_nErrorID := s_fbMcStop.ErrorID;
-	s_errMcError := TRUE;
-END_IF
-*)
 
 //Interlock warnings
 s_bPositiveDirection := (i_refAxis.NcToPlc.ActVelo > 0);
@@ -324,6 +301,7 @@ END_IF
 CASE s_eSequence OF
 	E_SeqServo.IDLE:
 		s_bReqPower := FALSE;
+		s_fbMcMoveAbs(Axis := i_refAxis, Execute := FALSE);
 		
 		IF s_bReqNcStop THEN
 			s_eSequence := E_SeqServo.STOP;

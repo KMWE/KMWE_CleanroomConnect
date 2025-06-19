@@ -436,7 +436,7 @@ s_cmPalletConveyor.p_sCfgBckName := 'Backward';
 s_cmCenteringUnit.i_bReqEnable := FALSE;
 s_cmCenteringUnit.i_eCtrlMode := E_CtrlMode.IDLE;
 s_cmCenteringUnit.i_sCmName := 'CM Centering Unit';
-s_cmCenteringUnit.i_stSettings.tValveOnTimeout := T#5S;
+s_cmCenteringUnit.i_stSettings.tValveOnTimeout := T#0S;
 s_cmCenteringUnit.i_stSettings.tValveOffTimeout := T#5S;
 
 s_cmCenteringUnit.p_bCfgBiStableValve := FALSE; //5/2 monostable
@@ -896,7 +896,7 @@ CASE s_eSequence OF
 			s_cmCenteringUnit.m_On();
 		END_IF
 		
-		IF s_cmCenteringUnit.p_bStaIsOn THEN
+		IF s_cmCenteringUnit.p_bStaIsOn OR (s_fbSeqControl.q_tmStepTime >= T#3S) THEN
 			s_eSequence := E_SeqPalletConveyor.PUSHER_AT_CENTER;
 		END_IF
 		

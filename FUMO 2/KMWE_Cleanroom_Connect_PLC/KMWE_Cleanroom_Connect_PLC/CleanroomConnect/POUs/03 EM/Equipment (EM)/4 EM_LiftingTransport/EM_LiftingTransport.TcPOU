@@ -19,7 +19,7 @@ VAR CONSTANT
 	c_fMAX_MOTOR_POS : LREAL := 870.0; //[mm]
 	
 	c_fMIN_LIFT_HEIGHT_TO_EXTRACT_TRANSPORT : LREAL := 305.0; //[mm]
-	c_fMAX_LIFT_HEIGHT_TO_EXTRACT_TRANSPORT : LREAL := 405.0; //[mm]
+	c_fMAX_LIFT_HEIGHT_TO_EXTRACT_TRANSPORT : LREAL := 435.0; //[mm]
 	
 	c_fMIN_TRANSPORT_POSITION_TO_LOWER_LIFT : LREAL := -1.0; //[mm]
 	c_fMAX_TRANSPORT_POSITION_TO_LOWER_LIFT : LREAL := 1.0; //[mm]
@@ -879,9 +879,8 @@ END_IF
 s_fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[1].bState := //Lift not at correct position
 	(i_eCtrlMode <> E_CtrlMode.AUTOMATIC) AND (i_eCtrlMode <> E_CtrlMode.MANUAL) AND s_cmTransport.p_bHomed AND
 	((s_fActLiftPosition < c_fMIN_LIFT_HEIGHT_TO_EXTRACT_TRANSPORT) OR (s_fActLiftPosition > c_fMAX_LIFT_HEIGHT_TO_EXTRACT_TRANSPORT) )
-	AND s_fActTransportPosition > 0
-	AND FALSE;
-s_fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[2].bState := s_bStaCollisionAvoidanceSensor AND (s_fActTransportPosition < c_fEND_TRANSPORT_POSITION_COLLISION_CHECK) AND FALSE;
+	AND s_fActTransportPosition > 0;
+s_fbIlckHandlerTransportExtract.i_stInterlockList.arr_Interlocks[2].bState := s_bStaCollisionAvoidanceSensor AND (s_fActTransportPosition < c_fEND_TRANSPORT_POSITION_COLLISION_CHECK);
 s_fbIlckHandlerTransportExtract();
 
 s_bIlckTransportRetract := s_fbIlckHandlerTransportRetract.p_bInterlocked;
@@ -1454,6 +1453,12 @@ CASE i_eCtrlMode OF
 		//Execute maintenance control (HMI control module buttons)
 		//Reset automatic/manual sequencer
 		s_eSequence := E_SeqLiftingTransport.IDLE;
+		IF i_eCtrlState = E_CtrlState.RUNNING THEN
+			s_eResumeStep := E_SeqLiftingTransport.READY;
+			s_sResumeStep := TO_STRING(s_eResumeStep);
+			s_eLastStepPersistent := s_eResumeStep;
+			s_sLastStepPersistent := s_sResumeStep;
+		END_IF
 		
 		; 	//Maintenance control is implemented in lower-layer control modules
 		

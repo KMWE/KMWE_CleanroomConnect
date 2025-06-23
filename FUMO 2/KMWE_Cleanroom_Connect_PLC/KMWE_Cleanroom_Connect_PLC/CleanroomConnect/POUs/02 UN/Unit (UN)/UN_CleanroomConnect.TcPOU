@@ -562,7 +562,7 @@ s_stSettings.stPalletConveyor.fDistanceToInfeed := 1150.0; //[mm]
 s_stSettings.stPalletConveyor.fDistanceToCentering := 980.0; //[mm]
 s_stSettings.stPalletConveyor.fDistanceToDocking := 250.0; //[mm]
 s_stSettings.stPalletConveyor.fDistanceOuterDoorCheck := 500.0; //[mm]
-s_stSettings.stPalletConveyor.fTravelTollerance := 1.2; //[%] (1.20 = +20%)
+s_stSettings.stPalletConveyor.fTravelTollerance := 1.20; //[%] (1.20 = +20%)
 
 //EM Docking Interface/////////////////////////////////////////////////////////////////////////////
 GVL_Modules.g_emDockingInterface.i_ref_stSettings REF= s_stSettings.stDockingInterface;
@@ -884,9 +884,9 @@ bReqEnable :=
 	
 //EM_PalletConveyor////////////////////////////////////////////////////////////////////////////////
 //Interlocks
-s_fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[0].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaClampsOpened) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking;
-s_fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[1].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaUnlockPinsLocked) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking;
-s_fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[2].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDoorOpenerClosed) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtDocking;
+s_fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[0].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaClampsOpened) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering; //Note: Sensor centering is closest to the docking position
+s_fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[1].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaUnlockPinsLocked) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering; //Note: Sensor centering is closest to the docking position
+s_fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[2].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDoorOpenerClosed) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering; //Note: Sensor centering is closest to the docking position
 s_fbIlckHandlerConvBwd();
 
 s_fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[0].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaClampsOpened) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering;

@@ -1204,7 +1204,10 @@ CASE s_eSequence OF
 			IF GVL.g_bFUMO3_Enabled THEN
 				s_eSequence := E_SeqCleanroomConnect.FLUSHING;
 			ELSE
-				s_eSequence := E_SeqCleanroomConnect.READY;
+//--				s_eSequence := E_SeqCleanroomConnect.READY;
+				IF (s_eReqAction = E_ReqAction.INBOUND) THEN
+					s_eSequence := E_SeqCleanroomConnect.PICK_TROLLEY_FROM_TB;
+				END_IF
 			END_IF
 		END_IF
 		

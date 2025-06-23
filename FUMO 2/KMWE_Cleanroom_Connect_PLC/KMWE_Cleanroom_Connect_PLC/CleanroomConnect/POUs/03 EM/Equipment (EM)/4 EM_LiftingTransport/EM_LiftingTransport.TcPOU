@@ -566,6 +566,10 @@ s_fSpindlePosition := s_cmLift.p_fPosition;
 s_fSpindlePosition := LIMIT(1, s_fSpindlePosition, 200.0);
 
 //Using override to compensate for the Sciccor effect
+
+//320 --> By multipling the result of te formula below by this value will result in 100% override (at max heigt).
+//100% / ( 178mm / SQRT( 1000mm^2 - (1000mm-178mm)^2 ) ) = 319.9 (factor)
+
 IF s_cmLift.p_bHomed THEN
 	IF s_fSpindlePosition > 0 THEN
 		s_fOverride := (s_fSpindlePosition / ( SQRT( ( EXPT(c_fLEG_LENGTH, 2) - EXPT((c_fLEG_LENGTH - s_fSpindlePosition), 2) ) ) ) )* 320;

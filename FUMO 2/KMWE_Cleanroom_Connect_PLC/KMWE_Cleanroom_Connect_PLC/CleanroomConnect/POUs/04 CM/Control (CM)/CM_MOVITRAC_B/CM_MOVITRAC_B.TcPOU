@@ -137,14 +137,14 @@ s_errDriveError R= i_bCmdReset;
 s_errDriveError S= i_bReqEnable AND s_bStaDriveError;
 
 //Interlock warnings
-IF s_bIclkForward AND NOT(s_bStaMotorStopped) THEN
+IF s_bIclkForward AND NOT(s_bStaMotorStopped) AND s_bStaMotorRunningFwd THEN
 	//warning set in corresponding method
 	m_Stop();
 ELSIF NOT(s_bIclkForward) OR i_bCmdReset THEN
 	s_wrnMotorForwardInterlocked := FALSE;
 END_IF
 
-IF s_bIclkBackward AND NOT(s_bStaMotorStopped) THEN
+IF s_bIclkBackward AND NOT(s_bStaMotorStopped) AND s_bStaMotorRunningBwd THEN
 	//warning set in corresponding method
 	m_Stop();
 ELSIF NOT(s_bIclkBackward) OR i_bCmdReset THEN

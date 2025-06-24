@@ -49,6 +49,7 @@ VAR
 	
 	s_bStaAllEmReady : BOOL;
 	
+	s_bStaInnerTbDoorClean : BOOL;
 	s_bStaDockTbDone: BOOL;
 	s_bStaUnDockTbDone : BOOL;
 	s_bStaOpenInnerTbDoorDone : BOOL;
@@ -60,8 +61,6 @@ VAR
 	s_eCabinAirState : E_AirState := E_AirState.UNKNOWN;
 	
 	s_eCtrlModePrevious : E_CtrlMode;
-	
-	s_bStaInnerTbDoorClean : BOOL;
 	
 	//Properties
 	//none
@@ -1049,34 +1048,57 @@ CASE s_eSequence OF
 			
 		//REQUEST DOCK TB//////////////////////////////////////////////////////////////////////////
 		IF s_bStaAllEmReady
-			AND ( (s_eReqAction = E_ReqAction.INBOUND)
-			OR (s_eReqAction = E_ReqAction.OUTBOUND)
-			OR (s_eReqAction = E_ReqAction.DOCK_TB) ) THEN
+			AND
+			(		(s_eReqAction = E_ReqAction.DOCK_TB)
+				OR 	((s_eReqAction = E_ReqAction.INBOUND) AND NOT(s_bStaInnerTbDoorClean))
+//--				OR 	(s_eReqAction = E_ReqAction.OUTBOUND)
+			) THEN
 				s_eSequence := E_SeqCleanroomConnect.CLEAN_OUTER_TB_DOOR;
 				
 		//REQUEST UNDOCK TB////////////////////////////////////////////////////////////////////////
 		ELSIF s_bStaAllEmReady
-			AND (s_eReqAction = E_ReqAction.UNDOCK_TB) THEN
+			AND
+			(
+					(s_eReqAction = E_ReqAction.UNDOCK_TB)
+				OR  ((s_eReqAction = E_ReqAction.OUTBOUND) AND NOT(s_bStaUnDockTbDone))
+			) THEN
 				s_eSequence := E_SeqCleanroomConnect.UNDOCK_TB;
 				
 		//REQUEST OPEN INNER TB DOOR///////////////////////////////////////////////////////////////
 		ELSIF s_bStaAllEmReady
-			AND (s_eReqAction = E_ReqAction.OPEN_INNER_TB_DOOR) THEN
+			AND
+			(
+					(s_eReqAction = E_ReqAction.OPEN_INNER_TB_DOOR)
+				OR	((s_eReqAction = E_ReqAction.INBOUND) AND NOT(s_bStaOpenInnerTbDoorDone))
+				OR	((s_eReqAction = E_ReqAction.OUTBOUND) AND NOT(s_bStaOpenInnerTbDoorDone) AND NOT(s_bStaPlaceTrolleyInTbDone))
+			) THEN
 				s_eSequence := E_SeqCleanroomConnect.OPEN_INNER_TB_DOOR;
 				
 		//REQUEST CLOSE INNER TB DOOR//////////////////////////////////////////////////////////////
 		ELSIF s_bStaAllEmReady
-			AND (s_eReqAction = E_ReqAction.CLOSE_INNER_TB_DOOR) THEN
+			AND
+			(
+				(s_eReqAction = E_ReqAction.CLOSE_INNER_TB_DOOR)
+				OR	((s_eReqAction = E_ReqAction.OUTBOUND) AND NOT(s_bStaCloseInnerTbDoorDone) AND s_bStaPlaceTrolleyInTbDone)
+			) THEN
 				s_eSequence := E_SeqCleanroomConnect.CLOSE_INNER_TB_DOOR;
 				
 		//REQUEST PICK TROLLEY FROM TB/////////////////////////////////////////////////////////////
 		ELSIF s_bStaAllEmReady
-			AND (s_eReqAction = E_ReqAction.PICK_TROLLEY_FROM_TB) THEN
+			AND
+			(
+				(s_eReqAction = E_ReqAction.PICK_TROLLEY_FROM_TB)
+			OR	((s_eReqAction = E_ReqAction.INBOUND) AND NOT(s_bStaPickTrolleyFromTbDone))
+			) THEN
 				s_eSequence := E_SeqCleanroomConnect.PICK_TROLLEY_FROM_TB;
 				
 		//REQUEST PLACE TROLLEY IN TB//////////////////////////////////////////////////////////////
 		ELSIF s_bStaAllEmReady
-			AND (s_eReqAction = E_ReqAction.PLACE_TROLLEY_IN_TB) THEN
+			AND
+			(
+				(s_eReqAction = E_ReqAction.PLACE_TROLLEY_IN_TB)
+				OR	((s_eReqAction = E_ReqAction.OUTBOUND) AND NOT(s_bStaPlaceTrolleyInTbDone))
+			) THEN
 				s_eSequence := E_SeqCleanroomConnect.PLACE_TROLLEY_IN_TB;
 		END_IF
 		
@@ -1207,6 +1229,8 @@ CASE s_eSequence OF
 //--				s_eSequence := E_SeqCleanroomConnect.READY;
 				IF (s_eReqAction = E_ReqAction.INBOUND) THEN
 					s_eSequence := E_SeqCleanroomConnect.PICK_TROLLEY_FROM_TB;
+				ELSE
+					s_eSequence := E_SeqCleanroomConnect.READY;
 				END_IF
 			END_IF
 		END_IF

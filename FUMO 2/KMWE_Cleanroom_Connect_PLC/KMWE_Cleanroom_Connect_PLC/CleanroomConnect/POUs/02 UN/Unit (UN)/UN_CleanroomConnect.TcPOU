@@ -1070,7 +1070,7 @@ CASE s_eSequence OF
 			(
 					(s_eReqAction = E_ReqAction.OPEN_INNER_TB_DOOR)
 				OR	((s_eReqAction = E_ReqAction.INBOUND) AND NOT(s_bStaOpenInnerTbDoorDone))
-				OR	((s_eReqAction = E_ReqAction.OUTBOUND) AND NOT(s_bStaOpenInnerTbDoorDone) AND NOT(s_bStaPlaceTrolleyInTbDone))
+//++				OR	((s_eReqAction = E_ReqAction.OUTBOUND) AND NOT(s_bStaOpenInnerTbDoorDone) AND NOT(s_bStaPlaceTrolleyInTbDone))
 			) THEN
 				s_eSequence := E_SeqCleanroomConnect.OPEN_INNER_TB_DOOR;
 				
@@ -1291,7 +1291,8 @@ CASE s_eSequence OF
 		IF GVL_Modules.g_emLiftingTransport.p_bStaTrollPickedFromTB
 			AND GVL_Modules.g_emLiftingTransport.p_bStaReady THEN
 			
-			IF (s_eReqAction = E_ReqAction.INBOUND) THEN
+			{warning '#FUMO3: Add future/FUMO3 code, due to "AND FALSE" the sequence will be ended here'}
+			IF (s_eReqAction = E_ReqAction.INBOUND) AND FALSE THEN
 				s_eSequence := E_SeqCleanroomConnect.OPEN_CLEANROOM_DOOR;
 			ELSE
 				s_bStaDockTbDone := FALSE;

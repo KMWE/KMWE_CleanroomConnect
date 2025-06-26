@@ -617,9 +617,19 @@ s_bStaTrolleyOnPositionRight := s_diStaTrolleyOnPositionRight.p_bStaInputDelayed
 s_bStaCabinAreaOccupied := NOT(s_diStaCabinAreaOccupied.p_bStaInputDelayed);
 
 s_bStaCabinAreaFree :=
-	NOT(s_diStaCabinAreaOccupied.p_bStaInputDelayed
-	OR s_diStaTrolleyOnPositionLeft.p_bStaInputDelayed
-	OR s_diStaTrolleyOnPositionRight.p_bStaInputDelayed);
+		NOT(s_bStaTrolleyOnPositionLeft)
+	AND NOT(s_bStaTrolleyOnPositionRight)
+	AND NOT(s_bStaCabinAreaOccupied);
+
+s_bStaTrolleyAtLiftPos :=
+	s_bStaTrolleyOnPositionLeft
+	AND s_bStaTrolleyOnPositionRight
+	AND s_bStaCabinAreaOccupied;
+	
+//--s_bStaCabinAreaFree :=
+//--	NOT(s_diStaCabinAreaOccupied.p_bStaInputDelayed
+//--	OR s_diStaTrolleyOnPositionLeft.p_bStaInputDelayed
+//--	OR s_diStaTrolleyOnPositionRight.p_bStaInputDelayed);
 	
 s_bStaTrolleyAtLiftPos :=
 	s_diStaCabinAreaOccupied.p_bStaInputDelayed

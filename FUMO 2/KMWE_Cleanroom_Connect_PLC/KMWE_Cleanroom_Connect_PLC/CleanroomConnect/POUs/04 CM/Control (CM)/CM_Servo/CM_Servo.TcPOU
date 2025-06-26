@@ -648,7 +648,8 @@ IF __ISVALIDREF(i_ref_eCtrlState) THEN
 	//MAINTENANCE-mode is running
 	IF (i_eCtrlMode = E_CtrlMode.MAINTENANCE) AND (i_ref_eCtrlState = E_CtrlState.RUNNING) THEN
 		s_fbHmiBtnHome.p_bStaVisible := TRUE;
-		s_fbHmiBtnHome.p_bStaEnabled := i_bReqEnable AND s_bStaEnabledControl AND s_bStaStandstill;
+		{warning '#TODO: Tempo. disable buttons tp prevent accedently re-homing at incorrect position'}
+		s_fbHmiBtnHome.p_bStaEnabled := i_bReqEnable AND s_bStaEnabledControl AND s_bStaStandstill AND FALSE;
 		
 		s_fbHmiBtnJogPos.p_bStaVisible := TRUE;
 		s_fbHmiBtnJogPos.p_bStaEnabled := i_bReqEnable AND s_bStaEnabledControl AND s_bStaEnabledPos AND NOT(i_bIclkPos) AND NOT(s_fbMcMoveAbs.Busy);

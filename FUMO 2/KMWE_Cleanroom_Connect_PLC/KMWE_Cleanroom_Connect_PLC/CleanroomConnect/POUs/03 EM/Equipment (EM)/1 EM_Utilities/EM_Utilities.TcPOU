@@ -178,8 +178,8 @@ s_bErrPower400VacOk S= NOT(s_bStsPower400VacOk);
 s_bErrPower230VacOk S= NOT(s_bStsPower230VacOk);
 s_bWrnPower230VacSocketsOk S= NOT(s_bStsPower230VacSocketsOk);
 s_bErrPower48VdcOk S= NOT(s_bStsPower48VdcOk);
-s_bErrPowerPotentialGroup24VdcOk S= NOT(s_bStsPowerPotentialGroup24VdcOk);
-s_bErrAirPressureNotOk S= NOT(s_bStaAirPressureOk);
+s_bErrPowerPotentialGroup24VdcOk S= NOT(s_bStsPowerPotentialGroup24VdcOk) AND s_bStaSafetyOk;
+s_bErrAirPressureNotOk S= NOT(s_bStaAirPressureOk) AND s_bStaSafetyOk;
 s_bErrCabinetTemperatureNotOk S= NOT(s_bStaCabinetTemperatureOk);
 
 //Alarm Handlers ( config --> init() )
@@ -329,7 +329,7 @@ IF NOT SUPER^._m_Init() THEN
 END_IF
 
 //Safety config
-s_nVerified_Crc := 16#532D;
+s_nVerified_Crc := 16#D21D;
 
 //Control Modules
 s_diSafetyOk.i_stSettings.tmInputDelay := T#1S;

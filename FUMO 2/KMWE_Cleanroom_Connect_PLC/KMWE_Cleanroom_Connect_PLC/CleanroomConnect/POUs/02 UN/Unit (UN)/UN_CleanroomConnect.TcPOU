@@ -888,7 +888,7 @@ s_fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[1].bState := NOT(GVL_Mod
 s_fbIlckHandlerConvBwd.i_stInterlockList.arr_Interlocks[2].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDoorOpenerClosed) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering; //Note: Sensor centering is closest to the docking position
 s_fbIlckHandlerConvBwd();
 
-s_fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[0].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaClampsOpened) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering;
+s_fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[0].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaClampsOpened) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering AND GVL_Modules.g_emPalletConveyor.p_bStaTB_CenteringDone;
 s_fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[1].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaUnlockPinsLocked) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering;
 s_fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[2].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaDoorOpenerClosed) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering;
 s_fbIlckHandlerConvFwd.i_stInterlockList.arr_Interlocks[3].bState := NOT(GVL_Modules.g_emDockingInterface.p_bStaOuterDoorOpened) AND GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering AND GVL.g_bFUMO3_Enabled;
@@ -1054,6 +1054,14 @@ CASE s_eSequence OF
 //--				OR 	(s_eReqAction = E_ReqAction.OUTBOUND)
 			) THEN
 				s_eSequence := E_SeqCleanroomConnect.CLEAN_OUTER_TB_DOOR;
+
+		ELSIF s_bStaAllEmReady
+			AND
+			(		(s_eReqAction = E_ReqAction.DOCK_TB)
+				OR 	((s_eReqAction = E_ReqAction.INBOUND) AND NOT(s_bStaDockTbDone))
+//--				OR 	(s_eReqAction = E_ReqAction.OUTBOUND)
+			) THEN
+				s_eSequence := E_SeqCleanroomConnect.TB_TO_CENTER;
 				
 		//REQUEST UNDOCK TB////////////////////////////////////////////////////////////////////////
 		ELSIF s_bStaAllEmReady
@@ -1105,7 +1113,8 @@ CASE s_eSequence OF
 	//DOCK TB//////////////////////////////////////////////////////////////////////////////////////
 	E_SeqCleanroomConnect.CLEAN_OUTER_TB_DOOR:
 		IF s_fbSeqControl.q_bStaEntry THEN
-			s_bStaInnerTbDoorClean := FALSE;
+			;
+			//s_bStaInnerTbDoorClean := FALSE;
 		END_IF
 		
 		IF GVL_Modules.g_emPalletConveyor.p_bStaTB_AtInfeed
@@ -1132,6 +1141,7 @@ CASE s_eSequence OF
 		END_IF
 		
 		IF GVL_Modules.g_emPalletConveyor.p_bStaTB_AtCentering
+			AND GVL_Modules.g_emPalletConveyor.p_bStaTB_CenteringDone
 			AND GVL_Modules.g_emPalletConveyor.p_bStaReady THEN
 			s_eSequence := E_SeqCleanroomConnect.START_DOCK_TB;
 		END_IF
@@ -1164,15 +1174,16 @@ CASE s_eSequence OF
 		IF GVL_Modules.g_emDockingInterface.p_bStaDocked
 			AND GVL_Modules.g_emDockingInterface.p_bStaReady THEN
 				
+				s_bStaDockTbDone := TRUE;
+				s_bStaUnDockTbDone := FALSE;
+//--			s_bStaOpenInnerTbDoorDone := FALSE;
+//--			s_bStaCloseInnerTbDoorDone := FALSE;
+//--			s_bStaPickTrolleyFromTbDone := FALSE;
+//--			s_bStaPlaceTrolleyInTbDone := FALSE;
+
 				IF ( (s_eReqAction = E_ReqAction.INBOUND) OR (s_eReqAction = E_ReqAction.OUTBOUND) ) THEN
 					s_eSequence := E_SeqCleanroomConnect.OPEN_INNER_TB_DOOR;
 				ELSE
-					s_bStaDockTbDone := TRUE;
-					s_bStaUnDockTbDone := FALSE;
-					s_bStaOpenInnerTbDoorDone := FALSE;
-					s_bStaCloseInnerTbDoorDone := FALSE;
-					s_bStaPickTrolleyFromTbDone := FALSE;
-					s_bStaPlaceTrolleyInTbDone := FALSE;
 					
 					s_eSequence := E_SeqCleanroomConnect.READY;
 				END_IF
@@ -1204,12 +1215,13 @@ CASE s_eSequence OF
 			AND GVL_Modules.g_emPalletConveyor.p_bStaReady
 			AND GVL_Modules.g_emDockingInterface.p_bStaUndocked
 			AND GVL_Modules.g_emDockingInterface.p_bStaReady THEN
+				s_bStaInnerTbDoorClean := FALSE;
 				s_bStaDockTbDone := FALSE;
 				s_bStaUnDockTbDone := TRUE;
-				s_bStaOpenInnerTbDoorDone := FALSE;
-				s_bStaCloseInnerTbDoorDone := FALSE;
-				s_bStaPickTrolleyFromTbDone := FALSE;
-				s_bStaPlaceTrolleyInTbDone := FALSE;
+//--			s_bStaOpenInnerTbDoorDone := FALSE;
+//--			s_bStaCloseInnerTbDoorDone := FALSE;
+//--			s_bStaPickTrolleyFromTbDone := FALSE;
+//--			s_bStaPlaceTrolleyInTbDone := FALSE;
 				
 				s_eSequence := E_SeqCleanroomConnect.READY;
 		END_IF
@@ -1222,6 +1234,13 @@ CASE s_eSequence OF
 		
 		IF GVL_Modules.g_emDockingInterface.p_bStaInnerDoorOpened
 			AND GVL_Modules.g_emDockingInterface.p_bStaReady THEN
+			
+//--			s_bStaDockTbDone := FALSE;
+//--			s_bStaUnDockTbDone := FALSE;
+				s_bStaOpenInnerTbDoorDone := TRUE;
+				s_bStaCloseInnerTbDoorDone := FALSE;
+//--			s_bStaPickTrolleyFromTbDone := FALSE;
+//--			s_bStaPlaceTrolleyInTbDone := FALSE;
 			
 			IF GVL.g_bFUMO3_Enabled THEN
 				s_eSequence := E_SeqCleanroomConnect.FLUSHING;
@@ -1245,12 +1264,13 @@ CASE s_eSequence OF
 			ELSIF ( (s_eReqAction = E_ReqAction.OUTBOUND) OR (s_eReqAction = E_ReqAction.PLACE_TROLLEY_IN_TB) ) THEN
 				s_eSequence := E_SeqCleanroomConnect.OPEN_CLEANROOM_DOOR;
 			ELSE
-				s_bStaDockTbDone := FALSE;
-				s_bStaUnDockTbDone := FALSE;
-				s_bStaOpenInnerTbDoorDone := TRUE;
-				s_bStaCloseInnerTbDoorDone := FALSE;
-				s_bStaPickTrolleyFromTbDone := FALSE;
-				s_bStaPlaceTrolleyInTbDone := FALSE;
+//-- Niet duidleijk waarom de statussen hier gereset worden
+//--				s_bStaDockTbDone := FALSE;
+//--				s_bStaUnDockTbDone := FALSE;
+//--				s_bStaOpenInnerTbDoorDone := TRUE;
+//--				s_bStaCloseInnerTbDoorDone := FALSE;
+//--				s_bStaPickTrolleyFromTbDone := FALSE;
+//--				s_bStaPlaceTrolleyInTbDone := FALSE;
 				
 				s_eSequence := E_SeqCleanroomConnect.READY;
 			END_IF
@@ -1264,12 +1284,12 @@ CASE s_eSequence OF
 		
 		IF GVL_Modules.g_emDockingInterface.p_bStaInnerDoorClosed
 			AND GVL_Modules.g_emDockingInterface.p_bStaReady THEN
-				s_bStaDockTbDone := FALSE;
-				s_bStaUnDockTbDone := FALSE;
+//--			s_bStaDockTbDone := FALSE;
+//--			s_bStaUnDockTbDone := FALSE;
 				s_bStaOpenInnerTbDoorDone := FALSE;
 				s_bStaCloseInnerTbDoorDone := TRUE;
-				s_bStaPickTrolleyFromTbDone := FALSE;
-				s_bStaPlaceTrolleyInTbDone := FALSE;
+//--			s_bStaPickTrolleyFromTbDone := FALSE;
+//--			s_bStaPlaceTrolleyInTbDone := FALSE;
 				
 				IF GVL_Modules.g_emDockingInterface.p_bStaReady THEN
 					
@@ -1291,16 +1311,17 @@ CASE s_eSequence OF
 		IF GVL_Modules.g_emLiftingTransport.p_bStaTrollPickedFromTB
 			AND GVL_Modules.g_emLiftingTransport.p_bStaReady THEN
 			
+//--		s_bStaDockTbDone := FALSE;
+//--		s_bStaUnDockTbDone := FALSE;
+//--		s_bStaOpenInnerTbDoorDone := FALSE;
+//--		s_bStaCloseInnerTbDoorDone := FALSE;
+			s_bStaPickTrolleyFromTbDone := TRUE;
+			s_bStaPlaceTrolleyInTbDone := FALSE;
+			
 			{warning '#FUMO3: Add future/FUMO3 code, due to "AND FALSE" the sequence will be ended here'}
 			IF (s_eReqAction = E_ReqAction.INBOUND) AND FALSE THEN
 				s_eSequence := E_SeqCleanroomConnect.OPEN_CLEANROOM_DOOR;
 			ELSE
-				s_bStaDockTbDone := FALSE;
-				s_bStaUnDockTbDone := FALSE;
-				s_bStaOpenInnerTbDoorDone := FALSE;
-				s_bStaCloseInnerTbDoorDone := FALSE;
-				s_bStaPickTrolleyFromTbDone := TRUE;
-				s_bStaPlaceTrolleyInTbDone := FALSE;
 				
 				s_eSequence := E_SeqCleanroomConnect.READY;
 			END_IF
@@ -1315,17 +1336,18 @@ CASE s_eSequence OF
 		IF GVL_Modules.g_emLiftingTransport.p_bStaTrollPlacedInTB
 			AND GVL_Modules.g_emLiftingTransport.p_bStaReady THEN
 			
+//--		s_bStaDockTbDone := FALSE;
+//--		s_bStaUnDockTbDone := FALSE;
+//--		s_bStaOpenInnerTbDoorDone := FALSE;
+//--		s_bStaCloseInnerTbDoorDone := FALSE;
+			s_bStaPickTrolleyFromTbDone := FALSE;
+			s_bStaPlaceTrolleyInTbDone := TRUE;
+			
 			IF (s_eReqAction = E_ReqAction.OUTBOUND) THEN
 				s_eSequence := E_SeqCleanroomConnect.CLOSE_CLEANROOM_DOOR;
 			ELSIF (s_eReqAction = E_ReqAction.PLACE_TROLLEY_IN_TB) THEN
 				s_eSequence := E_SeqCleanroomConnect.READY;
 			ELSE
-				s_bStaDockTbDone := FALSE;
-				s_bStaUnDockTbDone := FALSE;
-				s_bStaOpenInnerTbDoorDone := FALSE;
-				s_bStaCloseInnerTbDoorDone := FALSE;
-				s_bStaPickTrolleyFromTbDone := FALSE;
-				s_bStaPlaceTrolleyInTbDone := TRUE;
 				
 				s_eSequence := E_SeqCleanroomConnect.READY;
 			END_IF

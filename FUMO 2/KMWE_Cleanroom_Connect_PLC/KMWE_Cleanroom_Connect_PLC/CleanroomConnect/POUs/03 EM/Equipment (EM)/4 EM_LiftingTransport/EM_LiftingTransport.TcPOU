@@ -556,11 +556,6 @@ IF NOT __ISVALIDREF(i_ref_stSettings) THEN
 	RETURN;
 END_IF
 
-//Using override to compensate for the Sciccor effect
-//--IF s_cmLift.p_fPosition > 0 THEN
-//--	s_cmLift.p_fSetOverride := (s_cmLift.p_fPosition / ( SQRT( ( EXPT(c_fLEG_LENGTH, 2) - EXPT((c_fLEG_LENGTH - s_cmLift.p_fPosition), 2) ) ) ) )* 365;
-//--END_IF
-
 //Read spindle position from motor and limit to prevent misscalculations
 s_fSpindlePosition := s_cmLift.p_fPosition;
 s_fSpindlePosition := LIMIT(1, s_fSpindlePosition, 200.0);
@@ -625,16 +620,6 @@ s_bStaTrolleyAtLiftPos :=
 	s_bStaTrolleyOnPositionLeft
 	AND s_bStaTrolleyOnPositionRight
 	AND s_bStaCabinAreaOccupied;
-	
-//--s_bStaCabinAreaFree :=
-//--	NOT(s_diStaCabinAreaOccupied.p_bStaInputDelayed
-//--	OR s_diStaTrolleyOnPositionLeft.p_bStaInputDelayed
-//--	OR s_diStaTrolleyOnPositionRight.p_bStaInputDelayed);
-	
-//--s_bStaTrolleyAtLiftPos :=
-//--	s_diStaCabinAreaOccupied.p_bStaInputDelayed
-//--	AND s_diStaTrolleyOnPositionLeft.p_bStaInputDelayed
-//--	AND s_diStaTrolleyOnPositionRight.p_bStaInputDelayed;
 	
 s_bStaCollisionAvoidanceSensor := NOT(s_diStaCollisionAvoidanceSensor.p_bStaInputDelayed);
 s_bStaTrolleyLocked := s_diStaTrolleyLocked.p_bStaInputDelayed;

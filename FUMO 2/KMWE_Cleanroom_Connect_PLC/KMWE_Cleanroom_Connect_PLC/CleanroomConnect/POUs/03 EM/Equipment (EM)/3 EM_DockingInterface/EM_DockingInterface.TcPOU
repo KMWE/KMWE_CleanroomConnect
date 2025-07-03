@@ -1248,7 +1248,7 @@ CASE s_eSequence OF
 		IF s_fbSeqControl.q_bStaEntry THEN
 			
 			//Check actual status
-			IF NOT(s_bStaDocked)
+			IF NOT(s_bStaDocked) AND FALSE
 				AND(
 					s_bStaHighPressureSelected
 					OR NOT(s_bStaDockingClampsClosed)
@@ -1673,7 +1673,7 @@ CASE s_eSequence OF
 //ERROR////////////////////////////////////////////////////////////////////////////////////////////
 	E_SeqDockingInterface.ERROR:
 		IF s_fbSeqControl.q_bStaEntry THEN
-			IF (i_eCtrlMode = E_CtrlMode.AUTOMATIC)
+			IF ( (i_eCtrlMode = E_CtrlMode.AUTOMATIC) OR (i_eCtrlMode = E_CtrlMode.MANUAL) ) 
 				AND (s_ePreviousStep > E_SeqDockingInterface.START)
 				AND (s_ePreviousStep < E_SeqDockingInterface.ERROR) THEN
 					s_eResumeStep := s_ePreviousStep;

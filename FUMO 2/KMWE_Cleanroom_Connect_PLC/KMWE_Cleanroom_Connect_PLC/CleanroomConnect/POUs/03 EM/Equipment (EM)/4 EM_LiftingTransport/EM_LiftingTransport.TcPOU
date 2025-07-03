@@ -193,7 +193,7 @@ VAR
 	//Enable force output in IO-mode
 	s_bHmiForceOutputEnabled : BOOL;
 	
-	s_bTestwIgnoreSensors : BOOL := TRUE;
+	s_bTestwIgnoreSensors : BOOL := FALSE;
 END_VAR
 
 VAR PERSISTENT //Variables below will be returned during: Power Cycle, Active Configuration, Download, Cold Restart
@@ -410,7 +410,7 @@ s_bErrCmdNotAllowed := TRUE;
 
 IF __ISVALIDREF(i_refReason) THEN
 	IF NOT(s_bStaTrolleyAtLiftPos) AND NOT(s_bTestwIgnoreSensors) THEN
-		i_refReason := 'Cmd Place Trolley In TB: Interlocked - Trolley Not Place (correctly) At Cabin';
+		i_refReason := 'Cmd Place Trolley In TB: Interlocked - Trolley Not Placed (correctly) At Cabin';
 	ELSIF s_bStaCollisionAvoidanceSensor AND NOT(s_bTestwIgnoreSensors) THEN
 		i_refReason := 'Cmd Place Trolley In TB: Interlocked - TB Not Free, or Entrance Blocked';
 	ELSIF s_bIlckLiftDown THEN

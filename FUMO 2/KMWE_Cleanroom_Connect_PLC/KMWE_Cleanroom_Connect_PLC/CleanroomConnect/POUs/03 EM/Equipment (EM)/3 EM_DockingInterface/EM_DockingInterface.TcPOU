@@ -447,7 +447,7 @@ s_bStaDockingClampsLowerClosed := s_cmDockingClampsLower.p_bStaIsOn;
 s_bStaDockingClampsLowerOpened := s_cmDockingClampsLower.p_bStaIsOff;
 
 s_bStaHighPressureSelected := s_bStaDockingClampsUpperHighPressure AND s_bStaDockingClampsLowerHighPressure;
-s_bStaDockingClampsClosed := s_bStaDockingClampsUpperClosed AND s_bStaDockingClampsLowerClosed;
+s_bStaDockingClampsClosed := s_bStaDockingClampsUpperClosed AND (s_bStaDockingClampsLowerClosed OR s_cmDockingClampsLower.i_stSettings.tValveOnTimeout = T#0s) ;
 s_bStaDockingClampsOpened := s_bStaDockingClampsUpperOpened AND s_bStaDockingClampsLowerOpened;
 
 s_cmUnlockingPinUpper(
@@ -610,9 +610,9 @@ s_cmClampsUpperHighPressure.p_sCfgOnName := 'High';
 s_cmDockingClampsLower.i_bReqEnable := FALSE;
 s_cmDockingClampsLower.i_eCtrlMode := E_CtrlMode.IDLE;
 s_cmDockingClampsLower.i_sCmName := 'CM Docking Clamps Lower';
-s_cmDockingClampsLower.i_stSettings.tValveOnTimeout := T#10S;
 {warning '#TODO: On timeout disabled, reed contact are not reached'}
-s_cmDockingClampsLower.i_stSettings.tValveOffTimeout := T#0S;
+s_cmDockingClampsLower.i_stSettings.tValveOnTimeout := T#0S;
+s_cmDockingClampsLower.i_stSettings.tValveOffTimeout := T#10S;
 s_cmDockingClampsLower.p_bCfgBiStableValve := FALSE; //5/3 monostable, closed middle position
 s_cmDockingClampsLower.p_bCfgReverseValve := FALSE;
 s_cmDockingClampsLower.p_sCfgOffName := 'Release';
@@ -1448,7 +1448,7 @@ CASE s_eSequence OF
 		
 		IF s_fbSeqControl.q_tmStepTime >= i_ref_stSettings.tCompressSealDuration
 			//Check if lower docking clamps are closed
-			AND (s_cmDockingClampsLower.p_bStaIsOn OR (s_cmDockingClampsLower.i_stSettings.tValveOnTimeout = T#0S)) THEN
+			AND (s_cmDockingClampsLower.p_bStaIsOn OR ( s_cmDockingClampsLower.i_stSettings.tValveOnTimeout = T#0S)) THEN
 			s_eSequence := E_SeqDockingInterface.CLOSE_UPPER_DOCKING_CLAMPS;
 		END_IF
 		
